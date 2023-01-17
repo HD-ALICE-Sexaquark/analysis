@@ -875,13 +875,15 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
 
   // define variables & objects
   AliESDv0* V0;
-  Double_t V0_X, V0_Y, V0_Z;
-  Double_t N_Px, N_Py, N_Pz;
-  Double_t P_Px, P_Py, P_Pz;
-  Double_t radius;
 
   AliESDtrack* pos_track;
   AliESDtrack* neg_track;
+
+  V0_tt common_format;
+
+  Double_t V0_X, V0_Y, V0_Z;
+  Double_t N_Px, N_Py, N_Pz;
+  Double_t P_Px, P_Py, P_Pz;
 
   Float_t nsigma_pos_pion;
   Float_t nsigma_neg_pion;
@@ -891,7 +893,10 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
   Double_t neg_energy_asK0;
   Double_t neg_energy_asAL;
 
-  V0_tt common_format;
+  Double_t radius;
+
+  Double_t decay_length;
+  Double_t dca_to_pv;
 
   // get primary vertex of this event
   Double_t PV[3];
@@ -919,7 +924,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
     V0->GetXYZ(V0_X, V0_Y, V0_Z);
 
     // (cut) on radius
-    radius = TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y);
+    radius = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2));
     if (radius < 5. || radius > 180.) {
       continue;
     }
@@ -937,9 +942,6 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
     V0->GetPPxPyPz(P_Px, P_Py, P_Pz);
     V0->GetNPxPyPz(N_Px, N_Py, N_Pz);
 
-    // TMath::Sqrt(Neg_Px * Neg_Px + Neg_Py * Neg_Py + Neg_Pz * Neg_Pz + 0.0195)
-    // Rec_NSigmaPion[Idx_Neg] < Rec_NSigmaProton[Idx_Neg]
-
     // calculate energy
     // for positive daughter, assuming it's a positive pion
     pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + kMassPion * kMassPion);
@@ -952,13 +954,17 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
     AliInfoF("%5i %6.2f %6.2f %6.2f %6.2f %6.2f %6.2f %5i %6.2f %6.2f %6.2f %5i %6.2f %6.2f %6.2f", i, V0->Px(), V0->Py(), V0->Pz(), V0_X,
              V0_Y, V0_Z, V0->GetPindex(), P_Px, P_Py, P_Pz, V0->GetNindex(), N_Px, N_Py, N_Pz);
 
+    // geometry
+    decay_length = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
+    dca_to_pv = Calculate_LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
+
     // (tree operations)
     // fill common format and push_back
     common_format.Idx_Pos = V0->GetPindex();
     common_format.Idx_Neg = V0->GetNindex();
-    common_format.Px = P_Px + N_Px;
-    common_format.Py = P_Py + N_Py;
-    common_format.Pz = P_Pz + N_Pz;
+    common_format.Px = V0->Px();
+    common_format.Py = V0->Py();
+    common_format.Pz = V0->Pz();
     common_format.X = V0_X;
     common_format.Y = V0_Y;
     common_format.Z = V0_Z;
@@ -979,7 +985,10 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
     common_format.CPA_wrtPV = V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]);
     common_format.ArmAlpha = V0->AlphaV0();
     common_format.ArmPt = V0->PtArmV0();
-    common_format.DecayLength = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
+    common_format.DecayLength = decay_length;
+    common_format.DCA_wrtPV = dca_to_pv;
+    common_format.isPrimary = dca_to_pv < 2.;  // Fabio's condition
+
     V0_PushBack(common_format);
   }  // end of loop over V0s
 }
@@ -996,6 +1005,8 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
   AliESDtrack* ntrk;
   AliESDtrack* ptrk;
 
+  V0_tt common_format;
+
   Int_t nentr = fESD->GetNumberOfTracks();
   TArrayI neg(nentr);
   TArrayI pos(nentr);
@@ -1004,8 +1015,6 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
   Double_t N_Px, N_Py, N_Pz;
   Double_t P_Px, P_Py, P_Pz;
 
-  V0_tt common_format;
-
   Float_t nsigma_pos_pion;
   Float_t nsigma_neg_pion;
   Float_t nsigma_antiproton;
@@ -1013,6 +1022,11 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
   Double_t pos_energy;
   Double_t neg_energy_asK0;
   Double_t neg_energy_asAL;
+
+  Double_t radius;
+
+  Double_t decay_length;
+  Double_t dca_to_pv;
 
   // define cuts
   Double_t COV0F_DNmin = 0.05;   // min imp parameter for the negative daughter (depends on PV!)
@@ -1191,6 +1205,14 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
 
       // load coordinates and momentum of each component of the V0
       vertex.GetXYZ(V0_X, V0_Y, V0_Z);
+
+      // (cut) on radius
+      radius = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2));
+      if (radius < 5. || radius > 180.) {
+        continue;
+      }
+
+      // get momentum of negative and positive components at V0 vertex
       vertex.GetNPxPyPz(N_Px, N_Py, N_Pz);
       vertex.GetPPxPyPz(P_Px, P_Py, P_Pz);
 
@@ -1210,6 +1232,10 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + kMassPion * kMassPion);
       // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
       neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + kMassProton * kMassProton);
+
+      // geometry
+      decay_length = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
+      dca_to_pv = Calculate_LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
 
       // (tree operations)
       // fill common format and push_back
@@ -1238,8 +1264,10 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       common_format.CPA_wrtPV = vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]);
       common_format.ArmAlpha = vertex.AlphaV0();
       common_format.ArmPt = vertex.PtArmV0();
-      common_format.DecayLength =
-          TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
+      common_format.DecayLength = decay_length;
+      common_format.DCA_wrtPV = dca_to_pv;
+      common_format.isPrimary = dca_to_pv < 2.;  // Fabio's condition
+
       V0_PushBack(common_format);
 
       // increment counter of V0s
@@ -1390,6 +1418,11 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
                                               mc_neg->Px(), mc_neg->Py(), mc_neg->Pz());                //
         common_format.DecayLength = TMath::Sqrt(TMath::Power(mc_pos->Xv() - PV[0], 2) + TMath::Power(mc_pos->Yv() - PV[1], 2) +
                                                 TMath::Power(mc_pos->Zv() - PV[2], 2));
+        common_format.DCA_wrtPV = Calculate_LinePointDCA(mc_mother->Px(), mc_mother->Py(), mc_mother->Pz(),  //
+                                                         mc_pos->Xv(), mc_pos->Yv(), mc_pos->Zv(),           //
+                                                         PV[0], PV[1], PV[2]);
+        common_format.isPrimary = mc_mother->GetMother() == -1;
+
         V0_PushBack(common_format);
       }  // end of loop over negative tracks
     }    // end of loop over positive tracks
@@ -1468,6 +1501,23 @@ Double_t AliAnalysisTaskSexaquark::Calculate_ArmPt(Double_t V0_Px, Double_t V0_P
   TVector3 momNeg(Neg_Px, Neg_Py, Neg_Pz);
 
   return momNeg.Perp(momTot);
+}
+
+//________________________________________________________________________
+Double_t AliAnalysisTaskSexaquark::Calculate_LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,  //
+                                Double_t V0_X, Double_t V0_Y, Double_t V0_Z,     //
+                                Double_t PV_X, Double_t PV_Y, Double_t PV_Z) {
+  //
+  // Find the distance of closest approach to the Primary Vertex, after backtracking a V0.
+  // This function stores the point of closest approach, and returns its distance to the PV.
+  //
+  TVector3 V0Momentum(V0_Px, V0_Py, V0_Pz);
+  TVector3 V0Vertex(V0_X, V0_Y, V0_Z);
+  TVector3 PrimVertex(PV_X, PV_Y, PV_Z);
+
+  TVector3 CrossProduct = (PrimVertex - V0Vertex).Cross(V0Momentum);
+
+  return CrossProduct.Mag() / V0Momentum.Mag();
 }
 
 /*** CUSTOM OFFLINE V0 FINDER ***/
@@ -1787,6 +1837,8 @@ void AliAnalysisTaskSexaquark::SetBranches() {
   fTree->Branch("V0_ArmAlpha", &fEvent.V0_ArmAlpha);
   fTree->Branch("V0_ArmPt", &fEvent.V0_ArmPt);
   fTree->Branch("V0_DecayLength", &fEvent.V0_DecayLength);
+  fTree->Branch("V0_DCA_wrtPV", &fEvent.V0_DCA_wrtPV);
+  fTree->Branch("V0_isPrimary", &fEvent.V0_isPrimary);
 }
 
 //_____________________________________________________________________________
@@ -1945,6 +1997,8 @@ void AliAnalysisTaskSexaquark::V0_PushBack(V0_tt common_format) {
   fEvent.V0_ArmAlpha.push_back(common_format.ArmAlpha);
   fEvent.V0_ArmPt.push_back(common_format.ArmPt);
   fEvent.V0_DecayLength.push_back(common_format.DecayLength);
+  fEvent.V0_DCA_wrtPV.push_back(common_format.DCA_wrtPV);
+  fEvent.V0_isPrimary.push_back(common_format.isPrimary);
   fEvent.N_V0s++;
 }
 
@@ -2009,6 +2063,8 @@ void AliAnalysisTaskSexaquark::ClearEvent() {
   fEvent.V0_ArmAlpha.clear();
   fEvent.V0_ArmPt.clear();
   fEvent.V0_DecayLength.clear();
+  fEvent.V0_DCA_wrtPV.clear();
+  fEvent.V0_isPrimary.clear();
 }
 
 /*** HIST OPERATIONS ***/

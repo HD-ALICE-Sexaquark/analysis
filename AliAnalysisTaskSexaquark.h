@@ -35,6 +35,8 @@ struct V0_tt {
   Float_t ArmAlpha;       // Armenteros-Podolanski variable alpha
   Float_t ArmPt;          // Armenteros-Podolanski variable Pt
   Float_t DecayLength;    // distance between PV and V0
+  Float_t DCA_wrtPV;      // distance of closest approach to Primary Vertex
+  Bool_t isPrimary;       // kTRUE if it's a primary V0, kFALSE if not
 };
 
 struct Event_tt {
@@ -98,6 +100,8 @@ struct Event_tt {
   std::vector<Float_t> V0_ArmAlpha;       // Armenteros-Podolanski variable alpha
   std::vector<Float_t> V0_ArmPt;          // Armenteros-Podolanski variable Pt
   std::vector<Float_t> V0_DecayLength;    // distance between PV and V0
+  std::vector<Float_t> V0_DCA_wrtPV;      // distance of closest approach to Primary Vertex
+  std::vector<Bool_t> V0_isPrimary;       // kTRUE if it's a primary V0, kFALSE if not
 };
 
 class AliPIDResponse;
@@ -137,7 +141,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                              const Double_t b);
   virtual void GetHelixCenter(const AliExternalTrackParam* track, Double_t center[2], const Double_t b);
 
-  // mathematical functions
+  // (mathematical functions)
   Double_t Calculate_CPA(Double_t Px, Double_t Py, Double_t Pz,  //
                          Double_t X, Double_t Y, Double_t Z,     //
                          Double_t refPointX, Double_t refPointY, Double_t refPointZ);
@@ -146,6 +150,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                               Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz);
   Double_t Calculate_ArmPt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,  //
                            Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz);
+  Double_t Calculate_LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,  //
+                                  Double_t V0_X, Double_t V0_Y, Double_t V0_Z,     //
+                                  Double_t PV_X, Double_t PV_Y, Double_t PV_Z);
 
   // (tree operations)
   virtual void SetBranches();
