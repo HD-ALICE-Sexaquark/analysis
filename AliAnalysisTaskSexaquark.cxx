@@ -1731,8 +1731,6 @@ void AliAnalysisTaskSexaquark::SetBranches() {
   //
   // Define fTree's branches, and load them into fEvent (which is an Event_tt object)
   //
-  /* Event properties */
-  fTree->Branch("Idx_Event", &fEvent.Idx_Event);
   /* MC particles */
   fTree->Branch("N_MCGen", &fEvent.N_MCGen);
   fTree->Branch("MC_Px", &fEvent.MC_Px);
@@ -1794,7 +1792,7 @@ void AliAnalysisTaskSexaquark::SetBranches() {
 //_____________________________________________________________________________
 void AliAnalysisTaskSexaquark::MCGen_PushBack(AliMCParticle* mcPart, Int_t generation, Bool_t isSignal) {
   //
-  // Add one MC generated particle into Event_tt
+  // Add one MC generated particle into the Event_tt object
   //
   // (1) prepare
   // (a) solve indexing to mother particle
@@ -1842,7 +1840,7 @@ void AliAnalysisTaskSexaquark::MCGen_PushBack(AliMCParticle* mcPart, Int_t gener
 //_____________________________________________________________________________
 void AliAnalysisTaskSexaquark::MCGen_InsertAntiSexaquark(TVector3 antilambda, TVector3 neutral_kaon) {
   //
-  // Insert at first position an artificial MC generated anti-sexaquark into Event_tt
+  // Insert at first position an artificial MC generated anti-sexaquark into the Event_tt object
   //
   // (1) prepare
   // solve daughters indexing, add 1 because of the inserted sexaquark
@@ -1868,7 +1866,7 @@ void AliAnalysisTaskSexaquark::MCGen_InsertAntiSexaquark(TVector3 antilambda, TV
 //_____________________________________________________________________________
 void AliAnalysisTaskSexaquark::MCRec_PushBack(AliESDtrack* track, Bool_t isDuplicate) {
   //
-  // Add one more MC reconstructed track into Event_tt
+  // Add one more MC reconstructed track into the Event_tt object
   //
   // (1) prepare
   // check if rec. track is signal or not
@@ -1899,7 +1897,7 @@ void AliAnalysisTaskSexaquark::MCRec_PushBack(AliESDtrack* track, Bool_t isDupli
 //_____________________________________________________________________________
 void AliAnalysisTaskSexaquark::V0_PushBack(V0_tt common_format) {
   //
-  // Add one more V0 into Event_tt
+  // Add one more V0 into the Event_tt object
   //
   // (1) prepare
   // let's check if V0 is signal or not
@@ -1953,7 +1951,7 @@ void AliAnalysisTaskSexaquark::V0_PushBack(V0_tt common_format) {
 //_____________________________________________________________________________
 void AliAnalysisTaskSexaquark::ClearEvent() {
   //
-  // Clear all indices and vectors loaded in the Event_tt struct
+  // Clear all indices and vectors loaded in the Event_tt object
   //
   /* MC particles */
   fEvent.N_MCGen = 0;

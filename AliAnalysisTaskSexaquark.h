@@ -42,8 +42,6 @@ struct Event_tt {
   // This is the structure of the output TTree
   //
 
-  /* Event properties */
-  Int_t Idx_Event;                        // index (debug purposes)
   /* MC particles */                      //
   Int_t N_MCGen;                          // number of MC particles
   std::vector<Float_t> MC_Px;             // x-component of true momentum
