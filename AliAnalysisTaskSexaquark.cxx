@@ -1026,6 +1026,10 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
   AliESDtrack* ntrk;
   AliESDtrack* ptrk;
 
+  // (debug)
+  AliMCParticle* mc_neg;
+  AliMCParticle* mc_pos;
+
   V0_tt common_format;
 
   Int_t nentr = fESD->GetNumberOfTracks();
@@ -1043,6 +1047,8 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
   Double_t pos_energy;
   Double_t neg_energy_asK0;
   Double_t neg_energy_asAL;
+  Double_t mass_asK0;
+  Double_t mass_asAL;
 
   Double_t radius;
 
@@ -1050,13 +1056,19 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
   Double_t dca_to_pv;
 
   // define cuts
-  Double_t COV0F_DNmin = 0.05;   // min imp parameter for the negative daughter (depends on PV!)
-  Double_t COV0F_DPmin = 0.05;   // min imp parameter for the positive daughter (depends on PV!)
-  Double_t COV0F_Chi2max = 33.;  // max chi2
-  Double_t COV0F_DCAmax = 1.5;   // max DCA between the daughter tracks
-  Double_t COV0F_CPAmin = 0.9;   // min cosine of V0's pointing angle (depends on PV!)
-  Double_t COV0F_Rmin = 0.2;     // min radius of the fiducial volume
-  Double_t COV0F_Rmax = 200.;    // max radius of the fiducial volume
+  Double_t COV0F_DNmin = 0.1;            // (d=0.1) min imp parameter for the negative daughter (depends on PV!)
+  Double_t COV0F_DPmin = 0.1;            // (d=0.1) min imp parameter for the positive daughter (depends on PV!)
+  Double_t COV0F_Chi2max = 33.;          // (d=33.) max chi2
+  Double_t COV0F_DCAmax = 1.5;           // (d=1.) max DCA between the daughter tracks
+  Double_t COV0F_CPAmax = 0.98;          // (d=0.998, and it's a minimum instead) max cosine of V0's pointing angle (depends on PV!)
+  Double_t COV0F_Rmin = 50.;             // (d=0.9) min radius of the V0 radius
+  Double_t COV0F_Rmax = 200.;            // (d=100) max radius of the V0 radius
+  Double_t COV0F_Etamax_V0 = 1.0;        // (d=1.) max eta of V0
+  Double_t COV0F_DCAmin_V0_wrtPV = 5.;   // min DCA between V0 and PV
+  Double_t COV0F_Etamax_NegDau = 1.5;    // max eta of negative daughter
+  Double_t COV0F_Etamax_PosDau = 1.5;    // max eta of positive daughter
+  Int_t COV0F_NClustersTPCmin_Dau = 50;  // minimun number of clusters in the TPC
+  Double_t COV0F_Ptmin = 1.0;            // min Pt of V0
 
   // get primary vertex of this event
   Double_t PV[3];
@@ -1073,18 +1085,56 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
     return;
   }
 
-  // AliV0HypSel::AccountBField(b); // borquez comment: IDK what is this...
+  // (addition)
+  Bool_t UseImprovedFinding = kTRUE;
 
-  Int_t nneg = 0, npos = 0, nvtx = 0;
+  // (addition)
+  // [based on AliV0HypSel::AccountBField(b) and AliV0HypSel::SetBFieldCoef(v)]
+  // account effect of B-field on pT resolution, ignoring the fact that the V0 mass resolution
+  // is only partially determined by the prongs pT resolution
+  const Float_t kNomField = 5.00668e+00;
+  Float_t babs = TMath::Abs(b);
+  Float_t BFieldCoef;
+  if (babs > 1e-3) {
+    BFieldCoef = kNomField / babs > 0. ? kNomField / babs : 1.0;
+  }
+
+  // (addition)
+  const Int_t nHypSel = 6;
+  TString v0_hyp_name[nHypSel] = {"gamma", "K0", "Lambda", "antiLambda", "HyperTriton", "antiHyperTriton"};
+  Float_t v0_hyp_m0[nHypSel] = {0.5486e-3, 139.570e-3, 938.272e-3, 139.570e-3, 2.8092, 139.570e-3};
+  Float_t v0_hyp_m1[nHypSel] = {0.5486e-3, 139.570e-3, 139.570e-3, 938.272e-3, 139.570e-3, 2.8092};
+  Float_t v0_hyp_mass[nHypSel] = {1.099e-3, 497.7e-3, 1115.683e-3, 1115.683e-3, 2.992, 2.992};
+  Float_t v0_hyp_sigma[nHypSel] = {0.001, 0.003, 0.001, 0.001, 0.0025, 0.0025};
+  Float_t v0_hyp_cf0[nHypSel] = {20, 20, 20, 20, 14, 14};
+  Float_t v0_hyp_cf1[nHypSel] = {0.6, 0.07, 0.07, 0.07, 0.07, 0.07};
+  Float_t v0_hyp_nsig[nHypSel] = {0.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+  Float_t v0_hyp_margin[nHypSel] = {0.0, 0.5, 0.5, 0.5, 0.5, 0.5};
+
+  // number of charged tracks found
+  Int_t nneg = 0;
+  Int_t npos = 0;
 
   // first loop: find neg and pos tracks
   for (Int_t i = 0; i < nentr; i++) {
 
     esdTrack = fESD->GetTrack(i);
 
-    // cut on status
+    // (cut) if particle is not in the indexer
+    // => the particle was gen. non-relevant & rec. non-relevant
+    if (fIndexer_fTrack_to_fEvent.count(i) == 0) {
+      // std::map.count() returns the number of elements matching a specific key
+      continue;
+    }
+
+    // (cut) on status
     ULong64_t status = esdTrack->GetStatus();
     if ((status & AliESDtrack::kTPCrefit) == 0) {
+      continue;
+    }
+
+    // (cut) min. number of TPC clusters
+    if ((Int_t)esdTrack->GetTPCncls() < COV0F_NClustersTPCmin_Dau) {
       continue;
     }
 
@@ -1111,34 +1161,54 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
     }
   }  // end of first loop
 
-  // int nHypSel = fV0HypSelArray ? fV0HypSelArray->GetEntriesFast() : 0; // borquez comment: IDK what is this...
-
   // (debug)
-  AliInfo("Index  V0_Px  V0_Py  V0_Pz   V0_X   V0_Y   V0_Z P_Idx   P_Px   P_Py   P_Pz N_Idx   N_Px   N_Py   N_Pz");
+  /*
+  AliInfo(" Index  N_Idx  P_Idx  N_PID  P_PID   V0_X   V0_Y   V0_Z        CPA");
+  */
 
   // second loop: test all neg-pos pairs
   for (Int_t i = 0; i < nneg; i++) {
+
     Int_t nidx = neg[i];
     ntrk = fESD->GetTrack(nidx);
 
     for (Int_t k = 0; k < npos; k++) {
+
       Int_t pidx = pos[k];
       ptrk = fESD->GetTrack(pidx);
+
+      // (debug) load MC particles
+      /*
+      mc_neg = (AliMCParticle*)fMC->GetTrack(TMath::Abs(ntrk->GetLabel()));
+      mc_pos = (AliMCParticle*)fMC->GetTrack(TMath::Abs(ptrk->GetLabel()));
+      */
+
+      // (cut) -1. < eta(pi+) < 1.
+      if (TMath::Abs(ptrk->Eta()) > COV0F_Etamax_PosDau) {
+        continue;
+      }
+
+      // (cut) -1.5 < eta(pi-,anti-p) < 1.5
+      if (TMath::Abs(ntrk->Eta()) > COV0F_Etamax_NegDau) {
+        continue;
+      }
 
       AliExternalTrackParam nt(*ntrk), pt(*ptrk), *ntp = &nt, *ptp = &pt;
 
       Double_t xn, xp;
-      // if (fUseImprovedFinding && Preoptimize(ntp, ptp, &xn, &xp, b)) {
-      if (Preoptimize(ntp, ptp, &xn, &xp, b)) {
+      if (UseImprovedFinding && Preoptimize(ntp, ptp, &xn, &xp, b)) {
         // Move tracks to a better position if that helps
         nt.PropagateTo(xn, b);
         pt.PropagateTo(xp, b);
       }
 
+      // (cut) DCA between daughters
       Double_t dca = ntp->GetDCA(ptp, b, xn, xp);
       if (dca > COV0F_DCAmax) {
         continue;
       }
+
+      // idk what's this...
       if ((xn + xp) > 2 * COV0F_Rmax) {
         continue;
       }
@@ -1152,52 +1222,53 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       // important object!
       AliESDv0 vertex(nt, nidx, pt, pidx);
 
-      // if (fUseImprovedFinding) {
+      if (UseImprovedFinding) {
       vertex.Refit();  // imp pos + cov mat
-      // }
+      }
 
+      // (cut) chi2 ~ quality of fit
       if (vertex.GetChi2V0() > COV0F_Chi2max) {
         continue;
       }
 
+      vertex.SetDcaV0Daughters(dca);
+
+      // (cut) CPA
+      Float_t cpa = vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]);
+      vertex.SetV0CosineOfPointingAngle(cpa);
+      if (cpa > COV0F_CPAmax) {
+        continue;
+      }
+
+      // (cut) radius(V0)
       Double_t x = vertex.Xv();
       Double_t y = vertex.Yv();
-      Double_t r2 = x * x + y * y;
-      if (r2 < COV0F_Rmin * COV0F_Rmin) {
+      Double_t v0_radius = TMath::Sqrt(x * x + y * y);
+      if (v0_radius < COV0F_Rmin) {
         continue;
       }
-      if (r2 > COV0F_Rmax * COV0F_Rmax) {
+      if (v0_radius > COV0F_Rmax) {
         continue;
       }
 
-      /*
-      // borquez comment: we need to exclude PV-dependent cuts
-      Float_t cpa = vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]);
-      const Double_t pThr = 1.5;
-      Double_t pv0 = vertex.P();
+      // load coordinates and momentum of each component of the V0
+      vertex.GetXYZ(V0_X, V0_Y, V0_Z);
 
-      if (pv0 < pThr) {
-        // Below the threshold "pThr", try a momentum dependent cos(PA) cut
-        const Double_t bend = 0.03;  // approximate Xi bending angle
-        const Double_t qt = 0.211;   // max Lambda pT in Omega decay
-        const Double_t cpaThr = TMath::Cos(TMath::ATan(qt / pThr) + bend);
-        Double_t cpaCut = (COV0F_CPAmin / cpaThr) * TMath::Cos(TMath::ATan(qt / pv0) + bend);
-        if (cpa < cpaCut) {
+      // (cut) dca(V0,PV)
+      dca_to_pv = Calculate_LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
+      if (dca_to_pv < COV0F_DCAmin_V0_wrtPV) {
           continue;
         }
-      } else if (cpa < COV0F_CPAmin) {
-        continue;
-      }
-      */
 
-      /*
+      // (addition)
       if (nHypSel) {  // do we select particular hypotheses?
         Bool_t reject = kTRUE;
-        float pt = vertex.Pt();
-        for (int ih = 0; ih < nHypSel; ih++) {
-          const AliV0HypSel* hyp = (const AliV0HypSel*)(*fV0HypSelArray)[ih];
-          double m = vertex.GetEffMassExplicit(hyp->GetM0(), hyp->GetM1());
-          if (TMath::Abs(m - hyp->GetMass()) < hyp->GetMassMargin(pt)) {
+        Float_t v0_pt = vertex.Pt();
+        for (int hh = 0; hh < nHypSel; hh++) {
+          Double_t v0_eff_mass = vertex.GetEffMassExplicit(v0_hyp_m0[hh], v0_hyp_m1[hh]);
+          Float_t v0_mass_margin = v0_hyp_nsig[hh] * BFieldCoef * v0_hyp_sigma[hh] * (v0_hyp_cf0[hh] + v0_pt * v0_hyp_cf1[hh])  //
+                                   + v0_hyp_margin[hh];
+          if (TMath::Abs(v0_eff_mass - v0_hyp_mass[hh]) < v0_mass_margin) {
             reject = kFALSE;
             break;
           }
@@ -1206,40 +1277,51 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
           continue;
         }
       }
-      */
 
-      vertex.SetDcaV0Daughters(dca);
+      // (addition) (cut) remove v0s "not contributing to physics"
+      if (TMath::Abs(vertex.Eta()) > COV0F_Etamax) {
+        continue;
+      }
 
-      // vertex.SetV0CosineOfPointingAngle(cpa); // borquez comment: no longer needed
-      // vertex.ChangeMassHypothesis(kK0Short); // borquez comment: this was here...
+      // vertex.ChangeMassHypothesis(kK0Short);   // borquez: this was here...
 
       // store V0
-      // event->AddV0(&vertex); // borquez comment: we don't need to store in the ESD, since we store it in the tree
-
-      // (cut)
-      // if any component (neg. or pos.) is not in the indexer
-      // => the particle was gen. non-relevant & rec. non-relevant
-      if (fIndexer_fTrack_to_fEvent.count(vertex.GetPindex()) == 0 || fIndexer_fTrack_to_fEvent.count(vertex.GetNindex()) == 0) {
-        // count in std::map, returns the number of elements matching specific key
-        continue;
-      }
-
-      // load coordinates and momentum of each component of the V0
-      vertex.GetXYZ(V0_X, V0_Y, V0_Z);
-
-      // (cut) on radius
-      radius = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2));
-      if (radius < 5. || radius > 180.) {
-        continue;
-      }
+      // (removed) we don't need to store in the ESD, since we store it in the tree
+      // event->AddV0(&vertex);
 
       // get momentum of negative and positive components at V0 vertex
       vertex.GetNPxPyPz(N_Px, N_Py, N_Pz);
       vertex.GetPPxPyPz(P_Px, P_Py, P_Pz);
 
       // (debug)
-      AliInfoF("%5i %6.2f %6.2f %6.2f %6.2f %6.2f %6.2f %5i %6.2f %6.2f %6.2f %5i %6.2f %6.2f %6.2f", nvtx, vertex.Px(), vertex.Py(),
-               vertex.Pz(), V0_X, V0_Y, V0_Z, vertex.GetPindex(), P_Px, P_Py, P_Pz, vertex.GetNindex(), N_Px, N_Py, N_Pz);
+      /*
+      TString level = "-> L4";
+      if (cpa > 0.998) {
+        level = "-> L1";
+      } else if (cpa > 0.99) {
+        level = "-> L2";
+      } else if (cpa > 0.9) {
+        level = "-> L3";
+      }
+      */
+
+      // (debug)
+      /*
+      AliInfoF("%6i %6i %6i %6i %6i %6.2f %6.2f %6.2f %10.6f %s",  //
+               nvtx,                                               //
+               vertex.GetNindex(),                                 //
+               vertex.GetPindex(),                                 //
+               mc_neg->PdgCode(),                                  //
+               mc_pos->PdgCode(),                                  //
+               V0_X, V0_Y, V0_Z,                                   //
+               cpa,                                                //
+               level.Data());
+      */
+
+      // (cut) on Pt
+      if (TMath::Sqrt(vertex.Px() * vertex.Px() + vertex.Py() * vertex.Py()) < COV0F_Ptmin) {
+        continue;
+      }
 
       // get NSigmas for PID
       nsigma_pos_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(ptrk, AliPID::kPion));
@@ -1254,9 +1336,22 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
       neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + kMassProton * kMassProton);
 
+      // calc. mass
+      mass_asK0 = TMath::Sqrt((pos_energy + neg_energy_asK0) * (pos_energy + neg_energy_asK0) -  //
+                              vertex.Px() * vertex.Px() - vertex.Py() * vertex.Py() - vertex.Pz() * vertex.Pz());
+      mass_asAL = TMath::Sqrt((pos_energy + neg_energy_asAL) * (pos_energy + neg_energy_asAL) -  //
+                              vertex.Px() * vertex.Px() - vertex.Py() * vertex.Py() - vertex.Pz() * vertex.Pz());
+
+      // (cut) on mass
+      if (nsigma_pos_pion < N_SIGMA && nsigma_neg_pion < N_SIGMA && (mass_asK0 < 0.485 || mass_asK0 > 0.515)) {
+        continue;
+      }
+      if (nsigma_pos_pion < N_SIGMA && nsigma_antiproton < N_SIGMA && (mass_asAL < 1.1 || mass_asAL > 1.13)) {
+        continue;
+      }
+
       // geometry
       decay_length = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
-      dca_to_pv = Calculate_LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
 
       // (tree operations)
       // fill common format and push_back
@@ -1290,9 +1385,6 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       common_format.isPrimary = dca_to_pv < 2.;  // Fabio's condition
 
       V0_PushBack(common_format);
-
-      // increment counter of V0s
-      nvtx++;
     }  // end of loop over pos. tracks
   }    // end of loop over neg. tracks
 }
