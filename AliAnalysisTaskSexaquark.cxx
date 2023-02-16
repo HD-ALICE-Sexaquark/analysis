@@ -869,8 +869,12 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
   // define variables & objects
   AliESDv0* V0;
 
-  AliESDtrack* pos_track;
   AliESDtrack* neg_track;
+  AliESDtrack* pos_track;
+
+  // (debug)
+  AliMCParticle* mc_neg;
+  AliMCParticle* mc_pos;
 
   V0_tt common_format;
 
@@ -886,8 +890,6 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
   Double_t neg_energy_asK0;
   Double_t neg_energy_asAL;
 
-  Double_t radius;
-
   Double_t decay_length;
   Double_t dca_to_pv;
 
@@ -899,7 +901,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
   // (debug)
   AliInfo("V0s FROM ESD");
   AliInfoF("-- original number of V0s in this event = %i --", fESD->GetNumberOfV0s());
-  AliInfo("Index  V0_Px  V0_Py  V0_Pz   V0_X   V0_Y   V0_Z P_Idx   P_Px   P_Py   P_Pz N_Idx   N_Px   N_Py   N_Pz");
+  AliInfo(" Index  N_Idx  P_Idx  N_PID  P_PID   V0_X   V0_Y   V0_Z        CPA");
 
   // loop over V0s
   for (Int_t i = 0; i < fESD->GetNumberOfV0s(); i++) {
@@ -916,15 +918,19 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
     // get coordinates of V0
     V0->GetXYZ(V0_X, V0_Y, V0_Z);
 
-    // (cut) on radius
-    radius = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2));
-    if (radius < 5. || radius > 180.) {
-      continue;
-    }
-
     // load rec. tracks
-    pos_track = static_cast<AliESDtrack*>(fESD->GetTrack(V0->GetPindex()));
     neg_track = static_cast<AliESDtrack*>(fESD->GetTrack(V0->GetNindex()));
+    pos_track = static_cast<AliESDtrack*>(fESD->GetTrack(V0->GetPindex()));
+
+    // load red. tracks param
+    /*
+    AliExternalTrackParam pos_track_param(*pos_track);
+    AliExternalTrackParam neg_track_param(*neg_track);
+    */
+
+    // (debug) load MC particles
+    mc_neg = (AliMCParticle*)fMC->GetTrack(TMath::Abs(neg_track->GetLabel()));
+    mc_pos = (AliMCParticle*)fMC->GetTrack(TMath::Abs(pos_track->GetLabel()));
 
     // get NSigmas for PID
     nsigma_pos_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(pos_track, AliPID::kPion));
@@ -943,9 +949,31 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
     // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
     neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + kMassProton * kMassProton);
 
+    // (debug) remove on-the-fly V0s
+    if (V0->GetOnFlyStatus()) {
+      continue;
+    }
+
     // (debug)
-    AliInfoF("%5i %6.2f %6.2f %6.2f %6.2f %6.2f %6.2f %5i %6.2f %6.2f %6.2f %5i %6.2f %6.2f %6.2f", i, V0->Px(), V0->Py(), V0->Pz(), V0_X,
-             V0_Y, V0_Z, V0->GetPindex(), P_Px, P_Py, P_Pz, V0->GetNindex(), N_Px, N_Py, N_Pz);
+    TString level = "-> L4";
+    if (V0->GetV0CosineOfPointingAngle() > 0.998) {
+      level = "-> L1";
+    } else if (V0->GetV0CosineOfPointingAngle() > 0.99) {
+      level = "-> L2";
+    } else if (V0->GetV0CosineOfPointingAngle() > 0.9) {
+      level = "-> L3";
+    }
+
+    // (debug)
+    AliInfoF("%6i %6i %6i %6i %6i %6.2f %6.2f %6.2f %10.6f %s",  //
+             i,                                                  //
+             V0->GetNindex(),                                    //
+             V0->GetPindex(),                                    //
+             mc_neg->PdgCode(),                                  //
+             mc_pos->PdgCode(),                                  //
+             V0_X, V0_Y, V0_Z,                                   //
+             V0->GetV0CosineOfPointingAngle(),                   //
+             level.Data());
 
     // geometry
     decay_length = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
