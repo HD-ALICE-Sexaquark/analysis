@@ -420,7 +420,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     MCGen_FirstProcess();
   } else {
     AliFatal("ERROR: AliMCEvent couldn't be found.");
-    return;
   }
 
   // load reconstructed event
@@ -431,7 +430,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     MCRec_FirstProcess();
   } else {
     AliFatal("ERROR: AliESDEvent couldn't be found.");
-    return;
   }
 
   // (3) add non-relevant MC particles, that were rec. as relevant
@@ -691,9 +689,6 @@ void AliAnalysisTaskSexaquark::MCGen_VerifySourceAndGeneration(AliMCParticle* mc
   //
 
   // (1) define conditions
-  // Bool_t isStable = TMath::Abs(mcPart->PdgCode()) == 211 || mcPart->PdgCode() == -321 || mcPart->PdgCode() == -2212;  // (unnecessary?)
-  // Bool_t isUnstable = mcPart->PdgCode() == 310 || mcPart->PdgCode() == -3122 || mcPart->PdgCode() == -3312;  // (unnecessary?)
-
   Bool_t isSignal = mcPart->MCStatusCode() == 6;
   Bool_t isPrimary = mcPart->GetMother() == -1;
 
@@ -707,8 +702,6 @@ void AliAnalysisTaskSexaquark::MCGen_VerifySourceAndGeneration(AliMCParticle* mc
   // (2) if it's not primary, it must have a mother
   AliMCParticle* mcMother = (AliMCParticle*)fMC->GetTrack(mcPart->GetMother());
 
-  // Bool_t isMotherRelevant = mcMother->PdgCode() == 310 || mcMother->PdgCode() == -3122 || mcMother->PdgCode() == -3312;  //
-  // (unnecessary?)
   Bool_t isMotherSignal = mcMother->MCStatusCode() == 6;
   Bool_t isMotherPrimary = mcMother->GetMother() == -1;
 
@@ -1421,7 +1414,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
         common_format.DCA_wrtPV = Calculate_LinePointDCA(mc_mother->Px(), mc_mother->Py(), mc_mother->Pz(),  //
                                                          mc_pos->Xv(), mc_pos->Yv(), mc_pos->Zv(),           //
                                                          PV[0], PV[1], PV[2]);
-        common_format.isPrimary = mc_mother->GetMother() == -1;
+        common_format.isPrimary = mc_mother->GetMother() == -1 && mc_mother->MCStatusCode() != 6;
 
         V0_PushBack(common_format);
       }  // end of loop over negative tracks
@@ -1804,8 +1797,8 @@ void AliAnalysisTaskSexaquark::SetBranches() {
   fTree->Branch("Rec_Pz", &fEvent.Rec_Pz);
   fTree->Branch("Rec_Charge", &fEvent.Rec_Charge);
   fTree->Branch("Rec_NSigmaPion", &fEvent.Rec_NSigmaPion);
-  fTree->Branch("Rec_NSigmaKaon", &fEvent.Rec_NSigmaKaon);
   fTree->Branch("Rec_NSigmaProton", &fEvent.Rec_NSigmaProton);
+  fTree->Branch("Rec_NClustersTPC", &fEvent.Rec_NClustersTPC);
   fTree->Branch("Rec_isDuplicate", &fEvent.Rec_isDuplicate);
   fTree->Branch("Rec_isSignal", &fEvent.Rec_isSignal);
   /* V0s */
@@ -1922,10 +1915,9 @@ void AliAnalysisTaskSexaquark::MCRec_PushBack(AliESDtrack* track, Bool_t isDupli
   //
   // (1) prepare
   // check if rec. track is signal or not
-  Float_t track_PID[3];
-  track_PID[0] = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion));
-  track_PID[1] = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon));
-  track_PID[2] = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton));
+  Float_t track_PID[2];
+  track_PID[0] = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
+  track_PID[1] = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
   // get linked MC particle
   Int_t link_label = TMath::Abs(track->GetLabel());
   AliMCParticle* link = (AliMCParticle*)fMC->GetTrack(link_label);
@@ -1939,8 +1931,8 @@ void AliAnalysisTaskSexaquark::MCRec_PushBack(AliESDtrack* track, Bool_t isDupli
   fEvent.Rec_Pz.push_back(track->Pz());
   fEvent.Rec_Charge.push_back(track->Charge());
   fEvent.Rec_NSigmaPion.push_back(track_PID[0]);
-  fEvent.Rec_NSigmaKaon.push_back(track_PID[1]);
-  fEvent.Rec_NSigmaProton.push_back(track_PID[2]);
+  fEvent.Rec_NSigmaProton.push_back(track_PID[1]);
+  fEvent.Rec_NClustersTPC.push_back(track->GetTPCncls());
   fEvent.Rec_isDuplicate.push_back(isDuplicate);
   fEvent.Rec_isSignal.push_back(isSignal);
   fEvent.N_MCRec++;
@@ -2030,8 +2022,8 @@ void AliAnalysisTaskSexaquark::ClearEvent() {
   fEvent.Rec_Pz.clear();
   fEvent.Rec_Charge.clear();
   fEvent.Rec_NSigmaPion.clear();
-  fEvent.Rec_NSigmaKaon.clear();
   fEvent.Rec_NSigmaProton.clear();
+  fEvent.Rec_NClustersTPC.clear();
   fEvent.Rec_isDuplicate.clear();
   fEvent.Rec_isSignal.clear();
   /* V0s */

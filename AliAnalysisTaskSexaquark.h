@@ -67,8 +67,8 @@ struct Event_tt {
   std::vector<Float_t> Rec_Pz;            // z-component of reconstructed momentum
   std::vector<Short_t> Rec_Charge;        // measured charge
   std::vector<Float_t> Rec_NSigmaPion;    // absolute value of likeness to be a charged pion (closer to 0, the most likely)
-  std::vector<Float_t> Rec_NSigmaKaon;    // absolute value of likeness to be a charged kaon
-  std::vector<Float_t> Rec_NSigmaProton;  // absolute value of likeness to be a proton or anti-proton
+  std::vector<Float_t> Rec_NSigmaProton;  // absolute value of likeness to be a proton (closer to 0, the most likely)
+  std::vector<Short_t> Rec_NClustersTPC;  // number of clusters assigned in the TPC
   std::vector<Bool_t> Rec_isDuplicate;    // kTRUE if track is a duplicate, kFALSE if not
   std::vector<Bool_t> Rec_isSignal;       // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
   /* V0s */                               //
