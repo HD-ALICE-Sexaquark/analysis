@@ -8,7 +8,8 @@
 #########################################
 
 # 80 run numbers
-RN_ARRAY_2015=(246994 246991 246989 246984 246982 246980 246948 246945 246928 246851
+RN_ARRAY_2015=(
+               246994 246991 246989 246984 246982 246980 246948 246945 246928 246851
                246847 246846 246845 246844 246810 246809 246808 246807 246805 246804
                246766 246765 246763 246760 246759 246758 246757 246751 246750 246495
                246493 246488 246487 246434 246431 246428 246424 246276 246275 246272
@@ -19,7 +20,8 @@ RN_ARRAY_2015=(246994 246991 246989 246984 246982 246980 246948 246945 246928 24
                )
 
 # 91 run numbers
-RN_ARRAY_2018=(297595 297590 297588 297558 297544 297542 297541 297540 297537 297512
+RN_ARRAY_2018=(
+               297595 297590 297588 297558 297544 297542 297541 297540 297537 297512
                297483 297479 297452 297451 297450 297446 297442 297441 297415 297414
                297413 297406 297405 297380 297379 297372 297367 297366 297363 297336
                297335 297333 297332 297317 297315 297312 297311 297310 297278 297222
@@ -34,8 +36,6 @@ RN_ARRAY_2018=(297595 297590 297588 297558 297544 297542 297541 297540 297537 29
 V0_OPT="true" # "true" "custom" "official"
 V0_STR="TrueV0s" # "TrueV0s" "CustomV0s" "OfficialV0s"
 
-NICE_OPT=0
-
 for CURRENT_RN in ${RN_ARRAY_2018[@]}; do
     # create tmux session
     THIS_SESSION="${CURRENT_RN}_${V0_OPT}"
@@ -45,15 +45,11 @@ for CURRENT_RN in ${RN_ARRAY_2018[@]}; do
     tmux send -t ${THIS_SESSION} "own-alice" ENTER
     tmux send -t ${THIS_SESSION} "source set_env.sh" ENTER
 
-    # stage 1: run AliAnalysisTask
-    # tmux send -t ${THIS_SESSION} 'nice -n '${NICE_OPT}' ./analyze.sh --sim signal+bkg --v0s '${V0_OPT}' --rn '${CURRENT_RN}'' ENTER
+    # stage 1: run AliAnalysisTask, will loop over all dir numbers
+    tmux send -t ${THIS_SESSION} './analyze.sh --sim signal+bkg --v0s '${V0_OPT}' --rn '${CURRENT_RN}'' ENTER
 
     # stage 2: run SexaquarkFinder
-    ANALYSIS_DIR="output/signal+bkg/${CURRENT_RN}"
-    for analysis_file in $(readlink -f ${ANALYSIS_DIR}/AnalysisResults_${V0_STR}*.root); do
-        sexaquark_file="${analysis_file/AnalysisResults/SexaquarkResults}"
-        tmux send -t ${THIS_SESSION} 'nice -n '${NICE_OPT}' root -l -b -q '\''SexaquarkFinder.cxx("'${analysis_file}'", "'${sexaquark_file}'")'\''' ENTER
-    done
+    tmux send -t ${THIS_SESSION} './find.sh --sim signal+bkg --v0s '${V0_OPT}' --rn '${CURRENT_RN}'' ENTER
 
     # finish
     tmux send -t ${THIS_SESSION} "exit" ENTER
