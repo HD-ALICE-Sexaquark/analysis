@@ -2,14 +2,9 @@
 
 void runAnalysis(Bool_t IsMC, Bool_t HasSexaquark, TString SourceOfV0s, TString ReactionChannel) {
 
-  // since we will compile a class, tell root where to look for headers
-#if !defined(__CINT__) || defined(__CLING__)
-  gInterpreter->ProcessLine(".include $ROOTSYS/include");
-  gInterpreter->ProcessLine(".include $ALICE_ROOT/include");
-#else
-  gROOT->ProcessLine(".include $ROOTSYS/include");
-  gROOT->ProcessLine(".include $ALICE_ROOT/include");
-#endif
+  // tell root where to look for headers
+  gInterpreter->ProcessLine(".include ${ROOTSYS}/include");
+  gInterpreter->ProcessLine(".include ${ALICE_ROOT}/include");
 
   // create the analysis manager
   AliAnalysisManager *mgr = new AliAnalysisManager("AnalysisTaskExample");
@@ -20,28 +15,16 @@ void runAnalysis(Bool_t IsMC, Bool_t HasSexaquark, TString SourceOfV0s, TString 
   AliMCEventHandler *mcHand = new AliMCEventHandler();
   mgr->SetMCtruthEventHandler(mcHand);
 
-  // compile the class and load the add task macro
-  // here we have to differentiate between using the just-in-time compiler
-  // from root6, or the interpreter of root5
-#if !defined(__CINT__) || defined(__CLING__)
   // load PID task
-  TMacro PIDadd(gSystem->ExpandPathName("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C"));
-  AliAnalysisTaskPIDResponse *PIDresponseTask = reinterpret_cast<AliAnalysisTaskPIDResponse *>(PIDadd.Exec());
+  TString pid_response_path = gSystem->ExpandPathName("${ALICE_ROOT}/ANALYSIS/macros/AddTaskPIDResponse.C");
+  AliAnalysisTaskPIDResponse *PIDresponseTask = reinterpret_cast<AliAnalysisTaskPIDResponse *>(gInterpreter->ExecuteMacro(Form(
+      "%s(%i, 1, 1, \"3\")", pid_response_path.Data(), (Int_t)IsMC)));
+
   // load sexaquark task
   gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
   AliAnalysisTaskSexaquark *task = reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro(Form(
       "AddSexaquark.C(\"name\", %i, %i, \"%s\", \"%s\")", (Int_t)IsMC, (Int_t)HasSexaquark, SourceOfV0s.Data(), ReactionChannel.Data())));
-#else
-  // load PID task
-  gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C");
-  AddTaskPIDResponse(IsMC);
-  // load sexaquark task
-  gROOT->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
-  gROOT->LoadMacro("AddSexaquark.C");
-  AliAnalysisTaskSexaquark *task = AddSexaquark();
-#endif
 
-  // vital!
   if (!mgr->InitAnalysis()) {
     return;
   }
