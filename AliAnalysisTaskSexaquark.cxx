@@ -412,40 +412,34 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
   // once you return from UserExec(), the manager will retrieve the next event from the chain
   //
 
-  // get MC event
+  // load MC generated event
   fMC = MCEvent();
-
-  // (1) process MC tree
-  if (fMC) {
-    MCGen_FirstProcess();
-  } else {
-    AliFatal("ERROR: AliMCEvent couldn't be found.");
-  }
 
   // load reconstructed event
   fESD = dynamic_cast<AliESDEvent*>(InputEvent());
 
-  // (2) process reconstructed tracks
-  if (fESD) {
-    MCRec_FirstProcess();
-  } else {
+  if (!fMC) {
+    AliFatal("ERROR: AliMCEvent couldn't be found.");
+  }
+
+  if (!fESD) {
     AliFatal("ERROR: AliESDEvent couldn't be found.");
   }
 
+  // (1) process MC tree
+  MCGen_FirstProcess();
+
+  // (2) process reconstructed tracks
+  MCRec_FirstProcess();
+
   // (3) add non-relevant MC particles, that were rec. as relevant
-  if (fMC) {
-    MCGen_SecondProcess();
-  }
+  MCGen_SecondProcess();
 
   // (4) label duplicated tracks
-  if (fESD) {
-    MCRec_SecondProcess();
-  }
+  MCRec_SecondProcess();
 
   // (5) assign daughters indices
-  if (fMC) {
-    MCGen_ThirdProcess();
-  }
+  MCGen_ThirdProcess();
 
   // (6) V0 finder
   if (fSourceOfV0s == "official") {
@@ -515,7 +509,9 @@ void AliAnalysisTaskSexaquark::MCGen_FirstProcess() {
 
   // define variables & objects
   AliMCParticle* mcPart;
-  Bool_t isRelevant;
+  // AliMCParticle* mcMother; // (TEST)
+
+  Bool_t isGenPIDRelevant;
   Bool_t isSignal;
   Int_t generation;
 
@@ -524,24 +520,28 @@ void AliAnalysisTaskSexaquark::MCGen_FirstProcess() {
   TVector3 neutral_kaon;
 
   // (debug)
-  // AliInfo("MONTE CARLO TREE");
-  // AliInfo("");
-  // AliInfo(" Index    PID Mother Status  Label    Gen       Px       Py       Pz       Xv       Yv       Zv");
+  AliInfo("MONTE CARLO TREE");
+  AliInfo("");
+  AliInfo(" Index    PID Mother MomPID Status  Label    Gen       Px       Py       Pz       Xv       Yv       Zv");
 
-  // loop over MC gen. particles
+  // loop over MC gen. particles in a single event
   for (Int_t i = 0; i < fMC->GetNumberOfTracks(); i++) {
 
     mcPart = (AliMCParticle*)fMC->GetTrack(i);
 
-    isRelevant = TMath::Abs(mcPart->PdgCode()) == 211;      // is neg. / pos. pion
-    isRelevant = isRelevant || mcPart->PdgCode() == 321;    // is pos. kaon
-    isRelevant = isRelevant || mcPart->PdgCode() == 310;    // is neutral kaon short
-    isRelevant = isRelevant || mcPart->PdgCode() == -3122;  // is anti-lambda
-    isRelevant = isRelevant || mcPart->PdgCode() == -2212;  // is anti-proton
-    isRelevant = isRelevant || mcPart->PdgCode() == -3312;  // is Xi plus
+    // determine if gen. particle is relevant
+    isGenPIDRelevant = TMath::Abs(mcPart->PdgCode()) == 211 ||  // pos. and neg. pion
+                       mcPart->PdgCode() == 310 ||              // neutral kaon short
+                       mcPart->PdgCode() == -3122 ||            // anti-lambda
+                       mcPart->PdgCode() == -2212;              // anti-proton
+
+    //  mcPart->PdgCode() == 130 ||              // neutral kaon long
+    //  mcPart->PdgCode() == 311 ||              // neutral kaon (?)
+    //  mcPart->PdgCode() == 321 ||              // pos. kaon
+    //  mcPart->PdgCode() == -3312;              // Xi plus
 
     // IMPORTANT: mcPart->Label() != index... the real index is i!!
-    if (isRelevant) {
+    if (isGenPIDRelevant) {
 
       // verify source and generation of this particle
       isSignal = kFALSE;
@@ -558,10 +558,16 @@ void AliAnalysisTaskSexaquark::MCGen_FirstProcess() {
         }
       }
 
-      // (debug)
-      // AliInfoF("%6i %6i %6i %6i %6i %6i %8.4f %8.4f %8.4f %8.3f %8.3f %8.3f", i, mcPart->PdgCode(), mcPart->GetMother(),
-      //  mcPart->MCStatusCode(), isSignal, generation, mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcPart->Xv(), mcPart->Yv(),
-      //  mcPart->Zv());
+      // (TEST) (testing anti-sexaquark background)
+      /*
+      if ((mcPart->PdgCode() == -3122 || mcPart->PdgCode() == 310) && mcPart->GetMother() > 0) {
+        mcMother = (AliMCParticle*)fMC->GetTrack(mcPart->GetMother());
+        // (debug)
+        AliInfoF("%6i %6i %6i %6i %6i %6i %6i %8.4f %8.4f %8.4f %8.3f %8.3f %8.3f", i, mcPart->PdgCode(), mcPart->GetMother(),
+                 mcMother->PdgCode(), mcPart->MCStatusCode(), isSignal, generation, mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcPart->Xv(),
+                 mcPart->Yv(), mcPart->Zv());
+      }
+      */
 
       // (hist operations)
       // FillMCHistograms_Products(mcPart);
@@ -727,7 +733,8 @@ void AliAnalysisTaskSexaquark::MCRec_FirstProcess() {
 
   // define variables & objects
   AliESDtrack* track;
-  Float_t track_PID[3];
+  Float_t n_sigma_pion;
+  Float_t n_sigma_proton;
   Bool_t isRecPIDRelevant;
 
   Int_t link_label;
@@ -746,19 +753,20 @@ void AliAnalysisTaskSexaquark::MCRec_FirstProcess() {
     track = static_cast<AliESDtrack*>(fESD->GetTrack(i));
 
     // get reconstructed PID
-    track_PID[0] = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion));
-    track_PID[1] = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon));
-    track_PID[2] = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton));
-    isRecPIDRelevant = track_PID[0] < N_SIGMA || track_PID[1] < N_SIGMA || track_PID[2] < N_SIGMA;
+    n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
+    n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
+
+    // determine if track is relevant
+    isRecPIDRelevant = (TMath::Abs(n_sigma_pion) < N_SIGMA) ||                         // positive and negative pion
+                       (TMath::Abs(n_sigma_proton) < N_SIGMA && track->Charge() < 0);  // anti-proton
 
     // get linked MC particle
     link_label = TMath::Abs(track->GetLabel());
     link = (AliMCParticle*)fMC->GetTrack(link_label);
 
-    // get true PID
-    isGenPIDRelevant = TMath::Abs(link->PdgCode()) == 211;            // is neg. / pos. pion
-    isGenPIDRelevant = isGenPIDRelevant || link->PdgCode() == 321;    // is pos. kaon
-    isGenPIDRelevant = isGenPIDRelevant || link->PdgCode() == -2212;  // is anti-proton
+    // determine if true particle is relevant
+    isGenPIDRelevant = TMath::Abs(link->PdgCode()) == 211 ||  // positive and negative pion
+                       link->PdgCode() == -2212;              // anti-proton
 
     if (isRecPIDRelevant || isGenPIDRelevant) {
 
@@ -768,10 +776,11 @@ void AliAnalysisTaskSexaquark::MCRec_FirstProcess() {
 
       // (duplicated tracks)
       // add up the reconstructed indices that belong-to/come-from/are-matched-to a same MC index
+      // to be processed by "MCRec_SecondProcess()"
       fMap_DuplicatedTracks[link_label].push_back(i);
 
       // (non-relevant, but rec. as relevant)
-      // to be used by "MCGen_SecondProcess()"
+      // to be processed by "MCGen_SecondProcess()"
       if (!isGenPIDRelevant && isRecPIDRelevant) {
         fIndex_NonRelevantMC.insert(link_label);
       }
@@ -785,6 +794,7 @@ void AliAnalysisTaskSexaquark::MCRec_SecondProcess() {
   // (Second) Loop over the (duplicated tracks) map
   // If a MC particle has been reconstructed more than once
   // Tag the best particle as "non-duplicate", and the rest as "duplicates"
+  // Finally, push tracks into the tree
   //
 
   // define objects & variables
@@ -999,7 +1009,6 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
     common_format.E_asAL = pos_energy + neg_energy_asAL;
     common_format.couldBeK0 = nsigma_pos_pion < N_SIGMA && nsigma_neg_pion < N_SIGMA;
     common_format.couldBeAL = nsigma_pos_pion < N_SIGMA && nsigma_antiproton < N_SIGMA;
-    common_format.onFlyStatus = V0->GetOnFlyStatus();
     common_format.Chi2 = V0->GetChi2V0();
     common_format.DCA_Daughters = V0->GetDcaV0Daughters();
     common_format.IP_wrtPV = V0->GetD(PV[0], PV[1], PV[2]);
@@ -1008,7 +1017,6 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
     common_format.ArmPt = V0->PtArmV0();
     common_format.DecayLength = decay_length;
     common_format.DCA_wrtPV = dca_to_pv;
-    common_format.isPrimary = dca_to_pv < 2.;  // Fabio's condition
 
     V0_PushBack(common_format);
   }  // end of loop over V0s
@@ -1017,7 +1025,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
 //_____________________________________________________________________________
 void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
   //
-  // hola
+  // Custom Offline V0 Finder
   // [copied and modified from AliRoot/STEER/ESD/AliV0vertexer.cxx]
   //
 
@@ -1223,7 +1231,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       AliESDv0 vertex(nt, nidx, pt, pidx);
 
       if (UseImprovedFinding) {
-      vertex.Refit();  // imp pos + cov mat
+        vertex.Refit();  // imp pos + cov mat
       }
 
       // (cut) chi2 ~ quality of fit
@@ -1257,8 +1265,8 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       // (cut) dca(V0,PV)
       dca_to_pv = Calculate_LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
       if (dca_to_pv < COV0F_DCAmin_V0_wrtPV) {
-          continue;
-        }
+        continue;
+      }
 
       // (addition)
       if (nHypSel) {  // do we select particular hypotheses?
@@ -1279,7 +1287,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       }
 
       // (addition) (cut) remove v0s "not contributing to physics"
-      if (TMath::Abs(vertex.Eta()) > COV0F_Etamax) {
+      if (TMath::Abs(vertex.Eta()) > COV0F_Etamax_V0) {
         continue;
       }
 
@@ -1336,19 +1344,22 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
       neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + kMassProton * kMassProton);
 
-      // calc. mass
+      // (cut) on mass
+      /*
       mass_asK0 = TMath::Sqrt((pos_energy + neg_energy_asK0) * (pos_energy + neg_energy_asK0) -  //
                               vertex.Px() * vertex.Px() - vertex.Py() * vertex.Py() - vertex.Pz() * vertex.Pz());
       mass_asAL = TMath::Sqrt((pos_energy + neg_energy_asAL) * (pos_energy + neg_energy_asAL) -  //
                               vertex.Px() * vertex.Px() - vertex.Py() * vertex.Py() - vertex.Pz() * vertex.Pz());
-
-      // (cut) on mass
       if (nsigma_pos_pion < N_SIGMA && nsigma_neg_pion < N_SIGMA && (mass_asK0 < 0.485 || mass_asK0 > 0.515)) {
         continue;
       }
       if (nsigma_pos_pion < N_SIGMA && nsigma_antiproton < N_SIGMA && (mass_asAL < 1.1 || mass_asAL > 1.13)) {
         continue;
       }
+      */
+
+      // (cut) on PID
+      // PENDING!
 
       // geometry
       decay_length = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
@@ -1373,7 +1384,6 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       common_format.E_asAL = pos_energy + neg_energy_asAL;
       common_format.couldBeK0 = nsigma_pos_pion < N_SIGMA && nsigma_neg_pion < N_SIGMA;
       common_format.couldBeAL = nsigma_pos_pion < N_SIGMA && nsigma_antiproton < N_SIGMA;
-      common_format.onFlyStatus = kFALSE;  // custom V0 finder cannot be on-the-fly
       common_format.Chi2 = vertex.GetChi2V0();
       common_format.DCA_Daughters = vertex.GetDcaV0Daughters();
       common_format.IP_wrtPV = vertex.GetD(PV[0], PV[1], PV[2]);
@@ -1382,7 +1392,6 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
       common_format.ArmPt = vertex.PtArmV0();
       common_format.DecayLength = decay_length;
       common_format.DCA_wrtPV = dca_to_pv;
-      common_format.isPrimary = dca_to_pv < 2.;  // Fabio's condition
 
       V0_PushBack(common_format);
     }  // end of loop over pos. tracks
@@ -1517,10 +1526,9 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
         common_format.E_asAL = pos_energy + neg_energy_asAL;
         common_format.couldBeK0 = mc_mother->PdgCode() == 310;
         common_format.couldBeAL = mc_mother->PdgCode() == -3122;
-        common_format.onFlyStatus = kFALSE;  // true V0s don't come from any V0 finder
-        common_format.Chi2 = 1.0;            // no KF was used for this
-        common_format.DCA_Daughters = 0.;    // PENDING! too complicated to calculate using true information...
-        common_format.IP_wrtPV = 0.;         // PENDING! still not sure about the definition of this one...
+        common_format.Chi2 = 1.0;          // no KF was used for this
+        common_format.DCA_Daughters = 0.;  // PENDING! too complicated to calculate using true information...
+        common_format.IP_wrtPV = 0.;       // PENDING! still not sure about the definition of this one...
         common_format.CPA_wrtPV = Calculate_CPA(mc_mother->Px(), mc_mother->Py(), mc_mother->Pz(),      //
                                                 mc_pos->Xv(), mc_pos->Yv(), mc_pos->Zv(),               //
                                                 PV[0], PV[1], PV[2]);                                   //
@@ -1534,7 +1542,6 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
         common_format.DCA_wrtPV = Calculate_LinePointDCA(mc_mother->Px(), mc_mother->Py(), mc_mother->Pz(),  //
                                                          mc_pos->Xv(), mc_pos->Yv(), mc_pos->Zv(),           //
                                                          PV[0], PV[1], PV[2]);
-        common_format.isPrimary = mc_mother->GetMother() == -1 && mc_mother->MCStatusCode() != 6;
 
         V0_PushBack(common_format);
       }  // end of loop over negative tracks
@@ -1618,8 +1625,8 @@ Double_t AliAnalysisTaskSexaquark::Calculate_ArmPt(Double_t V0_Px, Double_t V0_P
 
 //________________________________________________________________________
 Double_t AliAnalysisTaskSexaquark::Calculate_LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,  //
-                                Double_t V0_X, Double_t V0_Y, Double_t V0_Z,     //
-                                Double_t PV_X, Double_t PV_Y, Double_t PV_Z) {
+                                                          Double_t V0_X, Double_t V0_Y, Double_t V0_Z,     //
+                                                          Double_t PV_X, Double_t PV_Y, Double_t PV_Z) {
   //
   // Find the distance of closest approach to the Primary Vertex, after backtracking a V0.
   // This function stores the point of closest approach, and returns its distance to the PV.
@@ -1633,7 +1640,7 @@ Double_t AliAnalysisTaskSexaquark::Calculate_LinePointDCA(Double_t V0_Px, Double
   return CrossProduct.Mag() / V0Momentum.Mag();
 }
 
-/*** CUSTOM OFFLINE V0 FINDER ***/
+/*** FUNCTIONS FOR THE CUSTOM OFFLINE V0 FINDER ***/
 
 //________________________________________________
 Bool_t AliAnalysisTaskSexaquark::Preoptimize(const AliExternalTrackParam* nt, AliExternalTrackParam* pt, Double_t* lPreprocessxn,
@@ -1904,6 +1911,8 @@ void AliAnalysisTaskSexaquark::SetBranches() {
   fTree->Branch("MC_Z", &fEvent.MC_Z);
   fTree->Branch("MC_PID", &fEvent.MC_PID);
   fTree->Branch("MC_Mother", &fEvent.MC_Mother);
+  fTree->Branch("MC_PID_Mother", &fEvent.MC_PID_Mother);
+  fTree->Branch("MC_PID_GrandMother", &fEvent.MC_PID_GrandMother);
   fTree->Branch("MC_FirstDau", &fEvent.MC_FirstDau);
   fTree->Branch("MC_LastDau", &fEvent.MC_LastDau);
   fTree->Branch("MC_Gen", &fEvent.MC_Gen);
@@ -1916,10 +1925,12 @@ void AliAnalysisTaskSexaquark::SetBranches() {
   fTree->Branch("Rec_Py", &fEvent.Rec_Py);
   fTree->Branch("Rec_Pz", &fEvent.Rec_Pz);
   fTree->Branch("Rec_Charge", &fEvent.Rec_Charge);
+  fTree->Branch("Rec_IP_wrtPV", &fEvent.Rec_IP_wrtPV);
   fTree->Branch("Rec_NSigmaPion", &fEvent.Rec_NSigmaPion);
   fTree->Branch("Rec_NSigmaProton", &fEvent.Rec_NSigmaProton);
   fTree->Branch("Rec_NClustersTPC", &fEvent.Rec_NClustersTPC);
-  fTree->Branch("Rec_isDuplicate", &fEvent.Rec_isDuplicate);
+  fTree->Branch("Rec_isDuplicate_v1", &fEvent.Rec_isDuplicate_v1);
+  fTree->Branch("Rec_isDuplicate_v2", &fEvent.Rec_isDuplicate_v2);
   fTree->Branch("Rec_isSignal", &fEvent.Rec_isSignal);
   /* V0s */
   fTree->Branch("N_V0s", &fEvent.N_V0s);
@@ -1942,7 +1953,6 @@ void AliAnalysisTaskSexaquark::SetBranches() {
   fTree->Branch("V0_E_asAL", &fEvent.V0_E_asAL);
   fTree->Branch("V0_couldBeK0", &fEvent.V0_couldBeK0);
   fTree->Branch("V0_couldBeAL", &fEvent.V0_couldBeAL);
-  fTree->Branch("V0_onFlyStatus", &fEvent.V0_onFlyStatus);
   fTree->Branch("V0_Chi2", &fEvent.V0_Chi2);
   fTree->Branch("V0_DCA_Daughters", &fEvent.V0_DCA_Daughters);
   fTree->Branch("V0_IP_wrtPV", &fEvent.V0_IP_wrtPV);
@@ -1951,7 +1961,6 @@ void AliAnalysisTaskSexaquark::SetBranches() {
   fTree->Branch("V0_ArmPt", &fEvent.V0_ArmPt);
   fTree->Branch("V0_DecayLength", &fEvent.V0_DecayLength);
   fTree->Branch("V0_DCA_wrtPV", &fEvent.V0_DCA_wrtPV);
-  fTree->Branch("V0_isPrimary", &fEvent.V0_isPrimary);
 }
 
 //_____________________________________________________________________________
@@ -1959,35 +1968,53 @@ void AliAnalysisTaskSexaquark::MCGen_PushBack(AliMCParticle* mcPart, Int_t gener
   //
   // Add one MC generated particle into the Event_tt object
   //
-  // (1) prepare
-  // (a) solve indexing to mother particle
+
+  // solve indexing to mother particle
   // -2 : mother is not relevant <-> mother outside the vector
   // -1 : particle has no mother <-> particle is primary
   //  0 : particle is primary && particle is signal, i.e., comes from a sexaquark
   //  X : particle has a relevant mother, located at index X
   Int_t idx_mother = -1;
+  Int_t pid_mother = 0;
+  Int_t pid_grandmother = 0;
+  AliMCParticle* mcMother;
+  AliMCParticle* mcGrandMother;
+  // does the particle have a mother?
   if (mcPart->GetMother() != -1) {
     // if mother is relevant <-> mother has been pushed before within the vector
     // ==> indexing attempt is correct!
     if (fIndexer_fMC_to_fEvent.count(mcPart->GetMother())) {
-      // then, given that particle has a mother, load it
+      // then, given that the particle has a mother, load it
       idx_mother = fIndexer_fMC_to_fEvent[mcPart->GetMother()];
     } else {
       idx_mother = -2;
     }
-  }  // closure: idx_mother stays at -1, because
-  //   // particle has no mother <-> particle is primary
-  // (artificial anti-sexaquark)
-  // particle is primary && particle is signal
-  // <->
-  // comes from a sexaquark, that will be added on the first position
-  if (fHasSexaquark && mcPart->MCStatusCode() == 6) {
-    idx_mother = 0;
-    // (artificial anti-sexaquark) add it to the daughters of the sexaquark
-    // the "+1" is because of the inserted sexaquark
-    fSexaquarkDaughters.push_back(fEvent.N_MCGen + 1);
+    // regardless if mother is relevant or not, get PID
+    mcMother = (AliMCParticle*)fMC->GetTrack(mcPart->GetMother());
+    pid_mother = mcMother->PdgCode();
+    // does the mother have a mother?
+    if (mcMother->GetMother() != -1) {
+      // if so, get its PID too
+      mcGrandMother = (AliMCParticle*)fMC->GetTrack(mcMother->GetMother());
+      pid_grandmother = mcGrandMother->PdgCode();
+    }  // closure: if not, pid_grandmother stays at 0
   }
-  // (2) assign
+  // closure: particle has no mother <-> particle is primary
+  // - idx_mother stays at -1
+  // - pid_mother stays at 0
+  // - pid_grandmother stays at 0
+
+  // (artificial anti-sexaquark)
+  // if particle is primary && particle is signal
+  if (fHasSexaquark && mcPart->MCStatusCode() == 6) {
+    // then, it comes from a artificial sexaquark, that will be added on the position "0"
+    idx_mother = 0;
+    // add it to the daughters of the sexaquark
+    fSexaquarkDaughters.push_back(fEvent.N_MCGen + 1);
+    // the "+1" is because of the inserted sexaquark
+  }
+
+  // assign
   fEvent.MC_Px.push_back(mcPart->Px());
   fEvent.MC_Py.push_back(mcPart->Py());
   fEvent.MC_Pz.push_back(mcPart->Pz());
@@ -1996,6 +2023,8 @@ void AliAnalysisTaskSexaquark::MCGen_PushBack(AliMCParticle* mcPart, Int_t gener
   fEvent.MC_Z.push_back(mcPart->Zv());
   fEvent.MC_PID.push_back(mcPart->PdgCode());
   fEvent.MC_Mother.push_back(idx_mother);
+  fEvent.MC_PID_Mother.push_back(pid_mother);
+  fEvent.MC_PID_GrandMother.push_back(pid_grandmother);
   fEvent.MC_Gen.push_back(generation);
   fEvent.MC_Status.push_back(mcPart->MCStatusCode());
   fEvent.MC_isSignal.push_back(isSignal);
@@ -2006,6 +2035,7 @@ void AliAnalysisTaskSexaquark::MCGen_PushBack(AliMCParticle* mcPart, Int_t gener
 void AliAnalysisTaskSexaquark::MCGen_InsertAntiSexaquark(TVector3 antilambda, TVector3 neutral_kaon) {
   //
   // Insert at first position an artificial MC generated anti-sexaquark into the Event_tt object
+  // PENDING: should be combined with "FillMCHistograms_Sexaquark()"
   //
   // (1) prepare
   // solve daughters indexing, add 1 because of the inserted sexaquark
@@ -2033,27 +2063,35 @@ void AliAnalysisTaskSexaquark::MCRec_PushBack(AliESDtrack* track, Bool_t isDupli
   //
   // Add one more MC reconstructed track into the Event_tt object
   //
-  // (1) prepare
+
   // check if rec. track is signal or not
-  Float_t track_PID[2];
-  track_PID[0] = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
-  track_PID[1] = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
-  // get linked MC particle
   Int_t link_label = TMath::Abs(track->GetLabel());
   AliMCParticle* link = (AliMCParticle*)fMC->GetTrack(link_label);
   Int_t generation = 3;  // dummy int
   Bool_t isSignal = kFALSE;
   MCGen_VerifySourceAndGeneration(link, generation, isSignal);
-  // (2) assign
+
+  // calculate transverse impact parameter
+  // (a) get magnetic field
+  Float_t b = fESD->GetMagneticField();
+  // (b) get primary vertex of this event
+  Double_t PV[3];
+  const AliESDVertex* prim_vertex = fESD->GetPrimaryVertex();
+  prim_vertex->GetXYZ(PV);
+  Float_t d = track->GetD(PV[0], PV[1], b);
+
+  // assign
   fEvent.Idx_True.push_back(fIndexer_fMC_to_fEvent[link_label]);
   fEvent.Rec_Px.push_back(track->Px());
   fEvent.Rec_Py.push_back(track->Py());
   fEvent.Rec_Pz.push_back(track->Pz());
   fEvent.Rec_Charge.push_back(track->Charge());
-  fEvent.Rec_NSigmaPion.push_back(track_PID[0]);
-  fEvent.Rec_NSigmaProton.push_back(track_PID[1]);
+  fEvent.Rec_IP_wrtPV.push_back(d);
+  fEvent.Rec_NSigmaPion.push_back(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion));
+  fEvent.Rec_NSigmaProton.push_back(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton));
   fEvent.Rec_NClustersTPC.push_back(track->GetTPCncls());
-  fEvent.Rec_isDuplicate.push_back(isDuplicate);
+  fEvent.Rec_isDuplicate_v1.push_back(isDuplicate);
+  fEvent.Rec_isDuplicate_v2.push_back(isDuplicate);
   fEvent.Rec_isSignal.push_back(isSignal);
   fEvent.N_MCRec++;
 }
@@ -2101,7 +2139,6 @@ void AliAnalysisTaskSexaquark::V0_PushBack(V0_tt common_format) {
   fEvent.V0_E_asAL.push_back(common_format.E_asAL);
   fEvent.V0_couldBeK0.push_back(common_format.couldBeK0);
   fEvent.V0_couldBeAL.push_back(common_format.couldBeAL);
-  fEvent.V0_onFlyStatus.push_back(common_format.onFlyStatus);
   fEvent.V0_Chi2.push_back(common_format.Chi2);
   fEvent.V0_DCA_Daughters.push_back(common_format.DCA_Daughters);
   fEvent.V0_IP_wrtPV.push_back(common_format.IP_wrtPV);
@@ -2110,7 +2147,6 @@ void AliAnalysisTaskSexaquark::V0_PushBack(V0_tt common_format) {
   fEvent.V0_ArmPt.push_back(common_format.ArmPt);
   fEvent.V0_DecayLength.push_back(common_format.DecayLength);
   fEvent.V0_DCA_wrtPV.push_back(common_format.DCA_wrtPV);
-  fEvent.V0_isPrimary.push_back(common_format.isPrimary);
   fEvent.N_V0s++;
 }
 
@@ -2129,6 +2165,8 @@ void AliAnalysisTaskSexaquark::ClearEvent() {
   fEvent.MC_Z.clear();
   fEvent.MC_PID.clear();
   fEvent.MC_Mother.clear();
+  fEvent.MC_PID_Mother.clear();
+  fEvent.MC_PID_GrandMother.clear();
   fEvent.MC_FirstDau.clear();
   fEvent.MC_LastDau.clear();
   fEvent.MC_Gen.clear();
@@ -2141,10 +2179,12 @@ void AliAnalysisTaskSexaquark::ClearEvent() {
   fEvent.Rec_Py.clear();
   fEvent.Rec_Pz.clear();
   fEvent.Rec_Charge.clear();
+  fEvent.Rec_IP_wrtPV.clear();
   fEvent.Rec_NSigmaPion.clear();
   fEvent.Rec_NSigmaProton.clear();
   fEvent.Rec_NClustersTPC.clear();
-  fEvent.Rec_isDuplicate.clear();
+  fEvent.Rec_isDuplicate_v1.clear();
+  fEvent.Rec_isDuplicate_v2.clear();
   fEvent.Rec_isSignal.clear();
   /* V0s */
   fEvent.N_V0s = 0;
@@ -2167,7 +2207,6 @@ void AliAnalysisTaskSexaquark::ClearEvent() {
   fEvent.V0_E_asAL.clear();
   fEvent.V0_couldBeK0.clear();
   fEvent.V0_couldBeAL.clear();
-  fEvent.V0_onFlyStatus.clear();
   fEvent.V0_Chi2.clear();
   fEvent.V0_DCA_Daughters.clear();
   fEvent.V0_IP_wrtPV.clear();
@@ -2176,7 +2215,6 @@ void AliAnalysisTaskSexaquark::ClearEvent() {
   fEvent.V0_ArmPt.clear();
   fEvent.V0_DecayLength.clear();
   fEvent.V0_DCA_wrtPV.clear();
-  fEvent.V0_isPrimary.clear();
 }
 
 /*** HIST OPERATIONS ***/

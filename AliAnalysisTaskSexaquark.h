@@ -27,7 +27,6 @@ struct V0_tt {
   Float_t E_asAL;         // energy of V0, assuming it's an anti-lambda
   Bool_t couldBeK0;       // kTRUE if K0 candidate, kFALSE if not
   Bool_t couldBeAL;       // kTRUE if anti-lambda candidate, kFALSE if not
-  Bool_t onFlyStatus;     // kTRUE if comes from the on-the-fly finder, kFALSE if not
   Float_t Chi2;           // chi2 value from the Kalman Filter (?)
   Float_t DCA_Daughters;  // distance of closest approach between daughters
   Float_t IP_wrtPV;       // impact parameter w.r.t. Primary Vertex
@@ -36,7 +35,6 @@ struct V0_tt {
   Float_t ArmPt;          // Armenteros-Podolanski variable Pt
   Float_t DecayLength;    // distance between PV and V0
   Float_t DCA_wrtPV;      // distance of closest approach to Primary Vertex
-  Bool_t isPrimary;       // kTRUE if it's a primary V0, kFALSE if not
 };
 
 struct Event_tt {
@@ -44,7 +42,8 @@ struct Event_tt {
   // This is the structure of the output TTree
   //
 
-  /* MC particles */                      //
+  /* MC particles */
+
   Int_t N_MCGen;                          // number of MC particles
   std::vector<Float_t> MC_Px;             // x-component of true momentum
   std::vector<Float_t> MC_Py;             // y-component of true momentum
@@ -54,24 +53,32 @@ struct Event_tt {
   std::vector<Float_t> MC_Z;              // z-coordinate of generation vertex
   std::vector<Int_t> MC_PID;              // PDG code
   std::vector<Int_t> MC_Mother;           // index of mother
+  std::vector<Int_t> MC_PID_Mother;       // PID of mother
+  std::vector<Int_t> MC_PID_GrandMother;  // PID of grandmother
   std::vector<Int_t> MC_FirstDau;         // index of first daughter
   std::vector<Int_t> MC_LastDau;          // index of last daughter
   std::vector<Int_t> MC_Gen;              // generation (to diff. between daughters and grandaughters) (only valid for signal particles)
   std::vector<Int_t> MC_Status;           // MC status code
   std::vector<Bool_t> MC_isSignal;        // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
-  /* MC Rec. Tracks */                    //
-  Int_t N_MCRec;                          // number of MC reconstructed tracks
-  std::vector<Int_t> Idx_True;            // index of true MC particle
-  std::vector<Float_t> Rec_Px;            // x-component of reconstructed momentum
-  std::vector<Float_t> Rec_Py;            // y-component of reconstructed momentum
-  std::vector<Float_t> Rec_Pz;            // z-component of reconstructed momentum
-  std::vector<Short_t> Rec_Charge;        // measured charge
-  std::vector<Float_t> Rec_NSigmaPion;    // absolute value of likeness to be a charged pion (closer to 0, the most likely)
-  std::vector<Float_t> Rec_NSigmaProton;  // absolute value of likeness to be a proton (closer to 0, the most likely)
-  std::vector<Short_t> Rec_NClustersTPC;  // number of clusters assigned in the TPC
-  std::vector<Bool_t> Rec_isDuplicate;    // kTRUE if track is a duplicate, kFALSE if not
-  std::vector<Bool_t> Rec_isSignal;       // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
-  /* V0s */                               //
+
+  /* MC Rec. Tracks */
+
+  Int_t N_MCRec;                           // number of MC reconstructed tracks
+  std::vector<Int_t> Idx_True;             // index of true MC particle
+  std::vector<Float_t> Rec_Px;             // x-component of reconstructed momentum
+  std::vector<Float_t> Rec_Py;             // y-component of reconstructed momentum
+  std::vector<Float_t> Rec_Pz;             // z-component of reconstructed momentum
+  std::vector<Short_t> Rec_Charge;         // measured charge
+  std::vector<Float_t> Rec_IP_wrtPV;       // transverse impact parameter w.r.t. Primary Vertex
+  std::vector<Float_t> Rec_NSigmaPion;     // absolute value of likeness to be a charged pion (closer to 0, the most likely)
+  std::vector<Float_t> Rec_NSigmaProton;   // absolute value of likeness to be a proton (closer to 0, the most likely)
+  std::vector<Short_t> Rec_NClustersTPC;   // number of clusters assigned in the TPC
+  std::vector<Bool_t> Rec_isDuplicate_v1;  // kTRUE if track is a duplicate, kFALSE if not (v1: compared to true particle)
+  std::vector<Bool_t> Rec_isDuplicate_v2;  // kTRUE if track is a duplicate, kFALSE if not (v2: compared to similar particles)
+  std::vector<Bool_t> Rec_isSignal;        // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
+
+  /* V0s */
+
   Int_t N_V0s;                            // number of formed V0s
   std::vector<Int_t> Idx_Pos;             // index of positive daughter
   std::vector<Int_t> Idx_Neg;             // index of negative daughter
@@ -87,12 +94,11 @@ struct Event_tt {
   std::vector<Float_t> Neg_Px;            // x-component of negative track momentum at V0 position
   std::vector<Float_t> Neg_Py;            // y-component of negative track momentum at V0 position
   std::vector<Float_t> Neg_Pz;            // z-component of negative track momentum at V0 position
-  std::vector<Bool_t> V0_isSignal;        // kTRUE if signal, kFALSE if background
+  std::vector<Bool_t> V0_isSignal;        // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
   std::vector<Float_t> V0_E_asK0;         // energy of V0, assuming it's a K0
   std::vector<Float_t> V0_E_asAL;         // energy of V0, assuming it's an anti-lambda
   std::vector<Bool_t> V0_couldBeK0;       // kTRUE if K0 candidate, kFALSE if not
   std::vector<Bool_t> V0_couldBeAL;       // kTRUE if anti-lambda candidate, kFALSE if not
-  std::vector<Bool_t> V0_onFlyStatus;     // kTRUE if comes from the on-the-fly finder, kFALSE if not
   std::vector<Float_t> V0_Chi2;           // chi2 value from the Kalman Filter (?)
   std::vector<Float_t> V0_DCA_Daughters;  // distance of closest approach between daughters
   std::vector<Float_t> V0_IP_wrtPV;       // impact parameter w.r.t. Primary Vertex
@@ -101,7 +107,6 @@ struct Event_tt {
   std::vector<Float_t> V0_ArmPt;          // Armenteros-Podolanski variable Pt
   std::vector<Float_t> V0_DecayLength;    // distance between PV and V0
   std::vector<Float_t> V0_DCA_wrtPV;      // distance of closest approach to Primary Vertex
-  std::vector<Bool_t> V0_isPrimary;       // kTRUE if it's a primary V0, kFALSE if not
 };
 
 class AliPIDResponse;

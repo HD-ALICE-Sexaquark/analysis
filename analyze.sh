@@ -39,7 +39,7 @@ function process_args() {
 function print_usage() {
     echo "analyze.sh :: SCRIPT: analyze.sh"
     echo "analyze.sh :: =================="
-    echo "analyze.sh ::"
+    echo "analyze.sh :: "
     echo "analyze.sh :: USAGE : ./analyze.sh --sim <sim-set> --v0s <v0s-option> --rn <run-number> --dir <dir-number> --channel <reaction-channel>"
     echo "analyze.sh ::         where:"
     echo "analyze.sh ::         <sim-set> : simulation set"
@@ -82,7 +82,7 @@ fi
 
 if [[ $# -lt 4 ]]; then
     echo "analyze.sh :: ERROR : insufficient number of arguments, you need to set at least a simulation set and a source of V0s."
-    echo "analyze.sh ::" # empty line
+    echo "analyze.sh :: " # empty line
     print_usage
     exit 1
 fi
@@ -98,14 +98,14 @@ process_args "${argArray[@]}"
 # another check for errors
 if [[ -z "${SIM_SET}" ]]; then
     echo "analyze.sh :: ERROR : please, choose a simulation set."
-    echo "analyze.sh ::" # empty line
+    echo "analyze.sh :: " # empty line
     print_usage
     exit 1
 fi
 
 if [[ -z "${V0S_OPTION}" ]]; then
     echo "analyze.sh :: ERROR : please, choose a source of V0s."
-    echo "analyze.sh ::" # empty line
+    echo "analyze.sh :: " # empty line
     print_usage
     exit 1
 fi
@@ -166,7 +166,7 @@ echo "analyze.sh :: - source of V0s    : ${V0S_OPTION}"
 echo "analyze.sh :: - run number       : ${RUN_NUMBER}"
 echo "analyze.sh :: - dir number       : ${DIR_NUMBER}"
 echo "analyze.sh :: - reaction channel : ${REACTION_CHANNEL} (${CHANNEL_STR})"
-echo "analyze.sh ::" # empty line
+echo "analyze.sh :: " # empty line
 
 # create output dir if it doesn't exist
 CURRENT_DIR=${PWD}
@@ -179,11 +179,11 @@ echo -n "analyze.sh :: "; cp -v AliAnalysisTaskSexaquark.cxx ${OUT_DIR}/
 echo -n "analyze.sh :: "; cp -v AliAnalysisTaskSexaquark.h ${OUT_DIR}/
 echo -n "analyze.sh :: "; cp -v runAnalysis.C ${OUT_DIR}/
 echo -n "analyze.sh :: "; cp -v AddSexaquark.C ${OUT_DIR}/
-echo "analyze.sh ::" # empty line
+echo "analyze.sh :: " # empty line
 
 echo "analyze.sh :: moving into ${OUT_DIR}"
 cd ${OUT_DIR}
-echo "analyze.sh ::" # empty line
+echo "analyze.sh :: " # empty line
 
 # start loop, in case of wildcard
 for dir in $(readlink -f ${INPUT_DIR}); do
@@ -193,7 +193,7 @@ for dir in $(readlink -f ${INPUT_DIR}); do
 
     echo "analyze.sh :: >> processing ${DIR_NUMBER_NOWC}"
     echo "analyze.sh :: (directory: ${dir})"
-    echo "analyze.sh ::" # empty line
+    echo "analyze.sh :: " # empty line
 
     # symbolic link to required input files
     echo "analyze.sh :: bringing ${dir}/AliESDs.root"
@@ -202,7 +202,7 @@ for dir in $(readlink -f ${INPUT_DIR}); do
     ln -s ${dir}/Kinematics.root
     echo "analyze.sh :: bringing ${dir}/galice.root"
     ln -s ${dir}/galice.root
-    echo "analyze.sh ::" # empty line
+    echo "analyze.sh :: " # empty line
 
     echo "analyze.sh :: analyzing..."
     aliroot -l -b -q 'runAnalysis.C(1, '${HAS_SEXAQUARK}', "'${V0S_OPTION}'", "'${REACTION_CHANNEL}'")' &> analysis.log
@@ -216,13 +216,13 @@ for dir in $(readlink -f ${INPUT_DIR}); do
     if [[ -e AnalysisResults.root ]]; then
         echo -n "analyze.sh :: "; mv -v AnalysisResults.root AnalysisResults_${V0S_STR}_${DIR_NUMBER_NOWC}.root
     fi
-    echo "analyze.sh ::" # empty line
+    echo "analyze.sh :: " # empty line
 
     # remove sym-linked root files
-    echo -n "analyze.sh ::"; rm -v AliESDs.root
-    echo -n "analyze.sh ::"; rm -v Kinematics.root
-    echo -n "analyze.sh ::"; rm -v galice.root
-    echo "analyze.sh ::" # empty line
+    echo -n "analyze.sh :: "; rm -v AliESDs.root
+    echo -n "analyze.sh :: "; rm -v Kinematics.root
+    echo -n "analyze.sh :: "; rm -v galice.root
+    echo "analyze.sh :: " # empty line
 done
 
 # cleaning
@@ -233,11 +233,11 @@ echo -n "analyze.sh :: "; rm -v AliAnalysisTaskSexaquark_cxx_ACLiC_dict_rdict.pc
 echo -n "analyze.sh :: "; rm -v AliAnalysisTaskSexaquark.h
 echo -n "analyze.sh :: "; rm -v runAnalysis.C
 echo -n "analyze.sh :: "; rm -v AddSexaquark.C
-echo "analyze.sh ::" # empty line
+echo "analyze.sh :: " # empty line
 
 # come back to original dir
 echo "analyze.sh :: moving out of ${OUT_DIR}"
 cd ${CURRENT_DIR}
 
-echo "analyze.sh ::" # empty line
+echo "analyze.sh :: " # empty line
 echo "analyze.sh :: finished"
