@@ -167,10 +167,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
   virtual void V0_PushBack(V0_tt v0);
   virtual void ClearEvent();
 
-  // (hist operations)
-  virtual void FillMCHistograms_Products(AliMCParticle* mcPart);
-  virtual void FillMCHistograms_Sexaquark(std::vector<Int_t> fsProducts, Int_t fsCharge);
-
  private:
   // (input options)
   Bool_t fIsMC;
@@ -191,7 +187,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
   Double_t kMassKaon;
 
   // output lists
-  TList* fOutputListOfHists;
   TList* fOutputListOfTrees;
 
   AliMCEvent* fMC;               // corresponding MC event
@@ -216,62 +211,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
   // (artificial sexaquark)
   std::vector<Int_t> fSexaquarkDaughters;
-
-  // Sim. Rec. (Accepted) histograms
-  TH1F* fHist_PDG;
-  /*
-  TH1F* fHist_Kp_P;
-  TH1F* fHist_Kp_Pt;
-  TH1F* fHist_Pip_P;
-  TH1F* fHist_Pip_Pt;
-  TH1F* fHist_Pim_P;
-  TH1F* fHist_Pim_Pt;
-  TH1F* fHist_AntiP_P;
-  TH1F* fHist_AntiP_Pt;
-
-  TH1F* fHist_K0_P;
-  TH1F* fHist_K0_Pt;
-  TH1F* fHist_K0_M;
-
-  TH1F* fHist_AntiL_P;
-  TH1F* fHist_AntiL_Pt;
-  TH1F* fHist_AntiL_M;
-
-  TH1F* fHist_Sexaquark_P;
-  TH1F* fHist_Sexaquark_Pt;
-  TH1F* fHist_Sexaquark_M;
-  */
-
-  // Sim. Gen. (Thrown/Truth/MC) histograms
-  TH1F* fHistMC_PDG;
-  /*
-  TH1F* fHistMC_Kp_P;
-  TH1F* fHistMC_Kp_Pt;
-  TH1F* fHistMC_Pip_P;
-  TH1F* fHistMC_Pip_Pt;
-  TH1F* fHistMC_Pim_P;
-  TH1F* fHistMC_Pim_Pt;
-  TH1F* fHistMC_AntiP_P;
-  TH1F* fHistMC_AntiP_Pt;
-  TH1F* fHistMC_AntiN_P;
-  TH1F* fHistMC_AntiN_Pt;
-  TH1F* fHistMC_Gamma_P;
-  TH1F* fHistMC_Gamma_Pt;
-
-  TH1F* fHistMC_AntiL_P;
-  TH1F* fHistMC_AntiL_Pt;
-  TH1F* fHistMC_AntiL_M;
-  TH1F* fHistMC_AntiL_CPA;
-
-  TH1F* fHistMC_K0_P;
-  TH1F* fHistMC_K0_Pt;
-  TH1F* fHistMC_K0_M;
-  TH1F* fHistMC_K0_CPA;
-
-  TH1F* fHistMC_Sexaquark_P;
-  TH1F* fHistMC_Sexaquark_Pt;
-  TH1F* fHistMC_Sexaquark_M;
-  */
 
   AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
   AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented

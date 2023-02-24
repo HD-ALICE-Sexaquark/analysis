@@ -40,7 +40,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fHasSexaquark(0),
       fSourceOfV0s(),
       fSimulationSet(0),
-      fOutputListOfHists(0),
       fOutputListOfTrees(0),
       kMassNeutron(0),
       kMassProton(0),
@@ -51,48 +50,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fPIDResponse(0),
       fMap_DuplicatedTracks(),
       fIndex_NonRelevantMC(),
-      fHist_PDG(0),
-      // fHist_Kp_P(0),
-      // fHist_Kp_Pt(0),
-      // fHist_Pip_P(0),
-      // fHist_Pip_Pt(0),
-      // fHist_Pim_P(0),
-      // fHist_Pim_Pt(0),
-      // fHist_AntiP_P(0),
-      // fHist_AntiP_Pt(0),
-      // fHist_K0_P(0),
-      // fHist_K0_Pt(0),
-      // fHist_K0_M(0),
-      // fHist_AntiL_P(0),
-      // fHist_AntiL_Pt(0),
-      // fHist_AntiL_M(0),
-      // fHist_Sexaquark_P(0),
-      // fHist_Sexaquark_Pt(0),
-      // fHist_Sexaquark_M(0),
-      fHistMC_PDG(0),
-      // fHistMC_Kp_P(0),
-      // fHistMC_Kp_Pt(0),
-      // fHistMC_Pip_P(0),
-      // fHistMC_Pip_Pt(0),
-      // fHistMC_Pim_P(0),
-      // fHistMC_Pim_Pt(0),
-      // fHistMC_AntiP_P(0),
-      // fHistMC_AntiP_Pt(0),
-      // fHistMC_AntiN_P(0),
-      // fHistMC_AntiN_Pt(0),
-      // fHistMC_Gamma_P(0),
-      // fHistMC_Gamma_Pt(0),
-      // fHistMC_AntiL_P(0),
-      // fHistMC_AntiL_Pt(0),
-      // fHistMC_AntiL_M(0),
-      // fHistMC_AntiL_CPA(0),
-      // fHistMC_K0_P(0),
-      // fHistMC_K0_Pt(0),
-      // fHistMC_K0_M(0),
-      // fHistMC_K0_CPA(0),
-      // fHistMC_Sexaquark_P(0),
-      // fHistMC_Sexaquark_Pt(0),
-      // fHistMC_Sexaquark_M(0),
       fTree(0),
       fIndexer_fMC_to_fEvent(),
       fIndexer_fTrack_to_fEvent(),
@@ -112,7 +69,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       fIsMC(IsMC),
       fSourceOfV0s(SourceOfV0s),
       fHasSexaquark(HasSexaquark),
-      fOutputListOfHists(0),
       fOutputListOfTrees(0),
       kMassNeutron(0),
       kMassProton(0),
@@ -123,48 +79,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       fPIDResponse(0),
       fMap_DuplicatedTracks(),
       fIndex_NonRelevantMC(),
-      fHist_PDG(0),
-      // fHist_Kp_P(0),
-      // fHist_Kp_Pt(0),
-      // fHist_Pip_P(0),
-      // fHist_Pip_Pt(0),
-      // fHist_Pim_P(0),
-      // fHist_Pim_Pt(0),
-      // fHist_AntiP_P(0),
-      // fHist_AntiP_Pt(0),
-      // fHist_K0_P(0),
-      // fHist_K0_Pt(0),
-      // fHist_K0_M(0),
-      // fHist_AntiL_P(0),
-      // fHist_AntiL_Pt(0),
-      // fHist_AntiL_M(0),
-      // fHist_Sexaquark_P(0),
-      // fHist_Sexaquark_Pt(0),
-      // fHist_Sexaquark_M(0),
-      fHistMC_PDG(0),
-      // fHistMC_Kp_P(0),
-      // fHistMC_Kp_Pt(0),
-      // fHistMC_Pip_P(0),
-      // fHistMC_Pip_Pt(0),
-      // fHistMC_Pim_P(0),
-      // fHistMC_Pim_Pt(0),
-      // fHistMC_AntiP_P(0),
-      // fHistMC_AntiP_Pt(0),
-      // fHistMC_AntiN_P(0),
-      // fHistMC_AntiN_Pt(0),
-      // fHistMC_Gamma_P(0),
-      // fHistMC_Gamma_Pt(0),
-      // fHistMC_AntiL_P(0),
-      // fHistMC_AntiL_Pt(0),
-      // fHistMC_AntiL_M(0),
-      // fHistMC_AntiL_CPA(0),
-      // fHistMC_K0_P(0),
-      // fHistMC_K0_Pt(0),
-      // fHistMC_K0_M(0),
-      // fHistMC_K0_CPA(0),
-      // fHistMC_Sexaquark_P(0),
-      // fHistMC_Sexaquark_Pt(0),
-      // fHistMC_Sexaquark_M(0),
       fTree(0),
       fIndexer_fMC_to_fEvent(),
       fIndexer_fTrack_to_fEvent(),
@@ -173,14 +87,8 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
   //
   // constructor
   //
-  DefineInput(0, TChain::Class());  // define the input of the analysis: in this case we take a 'chain' of events
-                                    // this chain is created by the analysis manager, so no need to worry about it,
-                                    // it does its work automatically
-  DefineOutput(1, TList::Class());  // define the output of the analysis: in this case it's a list of histograms
-                                    // you can add more output objects by calling DefineOutput(2, classname::Class())
-                                    // if you add more output objects, make sure to call PostData for all of them, and to
-                                    // make changes to your AddTask macro!
-  DefineOutput(2, TList::Class());
+  DefineInput(0, TChain::Class());
+  DefineOutput(1, TList::Class());
 
   CheckForInputErrors();
 }
@@ -191,9 +99,6 @@ AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
   // destructor
   //
   // at the end of your task, it is deleted from memory by calling this function
-  if (fOutputListOfHists) {
-    delete fOutputListOfHists;
-  }
   if (fOutputListOfTrees) {
     delete fOutputListOfTrees;
   }
@@ -229,150 +134,6 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
   AliInfoF(" >> Simulation Set = %c", fSimulationSet);
   InitPDGMasses();
 
-  // this is a list which will contain all of your histograms
-  // at the end of the analysis, the contents of this list are written
-  // to the output file
-
-  /*** List of Histograms ***/
-
-  fOutputListOfHists = new TList();
-  fOutputListOfHists->SetOwner(kTRUE);  // the list is owner of all objects it contains and will delete them if requested
-
-  // MC Rec. Hists
-  fHist_PDG = new TH1F("Hist_PDG", "Hist_PDG", 400, -3500, 500);
-  fOutputListOfHists->Add(fHist_PDG);
-  /*
-  fHist_Kp_P = new TH1F("Hist_Kp_P", "Hist_Kp_P", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_Kp_P);
-
-  fHist_Kp_Pt = new TH1F("Hist_Kp_Pt", "Hist_Kp_Pt", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_Kp_Pt);
-
-  fHist_Pip_P = new TH1F("Hist_Pip_P", "Hist_Pip_P", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_Pip_P);
-
-  fHist_Pip_Pt = new TH1F("Hist_Pip_Pt", "Hist_Pip_Pt", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_Pip_Pt);
-
-  fHist_Pim_P = new TH1F("Hist_Pim_P", "Hist_Pim_P", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_Pim_P);
-
-  fHist_Pim_Pt = new TH1F("Hist_Pim_Pt", "Hist_Pim_Pt", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_Pim_Pt);
-
-  fHist_AntiP_P = new TH1F("Hist_AntiP_P", "Hist_AntiP_P", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_AntiP_P);
-
-  fHist_AntiP_Pt = new TH1F("Hist_AntiP_Pt", "Hist_AntiP_Pt", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_AntiP_Pt);
-
-  fHist_K0_P = new TH1F("Hist_K0_P", "Hist_K0_P", 100, 0., 10.);
-  fOutputListOfHists->Add(fHist_K0_P);
-
-  fHist_K0_Pt = new TH1F("Hist_K0_Pt", "Hist_K0_Pt", 100, 0., 10.);
-  fOutputListOfHists->Add(fHist_K0_Pt);
-
-  fHist_K0_M = new TH1F("Hist_K0_M", "Hist_K0_M", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_K0_M);
-
-  fHist_AntiL_P = new TH1F("Hist_AntiL_P", "Hist_AntiL_P", 100, 0., 10.);
-  fOutputListOfHists->Add(fHist_AntiL_P);
-
-  fHist_AntiL_Pt = new TH1F("Hist_AntiL_Pt", "Hist_AntiL_Pt", 100, 0., 10.);
-  fOutputListOfHists->Add(fHist_AntiL_Pt);
-
-  fHist_AntiL_M = new TH1F("Hist_AntiL_M", "Hist_AntiL_M", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_AntiL_M);
-
-  fHist_Sexaquark_P = new TH1F("Hist_Sexaquark_P", "Hist_Sexaquark_P", 8, 0., 8.);
-  fOutputListOfHists->Add(fHist_Sexaquark_P);
-
-  fHist_Sexaquark_Pt = new TH1F("Hist_Sexaquark_Pt", "Hist_Sexaquark_Pt", 5, 0., 5.);
-  fOutputListOfHists->Add(fHist_Sexaquark_Pt);
-
-  fHist_Sexaquark_M = new TH1F("Hist_Sexaquark_M", "Hist_Sexaquark_M", 100, 0., 5.);
-  fOutputListOfHists->Add(fHist_Sexaquark_M);
-  */
-
-  // MC Gen.
-
-  fHistMC_PDG = new TH1F("HistMC_PDG", "PDG Code of Generated Particles (after all decays)", 400, -3500, 500);
-  fOutputListOfHists->Add(fHistMC_PDG);
-  /*
-  fHistMC_Kp_P = new TH1F("HistMC_Kp_P", "Momentum of Generated K^{+}", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_Kp_P);
-
-  fHistMC_Kp_Pt = new TH1F("HistMC_Kp_Pt", "Pt of Generated K^{+}", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_Kp_Pt);
-
-  fHistMC_Pip_P = new TH1F("HistMC_Pip_P", "Momentum of Generated #pi^{+}", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_Pip_P);
-
-  fHistMC_Pip_Pt = new TH1F("HistMC_Pip_Pt", "Pt of Generated #pi^{+}", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_Pip_Pt);
-
-  fHistMC_Pim_P = new TH1F("HistMC_Pim_P", "Momentum of Generated #pi^{-}", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_Pim_P);
-
-  fHistMC_Pim_Pt = new TH1F("HistMC_Pim_Pt", "Pt of Generated #pi^{-}", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_Pim_Pt);
-
-  fHistMC_AntiP_P = new TH1F("HistMC_AntiP_P", "Momentum of Generated anti-protons", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_AntiP_P);
-
-  fHistMC_AntiP_Pt = new TH1F("HistMC_AntiP_Pt", "Pt of Generated anti-protons", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_AntiP_Pt);
-
-  fHistMC_AntiN_P = new TH1F("HistMC_AntiN_P", "Momentum of Generated anti-neutrons", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_AntiN_P);
-
-  fHistMC_AntiN_Pt = new TH1F("HistMC_AntiN_Pt", "Pt of Generated anti-neutrons", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_AntiN_Pt);
-
-  fHistMC_Gamma_P = new TH1F("HistMC_Gamma_P", "Momentum of Generated #gamma", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_Gamma_P);
-
-  fHistMC_Gamma_Pt = new TH1F("HistMC_Gamma_Pt", "Pt of Generated #gamma", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_Gamma_Pt);
-
-  fHistMC_AntiL_P = new TH1F("HistMC_AntiL_P", "Momentum of Generated anti-#Lambda", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_AntiL_P);
-
-  fHistMC_AntiL_Pt = new TH1F("HistMC_AntiL_Pt", "Pt of Generated anti-#Lambda", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_AntiL_Pt);
-
-  fHistMC_AntiL_M = new TH1F("HistMC_AntiL_M", "Inv. Mass of Generated anti-#Lambda", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_AntiL_M);
-
-  fHistMC_AntiL_CPA = new TH1F("HistMC_AntiL_CPA", "CPA Generated #bar{#Lambda}", 200, -1., 1.);
-  fOutputListOfHists->Add(fHistMC_AntiL_CPA);
-
-  fHistMC_K0_P = new TH1F("HistMC_K0_P", "Momentum of Generated K^{0}_{S}", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_K0_P);
-
-  fHistMC_K0_Pt = new TH1F("HistMC_K0_Pt", "Pt of Generated K^{0}_{S}", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_K0_Pt);
-
-  fHistMC_K0_M = new TH1F("HistMC_K0_M", "Inv. Mass of Generated K^{0}_{S}", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_K0_M);
-
-  fHistMC_K0_CPA = new TH1F("HistMC_K0_CPA", "CPA Generated K^{0}_{S}", 200, -1., 1.);
-  fOutputListOfHists->Add(fHistMC_K0_CPA);
-
-  fHistMC_Sexaquark_P = new TH1F("HistMC_Sexaquark_P", "Momentum of Generated Sexaquark", 8, 0., 8.);
-  fOutputListOfHists->Add(fHistMC_Sexaquark_P);
-
-  fHistMC_Sexaquark_Pt = new TH1F("HistMC_Sexaquark_Pt", "Pt of Generated Sexaquark", 5, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_Sexaquark_Pt);
-
-  fHistMC_Sexaquark_M = new TH1F("HistMC_Sexaquark_M", "Inv. Mass of Generated Sexaquark", 100, 0., 5.);
-  fOutputListOfHists->Add(fHistMC_Sexaquark_M);
-  */
-
-  PostData(1, fOutputListOfHists);  // postdata will notify the analysis manager of changes / updates to the
-                                    // fOutputList object. the manager will in the end take care of writing your output to file
-                                    // so it needs to know what's in the output
-
   /*** List of Trees ***/
 
   fOutputListOfTrees = new TList();
@@ -382,7 +143,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
   SetBranches();
   fOutputListOfTrees->Add(fTree);
 
-  PostData(2, fOutputListOfTrees);
+  PostData(1, fOutputListOfTrees);
 }
 
 //_____________________________________________________________________________
@@ -458,8 +219,7 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
   // stream the results the analysis of this event to the output manager
   // which will take care of writing it to a file
-  PostData(1, fOutputListOfHists);
-  PostData(2, fOutputListOfTrees);
+  PostData(1, fOutputListOfTrees);
 
   /*** End of Event: Clear STD Structures ***/
 
@@ -568,9 +328,6 @@ void AliAnalysisTaskSexaquark::MCGen_FirstProcess() {
                  mcPart->Yv(), mcPart->Zv());
       }
       */
-
-      // (hist operations)
-      // FillMCHistograms_Products(mcPart);
 
       // (tree operations)
       // before pushing back, it's important to correctly index this
@@ -2035,7 +1792,6 @@ void AliAnalysisTaskSexaquark::MCGen_PushBack(AliMCParticle* mcPart, Int_t gener
 void AliAnalysisTaskSexaquark::MCGen_InsertAntiSexaquark(TVector3 antilambda, TVector3 neutral_kaon) {
   //
   // Insert at first position an artificial MC generated anti-sexaquark into the Event_tt object
-  // PENDING: should be combined with "FillMCHistograms_Sexaquark()"
   //
   // (1) prepare
   // solve daughters indexing, add 1 because of the inserted sexaquark
@@ -2215,102 +1971,4 @@ void AliAnalysisTaskSexaquark::ClearEvent() {
   fEvent.V0_ArmPt.clear();
   fEvent.V0_DecayLength.clear();
   fEvent.V0_DCA_wrtPV.clear();
-}
-
-/*** HIST OPERATIONS ***/
-
-//_____________________________________________________________________________
-void AliAnalysisTaskSexaquark::FillMCHistograms_Products(AliMCParticle* mcPart) {
-  //
-  // Fill the histograms that represent the generated MC final-state products
-  //
-  // fill PDG histogram
-  fHistMC_PDG->Fill(mcPart->PdgCode());
-  /*
-  if (mcPart->PdgCode() == 321) {
-    // Positive kaon
-    fHistMC_Kp_P->Fill(mcPart->P());
-    fHistMC_Kp_Pt->Fill(mcPart->Pt());
-  } else if (mcPart->PdgCode() == 211) {
-    // Positive pion
-    fHistMC_Pip_P->Fill(mcPart->P());
-    fHistMC_Pip_Pt->Fill(mcPart->Pt());
-  } else if (mcPart->PdgCode() == -211) {
-    // Negative pion
-    fHistMC_Pim_P->Fill(mcPart->P());
-    fHistMC_Pim_Pt->Fill(mcPart->Pt());
-  } else if (mcPart->PdgCode() == -2212) {
-    // Antiproton
-    fHistMC_AntiP_P->Fill(mcPart->P());
-    fHistMC_AntiP_Pt->Fill(mcPart->Pt());
-  } else if (mcPart->PdgCode() == -2112) {
-    // Antineutron
-    fHistMC_AntiN_P->Fill(mcPart->P());
-    fHistMC_AntiN_Pt->Fill(mcPart->Pt());
-  } else if (mcPart->PdgCode() == 22) {
-    // Gamma
-    fHistMC_Gamma_P->Fill(mcPart->P());
-    fHistMC_Gamma_Pt->Fill(mcPart->Pt());
-  }
-  */
-}
-
-//_____________________________________________________________________________
-void AliAnalysisTaskSexaquark::FillMCHistograms_Sexaquark(std::vector<Int_t> fsProducts, Int_t fsCharge) {
-  //
-  // Fill the histograms that represent the generated sexaquarks
-  // (at difference with FillHistograms_Sexaquark(), this function is general-purpose,
-  // if MCComesFromSexaquark() works correctly, this one should work for every decay channel)
-  //
-
-  Double_t mcNucleon_M = kMassProton;
-  if (fsCharge == 0) {
-    mcNucleon_M = kMassNeutron;
-  }
-
-  // define nucleon at rest
-  Double_t mcNucleon_Px = 0;
-  Double_t mcNucleon_Py = 0;
-  Double_t mcNucleon_Pz = 0;
-  Double_t mcNucleon_E = mcNucleon_M;
-
-  // define sexaquark kinematics
-  Double_t mcSexaquark_Px = 0;
-  Double_t mcSexaquark_Py = 0;
-  Double_t mcSexaquark_Pz = 0;
-  Double_t mcSexaquark_E = 0;
-
-  // add four-momentum of each final-state particle
-  AliMCParticle* fsPart;
-  for (Int_t i = 0; i < (Int_t)fsProducts.size(); i++) {
-    fsPart = (AliMCParticle*)fMC->GetTrack(fsProducts[i]);
-    mcSexaquark_Px += fsPart->Px();
-    mcSexaquark_Py += fsPart->Py();
-    mcSexaquark_Pz += fsPart->Pz();
-    mcSexaquark_E += fsPart->E();
-  }
-
-  // remove four-momentum of rest target
-  mcSexaquark_Px -= 0.;
-  mcSexaquark_Py -= 0.;
-  mcSexaquark_Pz -= 0.;
-  mcSexaquark_E -= mcNucleon_E;
-
-  // reconstruct momentum of the sexaquark and fill histogram
-  Double_t mcSexaquark_P = TMath::Sqrt(TMath::Power(mcSexaquark_Px, 2) + TMath::Power(mcSexaquark_Py, 2) + TMath::Power(mcSexaquark_Pz, 2));
-  // fHistMC_Sexaquark_P->Fill(mcSexaquark_P);
-
-  // reconstruct transverse-momentum of the sexaquark and fill histogram
-  Double_t mcSexaquark_Pt = TMath::Sqrt(TMath::Power(mcSexaquark_Px, 2) + TMath::Power(mcSexaquark_Py, 2));
-  // fHistMC_Sexaquark_Pt->Fill(mcSexaquark_Pt);
-
-  // reconstruct mass of the sexaquark and fill histogram
-  Double_t mcSexaquark_M;
-  if (TMath::Power(mcSexaquark_E, 2) - TMath::Power(mcSexaquark_P, 2) >= 0) {
-    mcSexaquark_M = TMath::Sqrt(TMath::Power(mcSexaquark_E, 2) - TMath::Power(mcSexaquark_P, 2));
-    // fHistMC_Sexaquark_M->Fill(mcSexaquark_M);
-    AliInfoF("M_S = %.6f", mcSexaquark_M);
-  } else {
-    AliInfo("M_S is OFF-SHELL");
-  }
 }
