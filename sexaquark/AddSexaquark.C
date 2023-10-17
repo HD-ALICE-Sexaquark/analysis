@@ -30,11 +30,10 @@ AliAnalysisTaskSexaquark* AddSexaquark(TString name = "name", Bool_t IsMC = kTRU
 
   // add your task to the manager
   mgr->AddTask(task);
-  // your task needs input: here we connect the manager to your task
+  // connect task's to the manager
   mgr->ConnectInput(task, 0, mgr->GetCommonInputContainer());
   // same for the output
-  mgr->ConnectOutput(task, 1, mgr->CreateContainer("Hists", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
-  mgr->ConnectOutput(task, 2, mgr->CreateContainer("Trees", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
+  mgr->ConnectOutput(task, 1, mgr->CreateContainer("Trees", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
 
   // in the end, this macro returns a pointer to your task. this will be convenient later on
   // when you will run your analysis in an analysis train on grid

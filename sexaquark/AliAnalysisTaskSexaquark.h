@@ -48,34 +48,43 @@ struct Event_tt {
   std::vector<Float_t> MC_Px;             // x-component of true momentum
   std::vector<Float_t> MC_Py;             // y-component of true momentum
   std::vector<Float_t> MC_Pz;             // z-component of true momentum
-  std::vector<Float_t> MC_X;              // x-coordinate of generation vertex
-  std::vector<Float_t> MC_Y;              // y-coordinate of generation vertex
-  std::vector<Float_t> MC_Z;              // z-coordinate of generation vertex
+  std::vector<Float_t> MC_X;              // initial x-coordinate of generation vertex
+  std::vector<Float_t> MC_Y;              // initial y-coordinate of generation vertex
+  std::vector<Float_t> MC_Z;              // initial z-coordinate of generation vertex
+  std::vector<Float_t> MC_Xf;             // final x-coordinate of generation vertex
+  std::vector<Float_t> MC_Yf;             // final y-coordinate of generation vertex
+  std::vector<Float_t> MC_Zf;             // final z-coordinate of generation vertex
   std::vector<Int_t> MC_PID;              // PDG code
   std::vector<Int_t> MC_Mother;           // index of mother
   std::vector<Int_t> MC_PID_Mother;       // PID of mother
   std::vector<Int_t> MC_PID_GrandMother;  // PID of grandmother
+  std::vector<Int_t> MC_NDaughters;       // number of daughters
   std::vector<Int_t> MC_FirstDau;         // index of first daughter
   std::vector<Int_t> MC_LastDau;          // index of last daughter
-  std::vector<Int_t> MC_Gen;              // generation (to diff. between daughters and grandaughters) (only valid for signal particles)
   std::vector<Int_t> MC_Status;           // MC status code
   std::vector<Bool_t> MC_isSignal;        // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
 
   /* MC Rec. Tracks */
 
-  Int_t N_MCRec;                           // number of MC reconstructed tracks
-  std::vector<Int_t> Idx_True;             // index of true MC particle
-  std::vector<Float_t> Rec_Px;             // x-component of reconstructed momentum
-  std::vector<Float_t> Rec_Py;             // y-component of reconstructed momentum
-  std::vector<Float_t> Rec_Pz;             // z-component of reconstructed momentum
-  std::vector<Short_t> Rec_Charge;         // measured charge
-  std::vector<Float_t> Rec_IP_wrtPV;       // transverse impact parameter w.r.t. Primary Vertex
-  std::vector<Float_t> Rec_NSigmaPion;     // absolute value of likeness to be a charged pion (closer to 0, the most likely)
-  std::vector<Float_t> Rec_NSigmaProton;   // absolute value of likeness to be a proton (closer to 0, the most likely)
-  std::vector<Short_t> Rec_NClustersTPC;   // number of clusters assigned in the TPC
-  std::vector<Bool_t> Rec_isDuplicate_v1;  // kTRUE if track is a duplicate, kFALSE if not (v1: compared to true particle)
-  std::vector<Bool_t> Rec_isDuplicate_v2;  // kTRUE if track is a duplicate, kFALSE if not (v2: compared to similar particles)
-  std::vector<Bool_t> Rec_isSignal;        // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
+  Int_t N_MCRec;                          // number of MC reconstructed tracks
+  std::vector<Int_t> Idx_True;            // index of true MC particle
+  std::vector<Float_t> Rec_Px;            // x-component of reconstructed momentum
+  std::vector<Float_t> Rec_Py;            // y-component of reconstructed momentum
+  std::vector<Float_t> Rec_Pz;            // z-component of reconstructed momentum
+  std::vector<Short_t> Rec_Charge;        // measured charge
+  std::vector<Float_t> Rec_IP_wrtPV;      // transverse impact parameter w.r.t. Primary Vertex
+  std::vector<Float_t> Rec_NSigmaPion;    // absolute value of likeness to be a charged pion (closer to 0, the most likely)
+  std::vector<Float_t> Rec_NSigmaProton;  // absolute value of likeness to be a proton (closer to 0, the most likely)
+  std::vector<Short_t> Rec_NClustersTPC;  // number of clusters assigned in the TPC
+  std::vector<Bool_t> Rec_isDuplicate;    // kTRUE if track is a duplicate, kFALSE if not (v1: compared to true particle)
+  std::vector<Bool_t> Rec_isSimilar;      // kTRUE if track is a duplicate, kFALSE if not (v2: compared to similar particles)
+  std::vector<Bool_t> Rec_isSignal;       // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
+  std::vector<Float_t> Rec_HelixParam0;   // helix param. 0
+  std::vector<Float_t> Rec_HelixParam1;   // helix param. 1
+  std::vector<Float_t> Rec_HelixParam2;   // helix param. 2
+  std::vector<Float_t> Rec_HelixParam3;   // helix param. 3
+  std::vector<Float_t> Rec_HelixParam4;   // helix param. 4
+  std::vector<Float_t> Rec_HelixParam5;   // helix param. 5
 
   /* V0s */
 
@@ -113,33 +122,94 @@ class AliPIDResponse;
 
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
  public:
-  AliAnalysisTaskSexaquark();
-  AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, Bool_t HasSexaquark, TString SourceOfV0s, char SimulationSet);
-  virtual ~AliAnalysisTaskSexaquark();
+  AliAnalysisTaskSexaquark()
+      : AliAnalysisTaskSE(),
+        fIsMC(0),
+        fHasSexaquark(0),
+        fSourceOfV0s(),
+        fSimulationSet(0),
+        fOutputListOfTrees(0),
+        kMassNeutron(0),
+        kMassProton(0),
+        kMassPion(0),
+        kMassKaon(0),
+        fMC(0),
+        fESD(0),
+        fPIDResponse(0),
+        fPrimaryVertex(0),
+        fTree(0),
+        fMap_Evt_MCGen(),
+        fVec_Idx_MCGen(),
+        fMap_Evt_MCRec(),
+        fVec_Idx_MCRec(),
+        fVec_MCRec_IsDuplicate(),
+        fVec_MCRec_IsSimilar(),
+        fVec_Idx_MCGen_NonRel(),
+        fMap_Duplicates(),
+        fVec_V0s(),
+        fEvent() {}
+  AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, Bool_t HasSexaquark, TString SourceOfV0s, char SimulationSet)
+      : AliAnalysisTaskSE(name),
+        fIsMC(IsMC),
+        fHasSexaquark(HasSexaquark),
+        fSourceOfV0s(SourceOfV0s),
+        fSimulationSet(SimulationSet),
+        fOutputListOfTrees(0),
+        kMassNeutron(0),
+        kMassProton(0),
+        kMassPion(0),
+        kMassKaon(0),
+        fMC(0),
+        fESD(0),
+        fPIDResponse(0),
+        fPrimaryVertex(0),
+        fTree(0),
+        fMap_Evt_MCGen(),
+        fVec_Idx_MCGen(),
+        fMap_Evt_MCRec(),
+        fVec_Idx_MCRec(),
+        fVec_MCRec_IsDuplicate(),
+        fVec_MCRec_IsSimilar(),
+        fVec_Idx_MCGen_NonRel(),
+        fMap_Duplicates(),
+        fVec_V0s(),
+        fEvent() {
+    DefineInput(0, TChain::Class());
+    DefineOutput(1, TList::Class());
+    CheckForInputErrors();
+  }
+  virtual ~AliAnalysisTaskSexaquark() {
+    if (fOutputListOfTrees) {
+      delete fOutputListOfTrees;
+    }
+  }
 
   // main functions
   virtual void UserCreateOutputObjects();
   virtual void UserExec(Option_t* option);
-  virtual void Terminate(Option_t* option);
+  virtual void Terminate(Option_t* option) { return; }
 
   // main functions, authored by me
   virtual void InitPDGMasses();
   virtual void CheckForInputErrors();
 
   // MC Gen.
-  virtual void MCGen_FirstProcess();
-  virtual void MCGen_SecondProcess();
-  virtual void MCGen_ThirdProcess();
-  virtual void MCGen_VerifySourceAndGeneration(AliMCParticle* mcPart, Int_t& generation, Bool_t& label);
+  virtual void MCGen_FindRelevant();
+  virtual void MCGen_GetMotherInfo(AliMCParticle* mcPart, Int_t& evt_mother, Int_t& mother_pid, Int_t& grandmother_pid);
+  virtual Bool_t MCGen_IsSignal(AliMCParticle* mcPart);
+  virtual void MCGen_AddNonRelevant();
+  virtual void MCGen_GetDaughtersInfo(AliMCParticle* mcPart, Int_t& n_dau, Int_t& n_first_dau, Int_t& n_last_dau);
 
   // MC Rec.
-  virtual void MCRec_FirstProcess();
-  virtual void MCRec_SecondProcess();
+  virtual void MCRec_FindRelevant();
+  virtual void MCRec_FindDuplicates();
+  virtual void MCRec_FindSimilarTracks();
+  virtual Float_t MCRec_GetImpactParameter(AliESDtrack* track);
 
-  // V0s (alternatives)
+  // V0 Finders
   virtual void V0_ProcessESD();
-  virtual void V0_ProcessCustom();
   virtual void V0_ProcessTrue();
+  virtual void V0_ProcessCustom();
 
   // custom offline V0 finder (based on AliV0vertexer.cxx)
   virtual Bool_t Preoptimize(const AliExternalTrackParam* nt, AliExternalTrackParam* pt, Double_t* lPreprocessxn, Double_t* lPreprocessxp,
@@ -161,10 +231,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
   // (tree operations)
   virtual void SetBranches();
-  virtual void MCGen_PushBack(AliMCParticle* mcPart, Int_t generation, Bool_t isSignal);
-  virtual void MCGen_InsertAntiSexaquark(TVector3 antilambda, TVector3 neutral_kaon);
-  virtual void MCRec_PushBack(AliESDtrack* track, Bool_t isDuplicate);
-  virtual void V0_PushBack(V0_tt v0);
+  virtual void MCGen_PushBack(Int_t evt_mc);
+  virtual void MCRec_PushBack(Int_t evt_track);
+  virtual void V0_PushBack(Int_t evt_v0);
   virtual void ClearEvent();
 
  private:
@@ -186,31 +255,31 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
   Double_t kMassPion;
   Double_t kMassKaon;
 
-  // output lists
-  TList* fOutputListOfTrees;
+  Event_tt fEvent;
 
+  std::unordered_map<Int_t, Int_t> fMap_Evt_MCGen;  // [Idx, Evt]
+  std::vector<Int_t> fVec_Idx_MCGen;
+
+  std::unordered_map<Int_t, Int_t> fMap_Evt_MCRec;  // [Idx, Evt]
+  std::vector<Int_t> fVec_Idx_MCRec;
+
+  std::vector<Bool_t> fVec_MCRec_IsDuplicate;
+  std::vector<Bool_t> fVec_MCRec_IsSimilar;
+
+  std::vector<Int_t> fVec_Idx_MCGen_NonRel;             // (non.rel.->rel.)
+  std::map<Int_t, std::vector<Int_t>> fMap_Duplicates;  // (duplicated tracks) [Idx_MCGen, {Idx_MCRec_0, ...}]
+
+  std::vector<V0_tt> fVec_V0s;
+
+  // input objects
   AliMCEvent* fMC;               // corresponding MC event
   AliESDEvent* fESD;             // input event
   AliPIDResponse* fPIDResponse;  // pid response object
+  AliESDVertex* fPrimaryVertex;  // primary vertex
 
-  // (duplicated tracks)
-  std::map<Int_t, std::vector<Int_t>> fMap_DuplicatedTracks;  // map [MC Index, vector of indices of rec tracks that have been linked to it]
-
-  // (non-relevant, but rec. as relevant)
-  std::set<Int_t> fIndex_NonRelevantMC;
-
-  // Struct
-  Event_tt fEvent;
-
-  // Trees
+  // output objects
+  TList* fOutputListOfTrees;
   TTree* fTree;
-
-  // [should come with a better name than these...]
-  std::map<Int_t, Int_t> fIndexer_fMC_to_fEvent;
-  std::map<Int_t, Int_t> fIndexer_fTrack_to_fEvent;
-
-  // (artificial sexaquark)
-  std::vector<Int_t> fSexaquarkDaughters;
 
   AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
   AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
