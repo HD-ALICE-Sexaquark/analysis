@@ -27,6 +27,8 @@ function process_args() {
             DIR_NUMBER=${arr[$((ic+1))]}
         elif [[ "${arr[$ic]}" == "--channel" ]]; then
             REACTION_CHANNEL=${arr[$((ic+1))]}
+        elif [[ "${arr[$ic]}" == "--n" ]]; then
+            N_EVENTS=${arr[$((ic+1))]}
         else
             echo "analyze.sh :: ERROR: unrecognized argument: ${arr[$((ic))]}."
             print_help
@@ -55,14 +57,16 @@ function print_usage() {
     echo "analyze.sh ::                        (default value: 297595)"
     echo "analyze.sh ::         <dir-number> : choose specific directory, within a run number dir"
     echo "analyze.sh ::                        (default value: *)"
+    echo "analyze.sh ::         <n>          : choose number of events"
+    echo "analyze.sh ::                        (default value: 0, which means all)"
     echo "analyze.sh ::         <reaction-channel> : reaction channel to analyze" # PENDING! will be important later
     echo "analyze.sh ::                              - A (AntiS + N -> AntiL + K0)"
-    echo "analyze.sh ::                              - B (AntiS + N -> AntiL + K0 + pim + pip)"
-    echo "analyze.sh ::                              - C (AntiS + N -> AntiP + K0 + K0 + pip)"
-    echo "analyze.sh ::                              - D (AntiS + P -> AntiL + Kp)"
+    # echo "analyze.sh ::                              - B (AntiS + N -> AntiL + K0 + pim + pip)"
+    # echo "analyze.sh ::                              - C (AntiS + N -> AntiP + K0 + K0 + pip)"
+    # echo "analyze.sh ::                              - D (AntiS + P -> AntiL + Kp)"
     echo "analyze.sh ::                              - E (AntiS + P -> AntiL + Kp + pim + pip)"
-    echo "analyze.sh ::                              - F (AntiS + P -> AntiP + Kp + K0 + pip)"
-    echo "analyze.sh ::                              - G (AntiS + N -> Xip + pim)"
+    # echo "analyze.sh ::                              - F (AntiS + P -> AntiP + Kp + K0 + pip)"
+    # echo "analyze.sh ::                              - G (AntiS + N -> Xip + pim)"
     echo "analyze.sh ::                              (default value: A)"
     echo "analyze.sh ::"
     echo "analyze.sh :: EXAMPLES :"
@@ -120,6 +124,9 @@ fi
 if [[ -z "${DIR_NUMBER}"  ]]; then
     DIR_NUMBER="*" # wildcard
 fi
+if [[ -z "${N_EVENTS}"  ]]; then
+    N_EVENTS=0 # all
+fi
 
 # after input options, decide further variables
 if [[ "${V0S_OPTION}" == "official" ]]; then
@@ -166,19 +173,25 @@ echo "analyze.sh :: - source of V0s    : ${V0S_OPTION}"
 echo "analyze.sh :: - run number       : ${RUN_NUMBER}"
 echo "analyze.sh :: - dir number       : ${DIR_NUMBER}"
 echo "analyze.sh :: - reaction channel : ${REACTION_CHANNEL} (${CHANNEL_STR})"
+if [[ ${N_EVENTS} -eq 0 ]]; then
+    echo "analyze.sh :: - n of events      : all"
+else
+    echo "analyze.sh :: - n of events      : ${N_EVENTS}"
+fi
 echo "analyze.sh :: " # empty line
 
 # create output dir if it doesn't exist
 CURRENT_DIR=${PWD}
+CUSTOM_V0_FINDER_DIR=${CURRENT_DIR}/custom-v0-finder
 
 OUT_DIR=${PWD}/output/${SIM_SET}/${RUN_NUMBER}
 mkdir -p ${OUT_DIR}
 
 echo "analyze.sh :: copying analysis files"
-echo -n "analyze.sh :: "; cp -v AliAnalysisTaskSexaquark.cxx ${OUT_DIR}/
-echo -n "analyze.sh :: "; cp -v AliAnalysisTaskSexaquark.h ${OUT_DIR}/
-echo -n "analyze.sh :: "; cp -v runAnalysis.C ${OUT_DIR}/
-echo -n "analyze.sh :: "; cp -v AddSexaquark.C ${OUT_DIR}/
+echo -n "analyze.sh :: "; cp -v ${CUSTOM_V0_FINDER_DIR}/AliAnalysisTaskSexaquark.cxx ${OUT_DIR}/
+echo -n "analyze.sh :: "; cp -v ${CUSTOM_V0_FINDER_DIR}/AliAnalysisTaskSexaquark.h ${OUT_DIR}/
+echo -n "analyze.sh :: "; cp -v ${CUSTOM_V0_FINDER_DIR}/runAnalysis.C ${OUT_DIR}/
+echo -n "analyze.sh :: "; cp -v ${CUSTOM_V0_FINDER_DIR}/AddSexaquark.C ${OUT_DIR}/
 echo "analyze.sh :: " # empty line
 
 echo "analyze.sh :: moving into ${OUT_DIR}"
@@ -205,7 +218,7 @@ for dir in $(readlink -f ${INPUT_DIR}); do
     echo "analyze.sh :: " # empty line
 
     echo "analyze.sh :: analyzing..."
-    aliroot -l -b -q 'runAnalysis.C(1, '${HAS_SEXAQUARK}', "'${V0S_OPTION}'", "'${REACTION_CHANNEL}'")' &> analysis.log
+    aliroot -l -b -q 'runAnalysis.C(1, '${HAS_SEXAQUARK}', "'${V0S_OPTION}'", "'${REACTION_CHANNEL}'", '${N_EVENTS}')' 2>&1 | tee analysis.log
 
     # if the log file exists, move it and rename it
     if [[ -e analysis.log ]]; then

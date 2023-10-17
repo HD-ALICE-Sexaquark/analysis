@@ -112,10 +112,6 @@ elif [[ "${V0S_OPTION}" == "true" ]]; then
 fi
 
 ANALYSIS_DIR="${HOME}/work/analysis/output/${SIM_SET}/${RUN_NUMBER}"
-HAS_SEXAQUARK=1 # valid for "${SIM_SET}" == "only_signal" or "signal+bkg"
-if [[ "${SIM_SET}" == "only_bkg" || "${SIM_SET}" == "only_V0s" ]]; then
-    HAS_SEXAQUARK=0
-fi
 
 echo "find.sh :: initiating..."
 echo "find.sh :: - simulation set : ${SIM_SET}"
@@ -128,7 +124,7 @@ for ((file_index = 0; file_index < 4; file_index++)); do
 
     ANALYSIS_FILE=${ANALYSIS_DIR}/AnalysisResults_${V0S_STR}_00${file_index}.root
     SEXAQUARK_FILE=${ANALYSIS_DIR}/SexaquarkResults_${V0S_STR}_00${file_index}.root
-    SEXAQUARK_LOG=${ANALYSIS_DIR}/AnalysisResults_${V0S_STR}_00${file_index}.root
+    SEXAQUARK_LOG=${ANALYSIS_DIR}/SexaquarkResults_${V0S_STR}_00${file_index}.log
 
     TMP_FILE=${ANALYSIS_DIR}/SexaquarkResults.root
     TMP_LOG=${ANALYSIS_DIR}/sexaquark.log
@@ -140,12 +136,12 @@ for ((file_index = 0; file_index < 4; file_index++)); do
     fi
 
     # if the output file exists, rename it
-    if [[ -e ${SEXAQUARK_FILE} ]]; then
+    if [[ -e ${TMP_FILE} ]]; then
         echo -n "find.sh :: "; mv -v ${TMP_FILE} ${SEXAQUARK_FILE}
     fi
 
     # if the log file exists, rename it
-    if [[ -e ${SEXAQUARK_LOG} ]]; then
+    if [[ -e ${TMP_LOG} ]]; then
         echo -n "find.sh :: "; mv -v ${TMP_LOG} ${SEXAQUARK_LOG}
     fi
 
