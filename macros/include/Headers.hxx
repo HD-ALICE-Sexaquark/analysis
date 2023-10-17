@@ -27,5 +27,6 @@
 #include "TROOT.h"
 #include "TString.h"
 #include "TStyle.h"
+#include "TVector3.h"
 
 #endif

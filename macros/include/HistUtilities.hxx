@@ -1,20 +1,18 @@
-#ifndef UTILITIES_HXX
-#define UTILITIES_HXX
+#ifndef HistUtilities_hxx
+#define HistUtilities_hxx
 
 #include "Headers.hxx"
-
-//_____________________________________________________________________________
-void ParseTreeFilename(TString name, TString &dirname, TString &filename, TString &listname, TString &treename) {
-  //
-  // Get information from the name
-  // - input: name
-  // - outputs: dirname, filename, listname, treename
-  //
+/**
+  Get information from the name
+  - input: name
+  - outputs: dirname, filename, listname, histname
+**/
+void ParseHistFilename(TString name, TString &dirname, TString &filename, TString &listname, TString &histname) {
 
   dirname.Clear();
   filename.Clear();
   listname.Clear();
-  treename.Clear();
+  histname.Clear();
 
   // find where .root is
   TString dot_root = ".root";
@@ -26,49 +24,44 @@ void ParseTreeFilename(TString name, TString &dirname, TString &filename, TStrin
   dirname = first_half(0, first_half.Last('/'));
   filename = first_half(first_half.Last('/') + 1, first_half.Length());
 
-  // second half: after .root, to extract listname and treename
+  // second half: after .root, to extract listname and histname
   TString second_half = name(js + dot_root.Length(), name.Length() - js);
   listname = second_half(1, second_half.Last('/') - 1);
-  treename = second_half(second_half.Last('/') + 1, second_half.Length());
+  histname = second_half(second_half.Last('/') + 1, second_half.Length());
 
-  // debug
-  /*
-    std::cout << "ParseTreeFilename :: dirname  = " << dirname << std::endl;
-    std::cout << "ParseTreeFilename :: filename = " << filename << std::endl;
-    std::cout << "ParseTreeFilename :: listname = " << listname << std::endl;
-    std::cout << "ParseTreeFilename :: treename = " << treename << std::endl;
-  */
+  // (debug)
+  std::cout << "ParseHistFilename :: dirname  = " << dirname << std::endl;
+  std::cout << "ParseHistFilename :: filename = " << filename << std::endl;
+  std::cout << "ParseHistFilename :: listname = " << listname << std::endl;
+  std::cout << "ParseHistFilename :: histname = " << histname << std::endl;
 }
 
-//_____________________________________________________________________________
+/**
+  Add a new file to this list
+**/
 void AddFileToList(TList *list, const char *name) {
-  //
-  // Add a new file to this list
-  //
-
-  TString dirname, filename, listname, treename;
-  ParseTreeFilename(name, dirname, filename, listname, treename);
+  TString dirname, filename, listname, histname;
+  ParseHistFilename(name, dirname, filename, listname, histname);
 
   TFile *input_file = new TFile(dirname + "/" + filename, "READ");
   TList *input_list = (TList *)input_file->Get(listname);
-  TTree *input_tree = (TTree *)input_list->FindObject(treename);
+  TH1 *input_hist = (TH1 *)input_list->FindObject(histname);
 
-  list->Add(input_tree);
+  list->Add(input_hist);
 }
 
-//_____________________________________________________________________________
-void AddTreesToList(TList *list, const char *name) {
-  //
-  //
-  //
+/**
 
-  TString directory, filename, listname, treename;
-  ParseTreeFilename(name, directory, filename, listname, treename);
+**/
+void AddHistsToList(TList *list, const char *name) {
+
+  TString directory, filename, listname, histname;
+  ParseHistFilename(name, directory, filename, listname, histname);
 
   // case A: no wildcard
   if (!filename.MaybeWildcard() && !directory.MaybeWildcard()) {
-    // printf("AddTreesToList :: wildcard not found\n");
-    // printf("AddTreesToList :: Adding %s\n", name);
+    printf("AddHistsToList :: wildcard not found\n");
+    printf("AddHistsToList :: Adding %s\n", name);
     AddFileToList(list, name);
     return;
   }
@@ -131,9 +124,9 @@ void AddTreesToList(TList *list, const char *name) {
     if (!filename.MaybeWildcard()) {
       // printf("AddTreesToList :: wildcard not found on filename\n");
       // printf("AddTreesToList :: Adding %s/%s/%s/%s/%s\n", top_directory.Data(), one_dir, filename.Data(), listname.Data(),
-      // treename.Data());
+      // histname.Data());
       AddFileToList(list,
-                    TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, filename.Data(), listname.Data(), treename.Data()));
+                    TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, filename.Data(), listname.Data(), histname.Data()));
       continue;
     }
 
@@ -176,8 +169,8 @@ void AddTreesToList(TList *list, const char *name) {
     while ((current_file = (TObjString *)next_file())) {
 
       one_file = current_file->GetName();
-      // printf("AddTreesToList :: Adding %s/%s/%s/%s/%s\n", top_directory.Data(), one_dir, one_file, listname.Data(), treename.Data());
-      AddFileToList(list, TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, one_file, listname.Data(), treename.Data()));
+      // printf("AddTreesToList :: Adding %s/%s/%s/%s/%s\n", top_directory.Data(), one_dir, one_file, listname.Data(), histname.Data());
+      AddFileToList(list, TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, one_file, listname.Data(), histname.Data()));
     }  // end of loop over files
 
     file_list.Delete();

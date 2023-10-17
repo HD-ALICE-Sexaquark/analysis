@@ -11,6 +11,7 @@ Color_t myCyan = kCyan + 1;
 Color_t myMagenta = kPink - 8;
 Color_t myBlack = kGray + 3;
 
+//________________________________________________________________________
 void DrawVerticalLine(Double_t x, Color_t color = kBlack, Style_t style = kDashed, Int_t width = 3) {
   gPad->Update();  // necessary
   Double_t u = (x - gPad->GetX1()) / (gPad->GetX2() - gPad->GetX1());
@@ -23,6 +24,7 @@ void DrawVerticalLine(Double_t x, Color_t color = kBlack, Style_t style = kDashe
   linex->Draw();
 }
 
+//________________________________________________________________________
 void SetMyHistStyle(TH1F *theHist) {
   theHist->SetTitle("");
   theHist->SetLineWidth(2);
@@ -34,6 +36,7 @@ void SetMyHistStyle(TH1F *theHist) {
   theHist->GetXaxis()->SetTitleOffset(1.2);
 }
 
+//________________________________________________________________________
 void SetMyStyle() {
   gStyle->SetPadTickX(1);
   gStyle->SetPadTickY(1);
@@ -45,12 +48,14 @@ void SetMyStyle() {
   gStyle->SetPadLeftMargin(0.15);
 }
 
-void DrawText(TString content, Color_t color = kBlack, Float_t min_y = 0.8) {
-  TPaveText *pav = new TPaveText(0.55, min_y, 0.85, min_y + 0.1, "NDC");  // x1,y1,x2,y2
+//________________________________________________________________________
+void DrawText(TString content, Color_t color = kBlack, Float_t min_x = 0.55, Float_t min_y = 0.8,  //
+              Short_t text_h_align = kHAlignCenter, Short_t text_v_align = kVAlignCenter) {
+  TPaveText *pav = new TPaveText(min_x, min_y, min_x + 0.3, min_y + 0.1, "NDC");  // x1,y1,x2,y2
   pav->AddText(content);
   pav->SetTextSize(0.03);
   pav->SetTextColor(color);
-  ((TText *)pav->GetListOfLines()->Last())->SetTextAlign(22);  // centered hor. and vert.
+  ((TText *)pav->GetListOfLines()->Last())->SetTextAlign(text_h_align + text_v_align);
   pav->SetBorderSize(0);
   pav->SetFillStyle(0);
   // pav->SetFillColor(kWhite);
@@ -58,6 +63,7 @@ void DrawText(TString content, Color_t color = kBlack, Float_t min_y = 0.8) {
   pav->Draw();
 }
 
+//________________________________________________________________________
 void SetMy2DHistStyle(TH2F *theHist) {
   theHist->SetTitle("");
   theHist->GetYaxis()->SetTitleSize(0.04);
@@ -68,6 +74,7 @@ void SetMy2DHistStyle(TH2F *theHist) {
   theHist->GetZaxis()->SetTickLength(0.02);
 }
 
+//________________________________________________________________________
 void SetMy2DStyle() {
   gStyle->SetPadTickX(1);
   gStyle->SetPadTickY(1);
