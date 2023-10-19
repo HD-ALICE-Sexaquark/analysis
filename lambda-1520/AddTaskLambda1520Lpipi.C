@@ -1,4 +1,4 @@
-AliAnalysisTaskLambda1520* AddTaskLambda1520Lpipi(TString name = "name", Bool_t IsMC = kTRUE) {
+AliAnalysisTaskLambda1520Lpipi* AddTaskLambda1520Lpipi(TString name = "name", Bool_t IsMC = kTRUE) {
   // get the manager via the static access member. since it's static, you don't need
   // to create an instance of the class here to call the function
   AliAnalysisManager* mgr = AliAnalysisManager::GetAnalysisManager();
@@ -17,7 +17,7 @@ AliAnalysisTaskLambda1520* AddTaskLambda1520Lpipi(TString name = "name", Bool_t 
   // fileName += ":Lambda1520";  // create a subfolder in the file
 
   // now we create an instance of your task
-  AliAnalysisTaskLambda1520* task = new AliAnalysisTaskLambda1520(name.Data(), IsMC);
+  AliAnalysisTaskLambda1520Lpipi* task = new AliAnalysisTaskLambda1520Lpipi(name.Data(), IsMC);
 
   if (!task) {
     return 0x0;

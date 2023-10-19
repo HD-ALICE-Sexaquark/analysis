@@ -8,61 +8,9 @@ class AliPIDResponse;
 class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
 
  public:
-  AliAnalysisTaskLambda1520Lpipi()
-      : AliAnalysisTaskSE(),
-        fIsMC(0),
-        fOutputListOfTrees(0),
-        fOutputListOfHists(0),
-        kMassNeutron(0),
-        kMassProton(0),
-        kMassPion(0),
-        kMassKaon(0),
-        fMC(0),
-        fESD(0),
-        fPIDResponse(0),
-        fPrimaryVertex(0),
-        fTree(0),
-        fHist_Bookkeeper(0),
-        fHist_TrueLambda_Pt(0),
-        fHist_TrueLambda_Pz(0),
-        fHist_TrueLambda_Radius(0),
-        fHist_TrueAntiLambda_Pt(0),
-        fHist_TrueAntiLambda_Pz(0),
-        fHist_TrueAntiLambda_Radius(0) {}
-  AliAnalysisTaskLambda1520Lpipi(const char* name, Bool_t IsMC)
-      : AliAnalysisTaskSE(name),
-        fIsMC(IsMC),
-        fOutputListOfTrees(0),
-        fOutputListOfHists(0),
-        kMassNeutron(0),
-        kMassProton(0),
-        kMassPion(0),
-        kMassKaon(0),
-        fMC(0),
-        fESD(0),
-        fPIDResponse(0),
-        fPrimaryVertex(0),
-        fTree(0),
-        fHist_Bookkeeper(0),
-        fHist_TrueLambda_Pt(0),
-        fHist_TrueLambda_Pz(0),
-        fHist_TrueLambda_Radius(0),
-        fHist_TrueAntiLambda_Pt(0),
-        fHist_TrueAntiLambda_Pz(0),
-        fHist_TrueAntiLambda_Radius(0) {
-    DefineInput(0, TChain::Class());
-    DefineOutput(1, TList::Class());
-    DefineOutput(2, TList::Class());
-    CheckForInputErrors();
-  }
-  ~AliAnalysisTaskLambda1520Lpipi() {
-    if (fOutputListOfTrees) {
-      delete fOutputListOfTrees;
-    }
-    if (fOutputListOfHists) {
-      delete fOutputListOfHists;
-    }
-  }
+  AliAnalysisTaskLambda1520Lpipi();
+  AliAnalysisTaskLambda1520Lpipi(const char* name, Bool_t IsMC);
+  virtual ~AliAnalysisTaskLambda1520Lpipi();
 
  public:
   virtual void UserCreateOutputObjects();
@@ -70,15 +18,32 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
   virtual void Terminate(Option_t* option) { return; }
 
  public:
-  virtual void InitPDGMasses();
   virtual void CheckForInputErrors();
 
+  void DefineCuts(TString cuts_option);
+
   virtual void ProcessMCGen(std::set<Int_t>&, std::set<Int_t>&);
-  virtual void ProcessMCRec(std::set<Int_t>, std::vector<Int_t>&);
-  virtual void ProcessTrueV0s_KF(std::vector<Int_t>, std::map<Int_t, Int_t>&, std::map<Int_t, Int_t>&, std::vector<AliKFParticle>&,
-                                 std::map<Int_t, std::vector<Int_t>>&, std::vector<AliKFParticle>&);
-  virtual void Lambda1520Finder(std::vector<AliKFParticle>, std::map<Int_t, std::vector<Int_t>>, std::vector<AliKFParticle>,
-                                std::vector<AliKFParticle>&);
+  virtual void ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal,                                        // (pending)
+                             std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks,      //
+                             std::vector<Int_t>& idxKaonPlusTracks, std::vector<Int_t>& idxKaonMinusTracks,  //
+                             std::vector<Int_t>& idxProtonTracks, std::vector<Int_t>& idxAntiProtonTracks);
+  virtual void ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks,  //
+                                 std::vector<Int_t> idxPositiveTracks,  //
+                                 Int_t pdgTrackNeg, Int_t pdgTrackPos,  //
+                                 std::vector<KFParticle>& kfV0s,        //
+                                 std::vector<std::vector<Int_t>>& idxDaughters);
+  virtual void Lambda1520Finder(std::vector<KFParticle> kfFirstV0s,                    //
+                                std::vector<std::vector<Int_t>> idxFirstV0Daughters,   //
+                                std::vector<KFParticle> kfSecondV0s,                   //
+                                std::vector<std::vector<Int_t>> idxSecondV0Daughters,  //
+                                std::vector<Int_t> pdgDaughters,                       //
+                                std::vector<KFParticle>& kfLambdas1520);
+  void SexaquarkFinder_ChannelA(std::vector<KFParticle> kfFirstV0s,                    //
+                                std::vector<std::vector<Int_t>> idxFirstV0Daughters,   //
+                                std::vector<KFParticle> kfSecondV0s,                   //
+                                std::vector<std::vector<Int_t>> idxSecondV0Daughters,  //
+                                std::vector<Int_t> pdgDaughters,                       //
+                                std::vector<KFParticle>& kfAntiSexaquarks);
   virtual void ProcessOfficialV0s(std::vector<Int_t>);
 
   virtual void ProcessTrueV0s();
@@ -95,37 +60,39 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
   KFVertex CreateKFVertex(const AliVVertex& vertex);
 
  private:
-  // (input options)
+  /* Input options */
   Bool_t fIsMC;
 
-  Double_t kMassNeutron;
-  Double_t kMassProton;
-  Double_t kMassPion;
-  Double_t kMassKaon;
+ private:
+  /* Cuts */
+  Float_t kMaxNSigma_Pion;
+  Float_t kMaxNSigma_Kaon;
+  Float_t kMaxNSigma_Proton;
+  Float_t kMaxDCA_T1_T2;
 
  private:
-  // AliRoot objects
+  /* AliRoot objects */
   AliMCEvent* fMC;               // corresponding MC event
   AliESDEvent* fESD;             // input event
   AliPIDResponse* fPIDResponse;  // pid response object
   AliESDVertex* fPrimaryVertex;  // primary vertex
+  Double_t fMagneticField;       // magnetic field
 
   TList* fOutputListOfTrees;
   TList* fOutputListOfHists;
 
  private:
+  /* ROOT objects */
+  TDatabasePDG fPDG;
   TTree* fTree;
-
- private:
-  /** Histogram to keep count of
-  - 0: n events
-  - 1: n gen lambda(1520)
-  - 2: n gen lambda(1520) -> lambda pi pi
-  - 3: n gen lambda(1520) -> lambda pi+ pi-
-  - 4: n gen anti-lambda(1520)
-  - 5: n gen anti-lambda(1520) -> anti-lambda pi pi
-  - 6: n gen anti-lambda(1520) -> anti-lambda pi+ pi-
-  */
+  // Histogram to keep count of
+  // - 0: n events
+  // - 1: n gen lambda(1520)
+  // - 2: n gen lambda(1520) -> lambda pi pi
+  // - 3: n gen lambda(1520) -> lambda pi+ pi-
+  // - 4: n gen anti-lambda(1520)
+  // - 5: n gen anti-lambda(1520) -> anti-lambda pi pi
+  // - 6: n gen anti-lambda(1520) -> anti-lambda pi+ pi-
   TH1I* fHist_Bookkeeper;
   TH1F* fHist_TrueLambda_Pt;
   TH1F* fHist_TrueLambda_Pz;
