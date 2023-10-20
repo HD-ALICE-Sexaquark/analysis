@@ -7,7 +7,7 @@
 #                                                            #
 ##############################################################
 
-# 29.Aug.2023
+# 20.Oct.2023
 ## A. Bórquez
 
 #############
@@ -18,7 +18,9 @@ function process_args() {
     arr=("$@")
     ic=0
     while [[ $ic -le $((${#arr[@]}-1)) ]]; do
-        if [[ "${arr[$ic]}" == "--rn" ]]; then
+        if [[ "${arr[$ic]}" == "--dataset" ]]; then
+            DATA_SET=${arr[$((ic+1))]}
+        elif [[ "${arr[$ic]}" == "--rn" ]]; then
             RUN_NUMBER=${arr[$((ic+1))]}
         elif [[ "${arr[$ic]}" == "--dir" ]]; then
             DIR_NUMBER=${arr[$((ic+1))]}
@@ -37,14 +39,19 @@ function print_usage() {
     echo "analyze.sh :: SCRIPT: analyze.sh"
     echo "analyze.sh :: =================="
     echo "analyze.sh :: "
-    echo "analyze.sh :: USAGE : ./analyze.sh --rn <run-number> --dir <dir-number>"
+    echo "analyze.sh :: USAGE : ./analyze.sh --dataset <prod_number> --rn <run_number> --dir <dir_number> --n <n_events>"
     echo "analyze.sh ::         where:"
-    echo "analyze.sh ::         <run-number> : choose run number"
-    echo "analyze.sh ::                        (default value: 297595)"
-    echo "analyze.sh ::         <dir-number> : choose specific directory, within a run number dir"
-    echo "analyze.sh ::                        (default value: *)"
-    echo "analyze.sh ::         <n>          : choose number of events to process"
-    echo "analyze.sh ::                        (default value: 0, which means all)"
+    echo "analyze.sh ::         <prod_number> : choose dataset production number"
+    echo "analyze.sh ::                         - default value: LHC20e3a"
+    echo "analyze.sh ::                         - possible options:"
+    echo "analyze.sh ::                           * LHC20e3a (LHC18{q,r}_pass3, Pb-Pb, 5 TeV, HIJING MB + Geant3)"
+    echo "analyze.sh ::                           * local-sexa (LHC{15o,18q}, Pb-Pb, 5 TeV, HIJING MB + Sexaquark/Ch.A + Geant4)"
+    echo "analyze.sh ::         <run_number>  : choose run number"
+    echo "analyze.sh ::                         - default value: 297595"
+    echo "analyze.sh ::         <dir_number>  : choose specific directory, within a run number dir"
+    echo "analyze.sh ::                         - default value: *"
+    echo "analyze.sh ::         <n_events>    : choose number of events to process"
+    echo "analyze.sh ::                         - default value: 0, which means all"
     echo "analyze.sh ::"
     echo "analyze.sh :: EXAMPLES :"
     echo "analyze.sh :: ./analyze.sh"
@@ -65,7 +72,6 @@ fi
 #########################
 
 CURRENT_DIR=${PWD}
-DATA_SET="LHC20e3a"
 
 ########
 # Main #
@@ -76,6 +82,9 @@ argArray=("$@")
 process_args "${argArray[@]}"
 
 # default values
+if [[ -z "${DATA_SET}" ]]; then
+    DATA_SET="LHC20e3a"
+fi
 if [[ -z "${RUN_NUMBER}" ]]; then
     RUN_NUMBER=297595
 fi
