@@ -58,6 +58,13 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
   void GetHelixCenter(const AliExternalTrackParam*, Double_t[2], const Double_t);
   KFParticle CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge);
   KFVertex CreateKFVertex(const AliVVertex& vertex);
+  Double_t ArmenterosAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,     //
+                           Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz,  //
+                           Double_t Pos_Px, Double_t Pos_Py, Double_t Pos_Pz);
+  Double_t ArmenterosQt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,  //
+                        Double_t Dau_Px, Double_t Dau_Py, Double_t Dau_Pz);
+  Double_t CosinePointingAngle(TLorentzVector particles_mom, Double_t X, Double_t Y, Double_t Z,  //
+                               Double_t refPointX, Double_t refPointY, Double_t refPointZ);
 
  private:
   /* Input options */
@@ -68,7 +75,6 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
   Float_t kMaxNSigma_Pion;
   Float_t kMaxNSigma_Kaon;
   Float_t kMaxNSigma_Proton;
-  Float_t kMaxDCA_T1_T2;
 
  private:
   /* AliRoot objects */
