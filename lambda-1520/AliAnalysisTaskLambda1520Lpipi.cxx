@@ -488,9 +488,21 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessTracks(std::set<Int_t> Indices_MCGen
   for (Int_t idx_track = 0; idx_track < fESD->GetNumberOfTracks(); idx_track++) {
 
     track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_track));
-    idx_true = TMath::Abs(track->GetLabel());
 
-    // (cut) (pending)
+    // (cut) track selection (pending) can be refactorized
+    // >> eta
+    if (TMath::Abs(track->Eta()) > 0.9) continue;
+    // >> TPC clusters
+    if (track->GetTPCNcls() < 50) continue;
+    // >> chi2 per TPC cluster
+    if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) continue;
+    // >> require TPC refit
+    if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) continue;
+    // >> reject kinks
+    if (track->GetKinkIndex(0) != 0) continue;
+
+    // (cut) (pending) temporal cut to get only signal tracks
+    idx_true = TMath::Abs(track->GetLabel());
     if (!Indices_MCGen_FS_Signal.count(idx_true)) {
       continue;
     }
@@ -743,6 +755,7 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
   AliESDtrack* esdTrackPos;
 
   Double_t esdDCA_tracks, esdDCA_neg_V0, esdDCA_pos_V0;
+  Double_t esdaltDCA_neg_V0, esdaltDCA_pos_V0;  // (debug) alternative
   Double_t kfDCA_tracks, kfDCA_neg_V0, kfDCA_pos_V0;
   Double_t esdCPA_tracks, esdCPA_neg_V0, esdCPA_pos_V0;
   Double_t kfCPA_tracks, kfCPA_neg_V0, kfCPA_pos_V0;
@@ -761,9 +774,10 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
   std::vector<Int_t> aux_idx_vector;
 
 #ifdef DEBUG_MODE
-  AliInfo("Idx(Neg) Idx(Pos)    X(V0)    Y(V0)    Z(V0)    M(V0) Chi2/NDF ESD: DCA(Tracks) DCA(Neg,V0) DCA(Pos,V0)");
-  AliInfo("                                                               KF : DCA(Tracks) DCA(Neg,V0) DCA(Pos,V0)");
-  AliInfo("                                                                    CPA(V0,PV)");
+  AliInfo("Idx(Neg) Idx(Pos)    X(V0)    Y(V0)    Z(V0)    M(V0) Chi2/NDF ESD : DCA(Tracks) DCA(Neg,V0) DCA(Pos,V0)");
+  AliInfo("                                                               ESD2:             DCA(Neg,V0) DCA(Pos,V0)");
+  AliInfo("                                                               KF  : DCA(Tracks) DCA(Neg,V0) DCA(Pos,V0)");
+  AliInfo("                                                                     CPA(V0,PV)");
   AliInfo("                                                                  qT(Neg)/Alpha qT(Pos)/Alpha");
 #endif
   for (Int_t& idxTrackNeg : idxNegativeTracks) {
@@ -808,7 +822,9 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
       esdDCA_tracks = esdTrackNeg->GetDCA(esdTrackPos, fMagneticField, xthis, xp);  // (pending) not so sure about this one
       esdDCA_neg_V0 = impar_neg[0];  // DCAxy, DCA = TMath::Sqrt(impar_neg[0] * impar_neg[0] + impar_neg[1] * impar_neg[1])
       esdDCA_pos_V0 = impar_pos[0];  // ... and DCAz = impar_neg[1]
-      kfDCA_tracks = kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos);  // (pending) not so sure about this one
+      esdaltDCA_neg_V0 = TMath::Abs(cloneTrackNeg.GetD(kfV0.GetX(), kfV0.GetY(), fMagneticField));  // (debug)
+      esdaltDCA_pos_V0 = TMath::Abs(cloneTrackPos.GetD(kfV0.GetX(), kfV0.GetY(), fMagneticField));  // (debug)
+      kfDCA_tracks = kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos);                          // (pending) not so sure about this one
       kfDCA_neg_V0 = kfDaughterNeg.GetDistanceFromVertexXY(kfV0);
       kfDCA_pos_V0 = kfDaughterPos.GetDistanceFromVertexXY(kfV0);
       armAlpha = ArmenterosAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(),                    //
@@ -821,16 +837,17 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
       cpa = CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(),  //
                                 fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
 
-#ifdef DEBUG_MODE
-      AliInfoF("%8i %8i %8.3f %8.3f %8.3f %8.3f %8.3f      %11.3f %11.3f %11.3f", idxTrackNeg, idxTrackPos,  //
-               kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), lvV0.M(), kfV0.GetChi2() / (Double_t)kfV0.GetNDF(),    //
-               esdDCA_tracks, esdDCA_neg_V0, esdDCA_pos_V0);
-      AliInfoF("                                                                    %11.3f %11.3f %11.3f",  //
-               kfDCA_tracks, kfDCA_neg_V0, kfDCA_pos_V0);
-      AliInfoF("                                                                    %11.3f", cpa);
-      AliInfoF("                                                                  %13.3f %11.3f",  //
-               armPtNeg / TMath::Abs(armAlpha), armPtPos / TMath::Abs(armAlpha));
+      // (cut) V0 selection
+      // if (cpa < 0.9) continue;
 
+#ifdef DEBUG_MODE
+      AliInfoF("%8i %8i %8.3f %8.3f %8.3f %8.3f %8.3f %5s %11.3f %11.3f %11.3f", idxTrackNeg, idxTrackPos,  //
+               kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), lvV0.M(), kfV0.GetChi2() / (Double_t)kfV0.GetNDF(),   //
+               "", esdDCA_tracks, esdDCA_neg_V0, esdDCA_pos_V0);
+      AliInfoF("%80s %11.3f %11.3f", "", esdaltDCA_neg_V0, esdaltDCA_pos_V0);
+      AliInfoF("%68s %11.3f %11.3f %11.3f %i", "", kfDCA_tracks, kfDCA_neg_V0, kfDCA_pos_V0, (Int_t)kfV0.GetQ());
+      AliInfoF("%68s %11.3f", "", cpa);
+      AliInfoF("%68s %11.3f %11.3f", "", armPtNeg / TMath::Abs(armAlpha), armPtPos / TMath::Abs(armAlpha));
 #endif
 
       // finally, store info
@@ -963,7 +980,7 @@ void AliAnalysisTaskLambda1520Lpipi::Lambda1520Finder(std::vector<KFParticle> kf
       dca_t3_sv = kfTrack3.GetDistanceFromVertexXY(kfLambda1520);
       dca_v0a_v0b = 0.;  // (pending)
 
-      // (cut) (pending) DCA w.r.t. PV
+      // (cut) lambdas1520 selection
       // if (dca > 0.1) continue;
 
 #ifdef DEBUG_MODE
@@ -1519,6 +1536,8 @@ Double_t AliAnalysisTaskLambda1520Lpipi::ArmenterosQt(Double_t V0_Px, Double_t V
 Double_t AliAnalysisTaskLambda1520Lpipi::CosinePointingAngle(TLorentzVector particles_mom, Double_t X, Double_t Y, Double_t Z,  //
                                                              Double_t refPointX, Double_t refPointY, Double_t refPointZ) {
 
+  // method 1
+  /*
   // vector between the reference point and the particle's vertex
   Double_t deltaPos[3];
   deltaPos[0] = X - refPointX;
@@ -1526,6 +1545,14 @@ Double_t AliAnalysisTaskLambda1520Lpipi::CosinePointingAngle(TLorentzVector part
   deltaPos[2] = Z - refPointZ;
 
   TVector3 hh(deltaPos[0], deltaPos[1], deltaPos[2]);
-
   return TMath::Cos(particles_mom.Angle(hh));
+  */
+
+  // method 2
+  TVector3 nom_mom = particles_mom.Vect();
+  TVector3 nom_pos(X, Y, Z);
+  TVector3 ref_pos(refPointX, refPointY, refPointZ);
+  TVector3 delta = nom_pos - ref_pos;
+
+  return delta.Dot(nom_mom) / (delta.Mag() * nom_mom.Mag());
 }
