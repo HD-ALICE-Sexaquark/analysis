@@ -21,16 +21,23 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
   virtual void CheckForInputErrors();
 
   void DefineCuts(TString cuts_option);
+  Bool_t PassesTrackSelection(AliESDtrack* track,  //
+                              Float_t& n_sigma_pion, Float_t& n_sigma_kaon, Float_t& n_sigma_proton);
+  Bool_t PassesLambdaCuts();
+  Bool_t PassesPionPairCuts();
+  Bool_t PassesNeutralKaonCuts();
+  Bool_t PassesLambda1520Cuts();
+  Bool_t PassesSexaquarkCuts();
 
   virtual void ProcessMCGen(std::set<Int_t>&, std::set<Int_t>&);
   virtual void ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal,                                        // (pending)
                              std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks,      //
                              std::vector<Int_t>& idxKaonPlusTracks, std::vector<Int_t>& idxKaonMinusTracks,  //
                              std::vector<Int_t>& idxProtonTracks, std::vector<Int_t>& idxAntiProtonTracks);
-  virtual void ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks,  //
-                                 std::vector<Int_t> idxPositiveTracks,  //
-                                 Int_t pdgTrackNeg, Int_t pdgTrackPos,  //
-                                 std::vector<KFParticle>& kfV0s,        //
+  virtual void ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks,               //
+                                 std::vector<Int_t> idxPositiveTracks,               //
+                                 Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos,  //
+                                 std::vector<KFParticle>& kfV0s,                     //
                                  std::vector<std::vector<Int_t>>& idxDaughters);
   virtual void Lambda1520Finder(std::vector<KFParticle> kfFirstV0s,                    //
                                 std::vector<std::vector<Int_t>> idxFirstV0Daughters,   //

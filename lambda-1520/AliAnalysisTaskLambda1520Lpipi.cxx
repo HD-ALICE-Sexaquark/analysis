@@ -195,6 +195,62 @@ void AliAnalysisTaskLambda1520Lpipi::DefineCuts(TString cuts_option) {
 }
 
 /*
+ Apply track selection cuts.
+ */
+Bool_t AliAnalysisTaskLambda1520Lpipi::PassesTrackSelection(AliESDtrack* track,  //
+                                                            Float_t& n_sigma_pion, Float_t& n_sigma_kaon, Float_t& n_sigma_proton) {
+
+  // >> eta
+  if (TMath::Abs(track->Eta()) > 0.9) return kFALSE;
+  // >> TPC clusters
+  if (track->GetTPCNcls() < 50) return kFALSE;
+  // >> chi2 per TPC cluster
+  if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) return kFALSE;
+  // >> require TPC refit
+  if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) return kFALSE;
+  // >> reject kinks
+  if (track->GetKinkIndex(0) != 0) return kFALSE;
+
+  n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
+  n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
+  n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
+
+  // (cut) particle identification
+  if (TMath::Abs(n_sigma_pion) > kMaxNSigma_Pion &&  //
+      TMath::Abs(n_sigma_kaon) > kMaxNSigma_Kaon &&  //
+      TMath::Abs(n_sigma_proton) > kMaxNSigma_Proton) {
+    return kFALSE;
+  }
+
+  return kTRUE;
+}
+
+/*
+ Apply Lambda/AntiLambda candidate cuts.
+ */
+Bool_t AliAnalysisTaskLambda1520Lpipi::PassesLambdaCuts() { return kTRUE; }
+
+/*
+ Apply Pion pair cuts.
+ */
+Bool_t AliAnalysisTaskLambda1520Lpipi::PassesPionPairCuts() { return kTRUE; }
+
+/*
+ Apply K0S cuts.
+ */
+Bool_t AliAnalysisTaskLambda1520Lpipi::PassesNeutralKaonCuts() { return kTRUE; }
+
+/*
+ Apply Lambda(1520) candidate cuts.
+*/
+Bool_t AliAnalysisTaskLambda1520Lpipi::PassesLambda1520Cuts() { return kTRUE; }
+
+/*
+ Apply AntiSexaquark candidate cuts.
+*/
+Bool_t AliAnalysisTaskLambda1520Lpipi::PassesSexaquarkCuts() { return kTRUE; }
+
+/*
  Main function, called per each event.
  */
 void AliAnalysisTaskLambda1520Lpipi::UserExec(Option_t*) {
@@ -263,18 +319,18 @@ void AliAnalysisTaskLambda1520Lpipi::UserExec(Option_t*) {
 
   if (mode == "Lambda1520->Lambda,pi,pi//Standard") {
     /* Lambda -> pi-,P */
-    ReconstructV0s_KF(idxPiMinusTracks, idxProtonTracks, -211, 2212, kfLambdas, idxLambdaDaughters);
+    ReconstructV0s_KF(idxPiMinusTracks, idxProtonTracks, 3122, -211, 2212, kfLambdas, idxLambdaDaughters);
     /* AntiLambda -> AntiP,pi+ */
-    ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
+    ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
     /* Lambda(1520) -> X,pi-,pi+ */
-    ReconstructV0s_KF(idxPiMinusTracks, idxPiPlusTracks, -211, 211, kfPionPairs, idxPionPairDaughters);
+    ReconstructV0s_KF(idxPiMinusTracks, idxPiPlusTracks, 0, -211, 211, kfPionPairs, idxPionPairDaughters);
   }
 
   if (mode == "AntiSexaquark,N->AntiLambda,K0S//Standard") {
     /* AntiLambda -> AntiP,pi+ */
-    ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
+    ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
     /* K0S -> pi-,pi+ */
-    ReconstructV0s_KF(idxPiMinusTracks, idxPiPlusTracks, -211, 211, kfNeutralShortKaons, idxNeutralShortKaonsDaughters);
+    ReconstructV0s_KF(idxPiMinusTracks, idxPiPlusTracks, 311, -211, 211, kfNeutralShortKaons, idxNeutralShortKaonsDaughters);
   }
 
   // ProcessOfficialV0s(Indices_MCRec_Signal);
@@ -472,7 +528,7 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessTracks(std::set<Int_t> Indices_MCGen
 
   AliESDtrack* track;
 
-  Int_t idx_true;
+  Int_t idx_true;  // (debug)
   AliMCParticle* truePart;
 
   Float_t n_sigma_pion;
@@ -489,17 +545,7 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessTracks(std::set<Int_t> Indices_MCGen
 
     track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_track));
 
-    // (cut) track selection (pending) can be refactorized
-    // >> eta
-    if (TMath::Abs(track->Eta()) > 0.9) continue;
-    // >> TPC clusters
-    if (track->GetTPCNcls() < 50) continue;
-    // >> chi2 per TPC cluster
-    if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) continue;
-    // >> require TPC refit
-    if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) continue;
-    // >> reject kinks
-    if (track->GetKinkIndex(0) != 0) continue;
+    counter++;  // (debug)
 
     // (cut) (pending) temporal cut to get only signal tracks
     idx_true = TMath::Abs(track->GetLabel());
@@ -507,18 +553,7 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessTracks(std::set<Int_t> Indices_MCGen
       continue;
     }
 
-    counter++;  // (debug)
-
-    n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
-    n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
-    n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
-
-    // (cut) particle identification
-    if (TMath::Abs(n_sigma_pion) > kMaxNSigma_Pion &&  //
-        TMath::Abs(n_sigma_kaon) > kMaxNSigma_Kaon &&  //
-        TMath::Abs(n_sigma_proton) > kMaxNSigma_Proton) {
-      continue;
-    }
+    if (!PassesTrackSelection(track, n_sigma_pion, n_sigma_kaon, n_sigma_proton)) continue;
 
     if (TMath::Abs(n_sigma_pion) < kMaxNSigma_Pion) {
       if (track->Charge() > 0.)
@@ -746,10 +781,10 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessTrueV0s() {
  - input: idxNegativeTracks, idxPositiveTracks, pdgTrackNeg, pdgTrackPos
  - output: kfV0s, idxDaughters
  */
-void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks,  //
-                                                       std::vector<Int_t> idxPositiveTracks,  //
-                                                       Int_t pdgTrackNeg, Int_t pdgTrackPos,  //
-                                                       std::vector<KFParticle>& kfV0s,        //
+void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks,               //
+                                                       std::vector<Int_t> idxPositiveTracks,               //
+                                                       Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos,  //
+                                                       std::vector<KFParticle>& kfV0s,                     //
                                                        std::vector<std::vector<Int_t>>& idxDaughters) {
   AliESDtrack* esdTrackNeg;
   AliESDtrack* esdTrackPos;
@@ -761,6 +796,8 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
   Double_t kfCPA_tracks, kfCPA_neg_V0, kfCPA_pos_V0;
   Double_t armAlpha, armPtNeg, armPtPos;
   Double_t cpa;
+
+  Double_t aux_op_angle;
 
   Double_t xthis, xp;
   Double_t impar_neg[2], impar_pos[2];
@@ -791,7 +828,6 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
 
       /* Kalman Filter */
 
-      KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
       KFParticle kfDaughterNeg = CreateKFParticle(*esdTrackNeg, pdgTrackNeg, (Int_t)esdTrackNeg->Charge());
       KFParticle kfDaughterPos = CreateKFParticle(*esdTrackPos, pdgTrackPos, (Int_t)esdTrackPos->Charge());
 
@@ -819,12 +855,17 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
       lvTrackPos.SetXYZM(cloneTrackPos.Px(), cloneTrackPos.Py(), cloneTrackPos.Pz(), fPDG.GetParticle(pdgTrackPos)->Mass());
       lvV0 = lvTrackNeg + lvTrackPos;
 
-      esdDCA_tracks = esdTrackNeg->GetDCA(esdTrackPos, fMagneticField, xthis, xp);  // (pending) not so sure about this one
-      esdDCA_neg_V0 = impar_neg[0];  // DCAxy, DCA = TMath::Sqrt(impar_neg[0] * impar_neg[0] + impar_neg[1] * impar_neg[1])
-      esdDCA_pos_V0 = impar_pos[0];  // ... and DCAz = impar_neg[1]
+      kfDaughterNeg.TransportToParticle(kfV0);
+      kfDaughterPos.TransportToParticle(kfV0);
+      TVector3 v0_to_dca_neg(kfV0.GetX() + kfDaughterNeg.GetX(), kfV0.GetY() + kfDaughterNeg.GetY(), 0.);
+      TVector3 v0_to_dca_pos(kfV0.GetX() + kfDaughterPos.GetX(), kfV0.GetY() + kfDaughterPos.GetY(), 0.);
+
+      esdDCA_tracks = (v0_to_dca_neg - v0_to_dca_pos).Mag();
+      esdDCA_neg_V0 = kfDaughterNeg.GetDistanceFromVertexXY(kfV0);  // testing stuff...
+      esdDCA_pos_V0 = kfDaughterPos.GetDistanceFromVertexXY(kfV0);
       esdaltDCA_neg_V0 = TMath::Abs(cloneTrackNeg.GetD(kfV0.GetX(), kfV0.GetY(), fMagneticField));  // (debug)
       esdaltDCA_pos_V0 = TMath::Abs(cloneTrackPos.GetD(kfV0.GetX(), kfV0.GetY(), fMagneticField));  // (debug)
-      kfDCA_tracks = kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos);                          // (pending) not so sure about this one
+      kfDCA_tracks = kfDaughterNeg.GetDistanceFromParticleXY(kfDaughterPos);                        // (pending) not so sure about this one
       kfDCA_neg_V0 = kfDaughterNeg.GetDistanceFromVertexXY(kfV0);
       kfDCA_pos_V0 = kfDaughterPos.GetDistanceFromVertexXY(kfV0);
       armAlpha = ArmenterosAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(),                    //
@@ -838,11 +879,15 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
                                 fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
 
       // (cut) V0 selection
-      // if (cpa < 0.9) continue;
+      /*
+      if (TMath::Abs(pdgV0) == 3122 && !PassesLambdaCuts()) continue;
+      if (TMath::Abs(pdgV0) == 0 && !PassesPionPairCuts()) continue;
+      if (pdgV0 == 311 && !PassesNeutralKaonCuts()) continue;  // for neutral kaons
+ */
 
 #ifdef DEBUG_MODE
-      AliInfoF("%8i %8i %8.3f %8.3f %8.3f %8.3f %8.3f %5s %11.3f %11.3f %11.3f", idxTrackNeg, idxTrackPos,  //
-               kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), lvV0.M(), kfV0.GetChi2() / (Double_t)kfV0.GetNDF(),   //
+      AliInfoF("%8i %8i %8.3f %8.3f %8.3f %8.3f %8.3f %5s %11.3f %11.3f %11.3f",                                                     //
+               idxTrackNeg, idxTrackPos, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), lvV0.M(), kfV0.GetChi2() / (Double_t)kfV0.GetNDF(),  //
                "", esdDCA_tracks, esdDCA_neg_V0, esdDCA_pos_V0);
       AliInfoF("%80s %11.3f %11.3f", "", esdaltDCA_neg_V0, esdaltDCA_pos_V0);
       AliInfoF("%68s %11.3f %11.3f %11.3f %i", "", kfDCA_tracks, kfDCA_neg_V0, kfDCA_pos_V0, (Int_t)kfV0.GetQ());
