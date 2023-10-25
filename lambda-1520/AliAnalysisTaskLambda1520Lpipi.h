@@ -5,6 +5,19 @@
 
 class AliPIDResponse;
 
+/*
+ Auxiliary class to make use of protected function KFParticleBase::GetMeasurement()
+ [copied from /PWGLF/.../AliAnalysisTaskDoubleHypNucTree.h]
+ */
+class KFParticleAux : public KFParticle {
+public:
+  Bool_t CheckDaughter(KFParticle daughter) {
+    Float_t m[8], mV[36], D[3][3];
+    if (KFParticleBase::GetMeasurement(daughter, m, mV, D)) return kTRUE;
+    return kFALSE;
+  }
+};
+
 class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
 
  public:
@@ -23,11 +36,15 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
   void DefineCuts(TString cuts_option);
   Bool_t PassesTrackSelection(AliESDtrack* track,  //
                               Float_t& n_sigma_pion, Float_t& n_sigma_kaon, Float_t& n_sigma_proton);
-  Bool_t PassesLambdaCuts();
-  Bool_t PassesPionPairCuts();
-  Bool_t PassesNeutralKaonCuts();
-  Bool_t PassesLambda1520Cuts();
-  Bool_t PassesSexaquarkCuts();
+  Bool_t PassesLambdaCuts_KF(KFParticle kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
+                             TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+  Bool_t PassesPionPairCuts_KF(KFParticle kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
+                               TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+  Bool_t PassesNeutralKaonCuts_KF(KFParticle kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
+                                  TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+  Bool_t PassesLambda1520Cuts_KF(KFParticle kfLambda1520, KFParticle kfLambda, KFParticle kfPion2, KFParticle kfPion3,  //
+                                 TLorentzVector lvLambda1520, TLorentzVector lvLambda, TLorentzVector lvPion2, TLorentzVector lvPion3);
+  Bool_t PassesSexaquarkCuts_KF();
 
   virtual void ProcessMCGen(std::set<Int_t>&, std::set<Int_t>&);
   virtual void ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal,                                        // (pending)
@@ -82,6 +99,9 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
   Float_t kMaxNSigma_Pion;
   Float_t kMaxNSigma_Kaon;
   Float_t kMaxNSigma_Proton;
+  Float_t kMaxDCATracks;  // maximum distance-of-closest-approach (in the XY plane) between tracks
+  Float_t kArmLambdaSlope;
+  Float_t kMinCPA_Lambda_SV;  // minimum cosine-of-pointing-angle of the anti-lambda/lambda w.r.t. sec. vertex
 
  private:
   /* AliRoot objects */
