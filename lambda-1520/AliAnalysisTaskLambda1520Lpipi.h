@@ -9,8 +9,8 @@ class AliPIDResponse;
  Auxiliary class to make use of protected function KFParticleBase::GetMeasurement()
  [copied from /PWGLF/.../AliAnalysisTaskDoubleHypNucTree.h]
  */
-class KFParticleAux : public KFParticle {
-public:
+class KFParticleMother : public KFParticle {
+ public:
   Bool_t CheckDaughter(KFParticle daughter) {
     Float_t m[8], mV[36], D[3][3];
     if (KFParticleBase::GetMeasurement(daughter, m, mV, D)) return kTRUE;
@@ -36,13 +36,13 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
   void DefineCuts(TString cuts_option);
   Bool_t PassesTrackSelection(AliESDtrack* track,  //
                               Float_t& n_sigma_pion, Float_t& n_sigma_kaon, Float_t& n_sigma_proton);
-  Bool_t PassesLambdaCuts_KF(KFParticle kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
+  Bool_t PassesLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
                              TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
-  Bool_t PassesPionPairCuts_KF(KFParticle kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
+  Bool_t PassesPionPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
                                TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
-  Bool_t PassesNeutralKaonCuts_KF(KFParticle kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
+  Bool_t PassesNeutralKaonCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
                                   TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
-  Bool_t PassesLambda1520Cuts_KF(KFParticle kfLambda1520, KFParticle kfLambda, KFParticle kfPion2, KFParticle kfPion3,  //
+  Bool_t PassesLambda1520Cuts_KF(KFParticleMother kfLambda1520, KFParticle kfLambda, KFParticle kfPion2, KFParticle kfPion3,  //
                                  TLorentzVector lvLambda1520, TLorentzVector lvLambda, TLorentzVector lvPion2, TLorentzVector lvPion3);
   Bool_t PassesSexaquarkCuts_KF();
 
@@ -54,20 +54,20 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
   virtual void ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks,               //
                                  std::vector<Int_t> idxPositiveTracks,               //
                                  Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos,  //
-                                 std::vector<KFParticle>& kfV0s,                     //
+                                 std::vector<KFParticleMother>& kfV0s,               //
                                  std::vector<std::vector<Int_t>>& idxDaughters);
-  virtual void Lambda1520Finder(std::vector<KFParticle> kfFirstV0s,                    //
+  virtual void Lambda1520Finder(std::vector<KFParticleMother> kfFirstV0s,              //
                                 std::vector<std::vector<Int_t>> idxFirstV0Daughters,   //
-                                std::vector<KFParticle> kfSecondV0s,                   //
+                                std::vector<KFParticleMother> kfSecondV0s,             //
                                 std::vector<std::vector<Int_t>> idxSecondV0Daughters,  //
                                 std::vector<Int_t> pdgDaughters,                       //
-                                std::vector<KFParticle>& kfLambdas1520);
-  void SexaquarkFinder_ChannelA(std::vector<KFParticle> kfFirstV0s,                    //
+                                std::vector<KFParticleMother>& kfLambdas1520);
+  void SexaquarkFinder_ChannelA(std::vector<KFParticleMother> kfFirstV0s,              //
                                 std::vector<std::vector<Int_t>> idxFirstV0Daughters,   //
-                                std::vector<KFParticle> kfSecondV0s,                   //
+                                std::vector<KFParticleMother> kfSecondV0s,             //
                                 std::vector<std::vector<Int_t>> idxSecondV0Daughters,  //
                                 std::vector<Int_t> pdgDaughters,                       //
-                                std::vector<KFParticle>& kfAntiSexaquarks);
+                                std::vector<KFParticleMother>& kfAntiSexaquarks);
   virtual void ProcessOfficialV0s(std::vector<Int_t>);
 
   virtual void ProcessTrueV0s();
