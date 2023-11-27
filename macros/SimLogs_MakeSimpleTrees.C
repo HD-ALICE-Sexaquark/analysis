@@ -129,7 +129,8 @@ void SimLogs_MakeSimpleTrees() {
                 SPx.push_back(dynamic_cast<TObjString *>(csv_arr->At(1))->String().Atof());
                 SPy.push_back(dynamic_cast<TObjString *>(csv_arr->At(2))->String().Atof());
                 SPz.push_back(dynamic_cast<TObjString *>(csv_arr->At(3))->String().Atof());
-                NPDGCode.push_back(reactionChannel == 'A' ? 2112 : 2212);  // considering only ADEH // BUG it's using the prev. reac. channel
+                NPDGCode.push_back(reactionChannel == 'A' ? 2112
+                                                          : 2212);  // considering only ADEH // BUG it's using the prev. reac. channel
                 NPx.push_back(dynamic_cast<TObjString *>(csv_arr->At(4))->String().Atof());
                 NPy.push_back(dynamic_cast<TObjString *>(csv_arr->At(5))->String().Atof());
                 NPz.push_back(dynamic_cast<TObjString *>(csv_arr->At(6))->String().Atof());

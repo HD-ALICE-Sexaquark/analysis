@@ -2,11 +2,12 @@
 #include "include/Style.hxx"
 #include "include/Utilities.hxx"
 
+// this macro is also a mess...
 // -- A. Bórquez
 
 //_____________________________________________________________________________
-void Plot2D_FoundV0s(
-    TString input_filename = "/misc/alidata121/alice_u/borquez/analysis/output/signal+bkg/AnalysisResults_OfficialV0s_*.root",
+void V0s_Val_Mass(
+    TString input_filename = "/misc/alidata121/alice_u/borquez/analysis/output/signal+bkg/297595/AnalysisResults_OfficialV0s_*.root",
     TString output_dir = "gfx/signal+bkg/official_v0s/") {
 
     TList *list_of_trees = new TList();
@@ -16,6 +17,16 @@ void Plot2D_FoundV0s(
     system("mkdir -p " + output_dir);
 
     // [based on "Event_tt" from "AliAnalysisTaskSexaquark.h"]
+    /* define MC variables */                    //
+    std::vector<Int_t> *MC_PID = 0;              // PDG code
+    std::vector<Int_t> *MC_Mother = 0;           // index of mother
+    std::vector<Bool_t> *MC_isSignal = 0;        // index of mother
+    /* define track variables  */                //
+    std::vector<Int_t> *Idx_True = 0;            // index of true MC particle
+    std::vector<Float_t> *Rec_Px = 0;            //
+    std::vector<Float_t> *Rec_Py = 0;            //
+    std::vector<Float_t> *Rec_Pz = 0;            //
+    std::vector<Bool_t> *Rec_isDuplicate = 0;    // kTRUE if track is a duplicate, kFALSE if not
     /* define V0 variables */                    //
     Int_t N_V0s;                                 // number of formed V0s
     std::vector<Int_t> *Idx_Pos = 0;             // index of positive daughter
@@ -47,26 +58,10 @@ void Plot2D_FoundV0s(
     std::vector<Float_t> *V0_DecayLength = 0;    // distance between PV and V0
 
     // define histograms
-    // (01) inv mass K0
-    TH2F *inv_mass_K0_vs_Chi2 = new TH2F("inv_mass_K0_vs_Chi2", "inv_mass_K0_vs_Chi2", 132, 0, 33, 150, 0, 3);
-    TH2F *inv_mass_K0_vs_DCA_Daughters = new TH2F("inv_mass_K0_vs_DCA_Daughters", "inv_mass_K0_vs_DCA_Daughters", 150, 0, 1.5, 150, 0, 3);
-    TH2F *inv_mass_K0_vs_IP_wrtPV = new TH2F("inv_mass_K0_vs_IP_wrtPV", "inv_mass_K0_vs_IP_wrtPV", 150, 0., 1.5, 150, 0, 3);
-    TH2F *inv_mass_K0_vs_CPA_wrtPV = new TH2F("inv_mass_K0_vs_CPA_wrtPV", "inv_mass_K0_vs_CPA_wrtPV", 200, 0, 2, 150, 0, 3);
-    TH2F *inv_mass_K0_vs_DecayLength = new TH2F("inv_mass_K0_vs_DecayLength", "inv_mass_K0_vs_DecayLength", 150, 0, 50, 150, 0, 3);
-    TH2F *inv_mass_K0_vs_Pt = new TH2F("inv_mass_K0_vs_Pt", "inv_mass_K0_vs_Pt", 150, 0, 5, 150, 0, 3);
-
-    // (02) inv mass anti-lambdas
-    TH2F *inv_mass_AL_vs_Chi2 = new TH2F("inv_mass_AL_vs_Chi2", "inv_mass_AL_vs_Chi2", 132, 0, 33, 150, 0, 3);
-    TH2F *inv_mass_AL_vs_DCA_Daughters = new TH2F("inv_mass_AL_vs_DCA_Daughters", "inv_mass_AL_vs_DCA_Daughters", 150, 0, 1.5, 150, 0, 3);
-    TH2F *inv_mass_AL_vs_IP_wrtPV = new TH2F("inv_mass_AL_vs_IP_wrtPV", "inv_mass_AL_vs_IP_wrtPV", 150, 0., 1.5, 150, 0, 3);
-    TH2F *inv_mass_AL_vs_CPA_wrtPV = new TH2F("inv_mass_AL_vs_CPA_wrtPV", "inv_mass_AL_vs_CPA_wrtPV", 200, 0, 2, 150, 0, 3);
-    TH2F *inv_mass_AL_vs_DecayLength = new TH2F("inv_mass_AL_vs_DecayLength", "inv_mass_AL_vs_DecayLength", 150, 0, 50, 150, 0, 3);
-    TH2F *inv_mass_AL_vs_Pt = new TH2F("inv_mass_AL_vs_Pt", "inv_mass_AL_vs_Pt", 150, 0, 5, 150, 0, 3);
-
-    // (armenteros-podolanski plot)
-    TH2F *ArmPt_vs_ArmAlpha = new TH2F("armenteros_podolanski", "armenteros_podolanski", 200, -1., 1., 150, 0, 0.3);
-    TH2F *ArmPt_vs_ArmAlpha_K0 = new TH2F("armenteros_podolanski_K0", "armenteros_podolanski_K0", 200, -1., 1., 150, 0, 0.3);
-    TH2F *ArmPt_vs_ArmAlpha_AL = new TH2F("armenteros_podolanski_AL", "armenteros_podolanski_AL", 200, -1., 1., 150, 0, 0.3);
+    // inv mass K0
+    TH1F *inv_mass_K0 = new TH1F("inv_mass_K0", "inv_mass_K0", 80, 0.4, 0.6);
+    // inv mass anti-lambdas
+    TH1F *inv_mass_AL = new TH1F("inv_mass_AL", "inv_mass_AL", 80, 1.095, 1.135);
 
     // define iterator
     TListIter *list_of_trees_it = new TListIter(list_of_trees);
@@ -74,6 +69,16 @@ void Plot2D_FoundV0s(
     // loop over collected trees
     while (TTree *this_tree = (TTree *)list_of_trees_it->Next()) {
 
+        // load MC particles branches
+        this_tree->SetBranchAddress("MC_PID", &MC_PID);
+        this_tree->SetBranchAddress("MC_Mother", &MC_Mother);
+        this_tree->SetBranchAddress("MC_isSignal", &MC_isSignal);
+        // load track branches
+        this_tree->SetBranchAddress("Idx_True", &Idx_True);
+        this_tree->SetBranchAddress("Rec_Px", &Rec_Px);
+        this_tree->SetBranchAddress("Rec_Py", &Rec_Py);
+        this_tree->SetBranchAddress("Rec_Pz", &Rec_Pz);
+        this_tree->SetBranchAddress("Rec_isDuplicate", &Rec_isDuplicate);
         // load V0 branches
         this_tree->SetBranchAddress("N_V0s", &N_V0s);
         this_tree->SetBranchAddress("Idx_Pos", &Idx_Pos);
@@ -109,50 +114,43 @@ void Plot2D_FoundV0s(
 
             this_tree->GetEntry(event);
 
-            /*** Count Found V0s ***/
-
-            Float_t V0_Pt;
-
+            // declare variables
             Float_t mass_asK0;
             Float_t mass_asAL;
+
+            // declare possible cuts
+            Bool_t cut_no_duplicate;
+
+            Bool_t K0_Selection;
+            Bool_t AL_Selection;
 
             // loop over V0s
             for (Int_t v0 = 0; v0 < N_V0s; v0++) {
 
-                // (cut)
-                // reject V0s found online/on-the-fly
-                if ((*V0_onFlyStatus)[v0]) {
-                    continue;
-                }
-
-                V0_Pt = TMath::Sqrt((*V0_Px)[v0] * (*V0_Px)[v0] + (*V0_Py)[v0] * (*V0_Py)[v0]);
                 mass_asK0 = TMath::Sqrt((*V0_E_asK0)[v0] * (*V0_E_asK0)[v0] - (*V0_Px)[v0] * (*V0_Px)[v0] - (*V0_Py)[v0] * (*V0_Py)[v0] -
                                         (*V0_Pz)[v0] * (*V0_Pz)[v0]);
                 mass_asAL = TMath::Sqrt((*V0_E_asAL)[v0] * (*V0_E_asAL)[v0] - (*V0_Px)[v0] * (*V0_Px)[v0] - (*V0_Py)[v0] * (*V0_Py)[v0] -
                                         (*V0_Pz)[v0] * (*V0_Pz)[v0]);
 
-                if ((*V0_couldBeK0)[v0]) {
-                    inv_mass_K0_vs_Chi2->Fill((*V0_Chi2)[v0], mass_asK0);
-                    inv_mass_K0_vs_DCA_Daughters->Fill((*V0_DCA_Daughters)[v0], mass_asK0);
-                    inv_mass_K0_vs_IP_wrtPV->Fill((*V0_IP_wrtPV)[v0], mass_asK0);
-                    inv_mass_K0_vs_CPA_wrtPV->Fill((*V0_CPA_wrtPV)[v0], mass_asK0);
-                    inv_mass_K0_vs_DecayLength->Fill((*V0_DecayLength)[v0], mass_asK0);
-                    inv_mass_K0_vs_Pt->Fill(V0_Pt, mass_asK0);
-                    ArmPt_vs_ArmAlpha_K0->Fill((*V0_ArmAlpha)[v0], (*V0_ArmPt)[v0]);
+                // define cuts
+                cut_no_duplicate = !(*Rec_isDuplicate)[(*Idx_Pos)[v0]] && !(*Rec_isDuplicate)[(*Idx_Neg)[v0]];
+
+                // define selections: CHOOSE cuts
+                K0_Selection = (*V0_couldBeK0)[v0] && cut_no_duplicate && !(*V0_couldBeAL)[v0] &&              //
+                               TMath::Sqrt((*V0_Px)[v0] * (*V0_Px)[v0] + (*V0_Py)[v0] * (*V0_Py)[v0]) > 1. &&  //
+                               TMath::Sqrt((*V0_Px)[v0] * (*V0_Px)[v0] + (*V0_Py)[v0] * (*V0_Py)[v0]) < 1.1;
+                AL_Selection = (*V0_couldBeAL)[v0] && cut_no_duplicate && !(*V0_couldBeK0)[v0] &&              //
+                               TMath::Sqrt((*V0_Px)[v0] * (*V0_Px)[v0] + (*V0_Py)[v0] * (*V0_Py)[v0]) > 1. &&  //
+                               TMath::Sqrt((*V0_Px)[v0] * (*V0_Px)[v0] + (*V0_Py)[v0] * (*V0_Py)[v0]) < 1.1;
+
+                if (K0_Selection) {
+                    inv_mass_K0->Fill(mass_asK0);
                 }
 
-                if ((*V0_couldBeAL)[v0]) {
-                    inv_mass_AL_vs_Chi2->Fill((*V0_Chi2)[v0], mass_asAL);
-                    inv_mass_AL_vs_DCA_Daughters->Fill((*V0_DCA_Daughters)[v0], mass_asAL);
-                    inv_mass_AL_vs_IP_wrtPV->Fill((*V0_IP_wrtPV)[v0], mass_asAL);
-                    inv_mass_AL_vs_CPA_wrtPV->Fill((*V0_CPA_wrtPV)[v0], mass_asAL);
-                    inv_mass_AL_vs_DecayLength->Fill((*V0_DecayLength)[v0], mass_asAL);
-                    inv_mass_AL_vs_Pt->Fill(V0_Pt, mass_asAL);
-                    ArmPt_vs_ArmAlpha_AL->Fill((*V0_ArmAlpha)[v0], (*V0_ArmPt)[v0]);
+                if (AL_Selection) {
+                    inv_mass_AL->Fill(mass_asAL);
                 }
 
-                // (armenteros-podolanski plot)
-                ArmPt_vs_ArmAlpha->Fill((*V0_ArmAlpha)[v0], (*V0_ArmPt)[v0]);
             }  // end of loop over V0s
 
         }  // end of loop over events
@@ -162,34 +160,51 @@ void Plot2D_FoundV0s(
     /* Draw */
 
     // set style to everything
-    SetMy2DStyle();
-
-    // don't forget to add more histograms when necessary
-    std::vector<TH2F *> list_hists = {inv_mass_K0_vs_Chi2,      inv_mass_K0_vs_DCA_Daughters, inv_mass_K0_vs_IP_wrtPV,
-                                      inv_mass_K0_vs_CPA_wrtPV, inv_mass_K0_vs_DecayLength,   inv_mass_K0_vs_Pt,
-                                      inv_mass_AL_vs_Chi2,      inv_mass_AL_vs_DCA_Daughters, inv_mass_AL_vs_IP_wrtPV,
-                                      inv_mass_AL_vs_CPA_wrtPV, inv_mass_AL_vs_DecayLength,   inv_mass_AL_vs_Pt,
-                                      ArmPt_vs_ArmAlpha,        ArmPt_vs_ArmAlpha_K0,         ArmPt_vs_ArmAlpha_AL};
-
-    for (TH2F *hist : list_hists) {
-        SetMy2DHistStyle(hist);
-    }
+    SetMyStyle();
+    gStyle->SetOptStat(0);
 
     TString output_filename;
     TCanvas *c = new TCanvas("c", "c", 1080, 1080);
-    c->SetFrameLineWidth(2);
 
-    for (TH2F *hist : list_hists) {
-        if (((TString)hist->GetName()).CompareTo("inv_mass_K0_vs_DecayLength") == 0 ||
-            ((TString)hist->GetName()).CompareTo("inv_mass_AL_vs_DecayLength") == 0) {
-            c->SetLogz(1);
-        }
-        hist->Draw("COLZ");
-        output_filename = hist->GetName();
-        c->Print(output_dir + output_filename + ".png");
-        if (((TString)hist->GetName()).CompareTo("inv_mass_K0_vs_DecayLength") == 0 ||
-            ((TString)hist->GetName()).CompareTo("inv_mass_AL_vs_DecayLength") == 0) {
-            c->SetLogz(0);
-        }
-    }
+    // c->SetLogy(1);
+
+    /* HIST 1 */
+    // inv mass neutral kaon short
+
+    SetMyHistStyle(inv_mass_K0);
+    inv_mass_K0->SetFillStyle(0);
+    inv_mass_K0->SetLineWidth(3);
+    inv_mass_K0->SetLineColor(myBlack);
+    // inv_mass_K0->SetMinimum(1);
+    // inv_mass_K0->SetMinimum(0);
+    // inv_mass_K0->SetMaximum(1000000);  // adjusted for one file
+    // inv_mass_K0->SetMaximum(1000);  // adjusted for one file
+    inv_mass_K0->GetYaxis()->SetTitle("Counts");
+    inv_mass_K0->GetXaxis()->SetTitle("m(#pi^{+}#pi^{-}) [GeV/c^{2}]");
+    inv_mass_K0->Draw();
+    inv_mass_K0->Draw("AXIS SAME");
+
+    DrawText(Form("N(Rec. K^{0}_{S} Selection, 1 < pt < 1.1) = %i", (Int_t)inv_mass_K0->GetEntries()), myBlack, 0.45, 0.84);
+
+    output_filename = inv_mass_K0->GetName();
+    c->Print(output_dir + output_filename + ".png");
+
+    /* HIST 2 */
+    // inv mass anti-lambdas
+
+    SetMyHistStyle(inv_mass_AL);
+    inv_mass_AL->SetFillStyle(0);
+    inv_mass_AL->SetLineWidth(3);
+    inv_mass_AL->SetLineColor(myBlack);
+    inv_mass_AL->SetMinimum(1);
+    inv_mass_AL->SetMaximum(10000);  // adjusted for one file
+    inv_mass_AL->GetYaxis()->SetTitle("Counts");
+    inv_mass_AL->GetXaxis()->SetTitle("m(#pi^{+}#bar{p}) [GeV/c^{2}]");
+    inv_mass_AL->Draw();
+    inv_mass_AL->Draw("AXIS SAME");
+
+    DrawText(Form("N(Rec. #bar{#Lambda} Selection, 1 < pt < 1.1) = %i", (Int_t)inv_mass_AL->GetEntries()), myBlack, 0.45, 0.84);
+
+    output_filename = inv_mass_AL->GetName();
+    c->Print(output_dir + output_filename + ".png");
 }

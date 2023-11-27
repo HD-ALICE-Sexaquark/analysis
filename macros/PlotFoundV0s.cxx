@@ -157,8 +157,8 @@ void PlotFoundV0s(  //
       Float_t mass_asK0;
       Float_t mass_asAL;
 
-      Float_t isK0Signal;
-      Float_t isALSignal;
+      Bool_t isK0Signal;
+      Bool_t isALSignal;
 
       // (test)
       Float_t kMassProton = 0.938272;
@@ -180,13 +180,12 @@ void PlotFoundV0s(  //
       Int_t mother_pid;
       Int_t pos_pid;
       Int_t neg_pid;
-      Int_t pos_issignal;
-      Int_t neg_issignal;
+      Bool_t pos_issignal;
+      Bool_t neg_issignal;
 
       // loop over V0s
       for (Int_t v0 = 0; v0 < N_V0s; v0++) {
 
-        // load variables
         exactlyOneTrackIsDupli = ((*Rec_isDuplicate)[(*Idx_True)[(*Idx_Pos)[v0]]] && !(*Rec_isDuplicate)[(*Idx_True)[(*Idx_Neg)[v0]]]) ||
                                  (!(*Rec_isDuplicate)[(*Idx_True)[(*Idx_Pos)[v0]]] && (*Rec_isDuplicate)[(*Idx_True)[(*Idx_Neg)[v0]]]);
         bothTracksAreDupli = (*Rec_isDuplicate)[(*Idx_True)[(*Idx_Pos)[v0]]] && (*Rec_isDuplicate)[(*Idx_True)[(*Idx_Neg)[v0]]];
@@ -211,9 +210,11 @@ void PlotFoundV0s(  //
 
         alt_energy_asK0 = alt_pos_energy + alt_neg_energy_asK0;
         alt_energy_asAL = alt_pos_energy + alt_neg_energy_asAL;
+
         alt_Px = (*Rec_Px)[(*Idx_Pos)[v0]] + (*Rec_Px)[(*Idx_Neg)[v0]];
         alt_Py = (*Rec_Py)[(*Idx_Pos)[v0]] + (*Rec_Py)[(*Idx_Neg)[v0]];
         alt_Pz = (*Rec_Pz)[(*Idx_Pos)[v0]] + (*Rec_Pz)[(*Idx_Neg)[v0]];
+
         alt_mass_asK0 = TMath::Sqrt(alt_energy_asK0 * alt_energy_asK0 - alt_Px * alt_Px - alt_Py * alt_Py - alt_Pz * alt_Pz);
         alt_mass_asAL = TMath::Sqrt(alt_energy_asAL * alt_energy_asAL - alt_Px * alt_Px - alt_Py * alt_Py - alt_Pz * alt_Pz);
 
@@ -385,13 +386,13 @@ void PlotFoundV0s(  //
   radius_K0->SetLineColor(kBlack);
   radius_K0->SetMinimum(1);
   radius_K0->GetYaxis()->SetTitle("Counts");
-  radius_K0->GetXaxis()->SetTitle("Fiducial Radius(#pi^{+}#pi^{-}) [cm]");
+  radius_K0->GetXaxis()->SetTitle("Radius(#pi^{+}#pi^{-}) [cm]");
   radius_AL->SetFillStyle(0);
   radius_AL->SetLineWidth(2);
   radius_AL->SetLineColor(kBlack);
   radius_AL->SetMinimum(1);
   radius_AL->GetYaxis()->SetTitle("Counts");
-  radius_AL->GetXaxis()->SetTitle("Fiducial Radius(#pi^{+}#bar{p}) [cm]");
+  radius_AL->GetXaxis()->SetTitle("Radius(#pi^{+}#bar{p}) [cm]");
 
   TString output_filename;
   TCanvas *c = new TCanvas("c", "c", 1080, 1080);
@@ -443,8 +444,8 @@ void PlotFoundV0s(  //
   inv_mass_K0_two_dupli->SetFillColor(myGreen);
   inv_mass_K0_two_dupli->Draw("SAME");
   inv_mass_K0_two_dupli->Draw("AXIS SAME");
-  DrawText("one daughter is duplicated", myBlue, 0.8);
-  DrawText("both daughters are duplicated", myGreen, 0.75);
+  DrawText("one daughter is duplicated", myBlue, 0.55, 0.8);
+  DrawText("both daughters are duplicated", myGreen, 0.55, 0.75);
   output_filename = (TString)inv_mass_K0->GetName() + "_dupli";
   c->Print(output_dir + output_filename + ".png");
 
@@ -452,7 +453,7 @@ void PlotFoundV0s(  //
   inv_mass_K0_no_dupli->SetFillColor(myYellow);
   inv_mass_K0_no_dupli->Draw("SAME");
   inv_mass_K0_no_dupli->Draw("AXIS SAME");
-  DrawText("none of the daughters is duplicated", myYellow, 0.8);
+  DrawText("none of the daughters is duplicated", myYellow, 0.55, 0.8);
   output_filename = inv_mass_K0_no_dupli->GetName();
   c->Print(output_dir + output_filename + ".png");
 
@@ -461,7 +462,7 @@ void PlotFoundV0s(  //
   inv_mass_K0_also_AL->SetFillColor(myOrange);
   inv_mass_K0_also_AL->Draw("SAME");
   inv_mass_K0_also_AL->Draw("AXIS SAME");
-  DrawText("could also be anti-lambda", myOrange, 0.8);
+  DrawText("could also be anti-lambda", myOrange,0.55,  0.8);
   output_filename = (TString)inv_mass_K0->GetName() + "_ambi";
   c->Print(output_dir + output_filename + ".png");
 
@@ -469,7 +470,7 @@ void PlotFoundV0s(  //
   inv_mass_K0_no_ambi->SetFillColor(myViolet);
   inv_mass_K0_no_ambi->Draw("SAME");
   inv_mass_K0_no_ambi->Draw("AXIS SAME");
-  DrawText("exclusively neutral kaon short", myViolet, 0.8);
+  DrawText("exclusively neutral kaon short", myViolet, 0.55, 0.8);
   output_filename = inv_mass_K0_no_ambi->GetName();
   c->Print(output_dir + output_filename + ".png");
 
@@ -478,7 +479,7 @@ void PlotFoundV0s(  //
   inv_mass_K0_no_dupli_no_ambi->SetFillColor(myMagenta);
   inv_mass_K0_no_dupli_no_ambi->Draw("SAME");
   inv_mass_K0_no_dupli_no_ambi->Draw("AXIS SAME");
-  DrawText("no dupli no ambi", myMagenta, 0.8);
+  DrawText("no dupli no ambi", myMagenta,0.55,  0.8);
   output_filename = inv_mass_K0_no_dupli_no_ambi->GetName();
   c->Print(output_dir + output_filename + ".png");
 
@@ -487,14 +488,14 @@ void PlotFoundV0s(  //
   inv_mass_K0_signal->SetFillColor(myBlack);
   inv_mass_K0_signal->Draw("SAME");
   inv_mass_K0_signal->Draw("AXIS SAME");
-  DrawText("K0S signal", myBlack, 0.8);
+  DrawText("K0S signal", myBlack, 0.55, 0.8);
   output_filename = inv_mass_K0_signal->GetName();
   c->Print(output_dir + output_filename + ".png");
 
   // (testing another mass definition)
   alt_mass_K0_signal->Draw();
   alt_mass_K0_signal->Draw("AXIS SAME");
-  DrawText("(taking momentum from TPC)", myBlack, 0.8);
+  DrawText("(taking momentum from TPC)", myBlack,0.55,  0.8);
   output_filename = alt_mass_K0_signal->GetName();
   c->Print(output_dir + output_filename + ".png");
 
@@ -543,8 +544,8 @@ void PlotFoundV0s(  //
   inv_mass_AL_two_dupli->SetFillColor(myGreen);
   inv_mass_AL_two_dupli->Draw("SAME");
   inv_mass_AL_two_dupli->Draw("AXIS SAME");
-  DrawText("one daughter is duplicated", myBlue, 0.8);
-  DrawText("both daughters are duplicated", myGreen, 0.75);
+  DrawText("one daughter is duplicated", myBlue, 0.55, 0.8);
+  DrawText("both daughters are duplicated", myGreen, 0.55, 0.75);
   output_filename = (TString)inv_mass_AL->GetName() + "_dupli";
   c->Print(output_dir + output_filename + ".png");
 
@@ -552,7 +553,7 @@ void PlotFoundV0s(  //
   inv_mass_AL_no_dupli->SetFillColor(myYellow);
   inv_mass_AL_no_dupli->Draw("SAME");
   inv_mass_AL_no_dupli->Draw("AXIS SAME");
-  DrawText("none of the daughters is duplicated", myYellow, 0.8);
+  DrawText("none of the daughters is duplicated", myYellow, 0.55, 0.8);
   output_filename = inv_mass_AL_no_dupli->GetName();
   c->Print(output_dir + output_filename + ".png");
 
@@ -561,7 +562,7 @@ void PlotFoundV0s(  //
   inv_mass_AL_also_K0->SetFillColor(myOrange);
   inv_mass_AL_also_K0->Draw("SAME");
   inv_mass_AL_also_K0->Draw("AXIS SAME");
-  DrawText("could also be K0", myOrange, 0.8);
+  DrawText("could also be K0", myOrange, 0.55, 0.8);
   output_filename = (TString)inv_mass_AL->GetName() + "_ambi";
   c->Print(output_dir + output_filename + ".png");
 
@@ -569,7 +570,7 @@ void PlotFoundV0s(  //
   inv_mass_AL_no_ambi->SetFillColor(myViolet);
   inv_mass_AL_no_ambi->Draw("SAME");
   inv_mass_AL_no_ambi->Draw("AXIS SAME");
-  DrawText("exclusively anti-lambda", myViolet, 0.8);
+  DrawText("exclusively anti-lambda", myViolet, 0.55, 0.8);
   output_filename = inv_mass_AL_no_ambi->GetName();
   c->Print(output_dir + output_filename + ".png");
 
@@ -578,7 +579,7 @@ void PlotFoundV0s(  //
   inv_mass_AL_no_dupli_no_ambi->SetFillColor(myMagenta);
   inv_mass_AL_no_dupli_no_ambi->Draw("SAME");
   inv_mass_AL_no_dupli_no_ambi->Draw("AXIS SAME");
-  DrawText("no dupli no ambi", myMagenta, 0.8);
+  DrawText("no dupli no ambi", myMagenta, 0.55, 0.8);
   output_filename = inv_mass_AL_no_dupli_no_ambi->GetName();
   c->Print(output_dir + output_filename + ".png");
 
@@ -587,14 +588,14 @@ void PlotFoundV0s(  //
   inv_mass_AL_signal->SetFillColor(myBlack);
   inv_mass_AL_signal->Draw("SAME");
   inv_mass_AL_signal->Draw("AXIS SAME");
-  DrawText("anti-lambda signal", myBlack, 0.8);
+  DrawText("anti-lambda signal", myBlack, 0.55, 0.8);
   output_filename = inv_mass_AL_signal->GetName();
   c->Print(output_dir + output_filename + ".png");
 
   // (testing another mass definition)
   alt_mass_AL_signal->Draw();
   alt_mass_AL_signal->Draw("AXIS SAME");
-  DrawText("(taking momentum from TPC)", myBlack, 0.8);
+  DrawText("(taking momentum from TPC)", myBlack, 0.55, 0.8);
   output_filename = alt_mass_AL_signal->GetName();
   c->Print(output_dir + output_filename + ".png");
 
