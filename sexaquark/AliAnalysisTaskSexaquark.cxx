@@ -1,3 +1,5 @@
+#define HomogeneousField  // homogenous field in z direction, required by KFParticle
+
 #include "TArray.h"
 #include "TChain.h"
 #include "TH1.h"
@@ -27,12 +29,82 @@
 #include "AliMCEventHandler.h"
 #include "AliMCParticle.h"
 
+#include "KFPTrack.h"
+#include "KFPVertex.h"
+#include "KFParticle.h"
+#include "KFVertex.h"
+
 #include "AliAnalysisTaskSexaquark.h"
 
-#define N_SIGMA 3.0
-#define DEBUG_MODE 1  // 1 : MC, 2 : Rec., 3 : V0s
+#define DEBUG_MODE // 1 : MC, 2 : Rec., 3 : V0s
 
 class AliAnalysisTaskSexaquark;
+
+/*
+ Default constructor
+ */
+AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
+    : AliAnalysisTaskSE(),
+      fIsMC(0),
+      fHasSexaquark(0),
+      fSourceOfV0s(),
+      fSimulationSet(0),
+      fOutputListOfTrees(0),
+      fMC(0),
+      fESD(0),
+      fPIDResponse(0),
+      fPrimaryVertex(0),
+      fTree(0),
+      fMap_Evt_MCGen(),
+      fVec_Idx_MCGen(),
+      fMap_Evt_MCRec(),
+      fVec_Idx_MCRec(),
+      fVec_MCRec_IsDuplicate(),
+      fVec_MCRec_IsSimilar(),
+      fVec_Idx_MCGen_NonRel(),
+      fMap_Duplicates(),
+      fVec_V0s(),
+      fEvent() {}
+
+/*
+ Constructor
+ */
+AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, Bool_t HasSexaquark, TString SourceOfV0s,
+                                                   Char_t SimulationSet)
+    : AliAnalysisTaskSE(name),
+      fIsMC(IsMC),
+      fHasSexaquark(HasSexaquark),
+      fSourceOfV0s(SourceOfV0s),
+      fSimulationSet(SimulationSet),
+      fOutputListOfTrees(0),
+      fMC(0),
+      fESD(0),
+      fPIDResponse(0),
+      fPrimaryVertex(0),
+      fTree(0),
+      fMap_Evt_MCGen(),
+      fVec_Idx_MCGen(),
+      fMap_Evt_MCRec(),
+      fVec_Idx_MCRec(),
+      fVec_MCRec_IsDuplicate(),
+      fVec_MCRec_IsSimilar(),
+      fVec_Idx_MCGen_NonRel(),
+      fMap_Duplicates(),
+      fVec_V0s(),
+      fEvent() {
+    DefineInput(0, TChain::Class());
+    DefineOutput(1, TList::Class());
+    CheckForInputErrors();
+}
+
+/*
+ Destructor
+ */
+AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
+    if (fOutputListOfTrees) {
+        delete fOutputListOfTrees;
+    }
+}
 
 /*
  Create output objects
@@ -61,7 +133,6 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     AliInfoF(" >> HasSexaquark   = %i", (Int_t)fHasSexaquark);
     AliInfoF(" >> Source of V0s  = %s", fSourceOfV0s.Data());
     AliInfoF(" >> Simulation Set = %c", fSimulationSet);
-    InitPDGMasses();
 
     /*** List of Trees ***/
 
@@ -73,20 +144,6 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfTrees->Add(fTree);
 
     PostData(1, fOutputListOfTrees);
-}
-
-/*
- Set mass-at-rest of different particles
-*/
-void AliAnalysisTaskSexaquark::InitPDGMasses() {
-    kMassNeutron = 0.939565;
-    AliInfoF("kMassNeutron = %.6f", kMassNeutron);
-    kMassProton = 0.938272;
-    AliInfoF("kMassProton = %.6f", kMassProton);
-    kMassPion = 0.139570;
-    AliInfoF("kMassPion = %.6f", kMassPion);
-    kMassKaon = 0.493677;
-    AliInfoF("kMassKaon = %.6f", kMassKaon);
 }
 
 /*
@@ -125,7 +182,7 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     MCRec_FindDuplicates();
 
     // V0 finder
-    if (fSourceOfV0s == "official") {
+    if (fSourceOfV0s == "offline") {
         V0_ProcessESD();
     }
     if (fSourceOfV0s == "true") {
@@ -202,7 +259,7 @@ void AliAnalysisTaskSexaquark::CheckForInputErrors() {
             AliFatal("ERROR: data cannot have access to true MC information.");
         }
     }
-    if (fSourceOfV0s == "true" || fSourceOfV0s == "official" || fSourceOfV0s == "custom") {
+    if (fSourceOfV0s == "true" || fSourceOfV0s == "offline" || fSourceOfV0s == "custom") {
         // nothing
     } else {
         AliFatal("ERROR: source of V0s must be true (available only for sim), official or custom.");

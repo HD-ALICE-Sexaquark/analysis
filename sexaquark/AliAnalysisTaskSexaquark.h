@@ -122,75 +122,16 @@ class AliPIDResponse;
 
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    public:
-    AliAnalysisTaskSexaquark()
-        : AliAnalysisTaskSE(),
-          fIsMC(0),
-          fHasSexaquark(0),
-          fSourceOfV0s(),
-          fSimulationSet(0),
-          fOutputListOfTrees(0),
-          kMassNeutron(0),
-          kMassProton(0),
-          kMassPion(0),
-          kMassKaon(0),
-          fMC(0),
-          fESD(0),
-          fPIDResponse(0),
-          fPrimaryVertex(0),
-          fTree(0),
-          fMap_Evt_MCGen(),
-          fVec_Idx_MCGen(),
-          fMap_Evt_MCRec(),
-          fVec_Idx_MCRec(),
-          fVec_MCRec_IsDuplicate(),
-          fVec_MCRec_IsSimilar(),
-          fVec_Idx_MCGen_NonRel(),
-          fMap_Duplicates(),
-          fVec_V0s(),
-          fEvent() {}
-    AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, Bool_t HasSexaquark, TString SourceOfV0s, char SimulationSet)
-        : AliAnalysisTaskSE(name),
-          fIsMC(IsMC),
-          fHasSexaquark(HasSexaquark),
-          fSourceOfV0s(SourceOfV0s),
-          fSimulationSet(SimulationSet),
-          fOutputListOfTrees(0),
-          kMassNeutron(0),
-          kMassProton(0),
-          kMassPion(0),
-          kMassKaon(0),
-          fMC(0),
-          fESD(0),
-          fPIDResponse(0),
-          fPrimaryVertex(0),
-          fTree(0),
-          fMap_Evt_MCGen(),
-          fVec_Idx_MCGen(),
-          fMap_Evt_MCRec(),
-          fVec_Idx_MCRec(),
-          fVec_MCRec_IsDuplicate(),
-          fVec_MCRec_IsSimilar(),
-          fVec_Idx_MCGen_NonRel(),
-          fMap_Duplicates(),
-          fVec_V0s(),
-          fEvent() {
-        DefineInput(0, TChain::Class());
-        DefineOutput(1, TList::Class());
-        CheckForInputErrors();
-    }
-    virtual ~AliAnalysisTaskSexaquark() {
-        if (fOutputListOfTrees) {
-            delete fOutputListOfTrees;
-        }
-    }
+    AliAnalysisTaskSexaquark();
+    AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC);
+    virtual ~AliAnalysisTaskSexaquark();
 
-    // main functions
+   public:
     virtual void UserCreateOutputObjects();
     virtual void UserExec(Option_t* option);
     virtual void Terminate(Option_t* option) { return; }
 
-    // main functions, authored by me
-    virtual void InitPDGMasses();
+   public:
     virtual void CheckForInputErrors();
 
     // MC Gen.
@@ -229,7 +170,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                     Double_t V0_X, Double_t V0_Y, Double_t V0_Z,     //
                                     Double_t PV_X, Double_t PV_Y, Double_t PV_Z);
 
-    // (tree operations)
+   public:
+    /* Tree operations */
     virtual void SetBranches();
     virtual void MCGen_PushBack(Int_t evt_mc);
     virtual void MCRec_PushBack(Int_t evt_track);
@@ -237,23 +179,25 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     virtual void ClearEvent();
 
    private:
-    // (input options)
+    /* Input options */
     Bool_t fIsMC;
-    Bool_t fHasSexaquark;
+    // source of V0 reconstruction:
+    // - "online"
+    // - "offline"
+    // - "custom"
+    // - "true"
+    // - "kalman"
     TString fSourceOfV0s;
-    char fSimulationSet;  // reaction channel, possible options:
-    // 'A' = AntiS + N -> AntiL + K0
-    // 'B' = AntiS + N -> AntiL + K0 + pim + pip
-    // 'C' = AntiS + N -> AntiP + K0 + K0 + pip
-    // 'D' = AntiS + P -> AntiL + Kp
-    // 'E' = AntiS + P -> AntiL + Kp + pim + pip
-    // 'F' = AntiS + P -> AntiP + Kp + K0 + pip
-    // 'G' = AntiS + N -> Xip + pim
-
-    Double_t kMassNeutron;
-    Double_t kMassProton;
-    Double_t kMassPion;
-    Double_t kMassKaon;
+    // reaction channel, could be:
+    // - 'A' = AntiS + N -> AntiL + K0
+    // - 'B' = AntiS + N -> AntiL + K0 + pim + pip
+    // - 'C' = AntiS + N -> AntiP + K0 + K0 + pip
+    // - 'D' = AntiS + P -> AntiL + Kp
+    // - 'E' = AntiS + P -> AntiL + Kp + pim + pip
+    // - 'F' = AntiS + P -> AntiP + Kp + K0 + pip
+    // - 'G' = AntiS + N -> Xip + pim
+    // - 'H' = AntiS + P -> AntiP + Kp + Kp + pi0
+    Char_t fSimulationSet;
 
     Event_tt fEvent;
 
@@ -271,13 +215,15 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     std::vector<V0_tt> fVec_V0s;
 
-    // input objects
+   private:
+    /* AliRoot objects */
     AliMCEvent* fMC;               // corresponding MC event
     AliESDEvent* fESD;             // input event
     AliPIDResponse* fPIDResponse;  // pid response object
     AliESDVertex* fPrimaryVertex;  // primary vertex
 
-    // output objects
+   private:
+    /* ROOT objects */
     TList* fOutputListOfTrees;
     TTree* fTree;
 
