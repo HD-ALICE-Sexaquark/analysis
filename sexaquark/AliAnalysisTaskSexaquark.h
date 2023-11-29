@@ -179,6 +179,23 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     virtual void ClearEvent();
 
    private:
+    Event_tt fEvent;
+
+    std::unordered_map<Int_t, Int_t> fMap_Evt_MCGen;  // [Idx, Evt]
+    std::vector<Int_t> fVec_Idx_MCGen;
+
+    std::unordered_map<Int_t, Int_t> fMap_Evt_MCRec;  // [Idx, Evt]
+    std::vector<Int_t> fVec_Idx_MCRec;
+
+    std::vector<Bool_t> fVec_MCRec_IsDuplicate;
+    std::vector<Bool_t> fVec_MCRec_IsSimilar;
+
+    std::vector<Int_t> fVec_Idx_MCGen_NonRel;             // (non.rel.->rel.)
+    std::map<Int_t, std::vector<Int_t>> fMap_Duplicates;  // (duplicated tracks) [Idx_MCGen, {Idx_MCRec_0, ...}]
+
+    std::vector<V0_tt> fVec_V0s;
+
+   private:
     /* Input options */
     Bool_t fIsMC;
     // source of V0 reconstruction:
@@ -199,21 +216,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // - 'H' = AntiS + P -> AntiP + Kp + Kp + pi0
     Char_t fSimulationSet;
 
-    Event_tt fEvent;
-
-    std::unordered_map<Int_t, Int_t> fMap_Evt_MCGen;  // [Idx, Evt]
-    std::vector<Int_t> fVec_Idx_MCGen;
-
-    std::unordered_map<Int_t, Int_t> fMap_Evt_MCRec;  // [Idx, Evt]
-    std::vector<Int_t> fVec_Idx_MCRec;
-
-    std::vector<Bool_t> fVec_MCRec_IsDuplicate;
-    std::vector<Bool_t> fVec_MCRec_IsSimilar;
-
-    std::vector<Int_t> fVec_Idx_MCGen_NonRel;             // (non.rel.->rel.)
-    std::map<Int_t, std::vector<Int_t>> fMap_Duplicates;  // (duplicated tracks) [Idx_MCGen, {Idx_MCRec_0, ...}]
-
-    std::vector<V0_tt> fVec_V0s;
+   private:
+    /* Cuts */
+    Float_t kMaxNSigma_Pion;
+    Float_t kMaxNSigma_Kaon;
+    Float_t kMaxNSigma_Proton;
 
    private:
     /* AliRoot objects */
@@ -221,11 +228,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliESDEvent* fESD;             // input event
     AliPIDResponse* fPIDResponse;  // pid response object
     AliESDVertex* fPrimaryVertex;  // primary vertex
+    Double_t fMagneticField;       // magnetic field
 
    private:
     /* ROOT objects */
     TDatabasePDG fPDG;
     TList* fOutputListOfTrees;
+    TList* fOutputListOfHists;
     TTree* fTree;
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented

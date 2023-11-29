@@ -2,6 +2,7 @@
 
 #include "TArray.h"
 #include "TChain.h"
+#include "TDatabasePDG.h"
 #include "TH1.h"
 #include "TH1F.h"
 #include "TList.h"
@@ -9,7 +10,6 @@
 #include "TString.h"
 #include "TTree.h"
 #include "TVector3.h"
-#include "TDatabasePDG.h"
 
 #include "AliAnalysisManager.h"
 #include "AliAnalysisTask.h"
@@ -50,10 +50,16 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fSourceOfV0s(),
       fSimulationSet(0),
       fOutputListOfTrees(0),
+      fOutputListOfHists(0),
       fMC(0),
       fESD(0),
       fPIDResponse(0),
       fPrimaryVertex(0),
+      fMagneticField(0.),
+      kMaxNSigma_Pion(0.),
+      kMaxNSigma_Kaon(0.),
+      kMaxNSigma_Proton(0.),
+      fPDG(),
       fTree(0),
       fMap_Evt_MCGen(),
       fVec_Idx_MCGen(),
@@ -64,7 +70,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fVec_Idx_MCGen_NonRel(),
       fMap_Duplicates(),
       fVec_V0s(),
-      fPDG(),
       fEvent() {}
 
 /*
@@ -76,10 +81,16 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       fSourceOfV0s(SourceOfV0s),
       fSimulationSet(SimulationSet),
       fOutputListOfTrees(0),
+      fOutputListOfHists(0),
       fMC(0),
       fESD(0),
       fPIDResponse(0),
       fPrimaryVertex(0),
+      fMagneticField(0.),
+      kMaxNSigma_Pion(0.),
+      kMaxNSigma_Kaon(0.),
+      kMaxNSigma_Proton(0.),
+      fPDG(),
       fTree(0),
       fMap_Evt_MCGen(),
       fVec_Idx_MCGen(),
@@ -90,10 +101,10 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       fVec_Idx_MCGen_NonRel(),
       fMap_Duplicates(),
       fVec_V0s(),
-      fPDG(),
       fEvent() {
     DefineInput(0, TChain::Class());
     DefineOutput(1, TList::Class());
+    DefineOutput(2, TList::Class());
     CheckForInputErrors();
 }
 
@@ -103,6 +114,9 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
 AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
     if (fOutputListOfTrees) {
         delete fOutputListOfTrees;
+    }
+    if (fOutputListOfHists) {
+        delete fOutputListOfHists;
     }
 }
 
@@ -133,7 +147,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     AliInfoF(" >> Source of V0s  = %s", fSourceOfV0s.Data());
     AliInfoF(" >> Simulation Set = %c", fSimulationSet);
 
-    /*** List of Trees ***/
+    /*** Trees ***/
 
     fOutputListOfTrees = new TList();
     fOutputListOfTrees->SetOwner(kTRUE);
@@ -143,6 +157,13 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfTrees->Add(fTree);
 
     PostData(1, fOutputListOfTrees);
+
+    /*** Histograms ***/
+
+    fOutputListOfHists = new TList();
+    fOutputListOfHists->SetOwner(kTRUE);
+
+    PostData(2, fOutputListOfHists);
 }
 
 /*
@@ -322,8 +343,8 @@ void AliAnalysisTaskSexaquark::MCRec_FindRelevant() {
         n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
         n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
 
-        isRecPIDRelevant = (TMath::Abs(n_sigma_pion) < N_SIGMA) ||                         // pos. and neg. pion
-                           (TMath::Abs(n_sigma_proton) < N_SIGMA && track->Charge() < 0);  // anti-proton
+        isRecPIDRelevant = (TMath::Abs(n_sigma_pion) < kMaxNSigma_Pion) ||                           // pos. and neg. pion
+                           (TMath::Abs(n_sigma_proton) < kMaxNSigma_Proton && track->Charge() < 0);  // anti-proton
 
         idx_true = TMath::Abs(track->GetLabel());
         truePart = (AliMCParticle*)fMC->GetTrack(idx_true);
@@ -643,9 +664,11 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
         // for positive daughter, assuming it's a positive pion
         pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
         // for negative daughter, assuming it's K0 -> pi+ pi-
-        neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
+        neg_energy_asK0 =
+            TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
         // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
-        neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
+        neg_energy_asAL =
+            TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
 
         // get true particles
         idx_pos_true = TMath::Abs(pos_track->GetLabel());
@@ -670,8 +693,8 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
         this_V0.isSignal = MCGen_IsSignal(mcPosTrue) && MCGen_IsSignal(mcNegTrue);
         this_V0.E_asK0 = pos_energy + neg_energy_asK0;
         this_V0.E_asAL = pos_energy + neg_energy_asAL;
-        this_V0.couldBeK0 = TMath::Abs(nsigma_pos_pion) < N_SIGMA && TMath::Abs(nsigma_neg_pion) < N_SIGMA;
-        this_V0.couldBeAL = TMath::Abs(nsigma_pos_pion) < N_SIGMA && TMath::Abs(nsigma_antiproton) < N_SIGMA;
+        this_V0.couldBeK0 = TMath::Abs(nsigma_pos_pion) < kMaxNSigma_Pion && TMath::Abs(nsigma_neg_pion) < kMaxNSigma_Pion;
+        this_V0.couldBeAL = TMath::Abs(nsigma_pos_pion) < kMaxNSigma_Pion && TMath::Abs(nsigma_antiproton) < kMaxNSigma_Proton;
         this_V0.Chi2 = V0->GetChi2V0();
         this_V0.DCA_Daughters = V0->GetDcaV0Daughters();
         this_V0.IP_wrtPV = V0->GetD(PV[0], PV[1], PV[2]);
@@ -1093,11 +1116,11 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
 
             // (cut) on PID
             // positive daughter must be a positive pion
-            if (TMath::Abs(nsigma_pos_pion) > N_SIGMA) {
+            if (TMath::Abs(nsigma_pos_pion) > kMaxNSigma_Pion) {
                 continue;
             }
             // negative daughter must be a negative pion or an anti-lambda
-            if (TMath::Abs(nsigma_neg_pion) > N_SIGMA && TMath::Abs(nsigma_antiproton) > N_SIGMA) {
+            if (TMath::Abs(nsigma_neg_pion) > kMaxNSigma_Pion && TMath::Abs(nsigma_antiproton) > kMaxNSigma_Proton) {
                 continue;
             }
 
@@ -1108,11 +1131,14 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
 
             // calculate energy
             // for positive daughter, assume it's a positive pion
-            pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
+            pos_energy =
+                TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
             // for negative daughter, assuming it's K0 -> pi+ pi-
-            neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
+            neg_energy_asK0 =
+                TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
             // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
-            neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
+            neg_energy_asAL =
+                TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
 
             // get true particles
             idx_pos_true = TMath::Abs(pos_track->GetLabel());
@@ -1140,8 +1166,8 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
             this_V0.Neg_Pz = N_Pz;
             this_V0.E_asK0 = pos_energy + neg_energy_asK0;
             this_V0.E_asAL = pos_energy + neg_energy_asAL;
-            this_V0.couldBeK0 = TMath::Abs(nsigma_pos_pion) < N_SIGMA && TMath::Abs(nsigma_neg_pion) < N_SIGMA;
-            this_V0.couldBeAL = TMath::Abs(nsigma_pos_pion) < N_SIGMA && TMath::Abs(nsigma_antiproton) < N_SIGMA;
+            this_V0.couldBeK0 = TMath::Abs(nsigma_pos_pion) < kMaxNSigma_Pion && TMath::Abs(nsigma_neg_pion) < kMaxNSigma_Pion;
+            this_V0.couldBeAL = TMath::Abs(nsigma_pos_pion) < kMaxNSigma_Pion && TMath::Abs(nsigma_antiproton) < kMaxNSigma_Proton;
             this_V0.Chi2 = vertex.GetChi2V0();
             this_V0.DCA_Daughters = vertex.GetDcaV0Daughters();
             this_V0.IP_wrtPV = vertex.GetD(PV[0], PV[1], PV[2]);
