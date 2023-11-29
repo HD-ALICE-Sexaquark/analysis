@@ -9,6 +9,7 @@
 #include "TString.h"
 #include "TTree.h"
 #include "TVector3.h"
+#include "TDatabasePDG.h"
 
 #include "AliAnalysisManager.h"
 #include "AliAnalysisTask.h"
@@ -36,7 +37,7 @@
 
 #include "AliAnalysisTaskSexaquark.h"
 
-#define DEBUG_MODE // 1 : MC, 2 : Rec., 3 : V0s
+#define DEBUG_MODE  // 1 : MC, 2 : Rec., 3 : V0s
 
 class AliAnalysisTaskSexaquark;
 
@@ -46,7 +47,6 @@ class AliAnalysisTaskSexaquark;
 AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
     : AliAnalysisTaskSE(),
       fIsMC(0),
-      fHasSexaquark(0),
       fSourceOfV0s(),
       fSimulationSet(0),
       fOutputListOfTrees(0),
@@ -64,16 +64,15 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fVec_Idx_MCGen_NonRel(),
       fMap_Duplicates(),
       fVec_V0s(),
+      fPDG(),
       fEvent() {}
 
 /*
  Constructor
  */
-AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, Bool_t HasSexaquark, TString SourceOfV0s,
-                                                   Char_t SimulationSet)
+AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, Char_t SimulationSet)
     : AliAnalysisTaskSE(name),
       fIsMC(IsMC),
-      fHasSexaquark(HasSexaquark),
       fSourceOfV0s(SourceOfV0s),
       fSimulationSet(SimulationSet),
       fOutputListOfTrees(0),
@@ -91,6 +90,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       fVec_Idx_MCGen_NonRel(),
       fMap_Duplicates(),
       fVec_V0s(),
+      fPDG(),
       fEvent() {
     DefineInput(0, TChain::Class());
     DefineOutput(1, TList::Class());
@@ -130,7 +130,6 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     AliInfo("Initializing AliAnalysisTaskSexaquark...");
     AliInfo("INPUT OPTIONS:");
     AliInfoF(" >> IsMC           = %i", (Int_t)fIsMC);
-    AliInfoF(" >> HasSexaquark   = %i", (Int_t)fHasSexaquark);
     AliInfoF(" >> Source of V0s  = %s", fSourceOfV0s.Data());
     AliInfoF(" >> Simulation Set = %c", fSimulationSet);
 
@@ -252,9 +251,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 */
 void AliAnalysisTaskSexaquark::CheckForInputErrors() {
     if (fIsMC == kFALSE) {
-        if (fHasSexaquark == kTRUE) {
-            AliFatal("ERROR: data cannot have a MC anti-sexaquark inserted.");
-        }
         if (fSourceOfV0s == "true") {
             AliFatal("ERROR: data cannot have access to true MC information.");
         }
@@ -645,11 +641,11 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
 
         // calculate energy
         // for positive daughter, assuming it's a positive pion
-        pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + kMassPion * kMassPion);
+        pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
         // for negative daughter, assuming it's K0 -> pi+ pi-
-        neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + kMassPion * kMassPion);
+        neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
         // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
-        neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + kMassProton * kMassProton);
+        neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
 
         // get true particles
         idx_pos_true = TMath::Abs(pos_track->GetLabel());
@@ -775,13 +771,13 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
 
                 // calculate energy (assuming positive pion)
                 pos_energy = TMath::Sqrt(mc_pos->Px() * mc_pos->Px() + mc_pos->Py() * mc_pos->Py() + mc_pos->Pz() * mc_pos->Pz() +
-                                         kMassPion * kMassPion);
+                                         fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
                 // assuming K0 -> pi+ pi-
                 neg_energy_asK0 = TMath::Sqrt(mc_neg->Px() * mc_neg->Px() + mc_neg->Py() * mc_neg->Py() + mc_neg->Pz() * mc_neg->Pz() +
-                                              kMassPion * kMassPion);
+                                              fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
                 // assuming anti-lambda -> pi+ anti-proton
                 neg_energy_asAL = TMath::Sqrt(mc_neg->Px() * mc_neg->Px() + mc_neg->Py() * mc_neg->Py() + mc_neg->Pz() * mc_neg->Pz() +
-                                              kMassProton * kMassProton);
+                                              fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
 
                 // (tree operations)
                 // fill common format and push_back
@@ -1112,11 +1108,11 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
 
             // calculate energy
             // for positive daughter, assume it's a positive pion
-            pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + kMassPion * kMassPion);
+            pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
             // for negative daughter, assuming it's K0 -> pi+ pi-
-            neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + kMassPion * kMassPion);
+            neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
             // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
-            neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + kMassProton * kMassProton);
+            neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
 
             // get true particles
             idx_pos_true = TMath::Abs(pos_track->GetLabel());

@@ -123,7 +123,7 @@ class AliPIDResponse;
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    public:
     AliAnalysisTaskSexaquark();
-    AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC);
+    AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, Char_t SimulationSet);
     virtual ~AliAnalysisTaskSexaquark();
 
    public:
@@ -224,6 +224,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    private:
     /* ROOT objects */
+    TDatabasePDG fPDG;
     TList* fOutputListOfTrees;
     TTree* fTree;
 
