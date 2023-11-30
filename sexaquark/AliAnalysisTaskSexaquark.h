@@ -118,6 +118,19 @@ struct Event_tt {
     std::vector<Float_t> V0_DCA_wrtPV;      // distance of closest approach to Primary Vertex
 };
 
+/*
+ Auxiliary class to make use of protected function KFParticleBase::GetMeasurement()
+ [copied from /PWGLF/.../AliAnalysisTaskDoubleHypNucTree.h]
+ */
+class KFParticleMother : public KFParticle {
+   public:
+    Bool_t CheckDaughter(KFParticle daughter) {
+        Float_t m[8], mV[36], D[3][3];
+        if (KFParticleBase::GetMeasurement(daughter, m, mV, D)) return kTRUE;
+        return kFALSE;
+    }
+};
+
 class AliPIDResponse;
 
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
@@ -132,32 +145,78 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     virtual void Terminate(Option_t* option) { return; }
 
    public:
-    virtual void CheckForInputErrors();
+    /* Initialization */
+    void CheckForInputErrors();
+    void Initialize();
+    void DefineCuts(TString cuts_option);
 
-    // MC Gen.
-    virtual void MCGen_FindRelevant();
-    virtual void MCGen_GetMotherInfo(AliMCParticle* mcPart, Int_t& evt_mother, Int_t& mother_pid, Int_t& grandmother_pid);
-    virtual Bool_t MCGen_IsSignal(AliMCParticle* mcPart);
-    virtual void MCGen_AddNonRelevant();
-    virtual void MCGen_GetDaughtersInfo(AliMCParticle* mcPart, Int_t& n_dau, Int_t& n_first_dau, Int_t& n_last_dau);
+   public:
+    /* MC Generated */
+    void ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, std::set<Int_t>& Indices_MCGen_FS_Signal);
 
-    // MC Rec.
-    virtual void MCRec_FindRelevant();
-    virtual void MCRec_FindDuplicates();
-    virtual void MCRec_FindSimilarTracks();
-    virtual Float_t MCRec_GetImpactParameter(AliESDtrack* track);
+   public:
+    /* Tracks */
+    void ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal,                                    // (pending)
+                       std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks,  //
+                       std::vector<Int_t>& idxKaonPlusTracks, std::vector<Int_t>& idxAntiProtonTracks);
+    Bool_t PassesTrackSelection(AliESDtrack* track, Float_t& n_sigma_pion, Float_t& n_sigma_kaon, Float_t& n_sigma_proton);
 
-    // V0 Finders
-    virtual void V0_ProcessESD();
-    virtual void V0_ProcessTrue();
-    virtual void V0_ProcessCustom();
+   public:
+    /* V0s -- ALICE V0 Finders */
+    void ReconstructV0s_Official(Bool_t online);
+    void ReconstructV0s_TrueInfo();
+    void ReconstructV0s_Custom();
 
-    // custom offline V0 finder (based on AliV0vertexer.cxx)
-    virtual Bool_t Preoptimize(const AliExternalTrackParam* nt, AliExternalTrackParam* pt, Double_t* lPreprocessxn, Double_t* lPreprocessxp,
-                               const Double_t b);
-    virtual void GetHelixCenter(const AliExternalTrackParam* track, Double_t center[2], const Double_t b);
+   public:
+    /* V0s -- Kalman Filter */
+    void ReconstructV0s_KF();
+    Bool_t PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
+                               TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+    Bool_t PassesPionPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
+                                 TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+    Bool_t PassesPosKaonPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughter1, KFParticle kfDaughter2,  //
+                                    TLorentzVector lvV0, TLorentzVector lvTrack1, TLorentzVector lvTrack2);
+    Bool_t PassesNeutralKaonShortCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
+                                    TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+    Bool_t PassesLambda1520Cuts_KF(KFParticleMother kfLambda1520, KFParticle kfLambda, KFParticle kfPion2, KFParticle kfPion3,  //
+                                   TLorentzVector lvLambda1520, TLorentzVector lvLambda, TLorentzVector lvPion2, TLorentzVector lvPion3);
+    Bool_t PassesSexaquarkCuts_KF();
 
-    // (mathematical functions)
+   public:
+    /* Sexaquark -- Kalman Filter */
+    // Channel A
+    Bool_t PassesAntiSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfNeutralKaonShort,  //
+                                               TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda, TLorentzVector lvNeutralKaonShort);
+    void SexaquarkFinder_ChannelA_KF(std::vector<KFParticleMother> kfFirstV0s, std::vector<std::vector<Int_t>> idxFirstV0Daughters,    //
+                                     std::vector<KFParticleMother> kfSecondV0s, std::vector<std::vector<Int_t>> idxSecondV0Daughters,  //
+                                     std::vector<Int_t> pdgDaughters, std::vector<KFParticleMother>& kfAntiSexaquarks);
+    // Channel D
+    Bool_t PassesAntiSexaquarkCuts_ChannelD_KF();
+    void SexaquarkFinder_ChannelD_KF();
+    // Channel E
+    Bool_t PassesAntiSexaquarkCuts_ChannelE_KF();
+    void SexaquarkFinder_ChannelE_KF();
+    // Channel H
+    Bool_t PassesAntiSexaquarkCuts_ChannelH_KF();
+    void SexaquarkFinder_ChannelH_KF();
+
+   public:
+    /* Sexaquark -- Geometric Backpropagation */
+    // Channel A
+    void SexaquarkFinder_ChannelA_Geo();
+    // Channel D
+    void SexaquarkFinder_ChannelD_Geo();
+    // Channel E
+    void SexaquarkFinder_ChannelE_Geo();
+    // Channel H
+    void SexaquarkFinder_ChannelH_Geo();
+
+   public:
+    /* Utilities */
+    Bool_t Preoptimize(const AliExternalTrackParam* nt, AliExternalTrackParam* pt, Double_t* lPreprocessxn, Double_t* lPreprocessxp,
+                       const Double_t b);
+    void GetHelixCenter(const AliExternalTrackParam* track, Double_t center[2], const Double_t b);
+    Float_t MCRec_GetImpactParameter(AliESDtrack* track);
     Double_t Calculate_CPA(Double_t Px, Double_t Py, Double_t Pz,  //
                            Double_t X, Double_t Y, Double_t Z,     //
                            Double_t refPointX, Double_t refPointY, Double_t refPointZ);
@@ -171,29 +230,16 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                     Double_t PV_X, Double_t PV_Y, Double_t PV_Z);
 
    public:
-    /* Tree operations */
-    virtual void SetBranches();
-    virtual void MCGen_PushBack(Int_t evt_mc);
-    virtual void MCRec_PushBack(Int_t evt_track);
-    virtual void V0_PushBack(Int_t evt_v0);
-    virtual void ClearEvent();
+    /* Tree Operations */
+    void SetBranches();
+    void MCGen_PushBack(Int_t evt_mc);
+    void MCRec_PushBack(Int_t evt_track);
+    void V0_PushBack(Int_t evt_v0);
+    void FillTree();
+    void ClearEvent();
 
    private:
     Event_tt fEvent;
-
-    std::unordered_map<Int_t, Int_t> fMap_Evt_MCGen;  // [Idx, Evt]
-    std::vector<Int_t> fVec_Idx_MCGen;
-
-    std::unordered_map<Int_t, Int_t> fMap_Evt_MCRec;  // [Idx, Evt]
-    std::vector<Int_t> fVec_Idx_MCRec;
-
-    std::vector<Bool_t> fVec_MCRec_IsDuplicate;
-    std::vector<Bool_t> fVec_MCRec_IsSimilar;
-
-    std::vector<Int_t> fVec_Idx_MCGen_NonRel;             // (non.rel.->rel.)
-    std::map<Int_t, std::vector<Int_t>> fMap_Duplicates;  // (duplicated tracks) [Idx_MCGen, {Idx_MCRec_0, ...}]
-
-    std::vector<V0_tt> fVec_V0s;
 
    private:
     /* Input options */
@@ -215,6 +261,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // - 'G' = AntiS + N -> Xip + pim
     // - 'H' = AntiS + P -> AntiP + Kp + Kp + pi0
     Char_t fSimulationSet;
+    TString fReactionChannel;  // derived from `fSimulationSet` in `Initialize()`
 
    private:
     /* Cuts */

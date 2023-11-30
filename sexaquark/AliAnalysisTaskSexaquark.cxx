@@ -37,12 +37,10 @@
 
 #include "AliAnalysisTaskSexaquark.h"
 
-#define DEBUG_MODE  // 1 : MC, 2 : Rec., 3 : V0s
-
 class AliAnalysisTaskSexaquark;
 
 /*
- Default constructor
+ Default constructor.
  */
 AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
     : AliAnalysisTaskSE(),
@@ -61,19 +59,10 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       kMaxNSigma_Proton(0.),
       fPDG(),
       fTree(0),
-      fMap_Evt_MCGen(),
-      fVec_Idx_MCGen(),
-      fMap_Evt_MCRec(),
-      fVec_Idx_MCRec(),
-      fVec_MCRec_IsDuplicate(),
-      fVec_MCRec_IsSimilar(),
-      fVec_Idx_MCGen_NonRel(),
-      fMap_Duplicates(),
-      fVec_V0s(),
       fEvent() {}
 
 /*
- Constructor
+ Constructor.
  */
 AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, Char_t SimulationSet)
     : AliAnalysisTaskSE(name),
@@ -92,24 +81,16 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       kMaxNSigma_Proton(0.),
       fPDG(),
       fTree(0),
-      fMap_Evt_MCGen(),
-      fVec_Idx_MCGen(),
-      fMap_Evt_MCRec(),
-      fVec_Idx_MCRec(),
-      fVec_MCRec_IsDuplicate(),
-      fVec_MCRec_IsSimilar(),
-      fVec_Idx_MCGen_NonRel(),
-      fMap_Duplicates(),
-      fVec_V0s(),
       fEvent() {
     DefineInput(0, TChain::Class());
     DefineOutput(1, TList::Class());
     DefineOutput(2, TList::Class());
     CheckForInputErrors();
+    Initialize();
 }
 
 /*
- Destructor
+ Destructor.
  */
 AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
     if (fOutputListOfTrees) {
@@ -121,8 +102,8 @@ AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
 }
 
 /*
- Create output objects
- This function is called ONCE at the start of your analysis (RUNTIME)
+ Create output objects.
+ This function is called ONCE at the start of your analysis (RUNTIME).
 */
 void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
@@ -138,14 +119,6 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     }
 
     fPIDResponse = inputHandler->GetPIDResponse();
-
-    /*** Initializing ***/
-
-    AliInfo("Initializing AliAnalysisTaskSexaquark...");
-    AliInfo("INPUT OPTIONS:");
-    AliInfoF(" >> IsMC           = %i", (Int_t)fIsMC);
-    AliInfoF(" >> Source of V0s  = %s", fSourceOfV0s.Data());
-    AliInfoF(" >> Simulation Set = %c", fSimulationSet);
 
     /*** Trees ***/
 
@@ -167,9 +140,77 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 }
 
 /*
- This function is called per each event.
+ Initialize analysis task.
+ */
+void AliAnalysisTaskSexaquark::Initialize() {
+    if (fSimulationSet == 'A')
+        fReactionChannel = "AntiSexaquark,N->AntiLambda,K0S";
+    else if (fSimulationSet == 'B')
+        fReactionChannel = "";
+    else if (fSimulationSet == 'C')
+        fReactionChannel = "";
+    else if (fSimulationSet == 'D')
+        fReactionChannel = "AntiSexaquark,P->AntiLambda,K+";
+    else if (fSimulationSet == 'E')
+        fReactionChannel = "AntiSexaquark,P->AntiLambda,K+,pi-,pi+";
+    else if (fSimulationSet == 'F')
+        fReactionChannel = "";
+    else if (fSimulationSet == 'G')
+        fReactionChannel = "";
+    else if (fSimulationSet == 'H')
+        fReactionChannel = "AntiSexaquark,P->AntiProton,K+,K+,pi0";
+
+    DefineCuts("Standard");
+
+    AliInfo("Initializing AliAnalysisTaskSexaquark...");
+    AliInfo("INPUT OPTIONS:");
+    AliInfoF(" >> IsMC             = %i", (Int_t)fIsMC);
+    AliInfoF(" >> Source of V0s    = %s", fSourceOfV0s.Data());
+    AliInfoF(" >> Simulation Set   = %c", fSimulationSet);
+    AliInfoF(" >> Reaction Channel = %s", fReactionChannel.Data());
+}
+
+/*
+ - Uses: `fReactionChannel`
+ */
+void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
+    kMaxNSigma_Pion = 3.;
+    kMaxNSigma_Kaon = 3.;
+    kMaxNSigma_Proton = 3.;
+    if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S" && cuts_option == "Standard") {
+    }
+    if (fReactionChannel == "AntiSexaquark,P->AntiLambda,K+" && cuts_option == "Standard") {
+    }
+    if (fReactionChannel == "AntiSexaquark,P->AntiLambda,K+,pi-,pi+" && cuts_option == "Standard") {
+    }
+    if (fReactionChannel == "AntiSexaquark,P->AntiProton,K+,K+,pi0" && cuts_option == "Standard") {
+    }
+}
+
+/*
+ Main function, called per each event.
 */
 void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
+
+    // declare containers
+    std::set<Int_t> Indices_MCGen_FS;  // FS: final-state
+    std::set<Int_t> Indices_MCGen_FS_Signal;
+
+    std::vector<Int_t> idxPiPlusTracks, idxPiMinusTracks;
+    std::vector<Int_t> idxKaonPlusTracks, idxAntiProtonTracks;
+
+    std::vector<KFParticleMother> kfAntiLambdas;
+    std::vector<std::vector<Int_t>> idxAntiLambdaDaughters;
+    std::vector<KFParticleMother> kfPosKaonPairs;
+    std::vector<std::vector<Int_t>> idxPosKaonPairDaughters;
+    std::vector<KFParticleMother> kfPionPairs;
+    std::vector<std::vector<Int_t>> idxPionPairDaughters;
+    std::vector<KFParticleMother> kfNeutralShortKaons;
+    std::vector<std::vector<Int_t>> idxNeutralShortKaonsDaughters;
+
+    std::vector<Int_t> pdgTracks;
+
+    std::vector<KFParticleMother> kfAntiSexaquarks;
 
     // load MC generated event
     fMC = MCEvent();
@@ -185,84 +226,45 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         AliFatal("ERROR: AliESDEvent couldn't be found.");
     }
 
+    // load magnetic field
+    fMagneticField = fESD->GetMagneticField();
+
+    // initialize KFparticle
+    KFParticle::SetField(fMagneticField);
+
     // load primary vertex
     // [note: const_cast removes the const qualifier from the pointer]
     fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
 
-    // process MC tree
-    MCGen_FindRelevant();
+    ProcessMCGen(Indices_MCGen_FS, Indices_MCGen_FS_Signal);
 
-    // process reconstructed tracks
-    MCRec_FindRelevant();
+    ProcessTracks(Indices_MCGen_FS_Signal, idxPiPlusTracks, idxPiMinusTracks, idxKaonPlusTracks, idxAntiProtonTracks);
 
-    // add non-relevant MC particles, that were rec. as relevant
-    MCGen_AddNonRelevant();
-
-    // label duplicated tracks
-    MCRec_FindDuplicates();
-
-    // V0 finder
-    if (fSourceOfV0s == "offline") {
-        V0_ProcessESD();
-    }
+    /*
     if (fSourceOfV0s == "true") {
-        V0_ProcessTrue();
+        ReconstructV0s_TrueInfo();
+    }
+    if (fSourceOfV0s == "offline") {
+        ReconstructV0s_Official(kFALSE);
+    }
+    if (fSourceOfV0s == "online") {
+        ReconstructV0s_Official(kTRUE);
     }
     if (fSourceOfV0s == "custom") {
-        V0_ProcessCustom();
+        ReconstructV0s_Custom();
     }
-
-#if DEBUG_MODE == 1
-    AliInfo("MONTE CARLO TREE");
-    AliInfo("");
-    AliInfo("         EVT    IDX    PID SIGNAL MOTHER  M_PID GM_PID FIRDAU LASDAU");
-#endif
-    fEvent.N_MCGen = (Int_t)fVec_Idx_MCGen.size();
-    for (Int_t ii = 0; ii < fEvent.N_MCGen; ii++) {
-        MCGen_PushBack(ii);
+    if (fSourceOfV0s == "kalman") {
+        ReconstructV0s_KF();
     }
+    */
 
-#if DEBUG_MODE > 0
-    AliInfo("RECONSTRUCTED TRACKS");
-    AliInfo("");
-    AliInfo("         EVT    IDX EVTTRU IDXTRU DUPLI?");
-#endif
-    fEvent.N_MCRec = (Int_t)fVec_Idx_MCRec.size();
-    for (Int_t ii = 0; ii < fEvent.N_MCRec; ii++) {
-        MCRec_PushBack(ii);
-    }
-
-#if DEBUG_MODE == 2
-    AliInfo("FOUND V0s");
-    AliInfo("");
-    AliInfo("   EVTPOS EVTNEG IDXPOS IDXNEG");
-#endif
-    fEvent.N_V0s = (Int_t)fVec_V0s.size();
-    for (Int_t ii = 0; ii < fEvent.N_V0s; ii++) {
-        V0_PushBack(ii);
-    }
-
-    // (tree operations) after all variables have been assigned, fill tree
-    fTree->Fill();
+    FillTree();
 
     // stream the results the analysis of this event to the output manager
     PostData(1, fOutputListOfTrees);
+    PostData(2, fOutputListOfHists);
 
-    /*** End of Event: Clear Structures ***/
-
-    fMap_Evt_MCGen.clear();
-    fVec_Idx_MCGen.clear();
-
-    fMap_Evt_MCRec.clear();
-    fVec_Idx_MCRec.clear();
-
-    fVec_MCRec_IsDuplicate.clear();
-    fVec_MCRec_IsSimilar.clear();
-
-    fVec_Idx_MCGen_NonRel.clear();
-    fMap_Duplicates.clear();
-
-    fVec_V0s.clear();
+    /* Clear containers */
 
     ClearEvent();
 }
@@ -271,332 +273,282 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
  Search for possible contradictions in the input options
 */
 void AliAnalysisTaskSexaquark::CheckForInputErrors() {
-    if (fIsMC == kFALSE) {
-        if (fSourceOfV0s == "true") {
-            AliFatal("ERROR: data cannot have access to true MC information.");
-        }
-    }
-    if (fSourceOfV0s == "true" || fSourceOfV0s == "offline" || fSourceOfV0s == "custom") {
+    if (fSourceOfV0s == "true" ||                                 //
+        fSourceOfV0s == "offline" || fSourceOfV0s == "online" ||  //
+        fSourceOfV0s == "custom" || fSourceOfV0s == "kalman") {
         // nothing
     } else {
-        AliFatal("ERROR: source of V0s must be true (available only for sim), official or custom.");
+        AliFatal("ERROR: source of V0s must be \"true\" (available only for sim), \"offline\", \"online\", \"custom\" or \"kalman\".");
+    }
+    if (!fIsMC && fSourceOfV0s == "true") {
+        AliFatal("ERROR: data cannot have access to true MC information.");
     }
 }
 
 /*
- Search for the relevant MC particles in a single event
+ Search for the relevant MC particles in a single event.
+ - Uses: `fMC`
+ - Output: `Indices_MCGen_FS`, `Indices_MCGen_FS_Signal`
 */
-void AliAnalysisTaskSexaquark::MCGen_FindRelevant() {
+void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, std::set<Int_t>& Indices_MCGen_FS_Signal) {
 
     AliMCParticle* mcPart;
-    AliMCParticle* mcMother;
-    AliMCParticle* mcGrandMother;
+    AliMCParticle* mcDaughter;
+    AliMCParticle* mcGrandDaughter;
 
-    Bool_t isGenPIDRelevant;
+    Int_t n_antilambda = 0;
+    Int_t n_k0s = 0;
 
-    Int_t evt_mother;
-    Int_t mother_pid;
-    Int_t grandmother_pid;
+    Int_t n_piplus = 0;
+    Int_t n_piminus = 0;
+    Int_t n_kplus = 0;
+    Int_t n_antiprotons = 0;
+
+    Double_t radius;  // 2d-radius where the sexaquark interacts
 
     // loop over MC gen. particles in a single event
+    AliInfo("   IDX STATUS    PID   NDAU FIRDAU LASDAU MOTHER ORIG                        MOMENTUM");
     for (Int_t idx_mc = 0; idx_mc < fMC->GetNumberOfTracks(); idx_mc++) {
 
         mcPart = (AliMCParticle*)fMC->GetTrack(idx_mc);
 
-        isGenPIDRelevant = TMath::Abs(mcPart->PdgCode()) == 211 ||  // pos. and neg. pion
-                           mcPart->PdgCode() == 310 ||              // neutral kaon short
-                           mcPart->PdgCode() == -3122 ||            // anti-lambda
-                           mcPart->PdgCode() == -2212;              // anti-proton
-
-        if (!isGenPIDRelevant) {
+        if ((Int_t)mcPart->MCStatusCode() < 600 && mcPart->IsPrimary()) {
             continue;
         }
 
-        fMap_Evt_MCGen[idx_mc] = (Int_t)fVec_Idx_MCGen.size();
-        fVec_Idx_MCGen.push_back(idx_mc);
+        AliInfoF("%6i %6i %6i %6i %6i %6i %6i %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f", idx_mc, (Int_t)mcPart->MCStatusCode(), mcPart->PdgCode(), mcPart->GetNDaughters(),
+                 mcPart->GetDaughterFirst(), mcPart->GetDaughterLast(), mcPart->GetMother(),  //
+                 mcPart->Xv(), mcPart->Yv(), mcPart->Zv(),                                    //
+                 mcPart->Px(), mcPart->Py(), mcPart->Pz());
+/*
+        // loop over daughters
+        for (Int_t idx_dau = mcPart->GetDaughterFirst(); idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
+
+            mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
+
+            AliInfoF("%6i %6i %6i %6i %6i %6i %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f", idx_dau, mcDaughter->PdgCode(), mcDaughter->GetNDaughters(),
+                     mcDaughter->GetDaughterFirst(), mcDaughter->GetDaughterLast(),
+                     mcDaughter->GetMother(),                               //
+                     mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv(),  //
+                     mcDaughter->Px(), mcDaughter->Py(), mcDaughter->Pz());
+
+            if (mcDaughter->Charge() != 0) Indices_MCGen_FS_Signal.insert(idx_dau);
+
+            if (mcDaughter->PdgCode() == -3122) n_antilambda++;
+            if (mcDaughter->PdgCode() == 310) n_k0s++;
+            if (mcDaughter->PdgCode() == 211) n_piplus++;
+            if (mcDaughter->PdgCode() == -211) n_piminus++;
+            if (mcDaughter->PdgCode() == 321) n_kplus++;
+
+            // check lambda's daughters -- loop over lambda(1520)'s granddaughters
+            if (TMath::Abs(mcDaughter->PdgCode()) != 3122 || mcDaughter->GetNDaughters() == 0) continue;
+            for (Int_t idx_grdau = mcDaughter->GetDaughterFirst(); idx_grdau <= mcDaughter->GetDaughterLast(); idx_grdau++) {
+
+                mcGrandDaughter = (AliMCParticle*)fMC->GetTrack(idx_grdau);
+
+                if (mcGrandDaughter->Charge() != 0) Indices_MCGen_FS_Signal.insert(idx_grdau);
+
+                AliInfoF("%6i %6i %6i %6i %6i %6i %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f", idx_grdau, mcGrandDaughter->PdgCode(),
+                         mcGrandDaughter->GetNDaughters(), mcGrandDaughter->GetDaughterFirst(), mcGrandDaughter->GetDaughterLast(),
+                         mcGrandDaughter->GetMother(),                                         //
+                         mcGrandDaughter->Xv(), mcGrandDaughter->Yv(), mcGrandDaughter->Zv(),  //
+                         mcGrandDaughter->Px(), mcGrandDaughter->Py(), mcGrandDaughter->Pz());
+            }  // end of loop over granddaughters
+
+        }  // end of loop over daughters
+ */
+
+        // use last daughter pointer to calculate the radius
+        // radius = TMath::Sqrt(mcDaughter->Xv() * mcDaughter->Xv() + mcDaughter->Yv() * mcDaughter->Yv());
+
+        // reset counters
+        n_antilambda = 0;
+        n_k0s = 0;
+
+        n_piplus = 0;
+        n_piminus = 0;
+        n_kplus = 0;
+        n_antiprotons = 0;
     }  // end of loop over MC particles
 }
 
 /*
- (First) Loop over the reconstructed tracks in a single event
- Store tracks into the (duplicated tracks) map
- IMPORTANT: don't trust track->GetID()
+ Loop over the reconstructed tracks in a single event
+ - Output: `idxPiPlusTracks`, `idxPiMinusTracks`, `idxKaonPlusTracks`, `idxAntiProtonTracks`
 */
-void AliAnalysisTaskSexaquark::MCRec_FindRelevant() {
+void AliAnalysisTaskSexaquark::ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal,                                    // (pending)
+                                             std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks,  //
+                                             std::vector<Int_t>& idxKaonPlusTracks, std::vector<Int_t>& idxAntiProtonTracks) {
 
     AliESDtrack* track;
 
-    Float_t n_sigma_pion;
-    Float_t n_sigma_proton;
-    Bool_t isRecPIDRelevant;
-
-    // (non.rel.->rel.)
-    Int_t idx_true;
+    Int_t idx_true;  // (debug) (pending)
     AliMCParticle* truePart;
-    Bool_t isGenPIDRelevant;
 
-    // loop over MC rec. tracks in a single event
+    Float_t n_sigma_pion;
+    Float_t n_sigma_kaon;
+    Float_t n_sigma_proton;
+
     for (Int_t idx_track = 0; idx_track < fESD->GetNumberOfTracks(); idx_track++) {
 
         track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_track));
 
-        n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
-        n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
-
-        isRecPIDRelevant = (TMath::Abs(n_sigma_pion) < kMaxNSigma_Pion) ||                           // pos. and neg. pion
-                           (TMath::Abs(n_sigma_proton) < kMaxNSigma_Proton && track->Charge() < 0);  // anti-proton
-
         idx_true = TMath::Abs(track->GetLabel());
-        truePart = (AliMCParticle*)fMC->GetTrack(idx_true);
 
-        isGenPIDRelevant = TMath::Abs(truePart->PdgCode()) == 211 ||  // pos. and neg. pion
-                           truePart->PdgCode() == -2212;              // anti-proton
-
-        // consider the cases:
-        // - rel.     -> rel.
-        // - rel.     -> non-rel. (make sure to remove these by imposing PID again!)
-        // - non-rel. -> rel.     (for contamination studies)
-        if (isGenPIDRelevant || isRecPIDRelevant) {
-
-            fMap_Evt_MCRec[idx_track] = (Int_t)fVec_Idx_MCRec.size();
-            fVec_Idx_MCRec.push_back(idx_track);
-
-            // (non.rel.->rel.)
-            // for when the true particle is non-relevant, but reconstructed as relevant
-            if (!isGenPIDRelevant) fVec_Idx_MCGen_NonRel.push_back(idx_true);
-
-            // (duplicated tracks) add them to the duplicates map
-            fMap_Duplicates[idx_true].push_back(idx_track);
+        // (cut) (pending) temporal cut to get only signal tracks
+        if (!Indices_MCGen_FS_Signal.count(idx_true)) {
+            continue;
         }
+
+        if (!PassesTrackSelection(track, n_sigma_pion, n_sigma_kaon, n_sigma_proton)) continue;
+
+        if (TMath::Abs(n_sigma_pion) < kMaxNSigma_Pion) {
+            if (track->Charge() > 0.)
+                idxPiPlusTracks.push_back(idx_track);
+            else
+                idxPiMinusTracks.push_back(idx_track);
+        }
+
+        if (TMath::Abs(n_sigma_kaon) < kMaxNSigma_Kaon && track->Charge() > 0.) {
+            idxKaonPlusTracks.push_back(idx_track);
+        }
+
+        if (TMath::Abs(n_sigma_proton) < kMaxNSigma_Proton && track->Charge() < 0.) {
+            idxAntiProtonTracks.push_back(idx_track);
+        }
+
+        // (debug) (pending)
+        truePart = (AliMCParticle*)fMC->GetTrack(idx_true);
+        AliInfoF("%8i %8i %8i %8.2f %8.2f", idx_track, idx_true, truePart->PdgCode(), n_sigma_pion, n_sigma_proton);
     }  // end of loop over tracks
 }
 
 /*
- Calculate transverse impact parameter w.r.t. Primary Vertex
-*/
-Float_t AliAnalysisTaskSexaquark::MCRec_GetImpactParameter(AliESDtrack* track) {
-    Double_t PV[3];
-    fPrimaryVertex->GetXYZ(PV);
 
-    return (Float_t)track->GetD(PV[0], PV[1], fESD->GetMagneticField());
-}
+ */
+Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Float_t& n_sigma_pion, Float_t& n_sigma_kaon, Float_t& n_sigma_proton) {
+    // >> eta
+    if (TMath::Abs(track->Eta()) > 0.9) return kFALSE;
+    // >> TPC clusters
+    if (track->GetTPCNcls() < 50) return kFALSE;
+    // >> chi2 per TPC cluster
+    if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) return kFALSE;
+    // >> require TPC refit
+    if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) return kFALSE;
+    // >> reject kinks
+    if (track->GetKinkIndex(0) != 0) return kFALSE;
 
-/*
- Get the evt of the mother particle, the PID of the mother particle, and the PID of the grandmother particle
-*/
-void AliAnalysisTaskSexaquark::MCGen_GetMotherInfo(AliMCParticle* mcPart,  //
-                                                   Int_t& evt_mother, Int_t& mother_pid, Int_t& grandmother_pid) {
+    n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
+    n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
+    n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
 
-    AliMCParticle* mcMother;
-    AliMCParticle* mcGrandMother;
-
-    Int_t idx_mother;
-
-    evt_mother = -1;  // it can be:
-    //                // -2 : mother is not relevant <-> mother outside the vector
-    //                // -1 : particle has no mother <-> particle is primary
-    //                //  > 0 : particle has a relevant mother
-    mother_pid = 0;
-    grandmother_pid = 0;
-
-    // is it a primary?
-    if (mcPart->GetMother() != -1) {
-        // if not, get mother
-        idx_mother = mcPart->GetMother();
-        mcMother = (AliMCParticle*)fMC->GetTrack(idx_mother);
-        mother_pid = mcMother->PdgCode();
-        // but, what if the mother is non-relevant?
-        // [note: count() in a std::map, returns the number of elements matching specific key]
-        evt_mother = fMap_Evt_MCGen.count(idx_mother) != 0 ? fMap_Evt_MCGen[idx_mother] : -2;
-        // is mother a primary?
-        if (mcMother->GetMother() != -1) {
-            // if not, get grandmother
-            mcGrandMother = (AliMCParticle*)fMC->GetTrack(mcMother->GetMother());
-            grandmother_pid = mcGrandMother->PdgCode();
-        }
-    }  // closure
-}
-
-/*
- Add the non-relevant MC particles that were reconstructed as relevant
-*/
-void AliAnalysisTaskSexaquark::MCGen_AddNonRelevant() {
-
-    AliMCParticle* mcPart;
-
-    Int_t evt_mother;
-    Int_t mother_pid;
-    Int_t grandmother_pid;
-
-    for (Int_t idx_mc : fVec_Idx_MCGen_NonRel) {
-
-        mcPart = (AliMCParticle*)fMC->GetTrack(idx_mc);
-
-        fMap_Evt_MCGen[idx_mc] = (Int_t)fVec_Idx_MCGen.size();
-        fVec_Idx_MCGen.push_back(idx_mc);
-        s
-    }
-}
-
-/*
- Get number of daughters, and the evt of the first and last daughter
-*/
-void AliAnalysisTaskSexaquark::MCGen_GetDaughtersInfo(AliMCParticle* mcPart,  //
-                                                      Int_t& n_daughters, Int_t& evt_first_dau, Int_t& evt_last_dau) {
-
-    n_daughters = mcPart->GetNDaughters();
-    evt_first_dau = -1;
-    evt_last_dau = -1;  // it can be:
-    //                 // -2 : daughter is not relevant
-    //                 // -1 : particle has no daughter
-    //                 //  > 0 : particle has a relevant daughter
-
-    if (!n_daughters) {
-        return;
+    // >> particle identification
+    if (TMath::Abs(n_sigma_pion) > kMaxNSigma_Pion &&  //
+        TMath::Abs(n_sigma_kaon) > kMaxNSigma_Kaon &&  //
+        TMath::Abs(n_sigma_proton) > kMaxNSigma_Proton) {
+        return kFALSE;
     }
 
-    Int_t idx_first_dau = mcPart->GetDaughterFirst();
-    Int_t idx_last_dau = mcPart->GetDaughterLast();
-
-    evt_first_dau = fMap_Evt_MCGen.count(idx_first_dau) != 0 ? fMap_Evt_MCGen[idx_first_dau] : -2;
-    evt_last_dau = fMap_Evt_MCGen.count(idx_last_dau) != 0 ? fMap_Evt_MCGen[idx_last_dau] : -2;
+    return kTRUE;
 }
 
 /*
- Determine if a certain MC particle comes from a generated sexaquark-nucleon interaction
-*/
-Bool_t AliAnalysisTaskSexaquark::MCGen_IsSignal(AliMCParticle* mcPart) {
+ Apply Lambda/AntiLambda candidate cuts.
+ */
+Bool_t AliAnalysisTaskSexaquark::PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfNegDau, KFParticle kfPosDau,  //
+                                                         TLorentzVector lvV0, TLorentzVector lvNegDau, TLorentzVector lvPosDau) {
 
-    // check if particle is a primary
-    if (mcPart->GetMother() == -1) {
-        return mcPart->MCStatusCode() == 6;  // comes from a sexaquark?
-    }
+    // geometrical cuts
+    Float_t kfDCA_tracks = TMath::Abs(kfNegDau.GetDistanceFromParticleXY(kfPosDau));
+    // Float_t kfDCA_neg_V0 =
+    // TMath::Abs(kfNegDau.GetDistanceFromVertexXY(kfV0));  // = AliESDtrack::GetD(vertex_x, vertex_y, mag_field) = impar_neg[0]
+    // Float_t kfDCA_pos_V0 = TMath::Abs(kfPosDau.GetDistanceFromVertexXY(kfV0));
 
-    // if it's not primary, it must have a mother
-    AliMCParticle* mcMother = (AliMCParticle*)fMC->GetTrack(mcPart->GetMother());
-
-    // check if mother is a primary
-    if (mcMother->GetMother() == -1) {
-        return mcMother->MCStatusCode() == 6;  // comes from a sexaquark?
-    }
-
-    // default values
-    return kFALSE;
-}
-
-/*
- Loop over the (duplicated tracks) map
- If a MC particle has been reconstructed more than once
- Tag the best particle as "non-duplicate", and the rest as "duplicates"
-*/
-void AliAnalysisTaskSexaquark::MCRec_FindDuplicates() {
-
-    std::vector<Int_t> vec_indices_tracks;
-
-    Int_t idx_mc;
-    AliMCParticle* mcTrue;
-    TVector3 p_true;
-
-    AliESDtrack* track;
-    TVector3 p_track;
-
-    Int_t idx_best;
-    Double_t min_angle;
-    Double_t delta_angle;
-
+    // kinematic cuts
     /*
-    Float_t n_sigma_pion;
-    Float_t n_sigma_proton;
-    Bool_t isRecPIDRelevant;
-    */
+    Double_t armAlpha = ArmenterosAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(),              //
+                                        lvNegDau.Px(), lvNegDau.Py(), lvNegDau.Pz(),  //
+                                        lvPosDau.Px(), lvPosDau.Py(), lvPosDau.Pz());
+    Double_t armPt = ArmenterosQt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), kfNegDau.Px(), kfNegDau.Py(), kfNegDau.Pz());
+    Float_t mass = lvV0.M();
+    Double_t cpa = CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(),  //
+                                       fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
 
-    // resize the duplicates vector, and fill with ones
-    fVec_MCRec_IsDuplicate.resize(fVec_Idx_MCRec.size(), kTRUE);
+    if (kfDCA_tracks > kMaxDCATracks) return kFALSE;
+    if ((armPt / TMath::Abs(armAlpha)) > kArmLambdaSlope) return kFALSE;
+    if (mass > 1.13 || mass < 1.10) return kFALSE;  // (pending) refactorize
+    if (cpa < 0.9) return kFALSE;                   // (pending)
+ */
 
-    for (auto it = fMap_Duplicates.begin(); it != fMap_Duplicates.end(); it++) {
-
-        idx_mc = it->first;
-        vec_indices_tracks = it->second;
-
-        // load true particle
-        mcTrue = (AliMCParticle*)fMC->GetTrack(idx_mc);
-        p_true.SetXYZ(mcTrue->Px(), mcTrue->Py(), mcTrue->Pz());
-
-        // reset best track and min angle
-        idx_best = -1;
-        min_angle = TMath::Pi();
-
-        // loop over tracks, look for best candidate
-        for (Int_t idx_track : vec_indices_tracks) {
-
-            // load track
-            track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_track));
-            p_track.SetXYZ(track->Px(), track->Py(), track->Pz());
-
-            delta_angle = p_true.Angle(p_track);
-
-            if (delta_angle < min_angle) {
-                min_angle = delta_angle;
-                idx_best = idx_track;
-                // PENDING: add PID to this
-                /*
-                n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
-                n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
-                isRecPIDRelevant = (TMath::Abs(n_sigma_pion) < N_SIGMA) ||                         // positive and negative pion
-                                   (TMath::Abs(n_sigma_proton) < N_SIGMA && track->Charge() < 0);  // anti-proton
-                if (isRecPIDRelevant) {
-                  idx_best = idx_track;
-                }
-                */
-            }
-        }  // end of loop over tracks
-
-        // assign zero to the best track
-        fVec_MCRec_IsDuplicate[fMap_Evt_MCRec[idx_best]] = kFALSE;
-    }  // end of loop over (duplicated tracks) map
+    return kTRUE;
 }
 
 /*
- PENDING!
-*/
-void AliAnalysisTaskSexaquark::MCRec_FindSimilarTracks() {
+ Apply Pion pair cuts.
+ */
+Bool_t AliAnalysisTaskSexaquark::PassesPionPairCuts_KF(KFParticleMother kfV0, KFParticle kfNegDau, KFParticle kfPosDau,  //
+                                                       TLorentzVector lvV0, TLorentzVector lvNegDau, TLorentzVector lvPosDau) {
+/*
+    Float_t kfDCA_tracks = TMath::Abs(kfNegDau.GetDistanceFromParticleXY(kfPosDau));
 
-    Int_t idx_track_a;
-    AliESDtrack* track_a;
+    Float_t kfDCA_NegPion_V0 = TMath::Abs(kfNegDau.GetDistanceFromVertexXY(kfV0));
+    Float_t kfDCA_PosPion_V0 = TMath::Abs(kfPosDau.GetDistanceFromVertexXY(kfV0));
+    Float_t kfD_V0_PV =
+        TMath::Sqrt(TMath::Power(kfV0.GetX() - (Float_t)fPrimaryVertex->GetX(), 2) + TMath::Power(kfV0.GetY() - (Float_t)fPrimaryVertex->GetY(), 2) +
+                    TMath::Power(kfV0.GetZ() - (Float_t)fPrimaryVertex->GetZ(), 2));
 
-    Int_t idx_track_b;
-    AliESDtrack* track_b;
-
-    Int_t idx_best;
-
-    // resize the similars vector, and fill with ones
-    fVec_MCRec_IsSimilar.resize(fVec_Idx_MCRec.size(), kFALSE);
-
-    for (Int_t evt_track_a = 0; evt_track_a < (Int_t)fVec_Idx_MCRec.size() - 1; evt_track_a++) {
-        for (Int_t evt_track_b = evt_track_a + 1; evt_track_b < (Int_t)fVec_Idx_MCRec.size(); evt_track_b++) {
-
-            idx_track_a = fVec_Idx_MCRec[evt_track_a];
-            idx_track_b = fVec_Idx_MCRec[evt_track_b];
-
-            track_a = static_cast<AliESDtrack*>(fESD->GetTrack(idx_track_a));
-            track_b = static_cast<AliESDtrack*>(fESD->GetTrack(idx_track_b));
-
-            if (TMath::Abs(1. - track_a->Px() / track_b->Px()) < 0.05 &&  //
-                TMath::Abs(1. - track_a->Py() / track_b->Py()) < 0.05 &&  //
-                TMath::Abs(1. - track_a->Pz() / track_b->Pz()) < 0.05) {
-                // hola
-            }
-        }
-
-        // assign zero to the best track
-        fVec_MCRec_IsSimilar[fMap_Evt_MCRec[idx_best]] = kTRUE;
-    }
+    // (pending) refactorize all these cuts
+    if (kfDCA_tracks > 0.5) return kFALSE;
+    if (kfDCA_NegPion_V0 > 0.5) return kFALSE;
+    if (kfDCA_PosPion_V0 > 0.5) return kFALSE;
+    if (kfD_V0_PV > 1.) return kFALSE;
+ */
+    return kTRUE;
 }
 
 /*
- Loop over all the V0s found by the Official Offline V0 Finder
+ Apply K0S cuts.
+ */
+Bool_t AliAnalysisTaskSexaquark::PassesNeutralKaonShortCuts_KF(KFParticleMother kfV0, KFParticle kfNegDau, KFParticle kfPosDau,  //
+                                                               TLorentzVector lvV0, TLorentzVector lvNegDau, TLorentzVector lvPosDau) {
+    return kTRUE;
+}
+
+/*
+ Apply anti-sexaquark candidate cuts.
 */
-void AliAnalysisTaskSexaquark::V0_ProcessESD() {
+Bool_t AliAnalysisTaskSexaquark::PassesAntiSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda,
+                                                                     KFParticle kfNeutralKaonShort,  //
+                                                                     TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda,
+                                                                     TLorentzVector lvNeutralKaonShort) {
+/*
+    Float_t kfDCA_Lambda_Pion2 = TMath::Abs(kfLambda.GetDistanceFromParticleXY(kfPion2));
+    Float_t kfDCA_Lambda_Pion3 = TMath::Abs(kfLambda.GetDistanceFromParticleXY(kfPion3));
+
+    Float_t kfDCA_Pion2_SV = TMath::Abs(kfPion2.GetDistanceFromVertexXY(kfLambda1520));
+
+    Float_t PrimVertex[3] = {(Float_t)fPrimaryVertex->GetX(), (Float_t)fPrimaryVertex->GetY(), (Float_t)fPrimaryVertex->GetZ()};
+    Float_t kfDCA_Lambda1520_PV = TMath::Abs(kfLambda1520.GetDistanceFromVertexXY(PrimVertex));
+
+    Float_t kfCPA_Lambda_SV = CosinePointingAngle(lvLambda, kfLambda.GetX(), kfLambda.GetY(), kfLambda.GetZ(),  //
+                                                  kfLambda1520.GetX(), kfLambda1520.GetY(), kfLambda1520.GetZ());
+
+    Float_t mass = lvLambda1520.M();
+
+    if (kfDCA_Lambda_Pion2 > kMaxDCATracks) return kFALSE;
+    if (kfDCA_Lambda_Pion3 > kMaxDCATracks) return kFALSE;
+    if (kfDCA_Pion2_SV > kMaxDCATracks) return kFALSE;  // (pending) should assign to another variable, later, probably
+    if (kfCPA_Lambda_SV < kMinCPA_Lambda_SV) return kFALSE;
+    if (mass > 1.62 || mass < 1.42) return kFALSE;  // (pending) refactorize
+    if (kfDCA_Lambda1520_PV > 0.5) return kFALSE;   // (pending) refactorize
+ */
+    return kTRUE;
+}
+
+/*
+ Loop over all the V0s found by the Official V0 Finders that are stored in the ESD file
+*/
+void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online = kFALSE) {
 
     // define variables & objects
     AliESDv0* V0;
@@ -634,20 +586,27 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
 
         V0 = fESD->GetV0(idx_v0);
 
-        // (cut) remove on-the-fly V0s
-        if (V0->GetOnFlyStatus()) {
+        // (cut) when offline, remove on-the-fly V0s
+        if (!online && V0->GetOnFlyStatus()) {
+            continue;
+        }
+
+        // (cut) when online, choose only on-the-fly V0s
+        if (online && !V0->GetOnFlyStatus()) {
             continue;
         }
 
         idx_pos = V0->GetPindex();
         idx_neg = V0->GetNindex();
 
+/*
         // (cut) if any daughter (neg. or pos.) is not in the indexer
         // => the particle was gen. non-relevant & rec. non-relevant
         if (fMap_Evt_MCRec.count(idx_pos) == 0 || fMap_Evt_MCRec.count(idx_neg) == 0) {
             // [note: count() in std::map, returns the number of elements matching specific key]
             continue;
         }
+ */
 
         neg_track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_pos));
         pos_track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_neg));
@@ -664,11 +623,9 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
         // for positive daughter, assuming it's a positive pion
         pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
         // for negative daughter, assuming it's K0 -> pi+ pi-
-        neg_energy_asK0 =
-            TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
+        neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
         // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
-        neg_energy_asAL =
-            TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
+        neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
 
         // get true particles
         idx_pos_true = TMath::Abs(pos_track->GetLabel());
@@ -676,8 +633,8 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
         idx_neg_true = TMath::Abs(neg_track->GetLabel());
         mcNegTrue = (AliMCParticle*)fMC->GetTrack(idx_neg_true);
 
-        this_V0.Idx_Pos = fMap_Evt_MCRec[idx_pos];
-        this_V0.Idx_Neg = fMap_Evt_MCRec[idx_neg];
+        this_V0.Idx_Pos = 0; //fMap_Evt_MCRec[idx_pos];
+        this_V0.Idx_Neg = 0; //fMap_Evt_MCRec[idx_neg];
         this_V0.Px = V0->Px();
         this_V0.Py = V0->Py();
         this_V0.Pz = V0->Pz();
@@ -690,7 +647,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
         this_V0.Neg_Px = N_Px;
         this_V0.Neg_Py = N_Py;
         this_V0.Neg_Pz = N_Pz;
-        this_V0.isSignal = MCGen_IsSignal(mcPosTrue) && MCGen_IsSignal(mcNegTrue);
+        this_V0.isSignal = 0; // MCGen_IsSignal(mcPosTrue) && MCGen_IsSignal(mcNegTrue);
         this_V0.E_asK0 = pos_energy + neg_energy_asK0;
         this_V0.E_asAL = pos_energy + neg_energy_asAL;
         this_V0.couldBeK0 = TMath::Abs(nsigma_pos_pion) < kMaxNSigma_Pion && TMath::Abs(nsigma_neg_pion) < kMaxNSigma_Pion;
@@ -704,7 +661,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
         this_V0.DecayLength = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
         this_V0.DCA_wrtPV = Calculate_LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
 
-        fVec_V0s.push_back(this_V0);
+        // fVec_V0s.push_back(this_V0);
     }  // end of loop over V0s
 }
 
@@ -714,7 +671,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessESD() {
  - no dependence on PID, nor ambiguity on measurements
  - only dependence: if they were reconstructed or not
 */
-void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
+void AliAnalysisTaskSexaquark::ReconstructV0s_TrueInfo() {
 
     V0_tt this_V0;
 
@@ -758,11 +715,11 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
         mc_firstdau = (AliMCParticle*)fMC->GetTrack(mc_mother->GetDaughterFirst());
         mc_lastdau = (AliMCParticle*)fMC->GetTrack(mc_mother->GetDaughterLast());
 
-        antiLambdaNonPi0Channel = (mc_firstdau->PdgCode() == -2212 && mc_lastdau->PdgCode() == 211) ||
-                                  (mc_firstdau->PdgCode() == 211 && mc_lastdau->PdgCode() == -2212);
+        antiLambdaNonPi0Channel =
+            (mc_firstdau->PdgCode() == -2212 && mc_lastdau->PdgCode() == 211) || (mc_firstdau->PdgCode() == 211 && mc_lastdau->PdgCode() == -2212);
 
-        neutralKaonNonPi0Channel = (mc_firstdau->PdgCode() == -211 && mc_lastdau->PdgCode() == 211) ||
-                                   (mc_firstdau->PdgCode() == 211 && mc_lastdau->PdgCode() == -211);
+        neutralKaonNonPi0Channel =
+            (mc_firstdau->PdgCode() == -211 && mc_lastdau->PdgCode() == 211) || (mc_firstdau->PdgCode() == 211 && mc_lastdau->PdgCode() == -211);
 
         // check for non-pi0 decay channel
         if (!antiLambdaNonPi0Channel && !neutralKaonNonPi0Channel) {
@@ -770,11 +727,12 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
         }
 
         // check if both daughters were reconstructed
+        /*
         if (fMap_Duplicates.count(mc_mother->GetDaughterFirst()) == 0 || fMap_Duplicates.count(mc_mother->GetDaughterLast()) == 0) {
             // [note: count() in std::map, returns the number of elements matching specific key]
             continue;
         }
-
+ */
         // identify daughters as positive/negative
         if (mc_firstdau->PdgCode() > 0 && mc_lastdau->PdgCode() < 0) {
             idx_pos_mc = mc_mother->GetDaughterFirst();
@@ -785,6 +743,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
         }
 
         // do combinations
+        /*
         for (Int_t idx_pos_track : fMap_Duplicates[idx_pos_mc]) {
             for (Int_t idx_neg_track : fMap_Duplicates[idx_neg_mc]) {
 
@@ -804,8 +763,8 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
 
                 // (tree operations)
                 // fill common format and push_back
-                this_V0.Idx_Pos = fMap_Evt_MCRec[idx_pos_track];
-                this_V0.Idx_Neg = fMap_Evt_MCRec[idx_neg_track];
+                this_V0.Idx_Pos = 0; // fMap_Evt_MCRec[idx_pos_track];
+                this_V0.Idx_Neg = 0; // fMap_Evt_MCRec[idx_neg_track];
                 this_V0.Px = mc_mother->Px();
                 this_V0.Py = mc_mother->Py();
                 this_V0.Pz = mc_mother->Pz();
@@ -818,7 +777,7 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
                 this_V0.Neg_Px = mc_neg->Px();
                 this_V0.Neg_Py = mc_neg->Py();
                 this_V0.Neg_Pz = mc_neg->Pz();
-                this_V0.isSignal = MCGen_IsSignal(mc_mother);
+                this_V0.isSignal = 0; // MCGen_IsSignal(mc_mother);
                 this_V0.E_asK0 = pos_energy + neg_energy_asK0;
                 this_V0.E_asAL = pos_energy + neg_energy_asAL;
                 this_V0.couldBeK0 = mc_mother->PdgCode() == 310;
@@ -840,18 +799,18 @@ void AliAnalysisTaskSexaquark::V0_ProcessTrue() {
                                                            mc_pos->Xv(), mc_pos->Yv(), mc_pos->Zv(),           //
                                                            PV[0], PV[1], PV[2]);
 
-                fVec_V0s.push_back(this_V0);
+                // fVec_V0s.push_back(this_V0);
             }  // end of loop over negative tracks
         }      // end of loop over positive tracks
-
+ */
     }  // end of loop over MC gen. mothers
 }
 
 /*
- Custom Offline V0 Finder
- [copied and adapted from AliRoot/STEER/ESD/AliV0vertexer.cxx]
+ Custom V0 Finder
+ [copied and adapted from `AliRoot/STEER/ESD/AliV0vertexer.cxx`]
 */
-void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
+void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
 
     AliESDtrack* track;
     AliESDtrack* neg_track;
@@ -945,14 +904,14 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
     for (Int_t idx_track = 0; idx_track < nentr; idx_track++) {
 
         track = fESD->GetTrack(idx_track);
-
+/*
         // (cut) if particle is not in the indexer
         // => the particle was gen. non-relevant & rec. non-relevant
         if (fMap_Evt_MCRec.count(idx_track) == 0) {
             // [note: count() returns the number of elements matching a specific key]
             continue;
         }
-
+ */
         // (cut) on status
         ULong64_t status = track->GetStatus();
         if ((status & AliESDtrack::kTPCrefit) == 0) {
@@ -1131,11 +1090,9 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
 
             // calculate energy
             // for positive daughter, assume it's a positive pion
-            pos_energy =
-                TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
+            pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
             // for negative daughter, assuming it's K0 -> pi+ pi-
-            neg_energy_asK0 =
-                TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
+            neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
             // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
             neg_energy_asAL =
                 TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
@@ -1150,8 +1107,8 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
             idx_pos_mother = mcPosTrue->GetMother();
             idx_neg_mother = mcNegTrue->GetMother();
 
-            this_V0.Idx_Pos = fMap_Evt_MCRec[vertex.GetPindex()];
-            this_V0.Idx_Neg = fMap_Evt_MCRec[vertex.GetNindex()];
+            this_V0.Idx_Pos = 0; // fMap_Evt_MCRec[vertex.GetPindex()];
+            this_V0.Idx_Neg = 0; // fMap_Evt_MCRec[vertex.GetNindex()];
             this_V0.Px = vertex.Px();
             this_V0.Py = vertex.Py();
             this_V0.Pz = vertex.Pz();
@@ -1174,14 +1131,13 @@ void AliAnalysisTaskSexaquark::V0_ProcessCustom() {
             this_V0.CPA_wrtPV = vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]);
             this_V0.ArmAlpha = vertex.AlphaV0();
             this_V0.ArmPt = vertex.PtArmV0();
-            this_V0.DecayLength =
-                TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
+            this_V0.DecayLength = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
             this_V0.DCA_wrtPV = dca_to_pv;
 
             // important: to be a signal V0, the MC particles must come from the same V0 as well
-            this_V0.isSignal = MCGen_IsSignal(mcNegTrue) && MCGen_IsSignal(mcPosTrue) && idx_neg_mother == idx_pos_mother;
+            this_V0.isSignal = 0; // MCGen_IsSignal(mcNegTrue) && MCGen_IsSignal(mcPosTrue) && idx_neg_mother == idx_pos_mother;
 
-            fVec_V0s.push_back(this_V0);
+            // fVec_V0s.push_back(this_V0);
         }  // end of loop over pos. tracks
     }      // end of loop over neg. tracks
 }
@@ -1265,6 +1221,16 @@ Double_t AliAnalysisTaskSexaquark::Calculate_LinePointDCA(Double_t V0_Px, Double
     TVector3 CrossProduct = (PrimVertex - V0Vertex).Cross(V0Momentum);
 
     return CrossProduct.Mag() / V0Momentum.Mag();
+}
+
+/*
+ Calculate transverse impact parameter w.r.t. Primary Vertex
+*/
+Float_t AliAnalysisTaskSexaquark::MCRec_GetImpactParameter(AliESDtrack* track) {
+    Double_t PV[3];
+    fPrimaryVertex->GetXYZ(PV);
+
+    return (Float_t)track->GetD(PV[0], PV[1], fESD->GetMagneticField());
 }
 
 /*** FUNCTIONS FOR THE CUSTOM OFFLINE V0 FINDER ***/
@@ -1357,9 +1323,8 @@ Bool_t AliAnalysisTaskSexaquark::Preoptimize(const AliExternalTrackParam* nt, Al
         if (xThisNeg < lMaximumX && xThisPos < lMaximumX && xThisNeg > lMinimumX && xThisPos > lMinimumX) {
             Double_t lCase1NegR[3] = {0.}, lCase1PosR[3] = {0.};
             if (nt->GetXYZAt(xThisNeg, b, lCase1NegR) && pt->GetXYZAt(xThisPos, b, lCase1PosR)) {
-                lPreprocessDCAxy =
-                    TMath::Sqrt(TMath::Power(lCase1NegR[0] - lCase1PosR[0], 2) + TMath::Power(lCase1NegR[1] - lCase1PosR[1], 2) +
-                                TMath::Power(lCase1NegR[2] - lCase1PosR[2], 2));
+                lPreprocessDCAxy = TMath::Sqrt(TMath::Power(lCase1NegR[0] - lCase1PosR[0], 2) + TMath::Power(lCase1NegR[1] - lCase1PosR[1], 2) +
+                                               TMath::Power(lCase1NegR[2] - lCase1PosR[2], 2));
                 // Pass coordinates
                 if (lPreprocessDCAxy < 999) {
                     *lPreprocessxp = xThisPos;
@@ -1423,9 +1388,8 @@ Bool_t AliAnalysisTaskSexaquark::Preoptimize(const AliExternalTrackParam* nt, Al
         if (xThisNeg[0] < lMaximumX && xThisPos[0] < lMaximumX && xThisNeg[0] > lMinimumX && xThisPos[0] > lMinimumX) {
             Double_t lCase2aNegR[3] = {0.}, lCase2aPosR[3] = {0.};
             if (nt->GetXYZAt(xThisNeg[0], b, lCase2aNegR) && pt->GetXYZAt(xThisPos[0], b, lCase2aPosR)) {
-                lCase2aDCA =
-                    TMath::Sqrt(TMath::Power(lCase2aNegR[0] - lCase2aPosR[0], 2) + TMath::Power(lCase2aNegR[1] - lCase2aPosR[1], 2) +
-                                TMath::Power(lCase2aNegR[2] - lCase2aPosR[2], 2));
+                lCase2aDCA = TMath::Sqrt(TMath::Power(lCase2aNegR[0] - lCase2aPosR[0], 2) + TMath::Power(lCase2aNegR[1] - lCase2aPosR[1], 2) +
+                                         TMath::Power(lCase2aNegR[2] - lCase2aPosR[2], 2));
             }
         }
 
@@ -1433,9 +1397,8 @@ Bool_t AliAnalysisTaskSexaquark::Preoptimize(const AliExternalTrackParam* nt, Al
         if (xThisNeg[1] < lMaximumX && xThisPos[1] < lMaximumX && xThisNeg[1] > lMinimumX && xThisPos[1] > lMinimumX) {
             Double_t lCase2bNegR[3] = {0.}, lCase2bPosR[3] = {0.};
             if (nt->GetXYZAt(xThisNeg[1], b, lCase2bNegR) && pt->GetXYZAt(xThisPos[1], b, lCase2bPosR)) {
-                lCase2bDCA =
-                    TMath::Sqrt(TMath::Power(lCase2bNegR[0] - lCase2bPosR[0], 2) + TMath::Power(lCase2bNegR[1] - lCase2bPosR[1], 2) +
-                                TMath::Power(lCase2bNegR[2] - lCase2bPosR[2], 2));
+                lCase2bDCA = TMath::Sqrt(TMath::Power(lCase2bNegR[0] - lCase2bPosR[0], 2) + TMath::Power(lCase2bNegR[1] - lCase2bPosR[1], 2) +
+                                         TMath::Power(lCase2bNegR[2] - lCase2bPosR[2], 2));
             }
         }
         // Minor detail: all things being equal, prefer closest X
@@ -1604,18 +1567,18 @@ void AliAnalysisTaskSexaquark::SetBranches() {
 */
 void AliAnalysisTaskSexaquark::MCGen_PushBack(Int_t evt_mc) {
 
-    Int_t idx_mc = fVec_Idx_MCGen[evt_mc];
+    Int_t idx_mc = 0;
     AliMCParticle* mcPart = (AliMCParticle*)fMC->GetTrack(idx_mc);
 
     Int_t evt_mother;
     Int_t mother_pid;
     Int_t grandmother_pid;
-    MCGen_GetMotherInfo(mcPart, evt_mother, mother_pid, grandmother_pid);
+    // MCGen_GetMotherInfo(mcPart, evt_mother, mother_pid, grandmother_pid);
 
     Int_t n_daughters;
     Int_t evt_first_dau;
     Int_t evt_last_dau;
-    MCGen_GetDaughtersInfo(mcPart, n_daughters, evt_first_dau, evt_last_dau);
+    // MCGen_GetDaughtersInfo(mcPart, n_daughters, evt_first_dau, evt_last_dau);
 
     Float_t x_f = -999.;
     Float_t y_f = -999.;
@@ -1627,7 +1590,7 @@ void AliAnalysisTaskSexaquark::MCGen_PushBack(Int_t evt_mc) {
         z_f = mcDaughter->Zv();
     }
 
-    Bool_t is_signal = MCGen_IsSignal(mcPart);
+    Bool_t is_signal = 0; // MCGen_IsSignal(mcPart);
 
 #if DEBUG_MODE == 1
     AliInfoF("%6i %6i %6i %6i %6i %6i %6i %6i %6i", evt_mc, idx_mc, mcPart->PdgCode(), is_signal,  //
@@ -1660,15 +1623,15 @@ void AliAnalysisTaskSexaquark::MCGen_PushBack(Int_t evt_mc) {
 */
 void AliAnalysisTaskSexaquark::MCRec_PushBack(Int_t evt_track) {
 
-    Int_t idx_track = fVec_Idx_MCRec[evt_track];
+    Int_t idx_track = 0; // fVec_Idx_MCRec[evt_track];
     AliESDtrack* track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_track));
 
     Int_t idx_true = TMath::Abs(track->GetLabel());
     AliMCParticle* mcTrue = (AliMCParticle*)fMC->GetTrack(idx_true);
 
-    Int_t evt_true = fMap_Evt_MCGen[idx_true];
-    Bool_t is_signal = MCGen_IsSignal(mcTrue);
-    Bool_t is_duplicate = fVec_MCRec_IsDuplicate[evt_track];
+    Int_t evt_true = 0 ; // fMap_Evt_MCGen[idx_true];
+    Bool_t is_signal = 0 ; // MCGen_IsSignal(mcTrue);
+    Bool_t is_duplicate = 0 ; // fVec_MCRec_IsDuplicate[evt_track];
     Bool_t is_similar = kFALSE;  // PENDING! fVec_MCRec_IsSimilar[evt_track];
     Float_t impact_param = MCRec_GetImpactParameter(track);
     Double_t helix_param[6];
@@ -1703,13 +1666,13 @@ void AliAnalysisTaskSexaquark::MCRec_PushBack(Int_t evt_track) {
 */
 void AliAnalysisTaskSexaquark::V0_PushBack(Int_t evt_v0) {
 
-    V0_tt this_V0 = fVec_V0s[evt_v0];
+    V0_tt this_V0; // = fVec_V0s[evt_v0];
 
 #if DEBUG_MODE == 2
     Int_t evt_pos = this_V0.Idx_Pos;
     Int_t evt_neg = this_V0.Idx_Neg;
-    Int_t idx_pos = fVec_Idx_MCRec[evt_pos];
-    Int_t idx_neg = fVec_Idx_MCRec[evt_neg];
+    Int_t idx_pos = 0; // fVec_Idx_MCRec[evt_pos];
+    Int_t idx_neg = 0; // fVec_Idx_MCRec[evt_neg];
     AliInfoF("%6i %6i %6i %6i", evt_pos, evt_neg, idx_pos, idx_neg);
 #endif
 
@@ -1740,6 +1703,39 @@ void AliAnalysisTaskSexaquark::V0_PushBack(Int_t evt_v0) {
     fEvent.V0_ArmPt.push_back(this_V0.ArmPt);
     fEvent.V0_DecayLength.push_back(this_V0.DecayLength);
     fEvent.V0_DCA_wrtPV.push_back(this_V0.DCA_wrtPV);
+}
+
+/*
+
+ */
+void AliAnalysisTaskSexaquark::FillTree() {
+    AliInfo("MONTE CARLO TREE");
+    AliInfo("");
+    AliInfo("         EVT    IDX    PID SIGNAL MOTHER  M_PID GM_PID FIRDAU LASDAU");
+    /*
+    fEvent.N_MCGen = (Int_t)fVec_Idx_MCGen.size();
+    for (Int_t ii = 0; ii < fEvent.N_MCGen; ii++) {
+        MCGen_PushBack(ii);
+    }
+
+    AliInfo("RECONSTRUCTED TRACKS");
+    AliInfo("");
+    AliInfo("         EVT    IDX EVTTRU IDXTRU DUPLI?");
+    fEvent.N_MCRec = (Int_t)fVec_Idx_MCRec.size();
+    for (Int_t ii = 0; ii < fEvent.N_MCRec; ii++) {
+        MCRec_PushBack(ii);
+    }
+
+    AliInfo("FOUND V0s");
+    AliInfo("");
+    AliInfo("   EVTPOS EVTNEG IDXPOS IDXNEG");
+    fEvent.N_V0s = (Int_t)fVec_V0s.size();
+    for (Int_t ii = 0; ii < fEvent.N_V0s; ii++) {
+        V0_PushBack(ii);
+    }
+ */
+    // (tree operations) after all variables have been assigned, fill tree
+    fTree->Fill();
 }
 
 /*
