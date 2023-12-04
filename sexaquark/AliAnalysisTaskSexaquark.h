@@ -171,13 +171,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* V0s -- Kalman Filter */
     void ReconstructV0s_KF();
     Bool_t PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
-                               TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+                                   TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
     Bool_t PassesPionPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
                                  TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
     Bool_t PassesPosKaonPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughter1, KFParticle kfDaughter2,  //
                                     TLorentzVector lvV0, TLorentzVector lvTrack1, TLorentzVector lvTrack2);
     Bool_t PassesNeutralKaonShortCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
-                                    TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+                                         TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
     Bool_t PassesLambda1520Cuts_KF(KFParticleMother kfLambda1520, KFParticle kfLambda, KFParticle kfPion2, KFParticle kfPion3,  //
                                    TLorentzVector lvLambda1520, TLorentzVector lvLambda, TLorentzVector lvPion2, TLorentzVector lvPion3);
     Bool_t PassesSexaquarkCuts_KF();
@@ -261,7 +261,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // - 'G' = AntiS + N -> Xip + pim
     // - 'H' = AntiS + P -> AntiP + Kp + Kp + pi0
     Char_t fSimulationSet;
-    TString fReactionChannel;  // derived from `fSimulationSet` in `Initialize()`
+    // derived from `fSimulationSet` in `Initialize()`
+    TString fReactionChannel;
+    std::vector<Int_t> fProductsPDG;
 
    private:
     /* Cuts */
