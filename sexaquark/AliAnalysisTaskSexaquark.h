@@ -282,9 +282,26 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    private:
     /* ROOT objects */
     TDatabasePDG fPDG;
+    // trees
     TList* fOutputListOfTrees;
-    TList* fOutputListOfHists;
     TTree* fTree;
+    // hists
+    TList* fOutputListOfHists;
+    TH1F* fHist_SignalSecVertex_Radius;
+    TH1F* fHist_InjBkgSecVertex_Radius;
+    TH1F* fHist_FermiSexaquark_Pt;
+    TH1F* fHist_FermiSexaquark_Mass;
+    TH1F* fHist_SignalAntiLambda_CPAwrtPV;
+    TH1F* fHist_SignalKaonZeroShort_CPAwrtPV;
+    TH1F* fHist_AntiLambda_Bookkeep;
+    TH1F* fHist_KaonZeroShort_Bookkeep;
+    TH1F* fHist_AntiProton_Bookkeep;
+    TH1F* fHist_KaonPlus_Bookkeep;
+    TH1F* fHist_PionPlus_Bookkeep;
+    TH1F* fHist_PionMinus_Bookkeep;
+    TH1F* fHist_AntiNeutron_Bookkeep;
+    TH1F* fHist_InjBkgProducts_Bookkeep;
+    TH1F* fHist_AllSecondaries_MothersPDG;
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented

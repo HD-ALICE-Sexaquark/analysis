@@ -138,6 +138,44 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists = new TList();
     fOutputListOfHists->SetOwner(kTRUE);
 
+    /* Filled with MC true information */
+
+    fHist_SignalSecVertex_Radius = new TH1F("SignalSecVertex_Radius", "SignalSecVertex_Radius", 100, 0., 200.);
+    fOutputListOfHists->Add(fHist_SignalSecVertex_Radius);
+    fHist_InjBkgSecVertex_Radius = new TH1F("InjBkgSecVertex_Radius", "InjBkgSecVertex_Radius", 100, 0., 200.);
+    fOutputListOfHists->Add(fHist_InjBkgSecVertex_Radius);
+
+    fHist_FermiSexaquark_Pt = new TH1F("FermiSexaquark_Pt", "FermiSexaquark_Pt", 100, 0., 10.);
+    fOutputListOfHists->Add(fHist_FermiSexaquark_Pt);
+    fHist_FermiSexaquark_Mass = new TH1F("FermiSexaquark_Mass", "FermiSexaquark_Mass", 100, -5., 5.);
+    fOutputListOfHists->Add(fHist_FermiSexaquark_Mass);
+
+    fHist_SignalAntiLambda_CPAwrtPV = new TH1F("SignalAntiLambda_CPAwrtPV", "SignalAntiLambda_CPAwrtPV", 100, -5., 5.);
+    fOutputListOfHists->Add(fHist_SignalAntiLambda_CPAwrtPV);
+    fHist_SignalKaonZeroShort_CPAwrtPV = new TH1F("SignalKaonZeroShort_CPAwrtPV", "SignalKaonZeroShort_CPAwrtPV", 100, -5., 5.);
+    fOutputListOfHists->Add(fHist_SignalKaonZeroShort_CPAwrtPV);
+
+    fHist_AntiLambda_Bookkeep = new TH1F("AntiLambda_Bookkeep", "AntiLambda_Bookkeep", 10, 0., 10.);
+    fOutputListOfHists->Add(fHist_AntiLambda_Bookkeep);
+    fHist_KaonZeroShort_Bookkeep = new TH1F("KaonZeroShort_Bookkeep", "KaonZeroShort_Bookkeep", 10, 0., 10.);
+    fOutputListOfHists->Add(fHist_KaonZeroShort_Bookkeep);
+    fHist_AntiProton_Bookkeep = new TH1F("AntiProton_Bookkeep", "AntiProton_Bookkeep", 10, 0., 10.);
+    fOutputListOfHists->Add(fHist_AntiProton_Bookkeep);
+    fHist_KaonPlus_Bookkeep = new TH1F("KaonPlus_Bookkeep", "KaonPlus_Bookkeep", 10, 0., 10.);
+    fOutputListOfHists->Add(fHist_KaonPlus_Bookkeep);
+    fHist_PionPlus_Bookkeep = new TH1F("PionPlus_Bookkeep", "PionPlus_Bookkeep", 10, 0., 10.);
+    fOutputListOfHists->Add(fHist_PionPlus_Bookkeep);
+    fHist_PionMinus_Bookkeep = new TH1F("PionMinus_Bookkeep", "PionMinus_Bookkeep", 10, 0., 10.);
+    fOutputListOfHists->Add(fHist_PionMinus_Bookkeep);
+
+    fHist_AntiNeutron_Bookkeep = new TH1F("AntiNeutron_Bookkeep", "AntiNeutron_Bookkeep", 10, 0., 10.);
+    fOutputListOfHists->Add(fHist_AntiNeutron_Bookkeep);
+
+    fHist_InjBkgProducts_Bookkeep = new TH1F("InjBkgProducts_Bookkeep", "InjBkgProducts_Bookkeep", 50, 0., 50.);
+    fOutputListOfHists->Add(fHist_InjBkgProducts_Bookkeep);
+    fHist_AllSecondaries_MothersPDG = new TH1F("AllSecondaries_MothersPDG", "AllSecondaries_MothersPDG", 6000, -3000, 3000.);
+    fOutputListOfHists->Add(fHist_AllSecondaries_MothersPDG);
+
     PostData(2, fOutputListOfHists);
 }
 
@@ -303,8 +341,10 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
     Int_t pdg_mc;
 
     AliMCParticle* mcDaughter;
-    Int_t idx_dau;
     Int_t pdg_dau;
+
+    AliMCParticle* mcGrandDaughter;
+    Int_t pdg_grdau;
 
     Int_t n_antilambda = 0;
     Int_t n_k0s = 0;
@@ -316,82 +356,140 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
     Int_t n_antiprotons = 0;
 
     Bool_t relevant_pid;
-    Double_t radius;  // 2d-radius where the anti-sexaquark interacts // pending
+    Bool_t signal_status;
+    Bool_t has_daughters;
+    Bool_t has_granddaughters;
 
-    // (debug)
+    std::map<Int_t, std::vector<Int_t>> vec_idx_signal_product;
+    std::map<Int_t, std::vector<Int_t>> vec_idx_antineutron_product;
+
     TString aux_mark;
     TString aux_lines6 = "------";
     TString aux_lines8 = "--------";
 
-    // loop over MC gen. particles in a single event
+    /* Loop over MC gen. particles in a single event */
+
     AliInfo("   IDX STATUS    PID           ORIGIN           DAUIDX DAUSTA DAUPID         DAUORIGIN         ");
     for (Int_t idx_mc = 0; idx_mc < fMC->GetNumberOfTracks(); idx_mc++) {
 
         mcPart = (AliMCParticle*)fMC->GetTrack(idx_mc);
         pdg_mc = mcPart->PdgCode();
 
-        // (cut) on PID
+        /* Fill bookkeeping histograms */
+        /* (pending) it can be simplified */
+
+        if (pdg_mc == -3122) fHist_AntiLambda_Bookkeep->Fill(0);
+        if (pdg_mc == 310) fHist_KaonZeroShort_Bookkeep->Fill(0);
+        if (pdg_mc == -2212) fHist_AntiProton_Bookkeep->Fill(0);
+        if (pdg_mc == 321) fHist_KaonPlus_Bookkeep->Fill(0);
+        if (pdg_mc == 211) fHist_PionPlus_Bookkeep->Fill(0);
+        if (pdg_mc == -211) fHist_PionMinus_Bookkeep->Fill(0);
+
+        if (pdg_mc == -2112) fHist_AntiNeutron_Bookkeep->Fill(0);
+
+        if (pdg_mc == -3122 && !mcPart->IsPrimary()) fHist_AntiLambda_Bookkeep->Fill(1);
+        if (pdg_mc == 310 && !mcPart->IsPrimary()) fHist_KaonZeroShort_Bookkeep->Fill(1);
+        if (pdg_mc == -2212 && !mcPart->IsPrimary()) fHist_AntiProton_Bookkeep->Fill(1);
+        if (pdg_mc == 321 && !mcPart->IsPrimary()) fHist_KaonPlus_Bookkeep->Fill(1);
+        if (pdg_mc == 211 && !mcPart->IsPrimary()) fHist_PionPlus_Bookkeep->Fill(1);
+        if (pdg_mc == -211 && !mcPart->IsPrimary()) fHist_PionMinus_Bookkeep->Fill(1);
+
+        signal_status = mcPart->MCStatusCode() >= 600 && mcPart->MCStatusCode() < 620;
+        if (pdg_mc == -3122 && signal_status) fHist_AntiLambda_Bookkeep->Fill(2);
+        if (pdg_mc == 310 && signal_status) fHist_KaonZeroShort_Bookkeep->Fill(2);
+        if (pdg_mc == -2212 && signal_status) fHist_AntiProton_Bookkeep->Fill(2);
+        if (pdg_mc == 321 && signal_status) fHist_KaonPlus_Bookkeep->Fill(2);
+        if (pdg_mc == 211 && signal_status) fHist_PionPlus_Bookkeep->Fill(2);
+        if (pdg_mc == -211 && signal_status) fHist_PionMinus_Bookkeep->Fill(2);
+
+        if (pdg_mc == -2112 && mcPart->GetNDaughters() > 0) fHist_AntiNeutron_Bookkeep->Fill(1);
+
+        /* Only choose the products of the interaction at hand */
+        /* and the injected anti-neutrons */
+
         relevant_pid = std::any_of(fProductsPDG.begin(), fProductsPDG.end(), [&](Int_t relevant_pdg) { return pdg_mc == relevant_pdg; });
+        if (relevant_pid && signal_status) vec_idx_signal_product[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
+
         relevant_pid = relevant_pid || pdg_mc == -2112;
         if (!relevant_pid) continue;
 
-        // (debug)
+        /* If they're signal, their MC status number should be among 600 and 619. */
+        /* This was done to recognize each interaction, assigning a different number to each of */
+        /* the 20 antisexaquark-nucleon reactions that were injected in a single event */
+
         aux_mark = "";
         if (mcPart->MCStatusCode() >= 600 && mcPart->MCStatusCode() < 620) aux_mark = "!!";
         AliInfoF("%6i %6i %6i %8.3f %8.3f %8.3f %s %s %s %s %s %s %s",                                                              //
-                 idx_mc, (Int_t)mcPart->MCStatusCode(), mcPart->PdgCode(), mcPart->Xv(), mcPart->Yv(), mcPart->Zv(),                //
+                 idx_mc, (Int_t)mcPart->MCStatusCode(), pdg_mc, mcPart->Xv(), mcPart->Yv(), mcPart->Zv(),                           //
                  aux_lines6.Data(), aux_lines6.Data(), aux_lines6.Data(), aux_lines8.Data(), aux_lines8.Data(), aux_lines8.Data(),  //
                  aux_mark.Data());
 
-        if ((pdg_mc == 310 || pdg_mc == -3122 || pdg_mc == -2112) && mcPart->GetNDaughters()) {
-            idx_dau = mcPart->GetDaughterFirst();
+        /* Inspect their daughters */
+
+        aux_mark = "";
+        has_daughters = (pdg_mc == 310 || pdg_mc == -3122) && mcPart->GetNDaughters();
+        has_daughters = has_daughters || (pdg_mc == -2112 && mcPart->GetNDaughters() > 1);
+        if (!has_daughters) continue;
+
+        if (pdg_mc == -2112) aux_mark = "xx";
+
+        for (Int_t idx_dau = mcPart->GetDaughterFirst(); idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
+
             mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
             pdg_dau = mcDaughter->PdgCode();
-            AliInfoF("%s %s %s %s %s %s %6i %6i %6i %8.3f %8.3f %8.3f",                                                                 //
-                     aux_lines6.Data(), aux_lines6.Data(), aux_lines6.Data(), aux_lines8.Data(), aux_lines8.Data(), aux_lines8.Data(),  //
-                     idx_dau, (Int_t)mcDaughter->MCStatusCode(), mcDaughter->PdgCode(), mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
-            if (mcPart->GetDaughterFirst() != mcPart->GetDaughterLast()) {
-                idx_dau = mcPart->GetDaughterLast();
-                mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
-                pdg_dau = mcDaughter->PdgCode();
-                AliInfoF("%s %s %s %s %s %s %6i %6i %6i %8.3f %8.3f %8.3f",                                                                 //
-                         aux_lines6.Data(), aux_lines6.Data(), aux_lines6.Data(), aux_lines8.Data(), aux_lines8.Data(), aux_lines8.Data(),  //
-                         idx_dau, (Int_t)mcDaughter->MCStatusCode(), mcDaughter->PdgCode(), mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
+            AliInfoF("%6i %s %s %s %s %s %6i %6i %6i %8.3f %8.3f %8.3f %s",                                                                   //
+                     mcDaughter->GetMother(), aux_lines6.Data(), aux_lines6.Data(), aux_lines8.Data(), aux_lines8.Data(), aux_lines8.Data(),  //
+                     idx_dau, (Int_t)mcDaughter->MCStatusCode(), pdg_dau, mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv(), aux_mark.Data());
+
+            /* Inspect their granddaughters */
+
+            has_granddaughters = mcDaughter->GetNDaughters();
+            if (!has_granddaughters) continue;
+
+            for (Int_t idx_grdau = mcDaughter->GetDaughterFirst(); idx_grdau <= mcDaughter->GetDaughterLast(); idx_grdau++) {
+
+                mcGrandDaughter = (AliMCParticle*)fMC->GetTrack(idx_grdau);
+                pdg_grdau = mcGrandDaughter->PdgCode();
+                AliInfoF("%6i %s %s %s %s %s %6i %6i %6i %8.3f %8.3f %8.3f %s",               //
+                         mcGrandDaughter->GetMother(), aux_lines6.Data(), aux_lines6.Data(),  //
+                         aux_lines8.Data(), aux_lines8.Data(), aux_lines8.Data(),             //
+                         idx_grdau, (Int_t)mcGrandDaughter->MCStatusCode(), pdg_grdau,        //
+                         mcGrandDaughter->Xv(), mcGrandDaughter->Yv(), mcGrandDaughter->Zv(), aux_mark.Data());
             }
         }
-
-        /*
-idx_mother = mcPart->GetMother();
-aux_mark = "";
-if (idx_mother > 0) {
-mcMother = (AliMCParticle*)fMC->GetTrack(idx_mother);
-if ((Int_t)mcMother->MCStatusCode() >= 600 && (Int_t)mcMother->MCStatusCode() <= 620) aux_mark = "!!";
-AliInfoF("%6i %6i %6i %8.3f %8.3f %8.3f %6i %6i %6i %8.3f %8.3f %8.3f %s",                                                  //
-        idx_mc, (Int_t)mcPart->MCStatusCode(), mcPart->PdgCode(), mcPart->Xv(), mcPart->Yv(), mcPart->Zv(),                //
-        idx_mother, (Int_t)mcMother->MCStatusCode(), mcMother->PdgCode(), mcMother->Xv(), mcMother->Yv(), mcMother->Zv(),  //
-        aux_mark.Data());
-} else {
-}
-
-Indices_MCGen_FS.insert(idx_mc);
-if ((Int_t)mcPart->MCStatusCode() >= 600 && (Int_t)mcPart->MCStatusCode() <= 620) {
-Indices_MCGen_FS_Signal.insert(idx_mc);
-}
-*/
-
-        // use last daughter pointer to calculate the radius
-        // radius = TMath::Sqrt(mcDaughter->Xv() * mcDaughter->Xv() + mcDaughter->Yv() * mcDaughter->Yv()); // pending
-
-        // reset counters
-        n_antilambda = 0;
-        n_k0s = 0;
-        n_antineutrons = 0;
-
-        n_piplus = 0;
-        n_piminus = 0;
-        n_kplus = 0;
-        n_antiprotons = 0;
     }  // end of loop over MC particles
+
+    /* Loop over antisexaquark-nucleon interactions */
+
+    Float_t antisexaquark_pt;
+    Float_t antisexaquark_px;
+    Float_t antisexaquark_py;
+    Float_t antisexaquark_mass; // (pending)
+    Float_t signal_radius;
+
+    for (Int_t interaction_id = 600; interaction_id < 620; interaction_id++) {
+
+        mcPart = (AliMCParticle*)fMC->GetTrack(vec_idx_signal_product[interaction_id][0]);
+        signal_radius = TMath::Sqrt(TMath::Power(mcPart->Xv(), 2) + TMath::Power(mcPart->Yv(), 2));
+
+        fHist_SignalSecVertex_Radius->Fill(signal_radius);
+
+        antisexaquark_px = 0.;
+        antisexaquark_py = 0.;
+        for (Int_t& signal_prod_idx : vec_idx_signal_product[interaction_id]) {
+
+            mcPart = (AliMCParticle*)fMC->GetTrack(signal_prod_idx);
+
+            antisexaquark_px += mcPart->Px();
+            antisexaquark_py += mcPart->Py();
+        }
+
+        antisexaquark_pt = TMath::Sqrt(TMath::Power(antisexaquark_px, 2) + TMath::Power(antisexaquark_py, 2));
+        fHist_FermiSexaquark_Pt->Fill(antisexaquark_pt);
+    }
+
+    /* Loop over antineutron-nucleon interactions */
+    /* (pending) */
 }
 
 /*
