@@ -48,6 +48,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fSourceOfV0s(),
       fSimulationSet(0),
       fReactionChannel(""),
+      fStruckNucleonPDG(0),
       fOutputListOfTrees(0),
       fOutputListOfHists(0),
       fMC(0),
@@ -71,6 +72,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       fSourceOfV0s(SourceOfV0s),
       fSimulationSet(SimulationSet),
       fReactionChannel(""),
+      fStruckNucleonPDG(0),
       fOutputListOfTrees(0),
       fOutputListOfHists(0),
       fMC(0),
@@ -145,7 +147,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fHist_InjBkgSecVertex_Radius = new TH1F("InjBkgSecVertex_Radius", "InjBkgSecVertex_Radius", 100, 0., 200.);
     fOutputListOfHists->Add(fHist_InjBkgSecVertex_Radius);
 
-    fHist_FermiSexaquark_Pt = new TH1F("FermiSexaquark_Pt", "FermiSexaquark_Pt", 100, 0., 10.);
+    fHist_FermiSexaquark_Pt = new TH1F("FermiSexaquark_Pt", "FermiSexaquark_Pt", 140, -7., 7.);
     fOutputListOfHists->Add(fHist_FermiSexaquark_Pt);
     fHist_FermiSexaquark_Mass = new TH1F("FermiSexaquark_Mass", "FermiSexaquark_Mass", 100, -5., 5.);
     fOutputListOfHists->Add(fHist_FermiSexaquark_Mass);
@@ -168,6 +170,10 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fHist_PionMinus_Bookkeep = new TH1F("PionMinus_Bookkeep", "PionMinus_Bookkeep", 10, 0., 10.);
     fOutputListOfHists->Add(fHist_PionMinus_Bookkeep);
 
+    fHist_AntiNeutron_Pt = new TH1F("AntiNeutron_Pt", "AntiNeutron_Pt", 10, 0., 10.);
+    fOutputListOfHists->Add(fHist_AntiNeutron_Pt);
+    fHist_AntiNeutronThatInteracted_Pt = new TH1F("AntiNeutronThatInteracted_Pt", "AntiNeutronThatInteracted_Pt", 10, 0., 10.);
+    fOutputListOfHists->Add(fHist_AntiNeutronThatInteracted_Pt);
     fHist_AntiNeutron_Bookkeep = new TH1F("AntiNeutron_Bookkeep", "AntiNeutron_Bookkeep", 10, 0., 10.);
     fOutputListOfHists->Add(fHist_AntiNeutron_Bookkeep);
 
@@ -186,6 +192,7 @@ void AliAnalysisTaskSexaquark::Initialize() {
     if (fSimulationSet == 'A') {
         fReactionChannel = "AntiSexaquark,N->AntiLambda,K0S";
         fProductsPDG = {-3122, 310};
+        fStruckNucleonPDG = 2112;
     } else if (fSimulationSet == 'B') {
         fReactionChannel = "";
     } else if (fSimulationSet == 'C') {
@@ -193,9 +200,11 @@ void AliAnalysisTaskSexaquark::Initialize() {
     } else if (fSimulationSet == 'D') {
         fReactionChannel = "AntiSexaquark,P->AntiLambda,K+";
         fProductsPDG = {-3122, 321};
+        fStruckNucleonPDG = 2212;
     } else if (fSimulationSet == 'E') {
         fReactionChannel = "AntiSexaquark,P->AntiLambda,K+,pi-,pi+";
         fProductsPDG = {-3122, 321, 211, -211};
+        fStruckNucleonPDG = 2212;
     } else if (fSimulationSet == 'F') {
         fReactionChannel = "";
     } else if (fSimulationSet == 'G') {
@@ -203,6 +212,7 @@ void AliAnalysisTaskSexaquark::Initialize() {
     } else if (fSimulationSet == 'H') {
         fReactionChannel = "AntiSexaquark,P->AntiProton,K+,K+,pi0";
         fProductsPDG = {-2212, 321, 321, 111};
+        fStruckNucleonPDG = 2212;
     }
 
     DefineCuts("Standard");
@@ -464,7 +474,10 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
     Float_t antisexaquark_pt;
     Float_t antisexaquark_px;
     Float_t antisexaquark_py;
-    Float_t antisexaquark_mass; // (pending)
+    Float_t antisexaquark_pz;
+    Float_t antisexaquark_p;
+    Float_t antisexaquark_e;
+    Float_t antisexaquark_mass;  // (pending)
     Float_t signal_radius;
 
     for (Int_t interaction_id = 600; interaction_id < 620; interaction_id++) {
@@ -476,16 +489,26 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
 
         antisexaquark_px = 0.;
         antisexaquark_py = 0.;
+        antisexaquark_pz = 0.;
+        antisexaquark_e = 0.;
         for (Int_t& signal_prod_idx : vec_idx_signal_product[interaction_id]) {
 
             mcPart = (AliMCParticle*)fMC->GetTrack(signal_prod_idx);
+            pdg_mc = mcPart->PdgCode();
 
             antisexaquark_px += mcPart->Px();
             antisexaquark_py += mcPart->Py();
+            antisexaquark_pz += mcPart->Pz();
+            antisexaquark_e += TMath::Sqrt(mcPart->P() * mcPart->P() + fPDG.GetParticle(pdg_mc)->Mass() * fPDG.GetParticle(pdg_mc)->Mass());
         }
+        antisexaquark_e -= fPDG.GetParticle(fStruckNucleonPDG)->Mass();
 
         antisexaquark_pt = TMath::Sqrt(TMath::Power(antisexaquark_px, 2) + TMath::Power(antisexaquark_py, 2));
         fHist_FermiSexaquark_Pt->Fill(antisexaquark_pt);
+
+        antisexaquark_p = TMath::Sqrt(TMath::Power(antisexaquark_px, 2) + TMath::Power(antisexaquark_py, 2) + TMath::Power(antisexaquark_pz, 2));
+        antisexaquark_mass = TMath::Sqrt(TMath::Power(antisexaquark_e, 2) - TMath::Power(antisexaquark_p, 2));
+        fHist_FermiSexaquark_Mass->Fill(antisexaquark_mass);
     }
 
     /* Loop over antineutron-nucleon interactions */

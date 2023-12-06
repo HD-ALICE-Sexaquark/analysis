@@ -264,6 +264,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // derived from `fSimulationSet` in `Initialize()`
     TString fReactionChannel;
     std::vector<Int_t> fProductsPDG;
+    Int_t fStruckNucleonPDG;
 
    private:
     /* Cuts */
@@ -299,6 +300,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_KaonPlus_Bookkeep;
     TH1F* fHist_PionPlus_Bookkeep;
     TH1F* fHist_PionMinus_Bookkeep;
+    TH1F* fHist_AntiNeutron_Pt;
+    TH1F* fHist_AntiNeutronThatInteracted_Pt;
     TH1F* fHist_AntiNeutron_Bookkeep;
     TH1F* fHist_InjBkgProducts_Bookkeep;
     TH1F* fHist_AllSecondaries_MothersPDG;
