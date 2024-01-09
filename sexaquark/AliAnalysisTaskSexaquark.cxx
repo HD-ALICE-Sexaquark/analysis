@@ -7,6 +7,7 @@
 #include "TH1F.h"
 #include "TList.h"
 #include "TLorentzVector.h"
+#include "TROOT.h"
 #include "TString.h"
 #include "TTree.h"
 #include "TVector3.h"
@@ -40,13 +41,15 @@
 class AliAnalysisTaskSexaquark;
 
 /*
- Default constructor.
+ Empty I/O constructor. Non-persistent members are initialized to their default values from here.
  */
 AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
     : AliAnalysisTaskSE(),
       fIsMC(0),
       fSourceOfV0s(),
-      fSimulationSet(0),
+      fSimulationSet(""),
+      fReactionID(0),
+      fInjectedSexaquarkMass(0),
       fReactionChannel(""),
       fStruckNucleonPDG(0),
       fOutputListOfTrees(0),
@@ -64,13 +67,15 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fEvent() {}
 
 /*
- Constructor.
+ Constructor, called locally.
  */
-AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, Char_t SimulationSet)
+AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet)
     : AliAnalysisTaskSE(name),
       fIsMC(IsMC),
       fSourceOfV0s(SourceOfV0s),
       fSimulationSet(SimulationSet),
+      fReactionID(0),
+      fInjectedSexaquarkMass(0),
       fReactionChannel(""),
       fStruckNucleonPDG(0),
       fOutputListOfTrees(0),
@@ -106,8 +111,7 @@ AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
 }
 
 /*
- Create output objects.
- This function is called ONCE at the start of your analysis (RUNTIME).
+ Create output objects, called once at RUNTIME ~ execution on Grid
 */
 void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
@@ -193,22 +197,32 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
  Initialize analysis task.
  */
 void AliAnalysisTaskSexaquark::Initialize() {
-    if (fSimulationSet == 'A') {
+
+    /* Parse TString: get reaction ID and injected sexaquark mass from SimulationSet */
+
+    fReactionID = fSimulationSet(0);
+    fInjectedSexaquarkMass = ((TString)fSimulationSet(1, fSimulationSet.Length())).Atof();
+
+    /* PENDING: inj. sexaquark mass doesn't make sense when analyzing data... do smth about it... */
+
+    /* Assign the rest of properties related to the respective Reaction Channel */
+
+    if (fReactionID == 'A') {
         fReactionChannel = "AntiSexaquark,N->AntiLambda,K0S";
         fProductsPDG = {-3122, 310};
         fFinalStateProductsPDG = {-2212, 211, -211, 211};
         fStruckNucleonPDG = 2112;
-    } else if (fSimulationSet == 'D') {
+    } else if (fReactionID == 'D') {
         fReactionChannel = "AntiSexaquark,P->AntiLambda,K+";
         fProductsPDG = {-3122, 321};
         fFinalStateProductsPDG = {-2212, 211, 321};
         fStruckNucleonPDG = 2212;
-    } else if (fSimulationSet == 'E') {
+    } else if (fReactionID == 'E') {
         fReactionChannel = "AntiSexaquark,P->AntiLambda,K+,pi-,pi+";
         fProductsPDG = {-3122, 321, -211, 211};
         fFinalStateProductsPDG = {-2212, 211, 321, -211, 211};
         fStruckNucleonPDG = 2212;
-    } else if (fSimulationSet == 'H') {
+    } else if (fReactionID == 'H') {
         fReactionChannel = "AntiSexaquark,P->AntiProton,K+,K+,pi0";
         fProductsPDG = {-2212, 321, 321, 111};
         fFinalStateProductsPDG = {-2212, 321, 321, 11, -11, 11, -11, 11, -11, 11, -11};  // not used
@@ -219,10 +233,12 @@ void AliAnalysisTaskSexaquark::Initialize() {
 
     AliInfo("Initializing AliAnalysisTaskSexaquark...");
     AliInfo("INPUT OPTIONS:");
-    AliInfoF(" >> IsMC             = %i", (Int_t)fIsMC);
-    AliInfoF(" >> Source of V0s    = %s", fSourceOfV0s.Data());
-    AliInfoF(" >> Simulation Set   = %c", fSimulationSet);
-    AliInfoF(" >> Reaction Channel = %s", fReactionChannel.Data());
+    AliInfoF(">> IsMC                = %i", (Int_t)fIsMC);
+    AliInfoF(">> Source of V0s       = %s", fSourceOfV0s.Data());
+    AliInfoF(">> Simulation Set      = %s", fSimulationSet.Data());
+    AliInfoF(">> Reaction ID         = %c", fReactionID);
+    AliInfoF(">> Reaction Channel    = %s", fReactionChannel.Data());
+    AliInfoF(">> Inj. Sexaquark Mass = %.2f", fInjectedSexaquarkMass);
 }
 
 /*
@@ -243,7 +259,7 @@ void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
 }
 
 /*
- Main function, called per each event.
+ Main function, called per each event at RUNTIME ~ execution on Grid
 */
 void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
@@ -447,7 +463,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
                     fHist_PionPlus_Bookkeep->Fill(2);
                 }
             }
-            if (fSimulationSet == 'A' || fSimulationSet == 'D' || fSimulationSet == 'E') {
+            if (fReactionID == 'A' || fReactionID == 'D' || fReactionID == 'E') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
         }
@@ -463,41 +479,41 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
                     fHist_PionPlus_Bookkeep->Fill(2);
                 }
             }
-            if (fSimulationSet == 'A') {
+            if (fReactionID == 'A') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
         }
 
         if (pdg_mc == -2212 && is_signal) {
             fHist_AntiProton_Bookkeep->Fill(2);
-            if (fSimulationSet == 'H') {
+            if (fReactionID == 'H') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
         }
 
         if (pdg_mc == 321 && is_signal) {
             fHist_KaonPlus_Bookkeep->Fill(2);
-            if (fSimulationSet == 'D' || fSimulationSet == 'E' || fSimulationSet == 'H') {
+            if (fReactionID == 'D' || fReactionID == 'E' || fReactionID == 'H') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
         }
 
         if (pdg_mc == 211 && is_signal) {
             fHist_PionPlus_Bookkeep->Fill(2);
-            if (fSimulationSet == 'E') {
+            if (fReactionID == 'E') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
         }
 
         if (pdg_mc == -211 && is_signal) {
             fHist_PionMinus_Bookkeep->Fill(2);
-            if (fSimulationSet == 'E') {
+            if (fReactionID == 'E') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
         }
 
         if (pdg_mc == 111 && is_signal) {
-            if (fSimulationSet == 'H') {
+            if (fReactionID == 'H') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
         }
@@ -1339,10 +1355,10 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_KF() { /* PENDING */
 /*
  Apply anti-sexaquark candidate cuts.
 */
-Bool_t AliAnalysisTaskSexaquark::PassesAntiSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda,
-                                                                     KFParticle kfNeutralKaonShort,  //
-                                                                     TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda,
-                                                                     TLorentzVector lvNeutralKaonShort) {
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda,
+                                                                 KFParticle kfNeutralKaonShort,  //
+                                                                 TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda,
+                                                                 TLorentzVector lvNeutralKaonShort) {
     /*
         Float_t kfDCA_Lambda_Pion2 = TMath::Abs(kfLambda.GetDistanceFromParticleXY(kfPion2));
         Float_t kfDCA_Lambda_Pion3 = TMath::Abs(kfLambda.GetDistanceFromParticleXY(kfPion3));
@@ -1484,7 +1500,7 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_KF(std::vector<KFParticl
 /*
  Apply anti-sexaquark candidate cuts.
 */
-Bool_t AliAnalysisTaskSexaquark::PassesAntiSexaquarkCuts_ChannelD_KF() {
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelD_KF() {
     /* PENDING */
     return kTRUE;
 }
@@ -1505,7 +1521,7 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelD_KF(std::vector<KFParticl
 /*
  Apply anti-sexaquark candidate cuts.
 */
-Bool_t AliAnalysisTaskSexaquark::PassesAntiSexaquarkCuts_ChannelE_KF() {
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelE_KF() {
     /* PENDING */
     return kTRUE;
 }

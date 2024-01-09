@@ -1,4 +1,4 @@
-AliAnalysisTaskSexaquark* AddSexaquark(TString name = "name", Bool_t IsMC = kTRUE, TString SourceOfV0s = "offline", TString ReactionChannel = "A") {
+AliAnalysisTaskSexaquark* AddSexaquark(TString name = "name", Bool_t IsMC = kTRUE, TString SourceOfV0s = "offline", TString SimulationSet = "A1.8") {
     // get the manager via the static access member. since it's static, you don't need
     // to create an instance of the class here to call the function
     AliAnalysisManager* mgr = AliAnalysisManager::GetAnalysisManager();
@@ -17,8 +17,7 @@ AliAnalysisTaskSexaquark* AddSexaquark(TString name = "name", Bool_t IsMC = kTRU
     // fileName += ":Sexaquark";  // create a subfolder in the file
 
     // now we create an instance of your task
-    AliAnalysisTaskSexaquark* task =
-        new AliAnalysisTaskSexaquark(name.Data(), IsMC, (TString)SourceOfV0s, ReactionChannel.Data()[0]);
+    AliAnalysisTaskSexaquark* task = new AliAnalysisTaskSexaquark(name, IsMC, SourceOfV0s, SimulationSet);
 
     if (!task) {
         return 0x0;
