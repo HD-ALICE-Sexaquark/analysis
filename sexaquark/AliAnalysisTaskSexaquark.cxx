@@ -144,51 +144,116 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists = new TList();
     fOutputListOfHists->SetOwner(kTRUE);
 
-    /* Filled with MC true information */
+    /* That will be filled with MC Gen. (or True) information */
 
-    fHist_SignalSecVertex_Radius = new TH1F("SignalSecVertex_Radius", "SignalSecVertex_Radius", 100, 0., 200.);
-    fOutputListOfHists->Add(fHist_SignalSecVertex_Radius);
-    fHist_InjBkgSecVertex_Radius = new TH1F("InjBkgSecVertex_Radius", "InjBkgSecVertex_Radius", 100, 0., 200.);
-    fOutputListOfHists->Add(fHist_InjBkgSecVertex_Radius);
+    TString def_True_Signal_SecVertex_Radius = "";
+    TString def_True_InjBkg_SecVertex_Radius = "";
 
-    fHist_FermiSexaquark_Pt = new TH1F("FermiSexaquark_Pt", "FermiSexaquark_Pt", 140, -7., 7.);
-    fOutputListOfHists->Add(fHist_FermiSexaquark_Pt);
-    fHist_FermiSexaquark_Mass = new TH1F("FermiSexaquark_Mass", "FermiSexaquark_Mass", 100, -5., 5.);
-    fOutputListOfHists->Add(fHist_FermiSexaquark_Mass);
+    fHist_True_Signal_SecVertex_Radius = new TH1F("True_Signal_SecVertex_Radius", def_True_Signal_SecVertex_Radius, 100, 0., 200.);
+    fHist_True_InjBkg_SecVertex_Radius = new TH1F("True_InjBkg_SecVertex_Radius", def_True_InjBkg_SecVertex_Radius, 100, 0., 200.);
 
-    fHist_SignalAntiLambda_CPAwrtPV = new TH1F("SignalAntiLambda_CPAwrtPV", "SignalAntiLambda_CPAwrtPV", 100, -5., 5.);
-    fOutputListOfHists->Add(fHist_SignalAntiLambda_CPAwrtPV);
-    fHist_SignalKaonZeroShort_CPAwrtPV = new TH1F("SignalKaonZeroShort_CPAwrtPV", "SignalKaonZeroShort_CPAwrtPV", 100, -5., 5.);
-    fOutputListOfHists->Add(fHist_SignalKaonZeroShort_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_True_Signal_SecVertex_Radius);
+    fOutputListOfHists->Add(fHist_True_InjBkg_SecVertex_Radius);
 
-    fHist_AntiLambda_Bookkeep = new TH1F("AntiLambda_Bookkeep", "AntiLambda_Bookkeep", 10, 0., 10.);
-    fOutputListOfHists->Add(fHist_AntiLambda_Bookkeep);
-    fHist_KaonZeroShort_Bookkeep = new TH1F("KaonZeroShort_Bookkeep", "KaonZeroShort_Bookkeep", 10, 0., 10.);
-    fOutputListOfHists->Add(fHist_KaonZeroShort_Bookkeep);
-    fHist_AntiProton_Bookkeep = new TH1F("AntiProton_Bookkeep", "AntiProton_Bookkeep", 10, 0., 10.);
-    fOutputListOfHists->Add(fHist_AntiProton_Bookkeep);
-    fHist_KaonPlus_Bookkeep = new TH1F("KaonPlus_Bookkeep", "KaonPlus_Bookkeep", 10, 0., 10.);
-    fOutputListOfHists->Add(fHist_KaonPlus_Bookkeep);
-    fHist_PionPlus_Bookkeep = new TH1F("PionPlus_Bookkeep", "PionPlus_Bookkeep", 10, 0., 10.);
-    fOutputListOfHists->Add(fHist_PionPlus_Bookkeep);
-    fHist_PionMinus_Bookkeep = new TH1F("PionMinus_Bookkeep", "PionMinus_Bookkeep", 10, 0., 10.);
-    fOutputListOfHists->Add(fHist_PionMinus_Bookkeep);
+    TString def_True_FermiSexaquark_Pt = "p_T of injected anti-sexaquark (affected by Fermi Motion)";
+    TString def_True_FermiSexaquark_Mass = "Mass of injected anti-sexaquark (affected by Fermi Motion)";
 
-    fHist_AntiNeutron_Pt = new TH1F("AntiNeutron_Pt", "AntiNeutron_Pt", 10, 0., 10.);
-    fOutputListOfHists->Add(fHist_AntiNeutron_Pt);
-    fHist_AntiNeutronThatInteracted_Pt = new TH1F("AntiNeutronThatInteracted_Pt", "AntiNeutronThatInteracted_Pt", 10, 0., 10.);
-    fOutputListOfHists->Add(fHist_AntiNeutronThatInteracted_Pt);
-    fHist_AntiNeutron_NDaughters = new TH1F("AntiNeutron_NDaughters", "AntiNeutron_NDaughters", 100, 0., 100.);
-    fOutputListOfHists->Add(fHist_AntiNeutron_NDaughters);
-    fHist_AntiNeutron_PDGDaughters = new TH1F("AntiNeutron_PDGDaughters", "AntiNeutron_PDGDaughters", 7000, -3500., 3500.);
-    fOutputListOfHists->Add(fHist_AntiNeutron_PDGDaughters);
-    fHist_AntiNeutron_Bookkeep = new TH1F("AntiNeutron_Bookkeep", "AntiNeutron_Bookkeep", 10, 0., 10.);
-    fOutputListOfHists->Add(fHist_AntiNeutron_Bookkeep);
+    fHist_True_FermiSexaquark_Pt = new TH1F("True_FermiSexaquark_Pt", def_True_FermiSexaquark_Pt, 140, -7., 7.);
+    fHist_True_FermiSexaquark_Mass = new TH1F("True_FermiSexaquark_Mass", def_True_FermiSexaquark_Mass, 100, -5., 5.);
 
-    fHist_InjBkgProducts_Bookkeep = new TH1F("InjBkgProducts_Bookkeep", "InjBkgProducts_Bookkeep", 50, 0., 50.);
-    fOutputListOfHists->Add(fHist_InjBkgProducts_Bookkeep);
-    fHist_AllSecondaries_MothersPDG = new TH1F("AllSecondaries_MothersPDG", "AllSecondaries_MothersPDG", 6000, -3000, 3000.);
-    fOutputListOfHists->Add(fHist_AllSecondaries_MothersPDG);
+    fOutputListOfHists->Add(fHist_True_FermiSexaquark_Pt);
+    fOutputListOfHists->Add(fHist_True_FermiSexaquark_Mass);
+
+    TString def_True_Signal_AntiLambda_CPAwrtPV = "";
+    TString def_True_Signal_KaonZeroShort_CPAwrtPV = "";
+
+    fHist_True_Signal_AntiLambda_CPAwrtPV = new TH1F("True_Signal_AntiLambda_CPAwrtPV", def_True_Signal_AntiLambda_CPAwrtPV, 100, -5., 5.);
+    fHist_True_Signal_KaonZeroShort_CPAwrtPV = new TH1F("True_Signal_KaonZeroShort_CPAwrtPV", def_True_Signal_KaonZeroShort_CPAwrtPV, 100, -5., 5.);
+
+    fOutputListOfHists->Add(fHist_True_Signal_AntiLambda_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_True_Signal_KaonZeroShort_CPAwrtPV);
+
+    TString def_True_AntiLambda_Bookkeep = "";
+    TString def_True_KaonZeroShort_Bookkeep = "";
+    TString def_True_AntiProton_Bookkeep = "";
+    TString def_True_PosKaon_Bookkeep = "";
+    TString def_True_PiPlus_Bookkeep = "";
+    TString def_True_PiMinus_Bookkeep = "";
+
+    fHist_True_AntiLambda_Bookkeep = new TH1F("True_AntiLambda_Bookkeep", def_True_AntiLambda_Bookkeep, 10, 0., 10.);
+    fHist_True_KaonZeroShort_Bookkeep = new TH1F("True_KaonZeroShort_Bookkeep", def_True_KaonZeroShort_Bookkeep, 10, 0., 10.);
+    fHist_True_AntiProton_Bookkeep = new TH1F("True_AntiProton_Bookkeep", def_True_AntiProton_Bookkeep, 10, 0., 10.);
+    fHist_True_PosKaon_Bookkeep = new TH1F("True_PosKaon_Bookkeep", def_True_PosKaon_Bookkeep, 10, 0., 10.);
+    fHist_True_PiPlus_Bookkeep = new TH1F("True_PiPlus_Bookkeep", def_True_PiPlus_Bookkeep, 10, 0., 10.);
+    fHist_True_PiMinus_Bookkeep = new TH1F("True_PiMinus_Bookkeep", def_True_PiMinus_Bookkeep, 10, 0., 10.);
+
+    fOutputListOfHists->Add(fHist_True_AntiLambda_Bookkeep);
+    fOutputListOfHists->Add(fHist_True_KaonZeroShort_Bookkeep);
+    fOutputListOfHists->Add(fHist_True_AntiProton_Bookkeep);
+    fOutputListOfHists->Add(fHist_True_PosKaon_Bookkeep);
+    fOutputListOfHists->Add(fHist_True_PiPlus_Bookkeep);
+    fOutputListOfHists->Add(fHist_True_PiMinus_Bookkeep);
+
+    TString def_True_AntiNeutron_Pt = "p_T of generated anti-neutrons";
+    TString def_True_AntiNeutronThatInteracted_Pt = "p_T of generated anti-neutrons that interacted with material";
+    TString def_True_AntiNeutron_NDaughters = "";
+    TString def_True_AntiNeutron_PDGDaughters = "";
+    TString def_True_AntiNeutron_Bookkeep = "";
+
+    fHist_True_AntiNeutron_Pt = new TH1F("True_AntiNeutron_Pt", def_True_AntiNeutron_Pt, 100, 0., 10.);
+    fHist_True_AntiNeutronThatInteracted_Pt = new TH1F("True_AntiNeutronThatInteracted_Pt", def_True_AntiNeutronThatInteracted_Pt, 100, 0., 10.);
+    fHist_True_AntiNeutron_NDaughters = new TH1F("True_AntiNeutron_NDaughters", def_True_AntiNeutron_NDaughters, 100, 0., 100.);
+    fHist_True_AntiNeutron_PDGDaughters = new TH1F("True_AntiNeutron_PDGDaughters", def_True_AntiNeutron_PDGDaughters, 7000, -3500., 3500.);
+    fHist_True_AntiNeutron_Bookkeep = new TH1F("True_AntiNeutron_Bookkeep", def_True_AntiNeutron_Bookkeep, 10, 0., 10.);
+
+    fOutputListOfHists->Add(fHist_True_AntiNeutron_Pt);
+    fOutputListOfHists->Add(fHist_True_AntiNeutronThatInteracted_Pt);
+    fOutputListOfHists->Add(fHist_True_AntiNeutron_NDaughters);
+    fOutputListOfHists->Add(fHist_True_AntiNeutron_PDGDaughters);
+    fOutputListOfHists->Add(fHist_True_AntiNeutron_Bookkeep);
+
+    TString def_True_InjBkgProducts_Bookkeep = "";
+    TString def_True_AllSecondaries_MothersPDG = "PDG code of all particles that come from a sec. vertex";
+
+    fHist_True_InjBkgProducts_Bookkeep = new TH1F("True_InjBkgProducts_Bookkeep", def_True_InjBkgProducts_Bookkeep, 50, 0., 50.);
+    fHist_True_AllSecondaries_MothersPDG = new TH1F("True_AllSecondaries_MothersPDG", def_True_AllSecondaries_MothersPDG, 7000, -3500, 3500.);
+
+    fOutputListOfHists->Add(fHist_True_InjBkgProducts_Bookkeep);
+    fOutputListOfHists->Add(fHist_True_AllSecondaries_MothersPDG);
+
+    /* That will be filled with rec. tracks information (that require MC Gen. information) */
+
+    TString def_Signal_AntiProton_Pt = "p_T of identified signal anti-protons";
+    TString def_Signal_PosKaon_Pt = "p_T of identified signal K+";
+    TString def_Signal_PiPlus_Pt = "p_T of identified signal pi+";
+    TString def_Signal_PiMinus_Pt = "p_T of identified signal pi-";
+
+    fHist_Signal_AntiProton_Pt = new TH1F("Signal_AntiProton_Pt", def_Signal_AntiProton_Pt, 100, 0., 10.);
+    fHist_Signal_PosKaon_Pt = new TH1F("Signal_PosKaon_Pt", def_Signal_PosKaon_Pt, 100, 0., 10.);
+    fHist_Signal_PiPlus_Pt = new TH1F("Signal_PiPlus_Pt", def_Signal_PiPlus_Pt, 100, 0., 10.);
+    fHist_Signal_PiMinus_Pt = new TH1F("Signal_PiMinus_Pt", def_Signal_PiMinus_Pt, 100, 0., 10.);
+
+    fOutputListOfHists->Add(fHist_Signal_AntiProton_Pt);
+    fOutputListOfHists->Add(fHist_Signal_PosKaon_Pt);
+    fOutputListOfHists->Add(fHist_Signal_PiPlus_Pt);
+    fOutputListOfHists->Add(fHist_Signal_PiMinus_Pt);
+
+    /* That will be filled with rec. tracks information */
+
+    TString def_AntiProton_Pt = "p_T of identified anti-protons";
+    TString def_PosKaon_Pt = "p_T of identified K+";
+    TString def_PiPlus_Pt = "p_T of identified pi+";
+    TString def_PiMinus_Pt = "p_T of identified pi-";
+
+    fHist_AntiProton_Pt = new TH1F("AntiProton_Pt", def_AntiProton_Pt, 100, 0., 10.);
+    fHist_PosKaon_Pt = new TH1F("PosKaon_Pt", def_PosKaon_Pt, 100, 0., 10.);
+    fHist_PiPlus_Pt = new TH1F("PiPlus_Pt", def_PiPlus_Pt, 100, 0., 10.);
+    fHist_PiMinus_Pt = new TH1F("PiMinus_Pt", def_PiMinus_Pt, 100, 0., 10.);
+
+    fOutputListOfHists->Add(fHist_AntiProton_Pt);
+    fOutputListOfHists->Add(fHist_PosKaon_Pt);
+    fOutputListOfHists->Add(fHist_PiPlus_Pt);
+    fOutputListOfHists->Add(fHist_PiMinus_Pt);
 
     PostData(2, fOutputListOfHists);
 }
@@ -264,11 +329,12 @@ void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
 void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     // declare containers
-    std::set<Int_t> Indices_MCGen_FS;  // FS: final-state
     std::set<Int_t> Indices_MCGen_FS_Signal;
 
-    std::vector<Int_t> idxPiPlusTracks, idxPiMinusTracks;
-    std::vector<Int_t> idxKaonPlusTracks, idxAntiProtonTracks;
+    std::vector<Int_t> idxAntiProtonTracks;
+    std::vector<Int_t> idxPosKaonTracks;
+    std::vector<Int_t> idxPiPlusTracks;
+    std::vector<Int_t> idxPiMinusTracks;
 
     std::vector<KFParticleMother> kfAntiLambdas;
     std::vector<std::vector<Int_t>> idxAntiLambdaDaughters;
@@ -307,9 +373,9 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     // [note: const_cast removes the const qualifier from the pointer]
     fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
 
-    ProcessMCGen(Indices_MCGen_FS, Indices_MCGen_FS_Signal);
+    ProcessMCGen(Indices_MCGen_FS_Signal);
 
-    ProcessTracks(Indices_MCGen_FS_Signal, idxPiPlusTracks, idxPiMinusTracks, idxKaonPlusTracks, idxAntiProtonTracks);
+    ProcessTracks(Indices_MCGen_FS_Signal, idxAntiProtonTracks, idxPosKaonTracks, idxPiPlusTracks, idxPiMinusTracks);
 
     if (fSourceOfV0s == "true") {
         ReconstructV0s_True();
@@ -361,11 +427,11 @@ void AliAnalysisTaskSexaquark::CheckForInputErrors() {
 /*** ============ ***/
 
 /*
- Search for the relevant MC particles in a single event.
- - Uses: `fMC`, `fProductsPDG`
- - Output: `Indices_MCGen_FS`, `Indices_MCGen_FS_Signal`
+ Loop over MC particles in a single event. Store the indices of the signal particles.
+ - Uses: `fMC`, `fPDG`, `fHist_True_*`
+ - Output: `Indices_MCGen_FS_Signal`
 */
-void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, std::set<Int_t>& Indices_MCGen_FS_Signal) {
+void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Signal) {
 
     AliMCParticle* mcPart;
     Int_t pdg_mc;
@@ -385,17 +451,11 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
     Int_t n_kplus = 0;
     Int_t n_antiprotons = 0;
 
-    Bool_t relevant_pid;
     Bool_t is_secondary;
     Bool_t is_signal;
-    Bool_t has_daughters;
-    Bool_t has_granddaughters;
 
     // `key` = interaction id, `value` = vector of indices of first gen. daughters
     std::map<Int_t, std::vector<Int_t>> vec_idx_signal_fg_daughters;
-
-    TString aux_mark;
-    TString aux_line6 = "------";
 
     /* Loop over MC gen. particles in a single event */
 
@@ -408,16 +468,16 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
         /* Fill bookkeeping histograms */
         /* PENDING: it can be simplified */
 
-        if (pdg_mc == -3122) fHist_AntiLambda_Bookkeep->Fill(0);
-        if (pdg_mc == 310) fHist_KaonZeroShort_Bookkeep->Fill(0);
-        if (pdg_mc == -2212) fHist_AntiProton_Bookkeep->Fill(0);
-        if (pdg_mc == 321) fHist_KaonPlus_Bookkeep->Fill(0);
-        if (pdg_mc == 211) fHist_PionPlus_Bookkeep->Fill(0);
-        if (pdg_mc == -211) fHist_PionMinus_Bookkeep->Fill(0);
+        if (pdg_mc == -3122) fHist_True_AntiLambda_Bookkeep->Fill(0);
+        if (pdg_mc == 310) fHist_True_KaonZeroShort_Bookkeep->Fill(0);
+        if (pdg_mc == -2212) fHist_True_AntiProton_Bookkeep->Fill(0);
+        if (pdg_mc == 321) fHist_True_PosKaon_Bookkeep->Fill(0);
+        if (pdg_mc == 211) fHist_True_PiPlus_Bookkeep->Fill(0);
+        if (pdg_mc == -211) fHist_True_PiMinus_Bookkeep->Fill(0);
 
         if (pdg_mc == -2112) {
-            fHist_AntiNeutron_Bookkeep->Fill(0);
-            fHist_AntiNeutron_Pt->Fill(mcPart->Pt());
+            fHist_True_AntiNeutron_Bookkeep->Fill(0);
+            fHist_True_AntiNeutron_Pt->Fill(mcPart->Pt());
         }
 
         /* If they're signal, their MC status number should be among 600 and 619. */
@@ -433,34 +493,36 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
 
         is_secondary = mcPart->GetMother() != -1;
 
-        if (pdg_mc == -3122 && (is_secondary || is_signal)) fHist_AntiLambda_Bookkeep->Fill(1);
+        if (pdg_mc == -3122 && (is_secondary || is_signal)) fHist_True_AntiLambda_Bookkeep->Fill(1);
         if (pdg_mc == 310) {
             if (is_secondary) {
                 mcMother = (AliMCParticle*)fMC->GetTrack(mcPart->GetMother());
                 pdg_mother = mcMother->PdgCode();
-                if (TMath::Abs(pdg_mother) != 311) fHist_KaonZeroShort_Bookkeep->Fill(1);
+                if (TMath::Abs(pdg_mother) != 311) fHist_True_KaonZeroShort_Bookkeep->Fill(1);
             } else if (is_signal) {
-                fHist_KaonZeroShort_Bookkeep->Fill(1);
+                fHist_True_KaonZeroShort_Bookkeep->Fill(1);
             }
         }
-        if (pdg_mc == -2212 && (is_secondary || is_signal)) fHist_AntiProton_Bookkeep->Fill(1);
-        if (pdg_mc == 321 && (is_secondary || is_signal)) fHist_KaonPlus_Bookkeep->Fill(1);
-        if (pdg_mc == 211 && (is_secondary || is_signal)) fHist_PionPlus_Bookkeep->Fill(1);
-        if (pdg_mc == -211 && (is_secondary || is_signal)) fHist_PionMinus_Bookkeep->Fill(1);
+        if (pdg_mc == -2212 && (is_secondary || is_signal)) fHist_True_AntiProton_Bookkeep->Fill(1);
+        if (pdg_mc == 321 && (is_secondary || is_signal)) fHist_True_PosKaon_Bookkeep->Fill(1);
+        if (pdg_mc == 211 && (is_secondary || is_signal)) fHist_True_PiPlus_Bookkeep->Fill(1);
+        if (pdg_mc == -211 && (is_secondary || is_signal)) fHist_True_PiMinus_Bookkeep->Fill(1);
 
         /* Count signal particles */
         /* -- Note: Only the first generation daughters right after the reaction */
         /* (PENDING) I should also check if the branching ratio of the decay of the AL and K0S correspond to the real one */
 
         if (pdg_mc == -3122 && is_signal) {
-            fHist_AntiLambda_Bookkeep->Fill(2);
+            fHist_True_AntiLambda_Bookkeep->Fill(2);
             for (Int_t idx_dau = mcPart->GetDaughterFirst(); idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
                 mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
                 pdg_dau = mcDaughter->PdgCode();
                 if (pdg_dau == -2212) {
-                    fHist_AntiProton_Bookkeep->Fill(2);
+                    fHist_True_AntiProton_Bookkeep->Fill(2);
+                    Indices_MCGen_FS_Signal.insert(idx_dau);
                 } else if (pdg_dau == 211) {
-                    fHist_PionPlus_Bookkeep->Fill(2);
+                    fHist_True_PiPlus_Bookkeep->Fill(2);
+                    Indices_MCGen_FS_Signal.insert(idx_dau);
                 }
             }
             if (fReactionID == 'A' || fReactionID == 'D' || fReactionID == 'E') {
@@ -469,14 +531,16 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
         }
 
         if (pdg_mc == 310 && is_signal) {
-            fHist_KaonZeroShort_Bookkeep->Fill(2);
+            fHist_True_KaonZeroShort_Bookkeep->Fill(2);
             for (Int_t idx_dau = mcPart->GetDaughterFirst(); idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
                 mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
                 pdg_dau = mcDaughter->PdgCode();
                 if (pdg_dau == -211) {
-                    fHist_PionMinus_Bookkeep->Fill(2);
+                    fHist_True_PiMinus_Bookkeep->Fill(2);
+                    Indices_MCGen_FS_Signal.insert(idx_dau);
                 } else if (pdg_dau == 211) {
-                    fHist_PionPlus_Bookkeep->Fill(2);
+                    fHist_True_PiPlus_Bookkeep->Fill(2);
+                    Indices_MCGen_FS_Signal.insert(idx_dau);
                 }
             }
             if (fReactionID == 'A') {
@@ -485,28 +549,32 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
         }
 
         if (pdg_mc == -2212 && is_signal) {
-            fHist_AntiProton_Bookkeep->Fill(2);
+            fHist_True_AntiProton_Bookkeep->Fill(2);
+            Indices_MCGen_FS_Signal.insert(idx_mc);
             if (fReactionID == 'H') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
         }
 
         if (pdg_mc == 321 && is_signal) {
-            fHist_KaonPlus_Bookkeep->Fill(2);
+            fHist_True_PosKaon_Bookkeep->Fill(2);
+            Indices_MCGen_FS_Signal.insert(idx_mc);
             if (fReactionID == 'D' || fReactionID == 'E' || fReactionID == 'H') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
         }
 
         if (pdg_mc == 211 && is_signal) {
-            fHist_PionPlus_Bookkeep->Fill(2);
+            fHist_True_PiPlus_Bookkeep->Fill(2);
+            Indices_MCGen_FS_Signal.insert(idx_mc);
             if (fReactionID == 'E') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
         }
 
         if (pdg_mc == -211 && is_signal) {
-            fHist_PionMinus_Bookkeep->Fill(2);
+            fHist_True_PiMinus_Bookkeep->Fill(2);
+            Indices_MCGen_FS_Signal.insert(idx_mc);
             if (fReactionID == 'E') {
                 vec_idx_signal_fg_daughters[(Int_t)mcPart->MCStatusCode()].push_back(idx_mc);
             }
@@ -522,9 +590,9 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
 
         if (pdg_mc == -2112 && mcPart->GetNDaughters() > 0) {
 
-            fHist_AntiNeutron_Bookkeep->Fill(1);
-            fHist_AntiNeutron_NDaughters->Fill(mcPart->GetNDaughters());
-            fHist_AntiNeutronThatInteracted_Pt->Fill(mcPart->Pt());
+            fHist_True_AntiNeutron_Bookkeep->Fill(1);
+            fHist_True_AntiNeutron_NDaughters->Fill(mcPart->GetNDaughters());
+            fHist_True_AntiNeutronThatInteracted_Pt->Fill(mcPart->Pt());
 
             /* Fill, then, the PDG code of its daughters */
 
@@ -532,9 +600,9 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
                 mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
                 pdg_dau = mcDaughter->PdgCode();
                 if (TMath::Abs(pdg_dau) < 3500) {
-                    fHist_AntiNeutron_PDGDaughters->Fill(pdg_dau);
+                    fHist_True_AntiNeutron_PDGDaughters->Fill(pdg_dau);
                 } else {
-                    fHist_AntiNeutron_PDGDaughters->Fill(0);
+                    fHist_True_AntiNeutron_PDGDaughters->Fill(0);
                 }
             }
         }
@@ -556,7 +624,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
         mcPart = (AliMCParticle*)fMC->GetTrack(vec_idx_signal_fg_daughters[interaction_id][0]);
         signal_radius = TMath::Sqrt(TMath::Power(mcPart->Xv(), 2) + TMath::Power(mcPart->Yv(), 2));
 
-        fHist_SignalSecVertex_Radius->Fill(signal_radius);
+        fHist_True_Signal_SecVertex_Radius->Fill(signal_radius);
 
         antisexaquark_px = 0.;
         antisexaquark_py = 0.;
@@ -576,12 +644,12 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
         antisexaquark_e -= fPDG.GetParticle(fStruckNucleonPDG)->Mass();
 
         antisexaquark_pt = TMath::Sqrt(TMath::Power(antisexaquark_px, 2) + TMath::Power(antisexaquark_py, 2));
-        fHist_FermiSexaquark_Pt->Fill(antisexaquark_pt);
+        fHist_True_FermiSexaquark_Pt->Fill(antisexaquark_pt);
 
         antisexaquark_p = TMath::Sqrt(TMath::Power(antisexaquark_px, 2) + TMath::Power(antisexaquark_py, 2) + TMath::Power(antisexaquark_pz, 2));
 
         antisexaquark_mass = TMath::Sqrt(TMath::Power(antisexaquark_e, 2) - TMath::Power(antisexaquark_p, 2));
-        fHist_FermiSexaquark_Mass->Fill(antisexaquark_mass);
+        fHist_True_FermiSexaquark_Mass->Fill(antisexaquark_mass);
     }
 }
 
@@ -591,27 +659,45 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, s
 
 /*
  Determine if current AliESDtrack passes track selection.
+ - Input: `track`, `is_signal`
  - Output: `n_sigma_pion`, `n_sigma_kaon`, `n_sigma_proton`
  */
-Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track,  //
-                                                      Float_t& n_sigma_pion, Float_t& n_sigma_kaon, Float_t& n_sigma_proton) {
-    // >> eta
-    if (TMath::Abs(track->Eta()) > 0.9) return kFALSE;
-    // >> TPC clusters
-    if (track->GetTPCNcls() < 50) return kFALSE;
-    // >> chi2 per TPC cluster
-    if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) return kFALSE;
-    // >> require TPC refit
-    if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) return kFALSE;
-    // >> reject kinks
-    if (track->GetKinkIndex(0) != 0) return kFALSE;
+Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Bool_t is_signal, Float_t& n_sigma_proton, Float_t& n_sigma_kaon,
+                                                      Float_t& n_sigma_pion) {
 
-    n_sigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion));
-    n_sigma_kaon = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon));
     n_sigma_proton = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton));
+    n_sigma_kaon = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon));
+    n_sigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion));
+
+    // >> eta
+    if (TMath::Abs(track->Eta()) > 0.9) {
+        if (is_signal) AliInfo("signal removed by eta cut");
+        return kFALSE;
+    }
+    // >> TPC clusters
+    if (track->GetTPCNcls() < 50) {
+        if (is_signal) AliInfo("signal removed by tpc clusters cut");
+        return kFALSE;
+    }
+    // >> chi2 per TPC cluster
+    if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) {
+        if (is_signal) AliInfo("signal removed by chi2 cut");
+        return kFALSE;
+    }
+    // >> require TPC refit
+    if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) {
+        if (is_signal) AliInfo("signal removed by tpc refit");
+        return kFALSE;
+    }
+    // >> reject kinks
+    if (track->GetKinkIndex(0) != 0) {
+        if (is_signal) AliInfo("signal removed by kink cut");
+        return kFALSE;
+    }
 
     // >> particle identification
     if (n_sigma_pion > kMaxNSigma_Pion && n_sigma_kaon > kMaxNSigma_Kaon && n_sigma_proton > kMaxNSigma_Proton) {
+        if (is_signal) AliInfo("signal removed by pid cut");
         return kFALSE;
     }
 
@@ -619,17 +705,18 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track,  //
 }
 
 /*
- Loop over the reconstructed tracks in a single event
- - Output: `idxPiPlusTracks`, `idxPiMinusTracks`, `idxKaonPlusTracks`, `idxAntiProtonTracks`
+ Loop over the reconstructed tracks in a single event.
+ - Input: `Indices_MCGen_FS_Signal`
+ - Output: `idxAntiProtonTracks`, `idxPosKaonTracks`, `idxPiPlusTracks`, `idxPiMinusTracks`
 */
-void AliAnalysisTaskSexaquark::ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal,                                    // (pending)
-                                             std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks,  //
-                                             std::vector<Int_t>& idxKaonPlusTracks, std::vector<Int_t>& idxAntiProtonTracks) {
+void AliAnalysisTaskSexaquark::ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal, std::vector<Int_t>& idxAntiProtonTracks,
+                                             std::vector<Int_t>& idxPosKaonTracks, std::vector<Int_t>& idxPiPlusTracks,
+                                             std::vector<Int_t>& idxPiMinusTracks) {
 
     AliESDtrack* track;
 
-    Int_t idx_true;  // (debug) (pending)
-    AliMCParticle* truePart;
+    Int_t idx_true;
+    Bool_t is_signal;
 
     Float_t n_sigma_pion;
     Float_t n_sigma_kaon;
@@ -640,32 +727,33 @@ void AliAnalysisTaskSexaquark::ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Si
         track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_track));
 
         idx_true = TMath::Abs(track->GetLabel());
+        is_signal = (Int_t)Indices_MCGen_FS_Signal.count(idx_true) > 0;  // PENDING: check if binary search is faster than linear search
 
-        // (cut) (pending) temporal cut to get only signal tracks
-        if (!Indices_MCGen_FS_Signal.count(idx_true)) {
-            continue;
-        }
+        if (!PassesTrackSelection(track, is_signal, n_sigma_proton, n_sigma_kaon, n_sigma_pion)) continue;
 
-        if (!PassesTrackSelection(track, n_sigma_pion, n_sigma_kaon, n_sigma_proton)) continue;
-
-        if (TMath::Abs(n_sigma_pion) < kMaxNSigma_Pion) {
-            if (track->Charge() > 0.)
-                idxPiPlusTracks.push_back(idx_track);
-            else
-                idxPiMinusTracks.push_back(idx_track);
-        }
-
-        if (TMath::Abs(n_sigma_kaon) < kMaxNSigma_Kaon && track->Charge() > 0.) {
-            idxKaonPlusTracks.push_back(idx_track);
-        }
-
-        if (TMath::Abs(n_sigma_proton) < kMaxNSigma_Proton && track->Charge() < 0.) {
+        if (n_sigma_proton < kMaxNSigma_Proton && track->Charge() < 0.) {
             idxAntiProtonTracks.push_back(idx_track);
+            fHist_AntiProton_Pt->Fill(track->Pt());
+            if (is_signal) fHist_Signal_AntiProton_Pt->Fill(track->Pt());
         }
 
-        // (debug) (pending)
-        truePart = (AliMCParticle*)fMC->GetTrack(idx_true);
-        AliInfoF("%8i %8i %8i %8.2f %8.2f", idx_track, idx_true, truePart->PdgCode(), n_sigma_pion, n_sigma_proton);
+        if (n_sigma_kaon < kMaxNSigma_Kaon && track->Charge() > 0.) {
+            idxPosKaonTracks.push_back(idx_track);
+            fHist_PosKaon_Pt->Fill(track->Pt());
+            if (is_signal) fHist_Signal_PosKaon_Pt->Fill(track->Pt());
+        }
+
+        if (n_sigma_pion < kMaxNSigma_Pion) {
+            if (track->Charge() > 0.) {
+                idxPiPlusTracks.push_back(idx_track);
+                fHist_PiPlus_Pt->Fill(track->Pt());
+                if (is_signal) fHist_Signal_PiPlus_Pt->Fill(track->Pt());
+            } else {
+                idxPiMinusTracks.push_back(idx_track);
+                fHist_PiMinus_Pt->Fill(track->Pt());
+                if (is_signal) fHist_Signal_PiMinus_Pt->Fill(track->Pt());
+            }
+        }
     }  // end of loop over tracks
 }
 

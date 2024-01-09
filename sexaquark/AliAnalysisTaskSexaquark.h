@@ -120,7 +120,7 @@ struct Event_tt {
 
 /*
  Auxiliary class to make use of protected function KFParticleBase::GetMeasurement()
- [copied from /PWGLF/.../AliAnalysisTaskDoubleHypNucTree.h]
+ (Copied from `/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.h`)
  */
 class KFParticleMother : public KFParticle {
    public:
@@ -152,14 +152,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* MC Generated */
-    void ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS, std::set<Int_t>& Indices_MCGen_FS_Signal);
+    void ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Signal);
 
    public:
     /* Tracks */
-    void ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal,                                    // (pending)
-                       std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks,  //
-                       std::vector<Int_t>& idxKaonPlusTracks, std::vector<Int_t>& idxAntiProtonTracks);
-    Bool_t PassesTrackSelection(AliESDtrack* track, Float_t& n_sigma_pion, Float_t& n_sigma_kaon, Float_t& n_sigma_proton);
+    Bool_t PassesTrackSelection(AliESDtrack* track, Bool_t is_signal, Float_t& n_sigma_proton, Float_t& n_sigma_kaon, Float_t& n_sigma_pion);
+    void ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal, std::vector<Int_t>& idxAntiProtonTracks, std::vector<Int_t>& idxKaonPlusTracks,
+                       std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks);
 
    public:
     /* V0s -- ALICE V0 Finders */
@@ -295,25 +294,36 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TTree* fTree;
     // hists
     TList* fOutputListOfHists;
-    TH1F* fHist_SignalSecVertex_Radius;        //!
-    TH1F* fHist_InjBkgSecVertex_Radius;        //!
-    TH1F* fHist_FermiSexaquark_Pt;             //!
-    TH1F* fHist_FermiSexaquark_Mass;           //!
-    TH1F* fHist_SignalAntiLambda_CPAwrtPV;     //!
-    TH1F* fHist_SignalKaonZeroShort_CPAwrtPV;  //!
-    TH1F* fHist_AntiLambda_Bookkeep;           //!
-    TH1F* fHist_KaonZeroShort_Bookkeep;        //!
-    TH1F* fHist_AntiProton_Bookkeep;           //!
-    TH1F* fHist_KaonPlus_Bookkeep;             //!
-    TH1F* fHist_PionPlus_Bookkeep;             //!
-    TH1F* fHist_PionMinus_Bookkeep;            //!
-    TH1F* fHist_AntiNeutron_Pt;                //!
-    TH1F* fHist_AntiNeutronThatInteracted_Pt;  //!
-    TH1F* fHist_AntiNeutron_NDaughters;        //!
-    TH1F* fHist_AntiNeutron_PDGDaughters;      //!
-    TH1F* fHist_AntiNeutron_Bookkeep;          //!
-    TH1F* fHist_InjBkgProducts_Bookkeep;       //!
-    TH1F* fHist_AllSecondaries_MothersPDG;     //!
+    // -- mc gen. (or true)
+    TH1F* fHist_True_Signal_SecVertex_Radius;        //!
+    TH1F* fHist_True_InjBkg_SecVertex_Radius;        //!
+    TH1F* fHist_True_FermiSexaquark_Pt;              //!
+    TH1F* fHist_True_FermiSexaquark_Mass;            //!
+    TH1F* fHist_True_Signal_AntiLambda_CPAwrtPV;     //!
+    TH1F* fHist_True_Signal_KaonZeroShort_CPAwrtPV;  //!
+    TH1F* fHist_True_AntiLambda_Bookkeep;            //!
+    TH1F* fHist_True_KaonZeroShort_Bookkeep;         //!
+    TH1F* fHist_True_AntiProton_Bookkeep;            //!
+    TH1F* fHist_True_PosKaon_Bookkeep;               //!
+    TH1F* fHist_True_PiPlus_Bookkeep;                //!
+    TH1F* fHist_True_PiMinus_Bookkeep;               //!
+    TH1F* fHist_True_AntiNeutron_Pt;                 //!
+    TH1F* fHist_True_AntiNeutronThatInteracted_Pt;   //!
+    TH1F* fHist_True_AntiNeutron_NDaughters;         //!
+    TH1F* fHist_True_AntiNeutron_PDGDaughters;       //!
+    TH1F* fHist_True_AntiNeutron_Bookkeep;           //!
+    TH1F* fHist_True_InjBkgProducts_Bookkeep;        //!
+    TH1F* fHist_True_AllSecondaries_MothersPDG;      //!
+    // -- tracks (that require true info)
+    TH1F* fHist_Signal_AntiProton_Pt;  //!
+    TH1F* fHist_Signal_PosKaon_Pt;     //!
+    TH1F* fHist_Signal_PiPlus_Pt;      //!
+    TH1F* fHist_Signal_PiMinus_Pt;     //!
+    // -- tracks
+    TH1F* fHist_AntiProton_Pt;  //!
+    TH1F* fHist_PosKaon_Pt;     //!
+    TH1F* fHist_PiPlus_Pt;      //!
+    TH1F* fHist_PiMinus_Pt;     //!
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
