@@ -324,6 +324,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_PosKaon_Pt;     //!
     TH1F* fHist_PiPlus_Pt;      //!
     TH1F* fHist_PiMinus_Pt;     //!
+    TH2F* f2DHist_TPC_Signal;   //!
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented

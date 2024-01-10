@@ -146,7 +146,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     /* That will be filled with MC Gen. (or True) information */
 
-    TString def_True_Signal_SecVertex_Radius = "";
+    TString def_True_Signal_SecVertex_Radius = "2D Radius of Signal Products";
     TString def_True_InjBkg_SecVertex_Radius = "";
 
     fHist_True_Signal_SecVertex_Radius = new TH1F("True_Signal_SecVertex_Radius", def_True_Signal_SecVertex_Radius, 100, 0., 200.);
@@ -173,12 +173,12 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_True_Signal_AntiLambda_CPAwrtPV);
     fOutputListOfHists->Add(fHist_True_Signal_KaonZeroShort_CPAwrtPV);
 
-    TString def_True_AntiLambda_Bookkeep = "";
-    TString def_True_KaonZeroShort_Bookkeep = "";
-    TString def_True_AntiProton_Bookkeep = "";
-    TString def_True_PosKaon_Bookkeep = "";
-    TString def_True_PiPlus_Bookkeep = "";
-    TString def_True_PiMinus_Bookkeep = "";
+    TString def_True_AntiLambda_Bookkeep = "Bookkeeping of AntiLambdas";
+    TString def_True_KaonZeroShort_Bookkeep = "Bookkeeping of KaonZeroShort";
+    TString def_True_AntiProton_Bookkeep = "Bookkeeping of AntiProton";
+    TString def_True_PosKaon_Bookkeep = "Bookkeeping of PosKaon";
+    TString def_True_PiPlus_Bookkeep = "Bookkeeping of PiPlus";
+    TString def_True_PiMinus_Bookkeep = "Bookkeeping of PiMinus";
 
     fHist_True_AntiLambda_Bookkeep = new TH1F("True_AntiLambda_Bookkeep", def_True_AntiLambda_Bookkeep, 10, 0., 10.);
     fHist_True_KaonZeroShort_Bookkeep = new TH1F("True_KaonZeroShort_Bookkeep", def_True_KaonZeroShort_Bookkeep, 10, 0., 10.);
@@ -254,6 +254,12 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_PosKaon_Pt);
     fOutputListOfHists->Add(fHist_PiPlus_Pt);
     fOutputListOfHists->Add(fHist_PiMinus_Pt);
+
+    TString def_TPC_Signal = "TPC dE/dx vs p/z";
+
+    f2DHist_TPC_Signal = new TH2F("TPC_Signal", def_TPC_Signal, 500, 0., 10., 500, 0., 1000.);
+
+    fOutputListOfHists->Add(f2DHist_TPC_Signal);
 
     PostData(2, fOutputListOfHists);
 }
@@ -454,6 +460,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Si
     Bool_t is_secondary;
     Bool_t is_signal;
 
+    Float_t antineutron_radius;
+
     // `key` = interaction id, `value` = vector of indices of first gen. daughters
     std::map<Int_t, std::vector<Int_t>> vec_idx_signal_fg_daughters;
 
@@ -597,12 +605,19 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Si
             /* Fill, then, the PDG code of its daughters */
 
             for (Int_t idx_dau = mcPart->GetDaughterFirst(); idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
+
                 mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
                 pdg_dau = mcDaughter->PdgCode();
+
                 if (TMath::Abs(pdg_dau) < 3500) {
                     fHist_True_AntiNeutron_PDGDaughters->Fill(pdg_dau);
                 } else {
                     fHist_True_AntiNeutron_PDGDaughters->Fill(0);
+                }
+
+                if (idx_dau == mcPart->GetDaughterFirst()) {
+                    antineutron_radius = TMath::Sqrt(TMath::Power(mcDaughter->Xv(), 2) + TMath::Power(mcDaughter->Yv(), 2));
+                    fHist_True_InjBkg_SecVertex_Radius->Fill(antineutron_radius);
                 }
             }
         }
@@ -658,7 +673,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Si
 /*** ========== ***/
 
 /*
- Determine if current AliESDtrack passes track selection.
+ Determine if current AliESDtrack passes track selection,
+ and fill the bookkeeping histograms to measure the effect of the cuts.
  - Input: `track`, `is_signal`
  - Output: `n_sigma_pion`, `n_sigma_kaon`, `n_sigma_proton`
  */
@@ -669,37 +685,69 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Bool_t
     n_sigma_kaon = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon));
     n_sigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion));
 
-    // >> eta
-    if (TMath::Abs(track->Eta()) > 0.9) {
-        if (is_signal) AliInfo("signal removed by eta cut");
-        return kFALSE;
-    }
-    // >> TPC clusters
-    if (track->GetTPCNcls() < 50) {
-        if (is_signal) AliInfo("signal removed by tpc clusters cut");
-        return kFALSE;
-    }
-    // >> chi2 per TPC cluster
-    if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) {
-        if (is_signal) AliInfo("signal removed by chi2 cut");
-        return kFALSE;
-    }
-    // >> require TPC refit
-    if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) {
-        if (is_signal) AliInfo("signal removed by tpc refit");
-        return kFALSE;
-    }
-    // >> reject kinks
-    if (track->GetKinkIndex(0) != 0) {
-        if (is_signal) AliInfo("signal removed by kink cut");
+    // >> particle identification
+    if (n_sigma_pion > kMaxNSigma_Pion && n_sigma_kaon > kMaxNSigma_Kaon && n_sigma_proton > kMaxNSigma_Proton) {
         return kFALSE;
     }
 
-    // >> particle identification
-    if (n_sigma_pion > kMaxNSigma_Pion && n_sigma_kaon > kMaxNSigma_Kaon && n_sigma_proton > kMaxNSigma_Proton) {
-        if (is_signal) AliInfo("signal removed by pid cut");
+    /* Fill bookkeeping histograms */
+    /* -- PENDING: in a sim.set of reactionID='A', signal K+ appear where they shouldn't exist */
+    /* -- Note: should I only, besides if they're signal or not, their true id? */
+
+    if (n_sigma_proton < kMaxNSigma_Proton && is_signal && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(3);
+    if (n_sigma_kaon < kMaxNSigma_Kaon && is_signal && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(3);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(3);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(3);
+
+    // >> eta
+    if (TMath::Abs(track->Eta()) > 0.9) {
         return kFALSE;
     }
+
+    if (n_sigma_proton < kMaxNSigma_Proton && is_signal && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(4);
+    if (n_sigma_kaon < kMaxNSigma_Kaon && is_signal && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(4);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(4);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(4);
+
+    // >> TPC clusters
+    if (track->GetTPCNcls() < 50) {
+        return kFALSE;
+    }
+
+    if (n_sigma_proton < kMaxNSigma_Proton && is_signal && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(5);
+    if (n_sigma_kaon < kMaxNSigma_Kaon && is_signal && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(5);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(5);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(5);
+
+    // >> chi2 per TPC cluster
+    if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) {
+        return kFALSE;
+    }
+
+    if (n_sigma_proton < kMaxNSigma_Proton && is_signal && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(6);
+    if (n_sigma_kaon < kMaxNSigma_Kaon && is_signal && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(6);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(6);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(6);
+
+    // >> require TPC refit
+    if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) {
+        return kFALSE;
+    }
+
+    if (n_sigma_proton < kMaxNSigma_Proton && is_signal && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(7);
+    if (n_sigma_kaon < kMaxNSigma_Kaon && is_signal && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(7);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(7);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(7);
+
+    // >> reject kinks
+    if (track->GetKinkIndex(0) != 0) {
+        return kFALSE;
+    }
+
+    if (n_sigma_proton < kMaxNSigma_Proton && is_signal && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(8);
+    if (n_sigma_kaon < kMaxNSigma_Kaon && is_signal && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(8);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(8);
+    if (n_sigma_pion < kMaxNSigma_Pion && is_signal && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(8);
 
     return kTRUE;
 }
@@ -730,6 +778,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Si
         is_signal = (Int_t)Indices_MCGen_FS_Signal.count(idx_true) > 0;  // PENDING: check if binary search is faster than linear search
 
         if (!PassesTrackSelection(track, is_signal, n_sigma_proton, n_sigma_kaon, n_sigma_pion)) continue;
+
+        f2DHist_TPC_Signal->Fill(track->P(), track->GetTPCsignal());
 
         if (n_sigma_proton < kMaxNSigma_Proton && track->Charge() < 0.) {
             idxAntiProtonTracks.push_back(idx_track);
