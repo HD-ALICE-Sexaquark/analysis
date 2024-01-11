@@ -30,6 +30,7 @@
 #include "AliMCEvent.h"
 #include "AliMCEventHandler.h"
 #include "AliMCParticle.h"
+#include "AliVVertex.h"
 
 #include "KFPTrack.h"
 #include "KFPVertex.h"
@@ -164,8 +165,8 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_True_FermiSexaquark_Pt);
     fOutputListOfHists->Add(fHist_True_FermiSexaquark_Mass);
 
-    TString def_True_Signal_AntiLambda_CPAwrtPV = "";
-    TString def_True_Signal_KaonZeroShort_CPAwrtPV = "";
+    TString def_True_Signal_AntiLambda_CPAwrtPV = "CPA w.r.t. PV of Signal AntiLambda";
+    TString def_True_Signal_KaonZeroShort_CPAwrtPV = "CPA w.r.t. PV of Signal KaonZeroShort";
 
     fHist_True_Signal_AntiLambda_CPAwrtPV = new TH1F("True_Signal_AntiLambda_CPAwrtPV", def_True_Signal_AntiLambda_CPAwrtPV, 100, -5., 5.);
     fHist_True_Signal_KaonZeroShort_CPAwrtPV = new TH1F("True_Signal_KaonZeroShort_CPAwrtPV", def_True_Signal_KaonZeroShort_CPAwrtPV, 100, -5., 5.);
@@ -465,6 +466,13 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Si
     // `key` = interaction id, `value` = vector of indices of first gen. daughters
     std::map<Int_t, std::vector<Int_t>> vec_idx_signal_fg_daughters;
 
+    Float_t cpa_wrt_pv;
+    Double_t PV[3];
+    const AliVVertex* prim_vertex = fMC->GetPrimaryVertex();
+    PV[0] = prim_vertex->GetX();
+    PV[1] = prim_vertex->GetY();
+    PV[2] = prim_vertex->GetZ();
+
     /* Loop over MC gen. particles in a single event */
 
     AliInfo("   IDX    STATUS    PID MOMIDX MOMPID           ORIGIN           ISPRIM");
@@ -521,6 +529,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Si
         /* (PENDING) I should also check if the branching ratio of the decay of the AL and K0S correspond to the real one */
 
         if (pdg_mc == -3122 && is_signal) {
+            cpa_wrt_pv = Calculate_CPA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcPart->Xv(), mcPart->Yv(), mcPart->Zv(), PV[0], PV[1], PV[2]);
+            fHist_True_Signal_AntiLambda_CPAwrtPV->Fill(cpa_wrt_pv);
             fHist_True_AntiLambda_Bookkeep->Fill(2);
             for (Int_t idx_dau = mcPart->GetDaughterFirst(); idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
                 mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
@@ -539,6 +549,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Si
         }
 
         if (pdg_mc == 310 && is_signal) {
+            cpa_wrt_pv = Calculate_CPA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcPart->Xv(), mcPart->Yv(), mcPart->Zv(), PV[0], PV[1], PV[2]);
+            fHist_True_Signal_KaonZeroShort_CPAwrtPV->Fill(cpa_wrt_pv);
             fHist_True_KaonZeroShort_Bookkeep->Fill(2);
             for (Int_t idx_dau = mcPart->GetDaughterFirst(); idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
                 mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
