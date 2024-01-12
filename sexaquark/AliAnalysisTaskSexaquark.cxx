@@ -264,6 +264,29 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     fOutputListOfHists->Add(f2DHist_TPC_Signal);
 
+    /* That will be filled with V0s information */
+
+    TString def_AntiLambda_Mass = "m(#bar{p},#pi^{+})";
+    TString def_AntiLambda_CPAwrtPV = "CPA(#bar{p},#pi^{+}) w.r.t. PV";
+    TString def_AntiLambda_DCAwrtPV = "DCA(#bar{p},#pi^{+}) w.r.t. PV";
+    TString def_KaonZeroShort_Mass = "m(#pi^{-},#pi^{+})";
+    TString def_KaonZeroShort_CPAwrtPV = "CPA(#pi^{-},#pi^{+}) w.r.t. PV";
+    TString def_KaonZeroShort_DCAwrtPV = "DCA(#pi^{-},#pi^{+}) w.r.t. PV";
+
+    fHist_AntiLambda_Mass = new TH1F("AntiLambda_Mass", def_AntiLambda_Mass, 100, 0., 10.);
+    fHist_AntiLambda_CPAwrtPV = new TH1F("AntiLambda_CPAwrtPV", def_AntiLambda_CPAwrtPV, 100, -5., 5.);
+    fHist_AntiLambda_DCAwrtPV = new TH1F("AntiLambda_DCAwrtPV", def_AntiLambda_DCAwrtPV, 100, 0., 10.);
+    fHist_KaonZeroShort_Mass = new TH1F("KaonZeroShort_Mass", def_KaonZeroShort_Mass, 100, 0., 10.);
+    fHist_KaonZeroShort_CPAwrtPV = new TH1F("KaonZeroShort_CPAwrtPV", def_KaonZeroShort_CPAwrtPV, 100, -5., 5.);
+    fHist_KaonZeroShort_DCAwrtPV = new TH1F("KaonZeroShort_DCAwrtPV", def_KaonZeroShort_DCAwrtPV, 100, 0., 10.);
+
+    fOutputListOfHists->Add(fHist_AntiLambda_Mass);
+    fOutputListOfHists->Add(fHist_AntiLambda_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_AntiLambda_DCAwrtPV);
+    fOutputListOfHists->Add(fHist_KaonZeroShort_Mass);
+    fOutputListOfHists->Add(fHist_KaonZeroShort_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_KaonZeroShort_DCAwrtPV);
+
     PostData(2, fOutputListOfHists);
 }
 
@@ -393,20 +416,34 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     if (fSourceOfV0s == "true") {
         ReconstructV0s_True();
     }
-    /*
     if (fSourceOfV0s == "offline") {
-        ReconstructV0s_Official(kFALSE);
+        ReconstructV0s_Official(kFALSE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters);
     }
     if (fSourceOfV0s == "online") {
-        ReconstructV0s_Official(kTRUE);
+        ReconstructV0s_Official(kTRUE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters);
     }
+    /*
     if (fSourceOfV0s == "custom") {
         ReconstructV0s_Custom();
     }
-    if (fSourceOfV0s == "kalman") {
-        ReconstructV0s_KF();
-    }
     */
+    if (fSourceOfV0s == "kalman") {
+        if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S") {
+            ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
+            ReconstructV0s_KF(idxPiMinusTracks, idxPiPlusTracks, 310, -211, 211, kfKaonsZeroShort, idxKaonZeroShortDaughters);
+        }
+        if (fReactionChannel == "AntiSexaquark,P->AntiLambda,K+") {
+            ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
+        }
+        if (fReactionChannel == "AntiSexaquark,P->AntiLambda,K+,pi-,pi+") {
+            ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
+            ReconstructV0s_KF(idxPiMinusTracks, idxPosKaonTracks, 0, -211, 321, kfPionKaonPairs, idxPionKaonPairs);
+            ReconstructV0s_KF(idxPiMinusTracks, idxPiPlusTracks, 0, -211, 211, kfPionPairs, idxPionPairs);
+        }
+        if (fReactionChannel == "AntiSexaquark,P->AntiProton,K+,K+,pi0") {
+            ReconstructV0s_KF(idxPosKaonTracks, idxPosKaonTracks, 0, 312, 321, kfPosKaonPairs, idxPosKaonPairs);
+        }
+    }
 
     // FillTree();
 
@@ -823,14 +860,47 @@ void AliAnalysisTaskSexaquark::ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Si
 /*** ======================= ***/
 
 /*
+ Apply cuts to an (anti-lambda) candidate, reconstructed from an (anti-proton, pi+) pair. Relevant for channel A and D.
+ - Input: `v0`, `neg_track`, `pos_track`
+*/
+Bool_t AliAnalysisTaskSexaquark::PassesAntiLambdaCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track) {
+
+    Float_t neg_nsigma_proton = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(neg_track, AliPID::kProton));
+    Float_t pos_nsigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(pos_track, AliPID::kPion));
+
+    // >> particle identification
+    if (neg_nsigma_proton > kMaxNSigma_Proton || pos_nsigma_pion > kMaxNSigma_Pion) {
+        return kFALSE;
+    }
+
+    return kTRUE;
+}
+
+/*
+ Apply cuts to a (K0S) candidate, reconstructed from a (pi-, pi+) pair. Relevant for channel A.
+ - Input: `v0`, `neg_track`, `pos_track`
+*/
+Bool_t AliAnalysisTaskSexaquark::PassesKaonZeroShortCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track) {
+
+    Float_t neg_nsigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(neg_track, AliPID::kPion));
+    Float_t pos_nsigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(pos_track, AliPID::kPion));
+
+    // >> particle identification
+    if (neg_nsigma_pion > kMaxNSigma_Pion || pos_nsigma_pion > kMaxNSigma_Pion) {
+        return kFALSE;
+    }
+
+    return kTRUE;
+}
+
+/*
  Loop over all the V0s found by the Official V0 Finders that are stored in the ESD file
 */
-void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online = kFALSE) {
+void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
+                                                       std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters) {
 
     // define variables & objects
     AliESDv0* V0;
-
-    V0_tt this_V0;
 
     Int_t idx_pos;
     Int_t idx_neg;
@@ -846,99 +916,88 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online = kFALSE) {
     Double_t P_Px, P_Py, P_Pz;
 
     Double_t pos_energy;
-    Double_t neg_energy_asK0;
-    Double_t neg_energy_asAL;
+    Double_t neg_energy;
 
     Int_t idx_pos_true;
     Int_t idx_neg_true;
     AliMCParticle* mcPosTrue;
     AliMCParticle* mcNegTrue;
 
-    // get primary vertex of this event
     Double_t PV[3];
     fPrimaryVertex->GetXYZ(PV);
 
-    // loop over V0s
+    std::pair<Int_t, Int_t> aux_pair;
+    Float_t aux_mass;
+
+    /* Loop over V0s that are stored in the ESD */
+
     for (Int_t idx_v0 = 0; idx_v0 < fESD->GetNumberOfV0s(); idx_v0++) {
 
         V0 = fESD->GetV0(idx_v0);
 
-        // (cut) when offline, remove on-the-fly V0s
+        /* Choose between offline and online (on-the-fly) V0s */
+
         if (!online && V0->GetOnFlyStatus()) {
             continue;
         }
 
-        // (cut) when online, choose only on-the-fly V0s
         if (online && !V0->GetOnFlyStatus()) {
             continue;
         }
 
-        idx_pos = V0->GetPindex();
         idx_neg = V0->GetNindex();
+        idx_pos = V0->GetPindex();
 
-        /*
-                // (cut) if any daughter (neg. or pos.) is not in the indexer
-                // => the particle was gen. non-relevant & rec. non-relevant
-                if (fMap_Evt_MCRec.count(idx_pos) == 0 || fMap_Evt_MCRec.count(idx_neg) == 0) {
-                    // [note: count() in std::map, returns the number of elements matching specific key]
-                    continue;
-                }
-         */
+        neg_track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_neg));
+        pos_track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_pos));
 
-        neg_track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_pos));
-        pos_track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_neg));
+        /* Store: anti-lambda -> anti-proton + pi+ */
 
-        nsigma_pos_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(pos_track, AliPID::kPion));
-        nsigma_neg_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(neg_track, AliPID::kPion));
-        nsigma_antiproton = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(neg_track, AliPID::kProton));
+        if (PassesAntiLambdaCuts_OfficialCustom(V0, neg_track, pos_track)) {
 
-        V0->GetXYZ(V0_X, V0_Y, V0_Z);
-        V0->GetPPxPyPz(P_Px, P_Py, P_Pz);
-        V0->GetNPxPyPz(N_Px, N_Py, N_Pz);
+            aux_pair.first = idx_neg;
+            aux_pair.second = idx_pos;
+            idxAntiLambdaDaughters.push_back(aux_pair);
 
-        // calculate energy
-        // for positive daughter, assuming it's a positive pion
-        pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
-        // for negative daughter, assuming it's K0 -> pi+ pi-
-        neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
-        // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
-        neg_energy_asAL = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
+            V0->GetXYZ(V0_X, V0_Y, V0_Z);
+            V0->GetPPxPyPz(P_Px, P_Py, P_Pz);
+            V0->GetNPxPyPz(N_Px, N_Py, N_Pz);
 
-        // get true particles
-        idx_pos_true = TMath::Abs(pos_track->GetLabel());
-        mcPosTrue = (AliMCParticle*)fMC->GetTrack(idx_pos_true);
-        idx_neg_true = TMath::Abs(neg_track->GetLabel());
-        mcNegTrue = (AliMCParticle*)fMC->GetTrack(idx_neg_true);
+            pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
+            neg_energy = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
+            aux_mass = TMath::Sqrt((pos_energy + neg_energy) * (pos_energy + neg_energy) -  //
+                                   V0->Px() * V0->Px() - V0->Py() * V0->Py() - V0->Pz() * V0->Pz());
 
-        this_V0.Idx_Pos = 0;  // fMap_Evt_MCRec[idx_pos];
-        this_V0.Idx_Neg = 0;  // fMap_Evt_MCRec[idx_neg];
-        this_V0.Px = V0->Px();
-        this_V0.Py = V0->Py();
-        this_V0.Pz = V0->Pz();
-        this_V0.X = V0_X;
-        this_V0.Y = V0_Y;
-        this_V0.Z = V0_Z;
-        this_V0.Pos_Px = P_Px;
-        this_V0.Pos_Py = P_Py;
-        this_V0.Pos_Pz = P_Pz;
-        this_V0.Neg_Px = N_Px;
-        this_V0.Neg_Py = N_Py;
-        this_V0.Neg_Pz = N_Pz;
-        this_V0.isSignal = 0;  // MCGen_IsSignal(mcPosTrue) && MCGen_IsSignal(mcNegTrue);
-        this_V0.E_asK0 = pos_energy + neg_energy_asK0;
-        this_V0.E_asAL = pos_energy + neg_energy_asAL;
-        this_V0.couldBeK0 = TMath::Abs(nsigma_pos_pion) < kMaxNSigma_Pion && TMath::Abs(nsigma_neg_pion) < kMaxNSigma_Pion;
-        this_V0.couldBeAL = TMath::Abs(nsigma_pos_pion) < kMaxNSigma_Pion && TMath::Abs(nsigma_antiproton) < kMaxNSigma_Proton;
-        this_V0.Chi2 = V0->GetChi2V0();
-        this_V0.DCA_Daughters = V0->GetDcaV0Daughters();
-        this_V0.IP_wrtPV = V0->GetD(PV[0], PV[1], PV[2]);
-        this_V0.CPA_wrtPV = V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]);
-        this_V0.ArmAlpha = V0->AlphaV0();
-        this_V0.ArmPt = V0->PtArmV0();
-        this_V0.DecayLength = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
-        this_V0.DCA_wrtPV = Calculate_LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
+            /* Fill histograms */
 
-        // fVec_V0s.push_back(this_V0);
+            fHist_AntiLambda_Mass->Fill(aux_mass);
+            fHist_AntiLambda_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+            fHist_AntiLambda_DCAwrtPV->Fill(Calculate_LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+        }
+
+        /* Store: K0S -> pi- + pi+ */
+
+        if (PassesKaonZeroShortCuts_OfficialCustom(V0, neg_track, pos_track)) {
+
+            aux_pair.first = idx_neg;
+            aux_pair.second = idx_pos;
+            idxKaonZeroShortDaughters.push_back(aux_pair);
+
+            V0->GetXYZ(V0_X, V0_Y, V0_Z);
+            V0->GetPPxPyPz(P_Px, P_Py, P_Pz);
+            V0->GetNPxPyPz(N_Px, N_Py, N_Pz);
+
+            pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
+            neg_energy = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
+            aux_mass = TMath::Sqrt((pos_energy + neg_energy) * (pos_energy + neg_energy) -  //
+                                   V0->Px() * V0->Px() - V0->Py() * V0->Py() - V0->Pz() * V0->Pz());
+
+            /* Fill histograms */
+
+            fHist_KaonZeroShort_Mass->Fill(aux_mass);
+            fHist_KaonZeroShort_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+            fHist_KaonZeroShort_DCAwrtPV->Fill(Calculate_LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+        }
     }  // end of loop over V0s
 }
 

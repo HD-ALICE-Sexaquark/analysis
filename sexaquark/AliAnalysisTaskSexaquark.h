@@ -162,8 +162,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* V0s -- ALICE V0 Finders */
-    void ReconstructV0s_Official(Bool_t online);
+    Bool_t PassesAntiLambdaCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
+    Bool_t PassesKaonZeroShortCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
     void ReconstructV0s_True();
+    void ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
+                                 std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters);
     void ReconstructV0s_Custom();
 
    public:
@@ -319,6 +322,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_PiPlus_Pt;      //!
     TH1F* fHist_PiMinus_Pt;     //!
     TH2F* f2DHist_TPC_Signal;   //!
+    // -- V0s
+    TH1F* fHist_AntiLambda_Mass;         //!
+    TH1F* fHist_AntiLambda_CPAwrtPV;     //!
+    TH1F* fHist_AntiLambda_DCAwrtPV;     //!
+    TH1F* fHist_KaonZeroShort_Mass;      //!
+    TH1F* fHist_KaonZeroShort_CPAwrtPV;  //!
+    TH1F* fHist_KaonZeroShort_DCAwrtPV;  //!
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
