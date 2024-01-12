@@ -280,11 +280,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    private:
     /* AliRoot objects */
-    AliMCEvent* fMC;               // corresponding MC event
-    AliESDEvent* fESD;             // input event
-    AliPIDResponse* fPIDResponse;  // pid response object
-    AliESDVertex* fPrimaryVertex;  // primary vertex
-    Double_t fMagneticField;       // magnetic field
+    AliMCEvent* fMC;                // MC event
+    AliVVertex* fMC_PrimaryVertex;  // MC gen. (or true) primary vertex
+    AliESDEvent* fESD;              // reconstructed event
+    AliPIDResponse* fPIDResponse;   // pid response object
+    AliESDVertex* fPrimaryVertex;   // primary vertex
+    Double_t fMagneticField;        // magnetic field
 
    private:
     /* ROOT objects */

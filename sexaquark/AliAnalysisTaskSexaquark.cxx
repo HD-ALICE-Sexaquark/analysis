@@ -56,6 +56,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fOutputListOfTrees(0),
       fOutputListOfHists(0),
       fMC(0),
+      fMC_PrimaryVertex(0),
       fESD(0),
       fPIDResponse(0),
       fPrimaryVertex(0),
@@ -82,6 +83,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       fOutputListOfTrees(0),
       fOutputListOfHists(0),
       fMC(0),
+      fMC_PrimaryVertex(0),
       fESD(0),
       fPIDResponse(0),
       fPrimaryVertex(0),
@@ -363,6 +365,8 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         AliFatal("ERROR: AliMCEvent couldn't be found.");
     }
 
+    fMC_PrimaryVertex = const_cast<AliVVertex*>(fMC->GetPrimaryVertex());
+
     // load reconstructed event
     fESD = dynamic_cast<AliESDEvent*>(InputEvent());
 
@@ -468,10 +472,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Si
 
     Float_t cpa_wrt_pv;
     Double_t PV[3];
-    const AliVVertex* prim_vertex = fMC->GetPrimaryVertex();
-    PV[0] = prim_vertex->GetX();
-    PV[1] = prim_vertex->GetY();
-    PV[2] = prim_vertex->GetZ();
+    fMC_PrimaryVertex->GetXYZ(PV);
 
     /* Loop over MC gen. particles in a single event */
 
