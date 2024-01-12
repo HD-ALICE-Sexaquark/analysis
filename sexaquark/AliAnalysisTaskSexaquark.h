@@ -152,19 +152,20 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* MC Generated */
-    void ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Signal);
+    void ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Signal, std::map<Int_t, Int_t>& Map_TrueDaughter_TrueV0);
 
    public:
     /* Tracks */
     Bool_t PassesTrackSelection(AliESDtrack* track, Bool_t is_signal, Float_t& n_sigma_proton, Float_t& n_sigma_kaon, Float_t& n_sigma_pion);
-    void ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal, std::vector<Int_t>& idxAntiProtonTracks, std::vector<Int_t>& idxKaonPlusTracks,
-                       std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks);
+    void ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal, std::map<Int_t, Int_t> Map_TrueDaughter_TrueV0,
+                       std::map<Int_t, std::pair<Int_t, Int_t>>& Map_TrueV0_RecDaughters, std::vector<Int_t>& idxAntiProtonTracks,
+                       std::vector<Int_t>& idxKaonPlusTracks, std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks);
 
    public:
     /* V0s -- ALICE V0 Finders */
     Bool_t PassesAntiLambdaCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
     Bool_t PassesKaonZeroShortCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
-    void ReconstructV0s_True();
+    void ReconstructV0s_True(std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters);
     void ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
                                  std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters);
     void ReconstructV0s_Custom();

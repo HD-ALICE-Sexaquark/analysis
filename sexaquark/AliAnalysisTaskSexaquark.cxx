@@ -383,6 +383,9 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     std::vector<KFParticleMother> kfAntiSexaquarks;
 
+    std::map<Int_t, Int_t> Map_TrueDaughter_TrueV0;
+    std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters;
+
     // load MC generated event
     fMC = MCEvent();
 
@@ -409,12 +412,13 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     // [note: const_cast removes the const qualifier from the pointer]
     fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
 
-    ProcessMCGen(Indices_MCGen_FS_Signal);
+    if (fIsMC) ProcessMCGen(Indices_MCGen_FS_Signal, Map_TrueDaughter_TrueV0);
 
-    ProcessTracks(Indices_MCGen_FS_Signal, idxAntiProtonTracks, idxPosKaonTracks, idxPiPlusTracks, idxPiMinusTracks);
+    ProcessTracks(Indices_MCGen_FS_Signal, Map_TrueDaughter_TrueV0, Map_TrueV0_RecDaughters, idxAntiProtonTracks, idxPosKaonTracks, idxPiPlusTracks,
+                  idxPiMinusTracks);
 
     if (fSourceOfV0s == "true") {
-        ReconstructV0s_True();
+        ReconstructV0s_True(Map_TrueV0_RecDaughters);
     }
     if (fSourceOfV0s == "offline") {
         ReconstructV0s_Official(kFALSE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters);
@@ -475,9 +479,9 @@ void AliAnalysisTaskSexaquark::CheckForInputErrors() {
 /*
  Loop over MC particles in a single event. Store the indices of the signal particles.
  - Uses: `fMC`, `fPDG`, `fHist_True_*`
- - Output: `Indices_MCGen_FS_Signal`
+ - Output: `Indices_MCGen_FS_Signal`, `Map_TrueDaughter_TrueV0`
 */
-void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Signal) {
+void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Signal, std::map<Int_t, Int_t>& Map_TrueDaughter_TrueV0) {
 
     AliMCParticle* mcPart;
     Int_t pdg_mc;
@@ -520,13 +524,29 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Si
         /* Fill bookkeeping histograms */
         /* PENDING: it can be simplified */
 
-        if (pdg_mc == -3122) fHist_True_AntiLambda_Bookkeep->Fill(0);
-        if (pdg_mc == 310) fHist_True_KaonZeroShort_Bookkeep->Fill(0);
+        if (pdg_mc == -3122) {
+            fHist_True_AntiLambda_Bookkeep->Fill(0);
+            for (Int_t idx_dau = mcPart->GetDaughterFirst(); mcPart->GetNDaughters() && idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
+                mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
+                pdg_dau = mcDaughter->PdgCode();
+                if (pdg_dau == -2212)
+                    Map_TrueDaughter_TrueV0[idx_dau] = idx_mc;
+                else if (pdg_dau == 211)
+                    Map_TrueDaughter_TrueV0[idx_dau] = idx_mc;
+            }
+        }
+        if (pdg_mc == 310) {
+            fHist_True_KaonZeroShort_Bookkeep->Fill(0);
+            for (Int_t idx_dau = mcPart->GetDaughterFirst(); mcPart->GetNDaughters() && idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
+                mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
+                pdg_dau = mcDaughter->PdgCode();
+                if (TMath::Abs(pdg_dau) == 211) Map_TrueDaughter_TrueV0[idx_dau] = idx_mc;
+            }
+        }
         if (pdg_mc == -2212) fHist_True_AntiProton_Bookkeep->Fill(0);
         if (pdg_mc == 321) fHist_True_PosKaon_Bookkeep->Fill(0);
         if (pdg_mc == 211) fHist_True_PiPlus_Bookkeep->Fill(0);
         if (pdg_mc == -211) fHist_True_PiMinus_Bookkeep->Fill(0);
-
         if (pdg_mc == -2112) {
             fHist_True_AntiNeutron_Bookkeep->Fill(0);
             fHist_True_AntiNeutron_Pt->Fill(mcPart->Pt());
@@ -802,12 +822,13 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Bool_t
 
 /*
  Loop over the reconstructed tracks in a single event.
- - Input: `Indices_MCGen_FS_Signal`
- - Output: `idxAntiProtonTracks`, `idxPosKaonTracks`, `idxPiPlusTracks`, `idxPiMinusTracks`
+ - Input: `Indices_MCGen_FS_Signal`, `Map_TrueV0_TrueDaughters`
+ - Output: `Map_TrueV0_RecDaughters`, `idxAntiProtonTracks`, `idxPosKaonTracks`, `idxPiPlusTracks`, `idxPiMinusTracks`
 */
-void AliAnalysisTaskSexaquark::ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal, std::vector<Int_t>& idxAntiProtonTracks,
-                                             std::vector<Int_t>& idxPosKaonTracks, std::vector<Int_t>& idxPiPlusTracks,
-                                             std::vector<Int_t>& idxPiMinusTracks) {
+void AliAnalysisTaskSexaquark::ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal, std::map<Int_t, Int_t> Map_TrueDaughter_TrueV0,
+                                             std::map<Int_t, std::pair<Int_t, Int_t>>& Map_TrueV0_RecDaughters,
+                                             std::vector<Int_t>& idxAntiProtonTracks, std::vector<Int_t>& idxPosKaonTracks,
+                                             std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks) {
 
     AliESDtrack* track;
 
@@ -852,6 +873,13 @@ void AliAnalysisTaskSexaquark::ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Si
                 if (is_signal) fHist_Signal_PiMinus_Pt->Fill(track->Pt());
             }
         }
+
+        /* Assign this track to a true V0. Convoluted, but it works. */
+
+        if (track->Charge() < 0.)
+            Map_TrueV0_RecDaughters[Map_TrueDaughter_TrueV0[idx_true]].first = idx_track;
+        else
+            Map_TrueV0_RecDaughters[Map_TrueDaughter_TrueV0[idx_true]].second = idx_track;
     }  // end of loop over tracks
 }
 
@@ -894,7 +922,59 @@ Bool_t AliAnalysisTaskSexaquark::PassesKaonZeroShortCuts_OfficialCustom(AliESDv0
 }
 
 /*
- Loop over all the V0s found by the Official V0 Finders that are stored in the ESD file
+ Find all true V0s that had both of their daughters reconstructed. Useful for bookkeeping.
+ - Input: `Map_TrueV0_RecDaughters`
+ - Notes: to get any rec. value from the true V0s, I need to do vertexing first. That means:
+   (a) true vertexing & true values => trivial and already done by `ProcessMCGen()`
+   (b) true vertexing & rec. values => feels artificial...
+   (c) standard vertexing (a-la official V0 finders)
+   (d) KF vertexing
+   Considering (c) and (d), then this function should be used only as bookkeeping, and for calling the real "reconstructers"
+*/
+void AliAnalysisTaskSexaquark::ReconstructV0s_True(std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters) {
+
+    AliMCParticle* mcV0;
+
+    Int_t idx_mc_V0;
+
+    Bool_t is_signal;
+
+    Int_t idx_rec_neg_dau;
+    Int_t idx_rec_pos_dau;
+
+    /* Loop over map */
+
+    for (auto it = Map_TrueV0_RecDaughters.begin(); it != Map_TrueV0_RecDaughters.end(); it++) {
+
+        idx_mc_V0 = it->first;
+
+        mcV0 = (AliMCParticle*)fMC->GetTrack(idx_mc_V0);
+
+        idx_rec_neg_dau = Map_TrueV0_RecDaughters[idx_mc_V0].first;
+        idx_rec_pos_dau = Map_TrueV0_RecDaughters[idx_mc_V0].second;
+
+        if (idx_rec_neg_dau && idx_rec_pos_dau) {
+
+            is_signal = mcV0->MCStatusCode() >= 600 && mcV0->MCStatusCode() < 620;
+
+            if (mcV0->PdgCode() == -3122) {
+                fHist_True_AntiLambda_Bookkeep->Fill(3);
+                if (is_signal) fHist_True_AntiLambda_Bookkeep->Fill(4);
+            }
+            if (mcV0->PdgCode() == 310) {
+                fHist_True_KaonZeroShort_Bookkeep->Fill(3);
+                if (is_signal) fHist_True_KaonZeroShort_Bookkeep->Fill(4);
+            }
+        }
+    }
+
+    return;
+}
+
+/*
+ Loop over all the V0s found by the Official V0 Finders that are stored in the ESD file.
+ - Input: `online`
+ - Output: `idxAntiLambdaDaughters`, `idxKaonZeroShortDaughters`
 */
 void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
                                                        std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters) {
@@ -999,144 +1079,6 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
             fHist_KaonZeroShort_DCAwrtPV->Fill(Calculate_LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
         }
     }  // end of loop over V0s
-}
-
-/*
- Find all true V0s that had both of their daughters reconstructed
-*/
-void AliAnalysisTaskSexaquark::ReconstructV0s_True() {
-
-    V0_tt this_V0;
-
-    AliMCParticle* mc_mother;
-    AliMCParticle* mc_firstdau;
-    AliMCParticle* mc_lastdau;
-    AliMCParticle* mc_pos;
-    AliMCParticle* mc_neg;
-
-    Int_t idx_pos_mc;
-    Int_t idx_neg_mc;
-    Int_t mother_idx;
-
-    Bool_t antiLambdaNonPi0Channel;
-    Bool_t neutralKaonNonPi0Channel;
-
-    Double_t pos_energy;
-    Double_t neg_energy_asK0;
-    Double_t neg_energy_asAL;
-
-    // get primary vertex of this event
-    Double_t PV[3];
-    fPrimaryVertex->GetXYZ(PV);
-
-    // loop over MC gen. mothers
-    for (Int_t idx_mother = 0; idx_mother < fMC->GetNumberOfTracks(); idx_mother++) {
-
-        mc_mother = (AliMCParticle*)fMC->GetTrack(idx_mother);
-
-        // (cut) on PID, must be K0s or anti-lambda
-        if (mc_mother->PdgCode() != 310 && mc_mother->PdgCode() != -3122) {
-            continue;
-        }
-
-        // (cut) on number of daughters
-        if (mc_mother->GetNDaughters() != 2) {
-            continue;
-        }
-
-        // get the daughters
-        mc_firstdau = (AliMCParticle*)fMC->GetTrack(mc_mother->GetDaughterFirst());
-        mc_lastdau = (AliMCParticle*)fMC->GetTrack(mc_mother->GetDaughterLast());
-
-        antiLambdaNonPi0Channel =
-            (mc_firstdau->PdgCode() == -2212 && mc_lastdau->PdgCode() == 211) || (mc_firstdau->PdgCode() == 211 && mc_lastdau->PdgCode() == -2212);
-
-        neutralKaonNonPi0Channel =
-            (mc_firstdau->PdgCode() == -211 && mc_lastdau->PdgCode() == 211) || (mc_firstdau->PdgCode() == 211 && mc_lastdau->PdgCode() == -211);
-
-        // check for non-pi0 decay channel
-        if (!antiLambdaNonPi0Channel && !neutralKaonNonPi0Channel) {
-            continue;
-        }
-
-        // check if both daughters were reconstructed
-        /*
-        if (fMap_Duplicates.count(mc_mother->GetDaughterFirst()) == 0 || fMap_Duplicates.count(mc_mother->GetDaughterLast()) == 0) {
-            // [note: count() in std::map, returns the number of elements matching specific key]
-            continue;
-        }
- */
-        // identify daughters as positive/negative
-        if (mc_firstdau->PdgCode() > 0 && mc_lastdau->PdgCode() < 0) {
-            idx_pos_mc = mc_mother->GetDaughterFirst();
-            idx_neg_mc = mc_mother->GetDaughterLast();
-        } else {
-            idx_pos_mc = mc_mother->GetDaughterLast();
-            idx_neg_mc = mc_mother->GetDaughterFirst();
-        }
-
-        // do combinations
-        /*
-        for (Int_t idx_pos_track : fMap_Duplicates[idx_pos_mc]) {
-            for (Int_t idx_neg_track : fMap_Duplicates[idx_neg_mc]) {
-
-                // load MC particle depending if positive/negative
-                mc_pos = (AliMCParticle*)fMC->GetTrack(idx_pos_mc);
-                mc_neg = (AliMCParticle*)fMC->GetTrack(idx_neg_mc);
-
-                // calculate energy (assuming positive pion)
-                pos_energy = TMath::Sqrt(mc_pos->Px() * mc_pos->Px() + mc_pos->Py() * mc_pos->Py() + mc_pos->Pz() * mc_pos->Pz() +
-                                         fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
-                // assuming K0 -> pi+ pi-
-                neg_energy_asK0 = TMath::Sqrt(mc_neg->Px() * mc_neg->Px() + mc_neg->Py() * mc_neg->Py() + mc_neg->Pz() * mc_neg->Pz() +
-                                              fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
-                // assuming anti-lambda -> pi+ anti-proton
-                neg_energy_asAL = TMath::Sqrt(mc_neg->Px() * mc_neg->Px() + mc_neg->Py() * mc_neg->Py() + mc_neg->Pz() * mc_neg->Pz() +
-                                              fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
-
-                // (tree operations)
-                // fill common format and push_back
-                this_V0.Idx_Pos = 0; // fMap_Evt_MCRec[idx_pos_track];
-                this_V0.Idx_Neg = 0; // fMap_Evt_MCRec[idx_neg_track];
-                this_V0.Px = mc_mother->Px();
-                this_V0.Py = mc_mother->Py();
-                this_V0.Pz = mc_mother->Pz();
-                this_V0.X = mc_pos->Xv();  // use the origin of the daughters
-                this_V0.Y = mc_pos->Yv();
-                this_V0.Z = mc_pos->Zv();
-                this_V0.Pos_Px = mc_pos->Px();
-                this_V0.Pos_Py = mc_pos->Py();
-                this_V0.Pos_Pz = mc_pos->Pz();
-                this_V0.Neg_Px = mc_neg->Px();
-                this_V0.Neg_Py = mc_neg->Py();
-                this_V0.Neg_Pz = mc_neg->Pz();
-                this_V0.isSignal = 0; // MCGen_IsSignal(mc_mother);
-                this_V0.E_asK0 = pos_energy + neg_energy_asK0;
-                this_V0.E_asAL = pos_energy + neg_energy_asAL;
-                this_V0.couldBeK0 = mc_mother->PdgCode() == 310;
-                this_V0.couldBeAL = mc_mother->PdgCode() == -3122;
-                this_V0.Chi2 = 1.0;          // no KF was used for this
-                this_V0.DCA_Daughters = 0.;  // PENDING! too complicated to calculate using true information...
-                this_V0.IP_wrtPV = 0.;       // PENDING! still not sure about the definition of this one...
-                this_V0.CPA_wrtPV = Calculate_CPA(mc_mother->Px(), mc_mother->Py(), mc_mother->Pz(),      //
-                                                  mc_pos->Xv(), mc_pos->Yv(), mc_pos->Zv(),               //
-                                                  PV[0], PV[1], PV[2]);                                   //
-                this_V0.ArmAlpha = Calculate_ArmAlpha(mc_mother->Px(), mc_mother->Py(), mc_mother->Pz(),  //
-                                                      mc_pos->Px(), mc_pos->Py(), mc_pos->Pz(),           //
-                                                      mc_neg->Px(), mc_neg->Py(), mc_neg->Pz());          //
-                this_V0.ArmPt = Calculate_ArmPt(mc_mother->Px(), mc_mother->Py(), mc_mother->Pz(),        //
-                                                mc_neg->Px(), mc_neg->Py(), mc_neg->Pz());                //
-                this_V0.DecayLength = TMath::Sqrt(TMath::Power(mc_pos->Xv() - PV[0], 2) + TMath::Power(mc_pos->Yv() - PV[1], 2) +
-                                                  TMath::Power(mc_pos->Zv() - PV[2], 2));
-                this_V0.DCA_wrtPV = Calculate_LinePointDCA(mc_mother->Px(), mc_mother->Py(), mc_mother->Pz(),  //
-                                                           mc_pos->Xv(), mc_pos->Yv(), mc_pos->Zv(),           //
-                                                           PV[0], PV[1], PV[2]);
-
-                // fVec_V0s.push_back(this_V0);
-            }  // end of loop over negative tracks
-        }      // end of loop over positive tracks
- */
-    }  // end of loop over MC gen. mothers
 }
 
 /*
