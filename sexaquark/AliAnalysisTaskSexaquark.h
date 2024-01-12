@@ -168,34 +168,35 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* V0s -- Kalman Filter */
-    Bool_t PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
-                                   TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
-    Bool_t PassesNeutralKaonShortCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
-                                         TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
-    Bool_t PassesPionPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,  //
-                                 TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
-    Bool_t PassesKaonPionPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughter1, KFParticle kfDaughter2,  //
-                                     TLorentzVector lvV0, TLorentzVector lvTrack1, TLorentzVector lvTrack2);
-    Bool_t PassesPosKaonPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughter1, KFParticle kfDaughter2,  //
-                                    TLorentzVector lvV0, TLorentzVector lvTrack1, TLorentzVector lvTrack2);
-    void ReconstructV0s_KF();
+    Bool_t PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
+                                   TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+    Bool_t PassesKaonZeroShortCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
+                                      TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+    Bool_t PassesPionPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
+                                 TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+    Bool_t PassesKaonPionPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughter1, KFParticle kfDaughter2, TLorentzVector lvV0,
+                                     TLorentzVector lvTrack1, TLorentzVector lvTrack2);
+    Bool_t PassesPosKaonPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughter1, KFParticle kfDaughter2, TLorentzVector lvV0,
+                                    TLorentzVector lvTrack1, TLorentzVector lvTrack2);
+    void ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0, Int_t pdgTrackNeg,
+                           Int_t pdgTrackPos, std::vector<KFParticleMother>& kfV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters);
 
    public:
     /* Sexaquark -- Kalman Filter */
     // Channel A
-    Bool_t PassesSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfNeutralKaonShort,  //
-                                           TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda, TLorentzVector lvNeutralKaonShort);
-    void SexaquarkFinder_ChannelA_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::vector<Int_t>> idxAntiLambdaDaughters,
-                                     std::vector<KFParticleMother> kfNeutralKaonsShort, std::vector<std::vector<Int_t>> idxNeutralKaonShortDaughters,
+    Bool_t PassesSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
+                                           TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda, TLorentzVector lvKaonZeroShort);
+    void SexaquarkFinder_ChannelA_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
+                                     std::vector<KFParticleMother> kfKaonsZeroShort, std::vector<std::pair<Int_t, Int_t>> idxKaonZeroShortDaughters,
                                      std::vector<KFParticleMother>& kfAntiSexaquarks);
     // Channel D
     Bool_t PassesSexaquarkCuts_ChannelD_KF();
-    void SexaquarkFinder_ChannelD_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::vector<Int_t>> idxAntiLambdaDaughters,
+    void SexaquarkFinder_ChannelD_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
                                      std::vector<Int_t> idxPositiveKaons, std::vector<KFParticleMother>& kfAntiSexaquarks);
     // Channel E
     Bool_t PassesSexaquarkCuts_ChannelE_KF();
-    void SexaquarkFinder_ChannelE_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::vector<Int_t>> idxAntiLambdaDaughters,
-                                     std::vector<KFParticleMother> kfChargedPairs, std::vector<std::vector<Int_t>> idxChargedPairsTracks,
+    void SexaquarkFinder_ChannelE_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
+                                     std::vector<KFParticleMother> kfChargedPairs, std::vector<std::pair<Int_t, Int_t>> idxChargedPairsTracks,
                                      std::vector<Int_t> idxSinglePositiveTrack, std::vector<KFParticleMother>& kfAntiSexaquarks);
 
    public:
@@ -215,17 +216,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                        const Double_t b);
     void GetHelixCenter(const AliExternalTrackParam* track, Double_t center[2], const Double_t b);
     Float_t MCRec_GetImpactParameter(AliESDtrack* track);
-    Double_t Calculate_CPA(Double_t Px, Double_t Py, Double_t Pz,  //
-                           Double_t X, Double_t Y, Double_t Z,     //
-                           Double_t refPointX, Double_t refPointY, Double_t refPointZ);
-    Double_t Calculate_ArmAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,     //
-                                Double_t Pos_Px, Double_t Pos_Py, Double_t Pos_Pz,  //
-                                Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz);
-    Double_t Calculate_ArmPt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,  //
-                             Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz);
-    Double_t Calculate_LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,  //
-                                    Double_t V0_X, Double_t V0_Y, Double_t V0_Z,     //
-                                    Double_t PV_X, Double_t PV_Y, Double_t PV_Z);
+    Double_t Calculate_CPA(Double_t Px, Double_t Py, Double_t Pz, Double_t X, Double_t Y, Double_t Z, Double_t refPointX, Double_t refPointY,
+                           Double_t refPointZ);
+    Double_t Calculate_ArmAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Pos_Px, Double_t Pos_Py, Double_t Pos_Pz, Double_t Neg_Px,
+                                Double_t Neg_Py, Double_t Neg_Pz);
+    Double_t Calculate_ArmPt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz);
+    Double_t Calculate_LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t V0_X, Double_t V0_Y, Double_t V0_Z, Double_t PV_X,
+                                    Double_t PV_Y, Double_t PV_Z);
 
    public:
     /* Tree Operations */
@@ -256,12 +253,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TString fSourceOfV0s;  //
     // reaction channel, could be:
     // - 'A' = AntiS + N -> AntiL + K0
-    // - 'B' = AntiS + N -> AntiL + K0 + pim + pip
-    // - 'C' = AntiS + N -> AntiP + K0 + K0 + pip
     // - 'D' = AntiS + P -> AntiL + Kp
     // - 'E' = AntiS + P -> AntiL + Kp + pim + pip
-    // - 'F' = AntiS + P -> AntiP + Kp + K0 + pip
-    // - 'G' = AntiS + N -> Xip + pim
     // - 'H' = AntiS + P -> AntiP + Kp + Kp + pi0
     TString fSimulationSet;  //
     // derived from `fSimulationSet` in `Initialize()`
