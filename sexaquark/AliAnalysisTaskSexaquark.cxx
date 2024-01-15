@@ -386,6 +386,9 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     std::map<Int_t, Int_t> Map_TrueDaughter_TrueV0;
     std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters;
 
+    std::vector<AliESDv0> esdAntiLambdas;
+    std::vector<AliESDv0> esdKaonsZeroShort;
+
     // load MC generated event
     fMC = MCEvent();
 
@@ -420,17 +423,22 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     if (fSourceOfV0s == "true") {
         ReconstructV0s_True(Map_TrueV0_RecDaughters);
     }
+
     if (fSourceOfV0s == "offline") {
         ReconstructV0s_Official(kFALSE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters);
     }
+
     if (fSourceOfV0s == "online") {
         ReconstructV0s_Official(kTRUE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters);
     }
-    /*
+
     if (fSourceOfV0s == "custom") {
-        ReconstructV0s_Custom();
+        if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S") {
+            ReconstructV0s_Custom(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, esdAntiLambdas, idxAntiLambdaDaughters);
+            ReconstructV0s_Custom(idxPiMinusTracks, idxPiPlusTracks, 310, -211, 211, esdKaonsZeroShort, idxKaonZeroShortDaughters);
+        }
     }
-    */
+
     if (fSourceOfV0s == "kalman") {
         if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S") {
             ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
@@ -1084,14 +1092,18 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
 /*
  Custom V0 Finder.
  (Copied and adapted from `AliRoot/STEER/ESD/AliV0vertexer.cxx`)
+ - Input: `idxNegativeTracks`, `idxPositiveTracks`, `pdgV0`, `pdgTrackNeg`, `pdgTrackPos`
+ - Output: `esdV0s`, `idxDaughters`
 */
-void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
+void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegativeTracks,               //
+                                                     std::vector<Int_t> idxPositiveTracks,               //
+                                                     Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos,  //
+                                                     std::vector<AliESDv0>& esdV0s,                      //
+                                                     std::vector<std::pair<Int_t, Int_t>>& idxDaughters) {
 
-    AliESDtrack* track;
+    // AliESDtrack* track;
     AliESDtrack* neg_track;
     AliESDtrack* pos_track;
-
-    V0_tt this_V0;
 
     Int_t nentr = fESD->GetNumberOfTracks();
     TArrayI neg(nentr);
@@ -1101,25 +1113,14 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
     Double_t N_Px, N_Py, N_Pz;
     Double_t P_Px, P_Py, P_Pz;
 
-    Float_t nsigma_pos_pion;
-    Float_t nsigma_neg_pion;
-    Float_t nsigma_antiproton;
-
     Double_t pos_energy;
-    Double_t neg_energy_asK0;
-    Double_t neg_energy_asAL;
-    Double_t mass_asK0;
-    Double_t mass_asAL;
+    Double_t neg_energy;
+    Double_t aux_mass;
 
     Double_t radius;
-    Double_t dca_to_pv;
+    Double_t dca_wrt_pv;
 
-    Int_t idx_pos_true;
-    Int_t idx_neg_true;
-    AliMCParticle* mcPosTrue;
-    AliMCParticle* mcNegTrue;
-    Int_t idx_pos_mother;
-    Int_t idx_neg_mother;
+    std::pair<Int_t, Int_t> aux_pair;
 
     // define cuts
     Double_t COV0F_DNmin = 0.1;            // (d=0.1) min imp parameter for the negative daughter (depends on PV!)
@@ -1149,7 +1150,7 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
     Bool_t UseImprovedFinding = kTRUE;
 
     // (addition)
-    // [based on AliV0HypSel::AccountBField(b) and AliV0HypSel::SetBFieldCoef(v)]
+    // [based on `AliV0HypSel::AccountBField(b)` and `AliV0HypSel::SetBFieldCoef(v)`]
     // account effect of B-field on pT resolution, ignoring the fact that the V0 mass resolution
     // is only partially determined by the prongs pT resolution
     const Float_t kNomField = 5.00668e+00;
@@ -1171,65 +1172,61 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
     Float_t v0_hyp_nsig[nHypSel] = {0.0, 1.0, 1.0, 1.0, 1.0, 1.0};
     Float_t v0_hyp_margin[nHypSel] = {0.0, 0.5, 0.5, 0.5, 0.5, 0.5};
 
+    /*
     // number of charged tracks found
     Int_t nneg = 0;
     Int_t npos = 0;
+        // first loop: find neg and pos tracks
+        for (Int_t idx_track = 0; idx_track < nentr; idx_track++) {
 
-    // first loop: find neg and pos tracks
-    for (Int_t idx_track = 0; idx_track < nentr; idx_track++) {
+            track = fESD->GetTrack(idx_track);
 
-        track = fESD->GetTrack(idx_track);
-        /*
-                // (cut) if particle is not in the indexer
-                // => the particle was gen. non-relevant & rec. non-relevant
-                if (fMap_Evt_MCRec.count(idx_track) == 0) {
-                    // [note: count() returns the number of elements matching a specific key]
+            // (cut) on status
+            ULong64_t status = track->GetStatus();
+            if ((status & AliESDtrack::kTPCrefit) == 0) {
+                continue;
+            }
+
+            // (cut) min. number of TPC clusters
+            if ((Int_t)track->GetTPCncls() < COV0F_NClustersTPCmin_Dau) {
+                continue;
+            }
+
+            // cut on transverse impact parameter
+            Double_t d = 0.0;
+            if (track->GetSign() < 0.) {
+                d = track->GetD(PV[0], PV[1], b);
+                if (TMath::Abs(d) < COV0F_DNmin) {
                     continue;
                 }
-         */
-        // (cut) on status
-        ULong64_t status = track->GetStatus();
-        if ((status & AliESDtrack::kTPCrefit) == 0) {
-            continue;
-        }
-
-        // (cut) min. number of TPC clusters
-        if ((Int_t)track->GetTPCncls() < COV0F_NClustersTPCmin_Dau) {
-            continue;
-        }
-
-        // cut on transverse impact parameter
-        Double_t d = 0.0;
-        if (track->GetSign() < 0.) {
-            d = track->GetD(PV[0], PV[1], b);
-            if (TMath::Abs(d) < COV0F_DNmin) {
-                continue;
+                if (TMath::Abs(d) > COV0F_Rmax) {
+                    continue;
+                }
+                neg[nneg++] = idx_track;
+            } else {
+                d = track->GetD(PV[0], PV[1], b);
+                if (TMath::Abs(d) < COV0F_DPmin) {
+                    continue;
+                }
+                if (TMath::Abs(d) > COV0F_Rmax) {
+                    continue;
+                }
+                pos[npos++] = idx_track;
             }
-            if (TMath::Abs(d) > COV0F_Rmax) {
-                continue;
-            }
-            neg[nneg++] = idx_track;
-        } else {
-            d = track->GetD(PV[0], PV[1], b);
-            if (TMath::Abs(d) < COV0F_DPmin) {
-                continue;
-            }
-            if (TMath::Abs(d) > COV0F_Rmax) {
-                continue;
-            }
-            pos[npos++] = idx_track;
-        }
-    }  // end of first loop
+        }  // end of first loop
+     */
 
     // second loop: test all neg-pos pairs
-    for (Int_t i = 0; i < nneg; i++) {
+    // for (Int_t i = 0; i < nneg; i++) {
+    for (Int_t& nidx : idxNegativeTracks) {
 
-        Int_t nidx = neg[i];
+        // Int_t nidx = neg[i];
         neg_track = fESD->GetTrack(nidx);
 
-        for (Int_t k = 0; k < npos; k++) {
+        // for (Int_t k = 0; k < npos; k++) {
+        for (Int_t& pidx : idxPositiveTracks) {
 
-            Int_t pidx = pos[k];
+            // Int_t pidx = pos[k];
             pos_track = fESD->GetTrack(pidx);
 
             // (cut) -1. < eta(pi+) < 1.
@@ -1241,6 +1238,8 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
             if (TMath::Abs(neg_track->Eta()) > COV0F_Etamax_NegDau) {
                 continue;
             }
+
+            /* PENDING: could be uplifted as well */
 
             AliExternalTrackParam nt(*neg_track), pt(*pos_track), *ntp = &nt, *ptp = &pt;
 
@@ -1268,7 +1267,8 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
             nt.PropagateTo(xn, b);
             pt.PropagateTo(xp, b);
 
-            // important object!
+            /* PENDING: could be uplifted outside of the loop... could be, though? */
+
             AliESDv0 vertex(nt, nidx, pt, pidx);
 
             if (UseImprovedFinding) {
@@ -1300,12 +1300,13 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
                 continue;
             }
 
-            // load coordinates and momentum of each component of the V0
+            /* Load coordinates and momentum of each component of the V0 */
+
             vertex.GetXYZ(V0_X, V0_Y, V0_Z);
 
             // (cut) dca(V0,PV)
-            dca_to_pv = Calculate_LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
-            if (dca_to_pv < COV0F_DCAmin_V0_wrtPV) {
+            dca_wrt_pv = Calculate_LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
+            if (dca_wrt_pv < COV0F_DCAmin_V0_wrtPV) {
                 continue;
             }
 
@@ -1332,8 +1333,6 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
                 continue;
             }
 
-            // vertex.ChangeMassHypothesis(kK0Short);   // borquez: this was here...
-
             // get momentum of negative and positive components at V0 vertex
             vertex.GetNPxPyPz(N_Px, N_Py, N_Pz);
             vertex.GetPPxPyPz(P_Px, P_Py, P_Pz);
@@ -1343,6 +1342,7 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
                 continue;
             }
 
+            /*
             // get NSigmas for PID
             nsigma_pos_pion = fPIDResponse->NumberOfSigmasTPC(pos_track, AliPID::kPion);
             nsigma_neg_pion = fPIDResponse->NumberOfSigmasTPC(neg_track, AliPID::kPion);
@@ -1362,57 +1362,35 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom() {
             if (pos_track->GetSign() == neg_track->GetSign()) {
                 continue;
             }
+            */
 
             // calculate energy
-            // for positive daughter, assume it's a positive pion
-            pos_energy = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(211)->Mass() * fPDG.GetParticle(211)->Mass());
-            // for negative daughter, assuming it's K0 -> pi+ pi-
-            neg_energy_asK0 = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-211)->Mass() * fPDG.GetParticle(-211)->Mass());
-            // for negative daughter, assuming it's anti-lambda -> pi+ anti-proton
-            neg_energy_asAL =
-                TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(-2212)->Mass() * fPDG.GetParticle(-2212)->Mass());
+            pos_energy =
+                TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz + fPDG.GetParticle(pdgTrackPos)->Mass() * fPDG.GetParticle(pdgTrackPos)->Mass());
+            neg_energy =
+                TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz + fPDG.GetParticle(pdgTrackNeg)->Mass() * fPDG.GetParticle(pdgTrackNeg)->Mass());
+            aux_mass = TMath::Sqrt((pos_energy + neg_energy) * (pos_energy + neg_energy) - vertex.Px() * vertex.Px() - vertex.Py() * vertex.Py() -
+                                   vertex.Pz() * vertex.Pz());
 
-            // get true particles
-            idx_pos_true = TMath::Abs(pos_track->GetLabel());
-            mcPosTrue = (AliMCParticle*)fMC->GetTrack(idx_pos_true);
-            idx_neg_true = TMath::Abs(neg_track->GetLabel());
-            mcNegTrue = (AliMCParticle*)fMC->GetTrack(idx_neg_true);
+            /* Fill histograms */
 
-            // get mother of true particles
-            idx_pos_mother = mcPosTrue->GetMother();
-            idx_neg_mother = mcNegTrue->GetMother();
+            if (pdgV0 == 310) {
+                fHist_KaonZeroShort_Mass->Fill(aux_mass);
+                fHist_KaonZeroShort_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                fHist_KaonZeroShort_DCAwrtPV->Fill(
+                    Calculate_LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+            }
 
-            this_V0.Idx_Pos = 0;  // fMap_Evt_MCRec[vertex.GetPindex()];
-            this_V0.Idx_Neg = 0;  // fMap_Evt_MCRec[vertex.GetNindex()];
-            this_V0.Px = vertex.Px();
-            this_V0.Py = vertex.Py();
-            this_V0.Pz = vertex.Pz();
-            this_V0.X = V0_X;
-            this_V0.Y = V0_Y;
-            this_V0.Z = V0_Z;
-            this_V0.Pos_Px = P_Px;
-            this_V0.Pos_Py = P_Py;
-            this_V0.Pos_Pz = P_Pz;
-            this_V0.Neg_Px = N_Px;
-            this_V0.Neg_Py = N_Py;
-            this_V0.Neg_Pz = N_Pz;
-            this_V0.E_asK0 = pos_energy + neg_energy_asK0;
-            this_V0.E_asAL = pos_energy + neg_energy_asAL;
-            this_V0.couldBeK0 = TMath::Abs(nsigma_pos_pion) < kMaxNSigma_Pion && TMath::Abs(nsigma_neg_pion) < kMaxNSigma_Pion;
-            this_V0.couldBeAL = TMath::Abs(nsigma_pos_pion) < kMaxNSigma_Pion && TMath::Abs(nsigma_antiproton) < kMaxNSigma_Proton;
-            this_V0.Chi2 = vertex.GetChi2V0();
-            this_V0.DCA_Daughters = vertex.GetDcaV0Daughters();
-            this_V0.IP_wrtPV = vertex.GetD(PV[0], PV[1], PV[2]);
-            this_V0.CPA_wrtPV = vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]);
-            this_V0.ArmAlpha = vertex.AlphaV0();
-            this_V0.ArmPt = vertex.PtArmV0();
-            this_V0.DecayLength = TMath::Sqrt(TMath::Power(V0_X - PV[0], 2) + TMath::Power(V0_Y - PV[1], 2) + TMath::Power(V0_Z - PV[2], 2));
-            this_V0.DCA_wrtPV = dca_to_pv;
+            if (pdgV0 == -3122) {
+                fHist_AntiLambda_Mass->Fill(aux_mass);
+                fHist_AntiLambda_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                fHist_AntiLambda_DCAwrtPV->Fill(dca_wrt_pv);
+            }
 
-            // important: to be a signal V0, the MC particles must come from the same V0 as well
-            this_V0.isSignal = 0;  // MCGen_IsSignal(mcNegTrue) && MCGen_IsSignal(mcPosTrue) && idx_neg_mother == idx_pos_mother;
-
-            // fVec_V0s.push_back(this_V0);
+            esdV0s.push_back(vertex);
+            aux_pair.first = nidx;
+            aux_pair.second = pidx;
+            idxDaughters.push_back(aux_pair);
         }  // end of loop over pos. tracks
     }      // end of loop over neg. tracks
 }

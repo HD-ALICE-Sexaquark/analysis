@@ -168,7 +168,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void ReconstructV0s_True(std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters);
     void ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
                                  std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters);
-    void ReconstructV0s_Custom();
+    void ReconstructV0s_Custom(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0, Int_t pdgTrackNeg,
+                               Int_t pdgTrackPos, std::vector<AliESDv0>& esdV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters);
 
    public:
     /* V0s -- Kalman Filter */
