@@ -385,6 +385,7 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     std::map<Int_t, Int_t> Map_TrueDaughter_TrueV0;
     std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters;
+    std::vector<std::pair<Int_t, Int_t>> RecDaughters_SignalV0;
 
     std::vector<AliESDv0> esdAntiLambdas;
     std::vector<AliESDv0> esdKaonsZeroShort;
@@ -420,22 +421,22 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     ProcessTracks(Indices_MCGen_FS_Signal, Map_TrueDaughter_TrueV0, Map_TrueV0_RecDaughters, idxAntiProtonTracks, idxPosKaonTracks, idxPiPlusTracks,
                   idxPiMinusTracks);
 
-    if (fSourceOfV0s == "true") {
-        ReconstructV0s_True(Map_TrueV0_RecDaughters);
-    }
+    if (fIsMC) ReconstructV0s_True(Map_TrueV0_RecDaughters, RecDaughters_SignalV0);
 
     if (fSourceOfV0s == "offline") {
-        ReconstructV0s_Official(kFALSE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters);
+        ReconstructV0s_Official(kFALSE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters, RecDaughters_SignalV0);
     }
 
     if (fSourceOfV0s == "online") {
-        ReconstructV0s_Official(kTRUE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters);
+        ReconstructV0s_Official(kTRUE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters, RecDaughters_SignalV0);
     }
 
     if (fSourceOfV0s == "custom") {
         if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S") {
-            ReconstructV0s_Custom(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, esdAntiLambdas, idxAntiLambdaDaughters);
-            ReconstructV0s_Custom(idxPiMinusTracks, idxPiPlusTracks, 310, -211, 211, esdKaonsZeroShort, idxKaonZeroShortDaughters);
+            ReconstructV0s_Custom(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, esdAntiLambdas, idxAntiLambdaDaughters,
+                                  RecDaughters_SignalV0);
+            ReconstructV0s_Custom(idxPiMinusTracks, idxPiPlusTracks, 310, -211, 211, esdKaonsZeroShort, idxKaonZeroShortDaughters,
+                                  RecDaughters_SignalV0);
         }
     }
 
@@ -468,14 +469,12 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
  Search for possible contradictions in the input options
 */
 void AliAnalysisTaskSexaquark::CheckForInputErrors() {
-    if (fSourceOfV0s == "true" ||                                 //
-        fSourceOfV0s == "offline" || fSourceOfV0s == "online" ||  //
-        fSourceOfV0s == "custom" || fSourceOfV0s == "kalman") {
+    if (fSourceOfV0s == "offline" || fSourceOfV0s == "online" || fSourceOfV0s == "custom" || fSourceOfV0s == "kalman") {
         // nothing
     } else {
-        AliFatal("ERROR: source of V0s must be \"true\" (available only for sim), \"offline\", \"online\", \"custom\" or \"kalman\".");
+        AliFatal("ERROR: source of V0s must be \"offline\", \"online\", \"custom\" or \"kalman\".");
     }
-    if (!fIsMC && fSourceOfV0s == "true") {
+    if (!fIsMC) {
         AliFatal("ERROR: data cannot have access to true MC information.");
     }
 }
@@ -932,6 +931,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesKaonZeroShortCuts_OfficialCustom(AliESDv0
 /*
  Find all true V0s that had both of their daughters reconstructed. Useful for bookkeeping.
  - Input: `Map_TrueV0_RecDaughters`
+ - Output: `RecDaughters_SignalV0`
  - Notes: to get any rec. value from the true V0s, I need to do vertexing first. That means:
    (a) true vertexing & true values => trivial and already done by `ProcessMCGen()`
    (b) true vertexing & rec. values => feels artificial...
@@ -939,7 +939,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesKaonZeroShortCuts_OfficialCustom(AliESDv0
    (d) KF vertexing
    Considering (c) and (d), then this function should be used only as bookkeeping, and for calling the real "reconstructers"
 */
-void AliAnalysisTaskSexaquark::ReconstructV0s_True(std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters) {
+void AliAnalysisTaskSexaquark::ReconstructV0s_True(std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters,
+                                                   std::vector<std::pair<Int_t, Int_t>>& RecDaughters_SignalV0) {
 
     AliMCParticle* mcV0;
 
@@ -967,11 +968,19 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_True(std::map<Int_t, std::pair<Int
 
             if (mcV0->PdgCode() == -3122) {
                 fHist_True_AntiLambda_Bookkeep->Fill(3);
-                if (is_signal) fHist_True_AntiLambda_Bookkeep->Fill(4);
+                if (is_signal) {
+                    fHist_True_AntiLambda_Bookkeep->Fill(4);
+                    RecDaughters_SignalV0.push_back(Map_TrueV0_RecDaughters[idx_mc_V0]);
+                    AliInfoF("-3122 %i %i", Map_TrueV0_RecDaughters[idx_mc_V0].first, Map_TrueV0_RecDaughters[idx_mc_V0].second);  // debug
+                }
             }
             if (mcV0->PdgCode() == 310) {
                 fHist_True_KaonZeroShort_Bookkeep->Fill(3);
-                if (is_signal) fHist_True_KaonZeroShort_Bookkeep->Fill(4);
+                if (is_signal) {
+                    fHist_True_KaonZeroShort_Bookkeep->Fill(4);
+                    RecDaughters_SignalV0.push_back(Map_TrueV0_RecDaughters[idx_mc_V0]);
+                    AliInfoF(" 310 %i %i", Map_TrueV0_RecDaughters[idx_mc_V0].first, Map_TrueV0_RecDaughters[idx_mc_V0].second);  // debug
+                }
             }
         }
     }
@@ -985,7 +994,8 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_True(std::map<Int_t, std::pair<Int
  - Output: `idxAntiLambdaDaughters`, `idxKaonZeroShortDaughters`
 */
 void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
-                                                       std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters) {
+                                                       std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters,
+                                                       std::vector<std::pair<Int_t, Int_t>> RecDaughters_SignalV0) {
 
     // define variables & objects
     AliESDv0* V0;
@@ -1061,6 +1071,13 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
             fHist_AntiLambda_Mass->Fill(aux_mass);
             fHist_AntiLambda_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
             fHist_AntiLambda_DCAwrtPV->Fill(Calculate_LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+
+            /* DEBUG */
+
+            if (std::any_of(RecDaughters_SignalV0.begin(), RecDaughters_SignalV0.end(),
+                            [&](std::pair<Int_t, Int_t> signal_pair) { return signal_pair == aux_pair; })) {
+                AliInfoF("-3122 %i %i", aux_pair.first, aux_pair.second);
+            }
         }
 
         /* Store: K0S -> pi- + pi+ */
@@ -1085,7 +1102,15 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
             fHist_KaonZeroShort_Mass->Fill(aux_mass);
             fHist_KaonZeroShort_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
             fHist_KaonZeroShort_DCAwrtPV->Fill(Calculate_LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+
+            /* DEBUG */
+
+            if (std::any_of(RecDaughters_SignalV0.begin(), RecDaughters_SignalV0.end(),
+                            [&](std::pair<Int_t, Int_t> signal_pair) { return signal_pair == aux_pair; })) {
+                AliInfoF("310 %i %i", aux_pair.first, aux_pair.second);
+            }
         }
+
     }  // end of loop over V0s
 }
 
@@ -1095,11 +1120,10 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
  - Input: `idxNegativeTracks`, `idxPositiveTracks`, `pdgV0`, `pdgTrackNeg`, `pdgTrackPos`
  - Output: `esdV0s`, `idxDaughters`
 */
-void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegativeTracks,               //
-                                                     std::vector<Int_t> idxPositiveTracks,               //
-                                                     Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos,  //
-                                                     std::vector<AliESDv0>& esdV0s,                      //
-                                                     std::vector<std::pair<Int_t, Int_t>>& idxDaughters) {
+void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0,
+                                                     Int_t pdgTrackNeg, Int_t pdgTrackPos, std::vector<AliESDv0>& esdV0s,
+                                                     std::vector<std::pair<Int_t, Int_t>>& idxDaughters,
+                                                     std::vector<std::pair<Int_t, Int_t>> RecDaughters_SignalV0) {
 
     // AliESDtrack* track;
     AliESDtrack* neg_track;
@@ -1374,6 +1398,12 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegat
 
             /* Fill histograms */
 
+            if (pdgV0 == -3122) {
+                fHist_AntiLambda_Mass->Fill(aux_mass);
+                fHist_AntiLambda_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                fHist_AntiLambda_DCAwrtPV->Fill(dca_wrt_pv);
+            }
+
             if (pdgV0 == 310) {
                 fHist_KaonZeroShort_Mass->Fill(aux_mass);
                 fHist_KaonZeroShort_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
@@ -1381,16 +1411,15 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegat
                     Calculate_LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
             }
 
-            if (pdgV0 == -3122) {
-                fHist_AntiLambda_Mass->Fill(aux_mass);
-                fHist_AntiLambda_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
-                fHist_AntiLambda_DCAwrtPV->Fill(dca_wrt_pv);
-            }
-
             esdV0s.push_back(vertex);
             aux_pair.first = nidx;
             aux_pair.second = pidx;
             idxDaughters.push_back(aux_pair);
+
+            if (std::any_of(RecDaughters_SignalV0.begin(), RecDaughters_SignalV0.end(),
+                            [&](std::pair<Int_t, Int_t> signal_pair) { return signal_pair == aux_pair; })) {
+                AliInfoF("%i %i %i", pdgV0, aux_pair.first, aux_pair.second);
+            }
         }  // end of loop over pos. tracks
     }      // end of loop over neg. tracks
 }

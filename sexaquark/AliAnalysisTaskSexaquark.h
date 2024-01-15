@@ -165,11 +165,14 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* V0s -- ALICE V0 Finders */
     Bool_t PassesAntiLambdaCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
     Bool_t PassesKaonZeroShortCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
-    void ReconstructV0s_True(std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters);
+    void ReconstructV0s_True(std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters,
+                             std::vector<std::pair<Int_t, Int_t>>& RecDaughters_SignalV0);
     void ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
-                                 std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters);
+                                 std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters,
+                                 std::vector<std::pair<Int_t, Int_t>> RecDaughters_SignalV0);
     void ReconstructV0s_Custom(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0, Int_t pdgTrackNeg,
-                               Int_t pdgTrackPos, std::vector<AliESDv0>& esdV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters);
+                               Int_t pdgTrackPos, std::vector<AliESDv0>& esdV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters,
+                               std::vector<std::pair<Int_t, Int_t>> RecDaughters_SignalV0);
 
    public:
     /* V0s -- Kalman Filter */
@@ -253,7 +256,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // - "online"
     // - "offline"
     // - "custom"
-    // - "true"
     // - "kalman"
     TString fSourceOfV0s;  //
     // reaction channel, could be:
