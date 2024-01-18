@@ -291,10 +291,13 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     /* This will be filled with the reconstructed anti-sexaquark information */
 
     TString def_AntiSexaquark_Mass = "m(#bar{#Lambda},K^{0}_{S})";
+    TString def_AntiSexaquark_DCA = "DCA(#bar{#Lambda},K^{0}_{S})";
 
     fHist_AntiSexaquark_Mass = new TH1F("AntiSexaquark_Mass", def_AntiSexaquark_Mass, 150, -5., 10.);
+    fHist_AntiSexaquark_DCA = new TH1F("AntiSexaquark_DCA", def_AntiSexaquark_DCA, 100, 0., 10.);
 
     fOutputListOfHists->Add(fHist_AntiSexaquark_Mass);
+    fOutputListOfHists->Add(fHist_AntiSexaquark_DCA);
 
     PostData(2, fOutputListOfHists);
 }
@@ -1549,6 +1552,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiL
 
     dca = Calculate_TwoLinesDCA_v2(AntiLambda_momentum, AntiLambda_vertex, KaonZeroShort_momentum, KaonZeroShort_vertex, cpa1, cpa2);
     AliInfoF("dca cpa1 cpa2 = %f (%f, %f, %f) (%f, %f, %f)", dca, cpa1.X(), cpa1.Y(), cpa1.Z(), cpa2.X(), cpa2.Y(), cpa2.Z());
+    fHist_AntiSexaquark_DCA->Fill(dca);
 
     return kTRUE;
 }
