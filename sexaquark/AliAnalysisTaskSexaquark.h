@@ -1,7 +1,9 @@
 #ifndef AliAnalysisTaskSexaquark_H
 #define AliAnalysisTaskSexaquark_H
 
+#ifndef ALIANALYSISTASKSE_H
 #include "AliAnalysisTaskSE.h"
+#endif
 
 struct V0_tt {
     //
@@ -131,7 +133,11 @@ class KFParticleMother : public KFParticle {
     }
 };
 
+// ClassImp(AliAnalysisTaskSexaquark);
+
 class AliPIDResponse;
+class KFParticle;
+class KFParticleBase;
 
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    public:
@@ -190,6 +196,20 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                            Int_t pdgTrackPos, std::vector<KFParticleMother>& kfV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters);
 
    public:
+    /* Sexaquark -- Geometric Finder */
+    // Channel A
+    Bool_t PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
+    void SexaquarkFinder_ChannelA_Geo(std::vector<AliESDv0> esdAntiLambdas, std::vector<AliESDv0> esdKaonsZeroShort,
+                                      std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
+                                      std::vector<std::pair<Int_t, Int_t>> idxKaonZeroShortDaughters, std::vector<Int_t>& idxAntiSexaquarkDaughters);
+    // Channel D
+    void SexaquarkFinder_ChannelD_Geo();
+    // Channel E
+    void SexaquarkFinder_ChannelE_Geo();
+    // Channel H
+    void SexaquarkFinder_ChannelH_Geo();
+
+   public:
     /* Sexaquark -- Kalman Filter */
     // Channel A
     Bool_t PassesSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
@@ -208,17 +228,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                      std::vector<Int_t> idxSinglePositiveTrack, std::vector<KFParticleMother>& kfAntiSexaquarks);
 
    public:
-    /* Sexaquark -- Geometric Backpropagation */
-    // Channel A
-    void SexaquarkFinder_ChannelA_Geo();
-    // Channel D
-    void SexaquarkFinder_ChannelD_Geo();
-    // Channel E
-    void SexaquarkFinder_ChannelE_Geo();
-    // Channel H
-    void SexaquarkFinder_ChannelH_Geo();
-
-   public:
     /* Utilities */
     Bool_t Preoptimize(const AliExternalTrackParam* nt, AliExternalTrackParam* pt, Double_t* lPreprocessxn, Double_t* lPreprocessxp,
                        const Double_t b);
@@ -231,6 +240,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Double_t Calculate_ArmPt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz);
     Double_t Calculate_LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t V0_X, Double_t V0_Y, Double_t V0_Z, Double_t PV_X,
                                     Double_t PV_Y, Double_t PV_Z);
+    Double_t SquaredDistanceBetweenLines(const Double_t* t, Double_t pos0[], Double_t dir0[], Double_t pos1[], Double_t dir1[]);
+    Double_t Calculate_TwoLinesDCA_v1(TVector3 pos1, TVector3 dir1, TVector3 pos2, TVector3 dir2, TVector3& P1, TVector3& P2);
+    Double_t Calculate_TwoLinesDCA_v2(TVector3 pos1, TVector3 dir1, TVector3 pos2, TVector3 dir2, TVector3& P1, TVector3& P2);
 
    public:
     /* Tree Operations */
@@ -333,6 +345,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_KaonZeroShort_Mass;      //!
     TH1F* fHist_KaonZeroShort_CPAwrtPV;  //!
     TH1F* fHist_KaonZeroShort_DCAwrtPV;  //!
+    // -- Anti-Sexaquarks
+    TH1F* fHist_AntiSexaquark_Mass;  //!
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented

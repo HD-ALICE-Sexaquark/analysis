@@ -1,5 +1,3 @@
-#define HomogeneousField  // homogenous field in z direction, required by KFParticle
-
 #include "TArray.h"
 #include "TChain.h"
 #include "TDatabasePDG.h"
@@ -32,14 +30,17 @@
 #include "AliMCParticle.h"
 #include "AliVVertex.h"
 
+#include "Math/Factory.h"
+#include "Math/Functor.h"
+#include "Math/Minimizer.h"
+
+#define HomogeneousField  // homogenous field in z direction, required by KFParticle
 #include "KFPTrack.h"
 #include "KFPVertex.h"
 #include "KFParticle.h"
 #include "KFVertex.h"
 
 #include "AliAnalysisTaskSexaquark.h"
-
-class AliAnalysisTaskSexaquark;
 
 /*
  Empty I/O constructor. Non-persistent members are initialized to their default values from here.
@@ -287,6 +288,14 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_KaonZeroShort_CPAwrtPV);
     fOutputListOfHists->Add(fHist_KaonZeroShort_DCAwrtPV);
 
+    /* This will be filled with the reconstructed anti-sexaquark information */
+
+    TString def_AntiSexaquark_Mass = "m(#bar{#Lambda},K^{0}_{S})";
+
+    fHist_AntiSexaquark_Mass = new TH1F("AntiSexaquark_Mass", def_AntiSexaquark_Mass, 150, -5., 10.);
+
+    fOutputListOfHists->Add(fHist_AntiSexaquark_Mass);
+
     PostData(2, fOutputListOfHists);
 }
 
@@ -390,6 +399,8 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     std::vector<AliESDv0> esdAntiLambdas;
     std::vector<AliESDv0> esdKaonsZeroShort;
 
+    std::vector<Int_t> idxAntiSexaquarkDaughters;
+
     // load MC generated event
     fMC = MCEvent();
 
@@ -458,6 +469,10 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         }
     }
 
+    if (fSourceOfV0s == "custom") {
+        SexaquarkFinder_ChannelA_Geo(esdAntiLambdas, esdKaonsZeroShort, idxAntiLambdaDaughters, idxKaonZeroShortDaughters, idxAntiSexaquarkDaughters);
+    }
+
     // FillTree();
 
     // stream the results the analysis of this event to the output manager
@@ -469,9 +484,8 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
  Search for possible contradictions in the input options
 */
 void AliAnalysisTaskSexaquark::CheckForInputErrors() {
-    if (fSourceOfV0s == "offline" || fSourceOfV0s == "online" || fSourceOfV0s == "custom" || fSourceOfV0s == "kalman") {
-        // nothing
-    } else {
+    std::array<std::string, 4> validSources = {"offline", "online", "custom", "kalman"};
+    if (std::find(validSources.begin(), validSources.end(), fSourceOfV0s) == validSources.end()) {
         AliFatal("ERROR: source of V0s must be \"offline\", \"online\", \"custom\" or \"kalman\".");
     }
     if (!fIsMC) {
@@ -1418,7 +1432,7 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegat
 
             if (std::any_of(RecDaughters_SignalV0.begin(), RecDaughters_SignalV0.end(),
                             [&](std::pair<Int_t, Int_t> signal_pair) { return signal_pair == aux_pair; })) {
-                AliInfoF("%i %i %i", pdgV0, aux_pair.first, aux_pair.second);
+                AliInfoF("%i %i %i", pdgV0, aux_pair.first, aux_pair.second);  // debug
             }
         }  // end of loop over pos. tracks
     }      // end of loop over neg. tracks
@@ -1489,6 +1503,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesKaonPionPairCuts_KF(KFParticleMother kfV0
 
 /*
  Apply cuts to a (K+, K+) pair. Relevant for channel H.
+ - Input: `kfV0`, `kfDaughter1`, `kfDaughter2`, `lvV0`, `lvTrack1`, `lvTrack2`
+ - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
 */
 Bool_t AliAnalysisTaskSexaquark::PassesPosKaonPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughter1, KFParticle kfDaughter2,  //
                                                           TLorentzVector lvV0, TLorentzVector lvTrack1, TLorentzVector lvTrack2) {
@@ -1508,6 +1524,81 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_KF(std::vector<Int_t> idxNegativeT
                                                  std::vector<KFParticleMother>& kfV0s,               //
                                                  std::vector<std::pair<Int_t, Int_t>>& idxDaughters) {
     /* PENDING */
+    return;
+}
+
+/*                                     */
+/**  Sexaquark -- Geometrical Finder  **/
+/*** =============================== ***/
+
+/*
+ Apply anti-sexaquark candidate cuts.
+ - Input: `AntiLambda`, `KaonZeroShort`
+ - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
+*/
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort) {
+
+    TVector3 AntiLambda_momentum(AntiLambda.Px(), AntiLambda.Py(), AntiLambda.Pz());
+    TVector3 KaonZeroShort_momentum(KaonZeroShort.Px(), KaonZeroShort.Py(), KaonZeroShort.Pz());
+
+    TVector3 AntiLambda_vertex(AntiLambda.Xv(), AntiLambda.Yv(), AntiLambda.Zv());
+    TVector3 KaonZeroShort_vertex(KaonZeroShort.Xv(), KaonZeroShort.Yv(), KaonZeroShort.Zv());
+
+    Double_t dca;
+    TVector3 cpa1, cpa2;
+
+    dca = Calculate_TwoLinesDCA_v2(AntiLambda_momentum, AntiLambda_vertex, KaonZeroShort_momentum, KaonZeroShort_vertex, cpa1, cpa2);
+    AliInfoF("dca cpa1 cpa2 = %f (%f, %f, %f) (%f, %f, %f)", dca, cpa1.X(), cpa1.Y(), cpa1.Z(), cpa2.X(), cpa2.Y(), cpa2.Z());
+
+    return kTRUE;
+}
+
+/*
+ Using two AliESDv0 objects, reconstruct the anti-sexaquark candidate.
+ - Input: `esdAntiLambdas`, `esdKaonsZeroShort`
+ - Output: ????
+*/
+void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_Geo(std::vector<AliESDv0> esdAntiLambdas, std::vector<AliESDv0> esdKaonsZeroShort,
+                                                            std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
+                                                            std::vector<std::pair<Int_t, Int_t>> idxKaonZeroShortDaughters,
+                                                            std::vector<Int_t>& idxAntiSexaquarkDaughters) {
+
+    AliESDv0 AntiLambda;
+    AliESDv0 KaonZeroShort;
+
+    Float_t antilambda_energy;
+    Float_t kaonzero_energy;
+
+    TLorentzVector lvAntiLambda;
+    TLorentzVector lvKaonZeroShort;
+
+    TLorentzVector lvStruckNucleon(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());
+    TLorentzVector lvAntiSexaquark;
+
+    for (Int_t idxAntiLambda = 0; idxAntiLambda < (Int_t)esdAntiLambdas.size(); idxAntiLambda++) {
+        for (Int_t idxKaonZeroShort = 0; idxKaonZeroShort < (Int_t)esdKaonsZeroShort.size(); idxKaonZeroShort++) {
+
+            AntiLambda = esdAntiLambdas[idxAntiLambda];
+            KaonZeroShort = esdKaonsZeroShort[idxKaonZeroShort];
+
+            AliInfoF("idxAL idxKZS = %i %i", idxAntiLambda, idxKaonZeroShort);
+            PassesSexaquarkCuts_ChannelA_Geo(AntiLambda, KaonZeroShort);
+
+            // fill tlorentzvectors with the information of the v0s
+            antilambda_energy = TMath::Sqrt(AntiLambda.Px() * AntiLambda.Px() + AntiLambda.Py() * AntiLambda.Py() +
+                                            AntiLambda.Pz() * AntiLambda.Pz() + fPDG.GetParticle(-3122)->Mass() * fPDG.GetParticle(-3122)->Mass());
+            kaonzero_energy = TMath::Sqrt(KaonZeroShort.Px() * KaonZeroShort.Px() + KaonZeroShort.Py() * KaonZeroShort.Py() +
+                                          KaonZeroShort.Pz() * KaonZeroShort.Pz() + fPDG.GetParticle(310)->Mass() * fPDG.GetParticle(310)->Mass());
+            lvAntiLambda.SetPxPyPzE(AntiLambda.Px(), AntiLambda.Py(), AntiLambda.Pz(), antilambda_energy);
+            lvKaonZeroShort.SetPxPyPzE(KaonZeroShort.Px(), KaonZeroShort.Py(), KaonZeroShort.Pz(), kaonzero_energy);
+
+            // calculate the invariant mass of the anti-sexaquark candidate
+            lvAntiSexaquark = lvAntiLambda + lvKaonZeroShort - lvStruckNucleon;
+
+            fHist_AntiSexaquark_Mass->Fill(lvAntiSexaquark.M());
+        }
+    }
+
     return;
 }
 
@@ -1794,6 +1885,94 @@ Float_t AliAnalysisTaskSexaquark::MCRec_GetImpactParameter(AliESDtrack* track) {
     fPrimaryVertex->GetXYZ(PV);
 
     return (Float_t)track->GetD(PV[0], PV[1], fESD->GetMagneticField());
+}
+
+/*
+ Find a common vertex for two neutral particles, given their position and momentum, assuming they propagate in straight lines.
+ If a common vertex cannot be found, then return the DCA between the two lines.
+ (Based on Marty Cohen's answer in https://math.stackexchange.com/questions/2213165/find-shortest-distance-between-lines-in-3d)
+*/
+Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v1(TVector3 pos1, TVector3 dir1, TVector3 pos2, TVector3 dir2, TVector3& P1, TVector3& P2) {
+
+    if (dir1.Mag() == 0. || dir2.Mag() == 0.) {
+        AliWarning("One of the directions is null!");
+        return -1.;
+    }
+
+    /* Require perpendicularity, that means both lines must intersect eventually */
+
+    if (dir1.Cross(dir2).Mag() <= 0.) {
+        AliWarning("TwoLinesDCA :: Not possible to intersect!");
+        return -1.;
+    }
+
+    TVector3 diff = pos1 - pos2;
+    Double_t determinant = dir1.Dot(dir2) * dir1.Dot(dir2) - dir1.Mag2() * dir2.Mag2();
+    if (determinant == 0.) {
+        AliWarning("TwoLinesDCA :: Lines are parallel!");
+        return -1.;
+    }
+    Double_t sol1 = (dir2.Mag2() * dir1.Dot(diff) - dir2.Dot(diff) * dir2.Dot(dir1)) / determinant;
+    Double_t sol2 = (-1 * dir1.Mag2() * dir2.Dot(diff) + dir1.Dot(diff) * dir2.Dot(dir1)) / determinant;
+
+    // endpoints of the closest line
+    P1 = pos1 + sol1 * dir1;
+    P2 = pos2 + sol2 * dir2;
+
+    // the distance of the closest line
+    return (diff + dir1 * sol1 - dir2 * sol2).Mag();
+}
+
+/*
+ Given the parametric form of two lines, find their closest distance.
+ - Variable: `t`, array of size 2, where `t[0]` and `t[1] are the parameters for the first and second line, respectively.
+ - Parameters: `pos0`, `dir0`, `pos1`, `dir1`, the position and direction of the two lines.
+ - Return: the square of the distance between the two lines.
+*/
+Double_t AliAnalysisTaskSexaquark::SquaredDistanceBetweenLines(const Double_t* t, Double_t pos0[], Double_t dir0[], Double_t pos1[],
+                                                               Double_t dir1[]) {
+    return TMath::Power(dir1[0] * t[1] + pos1[0] - (dir0[0] * t[0] + pos0[0]), 2) +
+           TMath::Power(dir1[1] * t[1] + pos1[1] - (dir0[1] * t[0] + pos0[1]), 2) +
+           TMath::Power(dir1[2] * t[1] + pos1[2] - (dir0[2] * t[0] + pos0[2]), 2);
+}
+
+/*
+ Calculate the distance of closest approach between two lines, given their position and momentum, assuming they propagate in straight lines.
+ - Input: `pos0`, `dir0`, `pos1`, `dir1`, the position and direction of the two lines.
+ - Output: `CPA0`, `CPA1`, the closest point of approach for the two lines.
+ - Return: the distance of closest approach between the two lines.
+ */
+Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& CPA0,
+                                                            TVector3& CPA1) {
+
+    // convert input vectors to arrays
+    Double_t pos0[3] = {v3_pos0.X(), v3_pos0.Y(), v3_pos0.Z()};
+    Double_t dir0[3] = {v3_dir0.X(), v3_dir0.Y(), v3_dir0.Z()};
+
+    Double_t pos1[3] = {v3_pos1.X(), v3_pos1.Y(), v3_pos1.Z()};
+    Double_t dir1[3] = {v3_dir1.X(), v3_dir1.Y(), v3_dir1.Z()};
+
+    // lambda function
+    auto func = [this, &pos0, &dir0, &pos1, &dir1](const Double_t* t) { return SquaredDistanceBetweenLines(t, pos0, dir0, pos1, dir1); };
+    ROOT::Math::Functor f(func, 2);
+
+    // initialize minimizer
+    ROOT::Math::Minimizer* min = ROOT::Math::Factory::CreateMinimizer("Minuit", "Migrad");
+    min->SetFunction(f);
+    min->SetLimitedVariable(0, "t0", 0.0, 0.1, -999., 0.);
+    min->SetLimitedVariable(1, "t1", 0.0, 0.1, -999., 0.);
+    min->Minimize();
+
+    // print results
+    const Double_t* xs = min->X();
+    Double_t t0 = xs[0];
+    Double_t t1 = xs[1];
+
+    Double_t dca = TMath::Sqrt(SquaredDistanceBetweenLines(xs, pos0, dir0, pos1, dir1));
+    CPA0.SetXYZ(dir0[0] * t0 + pos0[0], dir0[1] * t0 + pos0[1], dir0[2] * t0 + pos0[2]);
+    CPA1.SetXYZ(dir1[0] * t1 + pos1[0], dir1[1] * t1 + pos1[1], dir1[2] * t1 + pos1[2]);
+
+    return dca;
 }
 
 /*** FUNCTIONS FOR THE CUSTOM OFFLINE V0 FINDER ***/
