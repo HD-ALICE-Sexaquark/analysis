@@ -158,27 +158,32 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* MC Generated */
-    void ProcessMCGen(std::set<Int_t>& Indices_MCGen_FS_Signal, std::map<Int_t, Int_t>& Map_TrueDaughter_TrueV0);
+    void ProcessMCGen(std::vector<Int_t>& SignalIDs, std::vector<Int_t>& SignalV0s, std::vector<std::pair<Int_t, Int_t>>& SignalV0s_Daughters,
+                      std::vector<Int_t>& TrueV0s, std::vector<std::pair<Int_t, Int_t>>& TrueV0s_Daughters);
+    void ProcessSignalInteractions(std::vector<Int_t> SignalIDs, std::vector<Int_t> SignalV0s);
 
    public:
     /* Tracks */
     Bool_t PassesTrackSelection(AliESDtrack* track, Bool_t is_signal, Float_t& n_sigma_proton, Float_t& n_sigma_kaon, Float_t& n_sigma_pion);
-    void ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal, std::map<Int_t, Int_t> Map_TrueDaughter_TrueV0,
-                       std::map<Int_t, std::pair<Int_t, Int_t>>& Map_TrueV0_RecDaughters, std::vector<Int_t>& idxAntiProtonTracks,
-                       std::vector<Int_t>& idxKaonPlusTracks, std::vector<Int_t>& idxPiPlusTracks, std::vector<Int_t>& idxPiMinusTracks);
+    void ProcessTracks(std::vector<std::pair<Int_t, Int_t>> SignalV0s_Daughters, std::vector<std::pair<Int_t, Int_t>> TrueV0s_Daughters,
+                       std::vector<std::pair<Int_t, Int_t>>& SignalV0s_RecDaughters, std::vector<std::pair<Int_t, Int_t>>& TrueV0s_RecDaughters,
+                       std::vector<Int_t>& idxAntiProtonTracks, std::vector<Int_t>& idxPosKaonTracks, std::vector<Int_t>& idxPiPlusTracks,
+                       std::vector<Int_t>& idxPiMinusTracks);
+
+   public:
+    /* V0s -- That require True info */
+    void ReconstructV0s_True(std::vector<Int_t> TrueV0s, std::vector<std::pair<Int_t, Int_t>> TrueV0s_RecDaughters);
 
    public:
     /* V0s -- ALICE V0 Finders */
     Bool_t PassesAntiLambdaCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
     Bool_t PassesKaonZeroShortCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
-    void ReconstructV0s_True(std::map<Int_t, std::pair<Int_t, Int_t>> Map_TrueV0_RecDaughters,
-                             std::vector<std::pair<Int_t, Int_t>>& RecDaughters_SignalV0);
     void ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
                                  std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters,
-                                 std::vector<std::pair<Int_t, Int_t>> RecDaughters_SignalV0);
+                                 std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters);
     void ReconstructV0s_Custom(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0, Int_t pdgTrackNeg,
                                Int_t pdgTrackPos, std::vector<AliESDv0>& esdV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters,
-                               std::vector<std::pair<Int_t, Int_t>> RecDaughters_SignalV0);
+                               std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters);
 
    public:
     /* V0s -- Kalman Filter */
@@ -201,7 +206,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
     void SexaquarkFinder_ChannelA_Geo(std::vector<AliESDv0> esdAntiLambdas, std::vector<AliESDv0> esdKaonsZeroShort,
                                       std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
-                                      std::vector<std::pair<Int_t, Int_t>> idxKaonZeroShortDaughters, std::vector<Int_t>& idxAntiSexaquarkDaughters);
+                                      std::vector<std::pair<Int_t, Int_t>> idxKaonZeroShortDaughters, std::vector<Int_t>& idxAntiSexaquarkDaughters,
+                                      std::vector<Int_t> SignalIDs, std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters);
     // Channel D
     void SexaquarkFinder_ChannelD_Geo();
     // Channel E
@@ -346,8 +352,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_KaonZeroShort_CPAwrtPV;  //!
     TH1F* fHist_KaonZeroShort_DCAwrtPV;  //!
     // -- Anti-Sexaquarks
-    TH1F* fHist_AntiSexaquark_Mass;  //!
-    TH1F* fHist_AntiSexaquark_DCA;   //!
+    TH1F* fHist_AntiSexaquark_Mass;    //!
+    TH1F* fHist_AntiSexaquark_DCA;     //!
+    TH1F* fHist_AntiSexaquark_Radius;  //!
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
