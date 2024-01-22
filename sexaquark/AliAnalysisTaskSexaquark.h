@@ -179,10 +179,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t PassesAntiLambdaCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
     Bool_t PassesKaonZeroShortCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
     void ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
-                                 std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters,
+                                 std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters, std::vector<Int_t> TrueV0s,
+                                 std::vector<std::pair<Int_t, Int_t>> TrueV0s_RecDaughters, std::vector<Int_t> SignalV0s,
                                  std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters);
     void ReconstructV0s_Custom(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0, Int_t pdgTrackNeg,
                                Int_t pdgTrackPos, std::vector<AliESDv0>& esdV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters,
+                               std::vector<Int_t> TrueV0s, std::vector<std::pair<Int_t, Int_t>> TrueV0s_RecDaughters, std::vector<Int_t> SignalV0s,
                                std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters);
 
    public:
@@ -316,13 +318,23 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TTree* fTree;
     // hists
     TList* fOutputListOfHists;
-    // -- mc gen. (or true)
+    // # mc gen. (or true)
     TH1F* fHist_True_Signal_SecVertex_Radius;        //!
     TH1F* fHist_True_InjBkg_SecVertex_Radius;        //!
     TH1F* fHist_True_FermiSexaquark_Pt;              //!
     TH1F* fHist_True_FermiSexaquark_Mass;            //!
+    TH1F* fHist_True_Signal_AntiLambda_Pt;           //!
+    TH1F* fHist_True_Signal_AntiLambda_DCAwrtPV;     //!
     TH1F* fHist_True_Signal_AntiLambda_CPAwrtPV;     //!
+    TH1F* fHist_True_Signal_KaonZeroShort_Pt;        //!
+    TH1F* fHist_True_Signal_KaonZeroShort_DCAwrtPV;  //!
     TH1F* fHist_True_Signal_KaonZeroShort_CPAwrtPV;  //!
+    TH1F* fHist_True_AntiLambda_Pt;                  //!
+    TH1F* fHist_True_AntiLambda_DCAwrtPV;            //!
+    TH1F* fHist_True_AntiLambda_CPAwrtPV;            //!
+    TH1F* fHist_True_KaonZeroShort_Pt;               //!
+    TH1F* fHist_True_KaonZeroShort_DCAwrtPV;         //!
+    TH1F* fHist_True_KaonZeroShort_CPAwrtPV;         //!
     TH1F* fHist_True_AntiLambda_Bookkeep;            //!
     TH1F* fHist_True_KaonZeroShort_Bookkeep;         //!
     TH1F* fHist_True_AntiProton_Bookkeep;            //!
@@ -336,28 +348,70 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_True_AntiNeutron_Bookkeep;           //!
     TH1F* fHist_True_InjBkgProducts_Bookkeep;        //!
     TH1F* fHist_True_AllSecondaries_MothersPDG;      //!
-    // -- tracks (that require true info)
-    TH1F* fHist_Signal_AntiProton_Pt;  //!
-    TH1F* fHist_Signal_PosKaon_Pt;     //!
-    TH1F* fHist_Signal_PiPlus_Pt;      //!
-    TH1F* fHist_Signal_PiMinus_Pt;     //!
-    // -- tracks
-    TH1F* fHist_AntiProton_Pt;  //!
-    TH1F* fHist_PosKaon_Pt;     //!
-    TH1F* fHist_PiPlus_Pt;      //!
-    TH1F* fHist_PiMinus_Pt;     //!
-    TH2F* f2DHist_TPC_Signal;   //!
-    // -- V0s
-    TH1F* fHist_AntiLambda_Mass;         //!
-    TH1F* fHist_AntiLambda_CPAwrtPV;     //!
-    TH1F* fHist_AntiLambda_DCAwrtPV;     //!
-    TH1F* fHist_KaonZeroShort_Mass;      //!
-    TH1F* fHist_KaonZeroShort_CPAwrtPV;  //!
-    TH1F* fHist_KaonZeroShort_DCAwrtPV;  //!
-    // -- Anti-Sexaquarks
-    TH1F* fHist_AntiSexaquark_Mass;    //!
-    TH1F* fHist_AntiSexaquark_DCA;     //!
-    TH1F* fHist_AntiSexaquark_Radius;  //!
+    // # tracks (that require true info)
+    TH1F* fHist_Rec_Signal_AntiProton_Pt;  //!
+    TH1F* fHist_Rec_Signal_PosKaon_Pt;     //!
+    TH1F* fHist_Rec_Signal_PiPlus_Pt;      //!
+    TH1F* fHist_Rec_Signal_PiMinus_Pt;     //!
+    // # tracks (that don't require true info)
+    TH1F* fHist_Rec_AntiProton_Pt;  //!
+    TH1F* fHist_Rec_PosKaon_Pt;     //!
+    TH1F* fHist_Rec_PiPlus_Pt;      //!
+    TH1F* fHist_Rec_PiMinus_Pt;     //!
+    TH2F* f2DHist_TPC_Signal;       //!
+    // # V0s (that require true info)
+    // ## findable signal
+    TH1F* fHist_Findable_Signal_AntiLambda_Mass;         //!
+    TH1F* fHist_Findable_Signal_AntiLambda_Radius;       //!
+    TH1F* fHist_Findable_Signal_AntiLambda_CPAwrtPV;     //!
+    TH1F* fHist_Findable_Signal_AntiLambda_DCAwrtPV;     //!
+    TH1F* fHist_Findable_Signal_KaonZeroShort_Mass;      //!
+    TH1F* fHist_Findable_Signal_KaonZeroShort_Radius;    //!
+    TH1F* fHist_Findable_Signal_KaonZeroShort_CPAwrtPV;  //!
+    TH1F* fHist_Findable_Signal_KaonZeroShort_DCAwrtPV;  //!
+    // ## found signal
+    TH1F* fHist_Found_Signal_AntiLambda_Mass;         //!
+    TH1F* fHist_Found_Signal_AntiLambda_Radius;       //!
+    TH1F* fHist_Found_Signal_AntiLambda_CPAwrtPV;     //!
+    TH1F* fHist_Found_Signal_AntiLambda_DCAwrtPV;     //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_Mass;      //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_Radius;    //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_CPAwrtPV;  //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_DCAwrtPV;  //!
+    // ## findable true
+    TH1F* fHist_Findable_True_AntiLambda_Mass;         //!
+    TH1F* fHist_Findable_True_AntiLambda_Radius;       //!
+    TH1F* fHist_Findable_True_AntiLambda_CPAwrtPV;     //!
+    TH1F* fHist_Findable_True_AntiLambda_DCAwrtPV;     //!
+    TH1F* fHist_Findable_True_KaonZeroShort_Mass;      //!
+    TH1F* fHist_Findable_True_KaonZeroShort_Radius;    //!
+    TH1F* fHist_Findable_True_KaonZeroShort_CPAwrtPV;  //!
+    TH1F* fHist_Findable_True_KaonZeroShort_DCAwrtPV;  //!
+    // ## found true
+    TH1F* fHist_Found_True_AntiLambda_Mass;         //!
+    TH1F* fHist_Found_True_AntiLambda_Radius;       //!
+    TH1F* fHist_Found_True_AntiLambda_CPAwrtPV;     //!
+    TH1F* fHist_Found_True_AntiLambda_DCAwrtPV;     //!
+    TH1F* fHist_Found_True_KaonZeroShort_Mass;      //!
+    TH1F* fHist_Found_True_KaonZeroShort_Radius;    //!
+    TH1F* fHist_Found_True_KaonZeroShort_CPAwrtPV;  //!
+    TH1F* fHist_Found_True_KaonZeroShort_DCAwrtPV;  //!
+    // # V0s (that don't require true info)
+    TH1F* fHist_Found_AntiLambda_Mass;         //!
+    TH1F* fHist_Found_AntiLambda_Radius;       //!
+    TH1F* fHist_Found_AntiLambda_CPAwrtPV;     //!
+    TH1F* fHist_Found_AntiLambda_DCAwrtPV;     //!
+    TH1F* fHist_Found_KaonZeroShort_Mass;      //!
+    TH1F* fHist_Found_KaonZeroShort_Radius;    //!
+    TH1F* fHist_Found_KaonZeroShort_CPAwrtPV;  //!
+    TH1F* fHist_Found_KaonZeroShort_DCAwrtPV;  //!
+    // # Anti-Sexaquarks
+    TH1F* fHist_Findable_AntiSexaquark_Mass;    //!
+    TH1F* fHist_Findable_AntiSexaquark_DCA;     //!
+    TH1F* fHist_Findable_AntiSexaquark_Radius;  //!
+    TH1F* fHist_Found_AntiSexaquark_Mass;       //!
+    TH1F* fHist_Found_AntiSexaquark_DCA;        //!
+    TH1F* fHist_Found_AntiSexaquark_Radius;     //!
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented

@@ -155,46 +155,52 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     /* That will be filled with MC Gen. (or True) information */
 
-    TString def_True_Signal_SecVertex_Radius = "2D Radius of Signal Products";
-    TString def_True_InjBkg_SecVertex_Radius = "2D Radius of Injected AntiNeutrons";
-
-    fHist_True_Signal_SecVertex_Radius = new TH1F("True_Signal_SecVertex_Radius", def_True_Signal_SecVertex_Radius, 100, 0., 200.);
-    fHist_True_InjBkg_SecVertex_Radius = new TH1F("True_InjBkg_SecVertex_Radius", def_True_InjBkg_SecVertex_Radius, 100, 0., 200.);
+    fHist_True_Signal_SecVertex_Radius = new TH1F("True_Signal_SecVertex_Radius", "", 100, 0., 200.);
+    fHist_True_InjBkg_SecVertex_Radius = new TH1F("True_InjBkg_SecVertex_Radius", "", 100, 0., 200.);
 
     fOutputListOfHists->Add(fHist_True_Signal_SecVertex_Radius);
     fOutputListOfHists->Add(fHist_True_InjBkg_SecVertex_Radius);
 
-    TString def_True_FermiSexaquark_Pt = "p_T of injected anti-sexaquark (affected by Fermi Motion)";
-    TString def_True_FermiSexaquark_Mass = "Mass of injected anti-sexaquark (affected by Fermi Motion)";
-
-    fHist_True_FermiSexaquark_Pt = new TH1F("True_FermiSexaquark_Pt", def_True_FermiSexaquark_Pt, 140, -7., 7.);
-    fHist_True_FermiSexaquark_Mass = new TH1F("True_FermiSexaquark_Mass", def_True_FermiSexaquark_Mass, 100, -5., 5.);
+    fHist_True_FermiSexaquark_Pt = new TH1F("True_FermiSexaquark_Pt", "", 140, -7., 7.);
+    fHist_True_FermiSexaquark_Mass = new TH1F("True_FermiSexaquark_Mass", "", 100, -5., 5.);
 
     fOutputListOfHists->Add(fHist_True_FermiSexaquark_Pt);
     fOutputListOfHists->Add(fHist_True_FermiSexaquark_Mass);
 
-    TString def_True_Signal_AntiLambda_CPAwrtPV = "CPA w.r.t. PV of Signal AntiLambda";
-    TString def_True_Signal_KaonZeroShort_CPAwrtPV = "CPA w.r.t. PV of Signal KaonZeroShort";
+    fHist_True_Signal_AntiLambda_Pt = new TH1F("True_Signal_AntiLambda_Pt", "", 100, 0., 10.);
+    fHist_True_Signal_KaonZeroShort_Pt = new TH1F("True_Signal_KaonZeroShort_Pt", "", 100, 0., 10.);
+    fHist_True_Signal_AntiLambda_DCAwrtPV = new TH1F("True_Signal_AntiLambda_DCAwrtPV", "", 100, 0., 10.);
+    fHist_True_Signal_KaonZeroShort_DCAwrtPV = new TH1F("True_Signal_KaonZeroShort_DCAwrtPV", "", 100, 0., 10.);
+    fHist_True_Signal_AntiLambda_CPAwrtPV = new TH1F("True_Signal_AntiLambda_CPAwrtPV", "", 100, -1., 1.);
+    fHist_True_Signal_KaonZeroShort_CPAwrtPV = new TH1F("True_Signal_KaonZeroShort_CPAwrtPV", "", 100, -1., 1.);
 
-    fHist_True_Signal_AntiLambda_CPAwrtPV = new TH1F("True_Signal_AntiLambda_CPAwrtPV", def_True_Signal_AntiLambda_CPAwrtPV, 100, -5., 5.);
-    fHist_True_Signal_KaonZeroShort_CPAwrtPV = new TH1F("True_Signal_KaonZeroShort_CPAwrtPV", def_True_Signal_KaonZeroShort_CPAwrtPV, 100, -5., 5.);
+    fHist_True_AntiLambda_Pt = new TH1F("True_AntiLambda_Pt", "", 100, 0., 10.);
+    fHist_True_KaonZeroShort_Pt = new TH1F("True_KaonZeroShort_Pt", "", 100, 0., 10.);
+    fHist_True_AntiLambda_DCAwrtPV = new TH1F("True_AntiLambda_DCAwrtPV", "", 100, 0., 10.);
+    fHist_True_KaonZeroShort_DCAwrtPV = new TH1F("True_KaonZeroShort_DCAwrtPV", "", 100, 0., 10.);
+    fHist_True_AntiLambda_CPAwrtPV = new TH1F("True_AntiLambda_CPAwrtPV", "", 100, -1., 1.);
+    fHist_True_KaonZeroShort_CPAwrtPV = new TH1F("True_KaonZeroShort_CPAwrtPV", "", 100, -1., 1.);
 
+    fOutputListOfHists->Add(fHist_True_AntiLambda_Pt);
+    fOutputListOfHists->Add(fHist_True_KaonZeroShort_Pt);
+    fOutputListOfHists->Add(fHist_True_AntiLambda_DCAwrtPV);
+    fOutputListOfHists->Add(fHist_True_KaonZeroShort_DCAwrtPV);
+    fOutputListOfHists->Add(fHist_True_AntiLambda_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_True_KaonZeroShort_CPAwrtPV);
+
+    fOutputListOfHists->Add(fHist_True_Signal_AntiLambda_Pt);
+    fOutputListOfHists->Add(fHist_True_Signal_KaonZeroShort_Pt);
+    fOutputListOfHists->Add(fHist_True_Signal_AntiLambda_DCAwrtPV);
+    fOutputListOfHists->Add(fHist_True_Signal_KaonZeroShort_DCAwrtPV);
     fOutputListOfHists->Add(fHist_True_Signal_AntiLambda_CPAwrtPV);
     fOutputListOfHists->Add(fHist_True_Signal_KaonZeroShort_CPAwrtPV);
 
-    TString def_True_AntiLambda_Bookkeep = "Bookkeeping of AntiLambdas";
-    TString def_True_KaonZeroShort_Bookkeep = "Bookkeeping of KaonZeroShort";
-    TString def_True_AntiProton_Bookkeep = "Bookkeeping of AntiProton";
-    TString def_True_PosKaon_Bookkeep = "Bookkeeping of PosKaon";
-    TString def_True_PiPlus_Bookkeep = "Bookkeeping of PiPlus";
-    TString def_True_PiMinus_Bookkeep = "Bookkeeping of PiMinus";
-
-    fHist_True_AntiLambda_Bookkeep = new TH1F("True_AntiLambda_Bookkeep", def_True_AntiLambda_Bookkeep, 10, 0., 10.);
-    fHist_True_KaonZeroShort_Bookkeep = new TH1F("True_KaonZeroShort_Bookkeep", def_True_KaonZeroShort_Bookkeep, 10, 0., 10.);
-    fHist_True_AntiProton_Bookkeep = new TH1F("True_AntiProton_Bookkeep", def_True_AntiProton_Bookkeep, 10, 0., 10.);
-    fHist_True_PosKaon_Bookkeep = new TH1F("True_PosKaon_Bookkeep", def_True_PosKaon_Bookkeep, 10, 0., 10.);
-    fHist_True_PiPlus_Bookkeep = new TH1F("True_PiPlus_Bookkeep", def_True_PiPlus_Bookkeep, 10, 0., 10.);
-    fHist_True_PiMinus_Bookkeep = new TH1F("True_PiMinus_Bookkeep", def_True_PiMinus_Bookkeep, 10, 0., 10.);
+    fHist_True_AntiLambda_Bookkeep = new TH1F("True_AntiLambda_Bookkeep", "", 10, 0., 10.);
+    fHist_True_KaonZeroShort_Bookkeep = new TH1F("True_KaonZeroShort_Bookkeep", "", 10, 0., 10.);
+    fHist_True_AntiProton_Bookkeep = new TH1F("True_AntiProton_Bookkeep", "", 10, 0., 10.);
+    fHist_True_PosKaon_Bookkeep = new TH1F("True_PosKaon_Bookkeep", "", 10, 0., 10.);
+    fHist_True_PiPlus_Bookkeep = new TH1F("True_PiPlus_Bookkeep", "", 10, 0., 10.);
+    fHist_True_PiMinus_Bookkeep = new TH1F("True_PiMinus_Bookkeep", "", 10, 0., 10.);
 
     fOutputListOfHists->Add(fHist_True_AntiLambda_Bookkeep);
     fOutputListOfHists->Add(fHist_True_KaonZeroShort_Bookkeep);
@@ -203,17 +209,11 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_True_PiPlus_Bookkeep);
     fOutputListOfHists->Add(fHist_True_PiMinus_Bookkeep);
 
-    TString def_True_AntiNeutron_Pt = "p_T of generated anti-neutrons";
-    TString def_True_AntiNeutronThatInteracted_Pt = "p_T of generated anti-neutrons that interacted with material";
-    TString def_True_AntiNeutron_NDaughters = "";
-    TString def_True_AntiNeutron_PDGDaughters = "";
-    TString def_True_AntiNeutron_Bookkeep = "";
-
-    fHist_True_AntiNeutron_Pt = new TH1F("True_AntiNeutron_Pt", def_True_AntiNeutron_Pt, 100, 0., 10.);
-    fHist_True_AntiNeutronThatInteracted_Pt = new TH1F("True_AntiNeutronThatInteracted_Pt", def_True_AntiNeutronThatInteracted_Pt, 100, 0., 10.);
-    fHist_True_AntiNeutron_NDaughters = new TH1F("True_AntiNeutron_NDaughters", def_True_AntiNeutron_NDaughters, 100, 0., 100.);
-    fHist_True_AntiNeutron_PDGDaughters = new TH1F("True_AntiNeutron_PDGDaughters", def_True_AntiNeutron_PDGDaughters, 7000, -3500., 3500.);
-    fHist_True_AntiNeutron_Bookkeep = new TH1F("True_AntiNeutron_Bookkeep", def_True_AntiNeutron_Bookkeep, 10, 0., 10.);
+    fHist_True_AntiNeutron_Pt = new TH1F("True_AntiNeutron_Pt", "", 100, 0., 10.);
+    fHist_True_AntiNeutronThatInteracted_Pt = new TH1F("True_AntiNeutronThatInteracted_Pt", "", 100, 0., 10.);
+    fHist_True_AntiNeutron_NDaughters = new TH1F("True_AntiNeutron_NDaughters", "", 100, 0., 100.);
+    fHist_True_AntiNeutron_PDGDaughters = new TH1F("True_AntiNeutron_PDGDaughters", "", 7000, -3500., 3500.);
+    fHist_True_AntiNeutron_Bookkeep = new TH1F("True_AntiNeutron_Bookkeep", "", 10, 0., 10.);
 
     fOutputListOfHists->Add(fHist_True_AntiNeutron_Pt);
     fOutputListOfHists->Add(fHist_True_AntiNeutronThatInteracted_Pt);
@@ -221,91 +221,151 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_True_AntiNeutron_PDGDaughters);
     fOutputListOfHists->Add(fHist_True_AntiNeutron_Bookkeep);
 
-    TString def_True_InjBkgProducts_Bookkeep = "";
-    TString def_True_AllSecondaries_MothersPDG = "PDG code of all particles that come from a sec. vertex";
-
-    fHist_True_InjBkgProducts_Bookkeep = new TH1F("True_InjBkgProducts_Bookkeep", def_True_InjBkgProducts_Bookkeep, 50, 0., 50.);
-    fHist_True_AllSecondaries_MothersPDG = new TH1F("True_AllSecondaries_MothersPDG", def_True_AllSecondaries_MothersPDG, 7000, -3500, 3500.);
+    fHist_True_InjBkgProducts_Bookkeep = new TH1F("True_InjBkgProducts_Bookkeep", "", 50, 0., 50.);
+    fHist_True_AllSecondaries_MothersPDG = new TH1F("True_AllSecondaries_MothersPDG", "", 7000, -3500, 3500.);
 
     fOutputListOfHists->Add(fHist_True_InjBkgProducts_Bookkeep);
     fOutputListOfHists->Add(fHist_True_AllSecondaries_MothersPDG);
 
     /* That will be filled with rec. tracks information (that require MC Gen. information) */
 
-    TString def_Signal_AntiProton_Pt = "p_T of identified signal anti-protons";
-    TString def_Signal_PosKaon_Pt = "p_T of identified signal K+";
-    TString def_Signal_PiPlus_Pt = "p_T of identified signal pi+";
-    TString def_Signal_PiMinus_Pt = "p_T of identified signal pi-";
+    fHist_Rec_Signal_AntiProton_Pt = new TH1F("Rec_Signal_AntiProton_Pt", "", 100, 0., 10.);
+    fHist_Rec_Signal_PosKaon_Pt = new TH1F("Rec_Signal_PosKaon_Pt", "", 100, 0., 10.);
+    fHist_Rec_Signal_PiPlus_Pt = new TH1F("Rec_Signal_PiPlus_Pt", "", 100, 0., 10.);
+    fHist_Rec_Signal_PiMinus_Pt = new TH1F("Rec_Signal_PiMinus_Pt", "", 100, 0., 10.);
 
-    fHist_Signal_AntiProton_Pt = new TH1F("Signal_AntiProton_Pt", def_Signal_AntiProton_Pt, 100, 0., 10.);
-    fHist_Signal_PosKaon_Pt = new TH1F("Signal_PosKaon_Pt", def_Signal_PosKaon_Pt, 100, 0., 10.);
-    fHist_Signal_PiPlus_Pt = new TH1F("Signal_PiPlus_Pt", def_Signal_PiPlus_Pt, 100, 0., 10.);
-    fHist_Signal_PiMinus_Pt = new TH1F("Signal_PiMinus_Pt", def_Signal_PiMinus_Pt, 100, 0., 10.);
+    fOutputListOfHists->Add(fHist_Rec_Signal_AntiProton_Pt);
+    fOutputListOfHists->Add(fHist_Rec_Signal_PosKaon_Pt);
+    fOutputListOfHists->Add(fHist_Rec_Signal_PiPlus_Pt);
+    fOutputListOfHists->Add(fHist_Rec_Signal_PiMinus_Pt);
 
-    fOutputListOfHists->Add(fHist_Signal_AntiProton_Pt);
-    fOutputListOfHists->Add(fHist_Signal_PosKaon_Pt);
-    fOutputListOfHists->Add(fHist_Signal_PiPlus_Pt);
-    fOutputListOfHists->Add(fHist_Signal_PiMinus_Pt);
+    /* That will be filled with rec. tracks information (that don't require MC Gen. information) */
 
-    /* That will be filled with rec. tracks information */
+    fHist_Rec_AntiProton_Pt = new TH1F("Rec_AntiProton_Pt", "", 100, 0., 10.);
+    fHist_Rec_PosKaon_Pt = new TH1F("Rec_PosKaon_Pt", "", 100, 0., 10.);
+    fHist_Rec_PiPlus_Pt = new TH1F("Rec_PiPlus_Pt", "", 100, 0., 10.);
+    fHist_Rec_PiMinus_Pt = new TH1F("Rec_PiMinus_Pt", "", 100, 0., 10.);
 
-    TString def_AntiProton_Pt = "p_T of identified anti-protons";
-    TString def_PosKaon_Pt = "p_T of identified K+";
-    TString def_PiPlus_Pt = "p_T of identified pi+";
-    TString def_PiMinus_Pt = "p_T of identified pi-";
+    fOutputListOfHists->Add(fHist_Rec_AntiProton_Pt);
+    fOutputListOfHists->Add(fHist_Rec_PosKaon_Pt);
+    fOutputListOfHists->Add(fHist_Rec_PiPlus_Pt);
+    fOutputListOfHists->Add(fHist_Rec_PiMinus_Pt);
 
-    fHist_AntiProton_Pt = new TH1F("AntiProton_Pt", def_AntiProton_Pt, 100, 0., 10.);
-    fHist_PosKaon_Pt = new TH1F("PosKaon_Pt", def_PosKaon_Pt, 100, 0., 10.);
-    fHist_PiPlus_Pt = new TH1F("PiPlus_Pt", def_PiPlus_Pt, 100, 0., 10.);
-    fHist_PiMinus_Pt = new TH1F("PiMinus_Pt", def_PiMinus_Pt, 100, 0., 10.);
-
-    fOutputListOfHists->Add(fHist_AntiProton_Pt);
-    fOutputListOfHists->Add(fHist_PosKaon_Pt);
-    fOutputListOfHists->Add(fHist_PiPlus_Pt);
-    fOutputListOfHists->Add(fHist_PiMinus_Pt);
-
-    TString def_TPC_Signal = "TPC dE/dx vs p/z";
-
-    f2DHist_TPC_Signal = new TH2F("TPC_Signal", def_TPC_Signal, 500, 0., 10., 500, 0., 1000.);
+    f2DHist_TPC_Signal = new TH2F("TPC_Signal", "", 500, 0., 10., 500, 0., 1000.);
 
     fOutputListOfHists->Add(f2DHist_TPC_Signal);
 
-    /* That will be filled with V0s information */
+    /* That will be filled with V0s (that require MC Gen. information) */
 
-    TString def_AntiLambda_Mass = "m(#bar{p},#pi^{+})";
-    TString def_AntiLambda_CPAwrtPV = "CPA(#bar{p},#pi^{+}) w.r.t. PV";
-    TString def_AntiLambda_DCAwrtPV = "DCA(#bar{p},#pi^{+}) w.r.t. PV";
-    TString def_KaonZeroShort_Mass = "m(#pi^{-},#pi^{+})";
-    TString def_KaonZeroShort_CPAwrtPV = "CPA(#pi^{-},#pi^{+}) w.r.t. PV";
-    TString def_KaonZeroShort_DCAwrtPV = "DCA(#pi^{-},#pi^{+}) w.r.t. PV";
+    fHist_Findable_True_AntiLambda_Mass = new TH1F("Findable_True_AntiLambda_Mass", "", 100, 0., 10.);
+    fHist_Findable_True_AntiLambda_Radius = new TH1F("Findable_True_AntiLambda_Radius", "", 100, 0., 200.);
+    fHist_Findable_True_AntiLambda_CPAwrtPV = new TH1F("Findable_True_AntiLambda_CPAwrtPV", "", 100, -1., 1.);
+    fHist_Findable_True_AntiLambda_DCAwrtPV = new TH1F("Findable_True_AntiLambda_DCAwrtPV", "", 100, 0., 10.);
+    fHist_Findable_True_KaonZeroShort_Mass = new TH1F("Findable_True_KaonZeroShort_Mass", "", 100, 0., 10.);
+    fHist_Findable_True_KaonZeroShort_Radius = new TH1F("Findable_True_KaonZeroShort_Radius", "", 100, 0., 200.);
+    fHist_Findable_True_KaonZeroShort_CPAwrtPV = new TH1F("Findable_True_KaonZeroShort_CPAwrtPV", "", 100, -1., 1.);
+    fHist_Findable_True_KaonZeroShort_DCAwrtPV = new TH1F("Findable_True_KaonZeroShort_DCAwrtPV", "", 100, 0., 10.);
 
-    fHist_AntiLambda_Mass = new TH1F("AntiLambda_Mass", def_AntiLambda_Mass, 100, 0., 10.);
-    fHist_AntiLambda_CPAwrtPV = new TH1F("AntiLambda_CPAwrtPV", def_AntiLambda_CPAwrtPV, 100, -5., 5.);
-    fHist_AntiLambda_DCAwrtPV = new TH1F("AntiLambda_DCAwrtPV", def_AntiLambda_DCAwrtPV, 100, 0., 10.);
-    fHist_KaonZeroShort_Mass = new TH1F("KaonZeroShort_Mass", def_KaonZeroShort_Mass, 100, 0., 10.);
-    fHist_KaonZeroShort_CPAwrtPV = new TH1F("KaonZeroShort_CPAwrtPV", def_KaonZeroShort_CPAwrtPV, 100, -5., 5.);
-    fHist_KaonZeroShort_DCAwrtPV = new TH1F("KaonZeroShort_DCAwrtPV", def_KaonZeroShort_DCAwrtPV, 100, 0., 10.);
+    fHist_Findable_Signal_AntiLambda_Mass = new TH1F("Findable_Signal_AntiLambda_Mass", "", 100, 0., 10.);
+    fHist_Findable_Signal_AntiLambda_Radius = new TH1F("Findable_Signal_AntiLambda_Radius", "", 100, 0., 200.);
+    fHist_Findable_Signal_AntiLambda_CPAwrtPV = new TH1F("Findable_Signal_AntiLambda_CPAwrtPV", "", 100, -1., 1.);
+    fHist_Findable_Signal_AntiLambda_DCAwrtPV = new TH1F("Findable_Signal_AntiLambda_DCAwrtPV", "", 100, 0., 10.);
+    fHist_Findable_Signal_KaonZeroShort_Mass = new TH1F("Findable_Signal_KaonZeroShort_Mass", "", 100, 0., 10.);
+    fHist_Findable_Signal_KaonZeroShort_Radius = new TH1F("Findable_Signal_KaonZeroShort_Radius", "", 100, 0., 200.);
+    fHist_Findable_Signal_KaonZeroShort_CPAwrtPV = new TH1F("Findable_Signal_KaonZeroShort_CPAwrtPV", "", 100, -1., 1.);
+    fHist_Findable_Signal_KaonZeroShort_DCAwrtPV = new TH1F("Findable_Signal_KaonZeroShort_DCAwrtPV", "", 100, 0., 10.);
 
-    fOutputListOfHists->Add(fHist_AntiLambda_Mass);
-    fOutputListOfHists->Add(fHist_AntiLambda_CPAwrtPV);
-    fOutputListOfHists->Add(fHist_AntiLambda_DCAwrtPV);
-    fOutputListOfHists->Add(fHist_KaonZeroShort_Mass);
-    fOutputListOfHists->Add(fHist_KaonZeroShort_CPAwrtPV);
-    fOutputListOfHists->Add(fHist_KaonZeroShort_DCAwrtPV);
+    fHist_Found_True_AntiLambda_Mass = new TH1F("Found_True_AntiLambda_Mass", "", 100, 0., 10.);
+    fHist_Found_True_AntiLambda_Radius = new TH1F("Found_True_AntiLambda_Radius", "", 100, 0., 200.);
+    fHist_Found_True_AntiLambda_CPAwrtPV = new TH1F("Found_True_AntiLambda_CPAwrtPV", "", 100, -1., 1.);
+    fHist_Found_True_AntiLambda_DCAwrtPV = new TH1F("Found_True_AntiLambda_DCAwrtPV", "", 100, 0., 10.);
+    fHist_Found_True_KaonZeroShort_Mass = new TH1F("Found_True_KaonZeroShort_Mass", "", 100, 0., 10.);
+    fHist_Found_True_KaonZeroShort_Radius = new TH1F("Found_True_KaonZeroShort_Radius", "", 100, 0., 200.);
+    fHist_Found_True_KaonZeroShort_CPAwrtPV = new TH1F("Found_True_KaonZeroShort_CPAwrtPV", "", 100, -1., 1.);
+    fHist_Found_True_KaonZeroShort_DCAwrtPV = new TH1F("Found_True_KaonZeroShort_DCAwrtPV", "", 100, 0., 10.);
+
+    fHist_Found_Signal_AntiLambda_Mass = new TH1F("Found_Signal_AntiLambda_Mass", "", 100, 0., 10.);
+    fHist_Found_Signal_AntiLambda_Radius = new TH1F("Found_Signal_AntiLambda_Radius", "", 100, 0., 200.);
+    fHist_Found_Signal_AntiLambda_CPAwrtPV = new TH1F("Found_Signal_AntiLambda_CPAwrtPV", "", 100, -1., 1.);
+    fHist_Found_Signal_AntiLambda_DCAwrtPV = new TH1F("Found_Signal_AntiLambda_DCAwrtPV", "", 100, 0., 10.);
+    fHist_Found_Signal_KaonZeroShort_Mass = new TH1F("Found_Signal_KaonZeroShort_Mass", "", 100, 0., 10.);
+    fHist_Found_Signal_KaonZeroShort_Radius = new TH1F("Found_Signal_KaonZeroShort_Radius", "", 100, 0., 200.);
+    fHist_Found_Signal_KaonZeroShort_CPAwrtPV = new TH1F("Found_Signal_KaonZeroShort_CPAwrtPV", "", 100, -1., 1.);
+    fHist_Found_Signal_KaonZeroShort_DCAwrtPV = new TH1F("Found_Signal_KaonZeroShort_DCAwrtPV", "", 100, 0., 10.);
+
+    fOutputListOfHists->Add(fHist_Findable_True_AntiLambda_Mass);
+    fOutputListOfHists->Add(fHist_Findable_True_AntiLambda_Radius);
+    fOutputListOfHists->Add(fHist_Findable_True_AntiLambda_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_Findable_True_AntiLambda_DCAwrtPV);
+    fOutputListOfHists->Add(fHist_Findable_True_KaonZeroShort_Mass);
+    fOutputListOfHists->Add(fHist_Findable_True_KaonZeroShort_Radius);
+    fOutputListOfHists->Add(fHist_Findable_True_KaonZeroShort_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_Findable_True_KaonZeroShort_DCAwrtPV);
+
+    fOutputListOfHists->Add(fHist_Findable_Signal_AntiLambda_Mass);
+    fOutputListOfHists->Add(fHist_Findable_Signal_AntiLambda_Radius);
+    fOutputListOfHists->Add(fHist_Findable_Signal_AntiLambda_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_Findable_Signal_AntiLambda_DCAwrtPV);
+    fOutputListOfHists->Add(fHist_Findable_Signal_KaonZeroShort_Mass);
+    fOutputListOfHists->Add(fHist_Findable_Signal_KaonZeroShort_Radius);
+    fOutputListOfHists->Add(fHist_Findable_Signal_KaonZeroShort_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_Findable_Signal_KaonZeroShort_DCAwrtPV);
+
+    fOutputListOfHists->Add(fHist_Found_True_AntiLambda_Mass);
+    fOutputListOfHists->Add(fHist_Found_True_AntiLambda_Radius);
+    fOutputListOfHists->Add(fHist_Found_True_AntiLambda_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_Found_True_AntiLambda_DCAwrtPV);
+    fOutputListOfHists->Add(fHist_Found_True_KaonZeroShort_Mass);
+    fOutputListOfHists->Add(fHist_Found_True_KaonZeroShort_Radius);
+    fOutputListOfHists->Add(fHist_Found_True_KaonZeroShort_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_Found_True_KaonZeroShort_DCAwrtPV);
+
+    fOutputListOfHists->Add(fHist_Found_Signal_AntiLambda_Mass);
+    fOutputListOfHists->Add(fHist_Found_Signal_AntiLambda_Radius);
+    fOutputListOfHists->Add(fHist_Found_Signal_AntiLambda_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_Found_Signal_AntiLambda_DCAwrtPV);
+    fOutputListOfHists->Add(fHist_Found_Signal_KaonZeroShort_Mass);
+    fOutputListOfHists->Add(fHist_Found_Signal_KaonZeroShort_Radius);
+    fOutputListOfHists->Add(fHist_Found_Signal_KaonZeroShort_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_Found_Signal_KaonZeroShort_DCAwrtPV);
+
+    /* That will be filled with V0s information (that don't require MC Gen. information) */
+
+    fHist_Found_AntiLambda_Mass = new TH1F("Found_AntiLambda_Mass", "", 100, 0., 10.);
+    fHist_Found_AntiLambda_Radius = new TH1F("Found_AntiLambda_Radius", "", 100, 0., 200.);
+    fHist_Found_AntiLambda_CPAwrtPV = new TH1F("Found_AntiLambda_CPAwrtPV", "", 100, -1., 1.);
+    fHist_Found_AntiLambda_DCAwrtPV = new TH1F("Found_AntiLambda_DCAwrtPV", "", 100, 0., 10.);
+    fHist_Found_KaonZeroShort_Mass = new TH1F("Found_KaonZeroShort_Mass", "", 100, 0., 10.);
+    fHist_Found_KaonZeroShort_Radius = new TH1F("Found_KaonZeroShort_Radius", "", 100, 0., 200.);
+    fHist_Found_KaonZeroShort_CPAwrtPV = new TH1F("Found_KaonZeroShort_CPAwrtPV", "", 100, -1., 1.);
+    fHist_Found_KaonZeroShort_DCAwrtPV = new TH1F("Found_KaonZeroShort_DCAwrtPV", "", 100, 0., 10.);
+
+    fOutputListOfHists->Add(fHist_Found_AntiLambda_Mass);
+    fOutputListOfHists->Add(fHist_Found_AntiLambda_Radius);
+    fOutputListOfHists->Add(fHist_Found_AntiLambda_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_Found_AntiLambda_DCAwrtPV);
+    fOutputListOfHists->Add(fHist_Found_KaonZeroShort_Mass);
+    fOutputListOfHists->Add(fHist_Found_KaonZeroShort_Radius);
+    fOutputListOfHists->Add(fHist_Found_KaonZeroShort_CPAwrtPV);
+    fOutputListOfHists->Add(fHist_Found_KaonZeroShort_DCAwrtPV);
 
     /* This will be filled with the reconstructed anti-sexaquark information */
 
-    TString def_AntiSexaquark_Mass = "m(#bar{#Lambda},K^{0}_{S})";
-    TString def_AntiSexaquark_DCA = "DCA(#bar{#Lambda},K^{0}_{S})";
-    TString def_AntiSexaquark_Radius = "2D Radius of AntiSexaquark";
+    fHist_Findable_AntiSexaquark_Mass = new TH1F("Findable_AntiSexaquark_Mass", "", 150, -5., 10.);
+    fHist_Findable_AntiSexaquark_DCA = new TH1F("Findable_AntiSexaquark_DCA", "", 100, 0., 10.);
+    fHist_Findable_AntiSexaquark_Radius = new TH1F("Findable_AntiSexaquark_Radius", "", 100, 0., 200.);
 
-    fHist_AntiSexaquark_Mass = new TH1F("AntiSexaquark_Mass", def_AntiSexaquark_Mass, 150, -5., 10.);
-    fHist_AntiSexaquark_DCA = new TH1F("AntiSexaquark_DCA", def_AntiSexaquark_DCA, 100, 0., 10.);
-    fHist_AntiSexaquark_Radius = new TH1F("AntiSexaquark_Radius", def_AntiSexaquark_Radius, 100, 0., 200.);
+    fHist_Found_AntiSexaquark_Mass = new TH1F("Found_AntiSexaquark_Mass", "", 150, -5., 10.);
+    fHist_Found_AntiSexaquark_DCA = new TH1F("Found_AntiSexaquark_DCA", "", 100, 0., 10.);
+    fHist_Found_AntiSexaquark_Radius = new TH1F("Found_AntiSexaquark_Radius", "", 100, 0., 200.);
 
-    fOutputListOfHists->Add(fHist_AntiSexaquark_Mass);
-    fOutputListOfHists->Add(fHist_AntiSexaquark_DCA);
-    fOutputListOfHists->Add(fHist_AntiSexaquark_Radius);
+    fOutputListOfHists->Add(fHist_Findable_AntiSexaquark_Mass);
+    fOutputListOfHists->Add(fHist_Findable_AntiSexaquark_DCA);
+    fOutputListOfHists->Add(fHist_Findable_AntiSexaquark_Radius);
+
+    fOutputListOfHists->Add(fHist_Found_AntiSexaquark_Mass);
+    fOutputListOfHists->Add(fHist_Found_AntiSexaquark_DCA);
+    fOutputListOfHists->Add(fHist_Found_AntiSexaquark_Radius);
 
     PostData(2, fOutputListOfHists);
 }
@@ -459,28 +519,30 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     if (fIsMC) ReconstructV0s_True(TrueV0s, TrueV0s_RecDaughters);
 
     if (fSourceOfV0s == "offline") {
-        ReconstructV0s_Official(kFALSE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters, SignalV0s_RecDaughters);
+        ReconstructV0s_Official(kFALSE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters, TrueV0s, TrueV0s_RecDaughters, SignalV0s,
+                                SignalV0s_RecDaughters);
     }
 
     if (fSourceOfV0s == "online") {
-        ReconstructV0s_Official(kTRUE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters, SignalV0s_RecDaughters);
+        ReconstructV0s_Official(kTRUE, idxAntiLambdaDaughters, idxKaonZeroShortDaughters, TrueV0s, TrueV0s_RecDaughters, SignalV0s,
+                                SignalV0s_RecDaughters);
     }
 
     if (fSourceOfV0s == "custom") {
         if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S") {
-            ReconstructV0s_Custom(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, esdAntiLambdas, idxAntiLambdaDaughters,
-                                  SignalV0s_RecDaughters);
-            ReconstructV0s_Custom(idxPiMinusTracks, idxPiPlusTracks, 310, -211, 211, esdKaonsZeroShort, idxKaonZeroShortDaughters,
-                                  SignalV0s_RecDaughters);
+            ReconstructV0s_Custom(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, esdAntiLambdas, idxAntiLambdaDaughters, TrueV0s,
+                                  TrueV0s_RecDaughters, SignalV0s, SignalV0s_RecDaughters);
+            ReconstructV0s_Custom(idxPiMinusTracks, idxPiPlusTracks, 310, -211, 211, esdKaonsZeroShort, idxKaonZeroShortDaughters, TrueV0s,
+                                  TrueV0s_RecDaughters, SignalV0s, SignalV0s_RecDaughters);
         }
     }
 
-    /*
-        if (fSourceOfV0s == "kalman") {
-            if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S") {
-                ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
-                ReconstructV0s_KF(idxPiMinusTracks, idxPiPlusTracks, 310, -211, 211, kfKaonsZeroShort, idxKaonZeroShortDaughters);
-            }
+    if (fSourceOfV0s == "kalman") {
+        if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S") {
+            ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
+            ReconstructV0s_KF(idxPiMinusTracks, idxPiPlusTracks, 310, -211, 211, kfKaonsZeroShort, idxKaonZeroShortDaughters);
+        }
+        /*
             if (fReactionChannel == "AntiSexaquark,P->AntiLambda,K+") {
                 ReconstructV0s_KF(idxAntiProtonTracks, idxPiPlusTracks, -3122, -2212, 211, kfAntiLambdas, idxAntiLambdaDaughters);
             }
@@ -492,8 +554,8 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
             if (fReactionChannel == "AntiSexaquark,P->AntiProton,K+,K+,pi0") {
                 ReconstructV0s_KF(idxPosKaonTracks, idxPosKaonTracks, 0, 312, 321, kfPosKaonPairs, idxPosKaonPairs);
             }
-        }
-    */
+        */
+    }
 
     if (fSourceOfV0s == "custom") {
         SexaquarkFinder_ChannelA_Geo(esdAntiLambdas, esdKaonsZeroShort, idxAntiLambdaDaughters, idxKaonZeroShortDaughters, idxAntiSexaquarkDaughters,
@@ -526,7 +588,7 @@ void AliAnalysisTaskSexaquark::CheckForInputErrors() {
 
 /*
  Loop over MC particles in a single event. Store the indices of the signal particles.
- - Uses: `fMC`, `fPDG`, `fHist_True_*`
+ - Uses: `fMC`, `fPDG`, histograms
  - Output: `SignalIDs`, `SignalV0s`, `SignalV0s_Daughters`, `TrueV0s`, `TrueV0s_Daughters`
 */
 void AliAnalysisTaskSexaquark::ProcessMCGen(std::vector<Int_t>& SignalIDs, std::vector<Int_t>& SignalV0s,
@@ -595,6 +657,13 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::vector<Int_t>& SignalIDs, std::
 
             fHist_True_AntiLambda_Bookkeep->Fill(0);
 
+            fHist_True_AntiLambda_Pt->Fill(mcPart->Pt());
+            fHist_True_AntiLambda_CPAwrtPV->Fill(  //
+                CosinePointingAngle(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decay_vertex.X(), decay_vertex.Y(), decay_vertex.Z(), PV[0], PV[1],
+                                    PV[2]));
+            fHist_True_AntiLambda_DCAwrtPV->Fill(  //
+                LinePointDCA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decay_vertex.X(), decay_vertex.Y(), decay_vertex.Z(), PV[0], PV[1], PV[2]));
+
             // fill vector
             TrueV0s.push_back(idx_mc);
         }
@@ -617,6 +686,13 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::vector<Int_t>& SignalIDs, std::
             TrueV0s_Daughters.push_back(aux_pair_trueV0_dau);
 
             fHist_True_KaonZeroShort_Bookkeep->Fill(0);
+
+            fHist_True_KaonZeroShort_Pt->Fill(mcPart->Pt());
+            fHist_True_KaonZeroShort_CPAwrtPV->Fill(  //
+                CosinePointingAngle(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decay_vertex.X(), decay_vertex.Y(), decay_vertex.Z(), PV[0], PV[1],
+                                    PV[2]));
+            fHist_True_KaonZeroShort_DCAwrtPV->Fill(  //
+                LinePointDCA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decay_vertex.X(), decay_vertex.Y(), decay_vertex.Z(), PV[0], PV[1], PV[2]));
 
             // fill vector
             TrueV0s.push_back(idx_mc);
@@ -680,9 +756,12 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::vector<Int_t>& SignalIDs, std::
 
             fHist_True_AntiLambda_Bookkeep->Fill(2);
 
+            fHist_True_Signal_AntiLambda_Pt->Fill(mcPart->Pt());
             fHist_True_Signal_AntiLambda_CPAwrtPV->Fill(  //
                 CosinePointingAngle(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decay_vertex.X(), decay_vertex.Y(), decay_vertex.Z(), PV[0], PV[1],
                                     PV[2]));
+            fHist_True_Signal_AntiLambda_DCAwrtPV->Fill(  //
+                LinePointDCA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decay_vertex.X(), decay_vertex.Y(), decay_vertex.Z(), PV[0], PV[1], PV[2]));
 
             // fill vectors
             SignalIDs.push_back(mcPart->MCStatusCode());
@@ -715,9 +794,13 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::vector<Int_t>& SignalIDs, std::
             }  // end of loop over V0 daughters
 
             fHist_True_KaonZeroShort_Bookkeep->Fill(2);
+
+            fHist_True_Signal_KaonZeroShort_Pt->Fill(mcPart->Pt());
             fHist_True_Signal_KaonZeroShort_CPAwrtPV->Fill(  //
                 CosinePointingAngle(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decay_vertex.X(), decay_vertex.Y(), decay_vertex.Z(), PV[0], PV[1],
                                     PV[2]));
+            fHist_True_Signal_KaonZeroShort_DCAwrtPV->Fill(  //
+                LinePointDCA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decay_vertex.X(), decay_vertex.Y(), decay_vertex.Z(), PV[0], PV[1], PV[2]));
 
             // fill vectors
             SignalIDs.push_back(mcPart->MCStatusCode());
@@ -985,26 +1068,26 @@ void AliAnalysisTaskSexaquark::ProcessTracks(std::vector<std::pair<Int_t, Int_t>
 
         if (n_sigma_proton < kMaxNSigma_Proton && track->Charge() < 0.) {
             idxAntiProtonTracks.push_back(idx_track);
-            fHist_AntiProton_Pt->Fill(track->Pt());
-            if (is_signal) fHist_Signal_AntiProton_Pt->Fill(track->Pt());
+            fHist_Rec_AntiProton_Pt->Fill(track->Pt());
+            if (is_signal) fHist_Rec_Signal_AntiProton_Pt->Fill(track->Pt());
         }
 
         if (n_sigma_kaon < kMaxNSigma_Kaon && track->Charge() > 0.) {
             idxPosKaonTracks.push_back(idx_track);
-            fHist_PosKaon_Pt->Fill(track->Pt());
-            if (is_signal) fHist_Signal_PosKaon_Pt->Fill(track->Pt());  // PENDING
+            fHist_Rec_PosKaon_Pt->Fill(track->Pt());
+            if (is_signal) fHist_Rec_Signal_PosKaon_Pt->Fill(track->Pt());  // PENDING
         }
 
         if (n_sigma_pion < kMaxNSigma_Pion && track->Charge() > 0.) {
             idxPiPlusTracks.push_back(idx_track);
-            fHist_PiPlus_Pt->Fill(track->Pt());
-            if (is_signal) fHist_Signal_PiPlus_Pt->Fill(track->Pt());
+            fHist_Rec_PiPlus_Pt->Fill(track->Pt());
+            if (is_signal) fHist_Rec_Signal_PiPlus_Pt->Fill(track->Pt());
         }
 
         if (n_sigma_pion < kMaxNSigma_Pion && track->Charge() < 0.) {
             idxPiMinusTracks.push_back(idx_track);
-            fHist_PiMinus_Pt->Fill(track->Pt());
-            if (is_signal) fHist_Signal_PiMinus_Pt->Fill(track->Pt());
+            fHist_Rec_PiMinus_Pt->Fill(track->Pt());
+            if (is_signal) fHist_Rec_Signal_PiMinus_Pt->Fill(track->Pt());
         }
 
         /* Fill vectors */
@@ -1041,12 +1124,14 @@ void AliAnalysisTaskSexaquark::ProcessTracks(std::vector<std::pair<Int_t, Int_t>
    (c) standard vertexing (a-la official V0 finders)
    (d) KF vertexing
    Considering (c) and (d), then this function should be used only as bookkeeping, and for calling the real "reconstructers"
+   I'm using (a) for now. (PENDING)
 */
 void AliAnalysisTaskSexaquark::ReconstructV0s_True(std::vector<Int_t> TrueV0s, std::vector<std::pair<Int_t, Int_t>> TrueV0s_RecDaughters) {
 
     AliMCParticle* mcV0;
 
-    Int_t idx_mc_V0;
+    AliESDtrack* negTrack;
+    AliMCParticle* mcNegDaughter;
 
     Bool_t is_signal;
 
@@ -1064,21 +1149,60 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_True(std::vector<Int_t> TrueV0s, s
 
         is_signal = mcV0->MCStatusCode() >= 600 && mcV0->MCStatusCode() < 620;
 
+        /* Get the true negative daughter */
+
+        negTrack = static_cast<AliESDtrack*>(fESD->GetTrack(TrueV0s_RecDaughters[idx_true_v0].first));
+        mcNegDaughter = (AliMCParticle*)fMC->GetTrack(TMath::Abs(negTrack->GetLabel()));
+
         /* Fill bookkeeping histograms */
 
         if (mcV0->PdgCode() == -3122) {
             fHist_True_AntiLambda_Bookkeep->Fill(3);
+            fHist_Findable_True_AntiLambda_Mass->Fill(fPDG.GetParticle(mcV0->PdgCode())->Mass());  // PENDING
+            fHist_Findable_True_AntiLambda_Radius->Fill(                                           //
+                TMath::Sqrt(mcNegDaughter->Xv() * mcNegDaughter->Xv() + mcNegDaughter->Yv() * mcNegDaughter->Yv()));
+            fHist_Findable_True_AntiLambda_CPAwrtPV->Fill(  //
+                CosinePointingAngle(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Xv(), mcNegDaughter->Yv(), mcNegDaughter->Zv(),
+                                    fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
+            fHist_Findable_True_AntiLambda_DCAwrtPV->Fill(  //
+                LinePointDCA(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Xv(), mcNegDaughter->Yv(), mcNegDaughter->Zv(),
+                             fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
             if (is_signal) {
                 fHist_True_AntiLambda_Bookkeep->Fill(4);
-                AliInfoF("-3122 %i %i", TrueV0s_RecDaughters[idx_true_v0].first, TrueV0s_RecDaughters[idx_true_v0].second);  // debug
+                fHist_Findable_Signal_AntiLambda_Mass->Fill(fPDG.GetParticle(mcV0->PdgCode())->Mass());  // PENDING
+                fHist_Findable_Signal_AntiLambda_Radius->Fill(                                           //
+                    TMath::Sqrt(mcNegDaughter->Xv() * mcNegDaughter->Xv() + mcNegDaughter->Yv() * mcNegDaughter->Yv()));
+                fHist_Findable_Signal_AntiLambda_CPAwrtPV->Fill(  //
+                    CosinePointingAngle(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Xv(), mcNegDaughter->Yv(), mcNegDaughter->Zv(),
+                                        fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
+                fHist_Findable_Signal_AntiLambda_DCAwrtPV->Fill(  //
+                    LinePointDCA(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Xv(), mcNegDaughter->Yv(), mcNegDaughter->Zv(),
+                                 fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
             }
         }
 
         if (mcV0->PdgCode() == 310) {
             fHist_True_KaonZeroShort_Bookkeep->Fill(3);
+            fHist_Findable_True_KaonZeroShort_Mass->Fill(fPDG.GetParticle(mcV0->PdgCode())->Mass());  // PENDING
+            fHist_Findable_True_KaonZeroShort_Radius->Fill(                                           //
+                TMath::Sqrt(mcNegDaughter->Xv() * mcNegDaughter->Xv() + mcNegDaughter->Yv() * mcNegDaughter->Yv()));
+            fHist_Findable_True_KaonZeroShort_CPAwrtPV->Fill(  //
+                CosinePointingAngle(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Xv(), mcNegDaughter->Yv(), mcNegDaughter->Zv(),
+                                    fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
+            fHist_Findable_True_KaonZeroShort_DCAwrtPV->Fill(  //
+                LinePointDCA(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Xv(), mcNegDaughter->Yv(), mcNegDaughter->Zv(),
+                             fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
             if (is_signal) {
                 fHist_True_KaonZeroShort_Bookkeep->Fill(4);
-                AliInfoF(" 310 %i %i", TrueV0s_RecDaughters[idx_true_v0].first, TrueV0s_RecDaughters[idx_true_v0].second);  // debug
+                fHist_Findable_Signal_KaonZeroShort_Mass->Fill(fPDG.GetParticle(mcV0->PdgCode())->Mass());  // PENDING
+                fHist_Findable_Signal_KaonZeroShort_Radius->Fill(                                           //
+                    TMath::Sqrt(mcNegDaughter->Xv() * mcNegDaughter->Xv() + mcNegDaughter->Yv() * mcNegDaughter->Yv()));
+                fHist_Findable_Signal_KaonZeroShort_CPAwrtPV->Fill(  //
+                    CosinePointingAngle(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Xv(), mcNegDaughter->Yv(), mcNegDaughter->Zv(),
+                                        fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
+                fHist_Findable_Signal_KaonZeroShort_DCAwrtPV->Fill(  //
+                    LinePointDCA(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Xv(), mcNegDaughter->Yv(), mcNegDaughter->Zv(),
+                                 fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
             }
         }
     }
@@ -1091,15 +1215,7 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_True(std::vector<Int_t> TrueV0s, s
  - Input: `v0`, `neg_track`, `pos_track`
 */
 Bool_t AliAnalysisTaskSexaquark::PassesAntiLambdaCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track) {
-
-    Float_t neg_nsigma_proton = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(neg_track, AliPID::kProton));
-    Float_t pos_nsigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(pos_track, AliPID::kPion));
-
-    // >> particle identification
-    if (neg_nsigma_proton > kMaxNSigma_Proton || pos_nsigma_pion > kMaxNSigma_Pion) {
-        return kFALSE;
-    }
-
+    // PENDING
     return kTRUE;
 }
 
@@ -1108,25 +1224,18 @@ Bool_t AliAnalysisTaskSexaquark::PassesAntiLambdaCuts_OfficialCustom(AliESDv0* v
  - Input: `v0`, `neg_track`, `pos_track`
 */
 Bool_t AliAnalysisTaskSexaquark::PassesKaonZeroShortCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track) {
-
-    Float_t neg_nsigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(neg_track, AliPID::kPion));
-    Float_t pos_nsigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(pos_track, AliPID::kPion));
-
-    // >> particle identification
-    if (neg_nsigma_pion > kMaxNSigma_Pion || pos_nsigma_pion > kMaxNSigma_Pion) {
-        return kFALSE;
-    }
-
+    // PENDING
     return kTRUE;
 }
 
 /*
- Loop over all the V0s found by the Official V0 Finders that are stored in the ESD file.
- - Input: `online`, `SignalV0s_RecDaughters`
+ Loop over all the V0s that were stored in the ESD file by the Official V0 Finders.
+ - Input: `online`, `TrueV0s`, `TrueV0s_RecDaughters`, `SignalV0s`, `SignalV0s_RecDaughters`
  - Output: `idxAntiLambdaDaughters`, `idxKaonZeroShortDaughters`
 */
 void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
-                                                       std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters,
+                                                       std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters, std::vector<Int_t> TrueV0s,
+                                                       std::vector<std::pair<Int_t, Int_t>> TrueV0s_RecDaughters, std::vector<Int_t> SignalV0s,
                                                        std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters) {
 
     // define variables & objects
@@ -1148,16 +1257,15 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
     Double_t pos_energy;
     Double_t neg_energy;
 
-    Int_t idx_pos_true;
-    Int_t idx_neg_true;
-    AliMCParticle* mcPosTrue;
-    AliMCParticle* mcNegTrue;
-
     Double_t PV[3];
     fPrimaryVertex->GetXYZ(PV);
 
     std::pair<Int_t, Int_t> aux_pair;
     Float_t aux_mass;
+    Int_t aux_true_v0_idx;
+    Int_t aux_signal_v0_idx;
+
+    AliMCParticle* mcV0;
 
     /* Loop over V0s that are stored in the ESD */
 
@@ -1187,7 +1295,6 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
 
             aux_pair.first = idx_neg;
             aux_pair.second = idx_pos;
-            idxAntiLambdaDaughters.push_back(aux_pair);
 
             V0->GetXYZ(V0_X, V0_Y, V0_Z);
             V0->GetPPxPyPz(P_Px, P_Py, P_Pz);
@@ -1200,16 +1307,42 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
 
             /* Fill histograms */
 
-            fHist_AntiLambda_Mass->Fill(aux_mass);
-            fHist_AntiLambda_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
-            fHist_AntiLambda_DCAwrtPV->Fill(LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+            fHist_Found_AntiLambda_Mass->Fill(aux_mass);
+            fHist_Found_AntiLambda_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+            fHist_Found_AntiLambda_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+            fHist_Found_AntiLambda_DCAwrtPV->Fill(LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
 
-            /* DEBUG */
-
-            if (std::any_of(SignalV0s_RecDaughters.begin(), SignalV0s_RecDaughters.end(),
-                            [&](std::pair<Int_t, Int_t> signal_pair) { return signal_pair == aux_pair; })) {
-                AliInfoF("-3122 %i %i", aux_pair.first, aux_pair.second);
+            aux_true_v0_idx = -1;
+            auto true_it = std::find(TrueV0s_RecDaughters.begin(), TrueV0s_RecDaughters.end(), aux_pair);
+            if (true_it != TrueV0s_RecDaughters.end()) {
+                aux_true_v0_idx = std::distance(TrueV0s_RecDaughters.begin(), true_it);
             }
+            if (aux_true_v0_idx != -1) {
+                mcV0 = (AliMCParticle*)fMC->GetTrack(TrueV0s[aux_true_v0_idx]);
+                if (mcV0->PdgCode() == -3122) {
+                    fHist_Found_True_AntiLambda_Mass->Fill(aux_mass);
+                    fHist_Found_True_AntiLambda_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+                    fHist_Found_True_AntiLambda_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                    fHist_Found_True_AntiLambda_DCAwrtPV->Fill(LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+                }
+            }
+
+            aux_signal_v0_idx = -1;
+            auto signal_it = std::find(SignalV0s_RecDaughters.begin(), SignalV0s_RecDaughters.end(), aux_pair);
+            if (signal_it != SignalV0s_RecDaughters.end()) {
+                aux_signal_v0_idx = std::distance(SignalV0s_RecDaughters.begin(), signal_it);
+            }
+            if (aux_signal_v0_idx != -1) {
+                mcV0 = (AliMCParticle*)fMC->GetTrack(SignalV0s[aux_signal_v0_idx]);
+                if (mcV0->PdgCode() == -3122) {
+                    fHist_Found_Signal_AntiLambda_Mass->Fill(aux_mass);
+                    fHist_Found_Signal_AntiLambda_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+                    fHist_Found_Signal_AntiLambda_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                    fHist_Found_Signal_AntiLambda_DCAwrtPV->Fill(LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+                }
+            }
+
+            idxAntiLambdaDaughters.push_back(aux_pair);
         }
 
         /* Store: K0S -> pi- + pi+ */
@@ -1218,7 +1351,6 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
 
             aux_pair.first = idx_neg;
             aux_pair.second = idx_pos;
-            idxKaonZeroShortDaughters.push_back(aux_pair);
 
             V0->GetXYZ(V0_X, V0_Y, V0_Z);
             V0->GetPPxPyPz(P_Px, P_Py, P_Pz);
@@ -1231,16 +1363,43 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
 
             /* Fill histograms */
 
-            fHist_KaonZeroShort_Mass->Fill(aux_mass);
-            fHist_KaonZeroShort_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
-            fHist_KaonZeroShort_DCAwrtPV->Fill(LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+            fHist_Found_KaonZeroShort_Mass->Fill(aux_mass);
+            fHist_Found_KaonZeroShort_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+            fHist_Found_KaonZeroShort_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+            fHist_Found_KaonZeroShort_DCAwrtPV->Fill(LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
 
-            /* DEBUG */
-
-            if (std::any_of(SignalV0s_RecDaughters.begin(), SignalV0s_RecDaughters.end(),
-                            [&](std::pair<Int_t, Int_t> signal_pair) { return signal_pair == aux_pair; })) {
-                AliInfoF("310 %i %i", aux_pair.first, aux_pair.second);
+            aux_true_v0_idx = -1;
+            auto true_it = std::find(TrueV0s_RecDaughters.begin(), TrueV0s_RecDaughters.end(), aux_pair);
+            if (true_it != TrueV0s_RecDaughters.end()) {
+                aux_true_v0_idx = std::distance(TrueV0s_RecDaughters.begin(), true_it);
             }
+            if (aux_true_v0_idx != -1) {
+                mcV0 = (AliMCParticle*)fMC->GetTrack(TrueV0s[aux_true_v0_idx]);
+                if (mcV0->PdgCode() == 310) {
+                    fHist_Found_True_KaonZeroShort_Mass->Fill(aux_mass);
+                    fHist_Found_True_KaonZeroShort_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+                    fHist_Found_True_KaonZeroShort_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                    fHist_Found_True_KaonZeroShort_DCAwrtPV->Fill(LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+                }
+            }
+
+            aux_signal_v0_idx = -1;
+            auto signal_it = std::find(SignalV0s_RecDaughters.begin(), SignalV0s_RecDaughters.end(), aux_pair);
+            if (signal_it != SignalV0s_RecDaughters.end()) {
+                aux_signal_v0_idx = std::distance(SignalV0s_RecDaughters.begin(), signal_it);
+            }
+            if (aux_signal_v0_idx != -1) {
+                mcV0 = (AliMCParticle*)fMC->GetTrack(SignalV0s[aux_signal_v0_idx]);
+                if (mcV0->PdgCode() == 310) {
+                    fHist_Found_Signal_KaonZeroShort_Mass->Fill(aux_mass);
+                    fHist_Found_Signal_KaonZeroShort_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+                    fHist_Found_Signal_KaonZeroShort_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                    fHist_Found_Signal_KaonZeroShort_DCAwrtPV->Fill(
+                        LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+                }
+            }
+
+            idxKaonZeroShortDaughters.push_back(aux_pair);
         }
 
     }  // end of loop over V0s
@@ -1254,7 +1413,8 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
 */
 void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0,
                                                      Int_t pdgTrackNeg, Int_t pdgTrackPos, std::vector<AliESDv0>& esdV0s,
-                                                     std::vector<std::pair<Int_t, Int_t>>& idxDaughters,
+                                                     std::vector<std::pair<Int_t, Int_t>>& idxDaughters, std::vector<Int_t> TrueV0s,
+                                                     std::vector<std::pair<Int_t, Int_t>> TrueV0s_RecDaughters, std::vector<Int_t> SignalV0s,
                                                      std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters) {
 
     // AliESDtrack* track;
@@ -1277,6 +1437,10 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegat
     Double_t dca_wrt_pv;
 
     std::pair<Int_t, Int_t> aux_pair;
+
+    AliMCParticle* mcV0;
+    Int_t aux_true_v0_idx;
+    Int_t aux_signal_v0_idx;
 
     // define cuts
     Double_t COV0F_DNmin = 0.1;            // (d=0.1) min imp parameter for the negative daughter (depends on PV!)
@@ -1531,15 +1695,81 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegat
             /* Fill histograms */
 
             if (pdgV0 == -3122) {
-                fHist_AntiLambda_Mass->Fill(aux_mass);
-                fHist_AntiLambda_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
-                fHist_AntiLambda_DCAwrtPV->Fill(dca_wrt_pv);
+                fHist_Found_AntiLambda_Mass->Fill(aux_mass);
+                fHist_Found_AntiLambda_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+                fHist_Found_AntiLambda_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                fHist_Found_AntiLambda_DCAwrtPV->Fill(dca_wrt_pv);
+
+                aux_true_v0_idx = -1;
+                auto true_it = std::find(TrueV0s_RecDaughters.begin(), TrueV0s_RecDaughters.end(), aux_pair);
+                if (true_it != TrueV0s_RecDaughters.end()) {
+                    aux_true_v0_idx = std::distance(TrueV0s_RecDaughters.begin(), true_it);
+                }
+                if (aux_true_v0_idx != -1) {
+                    mcV0 = (AliMCParticle*)fMC->GetTrack(TrueV0s[aux_true_v0_idx]);
+                    if (mcV0->PdgCode() == pdgV0) {
+                        fHist_Found_True_AntiLambda_Mass->Fill(aux_mass);
+                        fHist_Found_True_AntiLambda_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+                        fHist_Found_True_AntiLambda_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                        fHist_Found_True_AntiLambda_DCAwrtPV->Fill(  //
+                            LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+                    }
+                }
+
+                aux_signal_v0_idx = -1;
+                auto signal_it = std::find(SignalV0s_RecDaughters.begin(), SignalV0s_RecDaughters.end(), aux_pair);
+                if (signal_it != SignalV0s_RecDaughters.end()) {
+                    aux_signal_v0_idx = std::distance(SignalV0s_RecDaughters.begin(), signal_it);
+                }
+                if (aux_signal_v0_idx != -1) {
+                    mcV0 = (AliMCParticle*)fMC->GetTrack(SignalV0s[aux_signal_v0_idx]);
+                    if (mcV0->PdgCode() == pdgV0) {
+                        fHist_Found_Signal_AntiLambda_Mass->Fill(aux_mass);
+                        fHist_Found_Signal_AntiLambda_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+                        fHist_Found_Signal_AntiLambda_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                        fHist_Found_Signal_AntiLambda_DCAwrtPV->Fill(  //
+                            LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+                    }
+                }
             }
 
             if (pdgV0 == 310) {
-                fHist_KaonZeroShort_Mass->Fill(aux_mass);
-                fHist_KaonZeroShort_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
-                fHist_KaonZeroShort_DCAwrtPV->Fill(LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+                fHist_Found_KaonZeroShort_Mass->Fill(aux_mass);
+                fHist_Found_KaonZeroShort_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+                fHist_Found_KaonZeroShort_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                fHist_Found_KaonZeroShort_DCAwrtPV->Fill(dca_wrt_pv);
+
+                aux_true_v0_idx = -1;
+                auto true_it = std::find(TrueV0s_RecDaughters.begin(), TrueV0s_RecDaughters.end(), aux_pair);
+                if (true_it != TrueV0s_RecDaughters.end()) {
+                    aux_true_v0_idx = std::distance(TrueV0s_RecDaughters.begin(), true_it);
+                }
+                if (aux_true_v0_idx != -1) {
+                    mcV0 = (AliMCParticle*)fMC->GetTrack(TrueV0s[aux_true_v0_idx]);
+                    if (mcV0->PdgCode() == pdgV0) {
+                        fHist_Found_True_KaonZeroShort_Mass->Fill(aux_mass);
+                        fHist_Found_True_KaonZeroShort_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+                        fHist_Found_True_KaonZeroShort_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                        fHist_Found_True_KaonZeroShort_DCAwrtPV->Fill(  //
+                            LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+                    }
+                }
+
+                aux_signal_v0_idx = -1;
+                auto signal_it = std::find(SignalV0s_RecDaughters.begin(), SignalV0s_RecDaughters.end(), aux_pair);
+                if (signal_it != SignalV0s_RecDaughters.end()) {
+                    aux_signal_v0_idx = std::distance(SignalV0s_RecDaughters.begin(), signal_it);
+                }
+                if (aux_signal_v0_idx != -1) {
+                    mcV0 = (AliMCParticle*)fMC->GetTrack(SignalV0s[aux_signal_v0_idx]);
+                    if (mcV0->PdgCode() == pdgV0) {
+                        fHist_Found_Signal_KaonZeroShort_Mass->Fill(aux_mass);
+                        fHist_Found_Signal_KaonZeroShort_Radius->Fill(TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y));
+                        fHist_Found_Signal_KaonZeroShort_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
+                        fHist_Found_Signal_KaonZeroShort_DCAwrtPV->Fill(  //
+                            LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+                    }
+                }
             }
 
             /* Fill V0s vector */
@@ -1548,8 +1778,7 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegat
 
             /* Fill daughters vector */
 
-            aux_pair.first = nidx;
-            aux_pair.second = pidx;
+            aux_pair = std::make_pair(nidx, pidx);
             idxDaughters.push_back(aux_pair);
 
             if (std::any_of(SignalV0s_RecDaughters.begin(), SignalV0s_RecDaughters.end(),
@@ -1568,11 +1797,11 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegat
 /*
  Apply cuts to an (anti-lambda) candidate, reconstructed from an (anti-proton, pi+) pair. Relevant for channel A and D.
  */
-Bool_t AliAnalysisTaskSexaquark::PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfNegDau, KFParticle kfPosDau,  //
-                                                         TLorentzVector lvV0, TLorentzVector lvNegDau, TLorentzVector lvPosDau) {
+Bool_t AliAnalysisTaskSexaquark::PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfNegDau, KFParticle kfPosDau, TLorentzVector lvV0,
+                                                         TLorentzVector lvNegDau, TLorentzVector lvPosDau) {
 
     // define geometrical cuts
-    Float_t kfDCA_tracks = TMath::Abs(kfNegDau.GetDistanceFromParticleXY(kfPosDau));
+    // Float_t kfDCA_tracks = TMath::Abs(kfNegDau.GetDistanceFromParticleXY(kfPosDau));
     // Float_t kfDCA_neg_V0 =
     // TMath::Abs(kfNegDau.GetDistanceFromVertexXY(kfV0));  // = AliESDtrack::GetD(vertex_x, vertex_y, mag_field) = impar_neg[0]
     // Float_t kfDCA_pos_V0 = TMath::Abs(kfPosDau.GetDistanceFromVertexXY(kfV0));
@@ -1592,8 +1821,23 @@ Bool_t AliAnalysisTaskSexaquark::PassesAntiLambdaCuts_KF(KFParticleMother kfV0, 
     if (mass > 1.13 || mass < 1.10) return kFALSE;  // (pending) refactorize
     if (cpa < 0.9) return kFALSE;                   // (pending)
     if (kfDCA_tracks > kMaxDCATracks) return kFALSE;
- */
+    */
 
+    Double_t COV0F_DNmin = 0.1;            // (d=0.1) min imp parameter for the negative daughter (depends on PV!)
+    Double_t COV0F_DPmin = 0.1;            // (d=0.1) min imp parameter for the positive daughter (depends on PV!)
+    Double_t COV0F_Chi2max = 33.;          // (d=33.) max chi2
+    Double_t COV0F_DCAmax = 0.6;           // (d=1.) max DCA between the daughter tracks
+    Double_t COV0F_CPAmin = 0.4;           // (d=0.998) max cosine of V0's pointing angle (depends on PV!)
+    Double_t COV0F_Rmin = 50.;             // (d=0.9) min radius of the V0 radius
+    Double_t COV0F_Rmax = 200.;            // (d=100) max radius of the V0 radius
+    Double_t COV0F_Etamax_V0 = 1.0;        // (d=1.) max eta of V0
+    Double_t COV0F_DCAmin_V0_wrtPV = 5.;   // min DCA between V0 and PV
+    Double_t COV0F_Etamax_NegDau = 1.5;    // max eta of negative daughter
+    Double_t COV0F_Etamax_PosDau = 1.5;    // max eta of positive daughter
+    Int_t COV0F_NClustersTPCmin_Dau = 50;  // minimun number of clusters in the TPC
+    Double_t COV0F_Ptmin = 1.0;            // min Pt of V0
+
+    // PENDING
     return kTRUE;
 }
 
@@ -1723,18 +1967,20 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_KF(std::vector<Int_t> idxNegativeT
             /* Fill histograms */
 
             if (pdgV0 == -3122) {
-                fHist_AntiLambda_Mass->Fill(lvV0.M());
-                fHist_AntiLambda_CPAwrtPV->Fill(CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(),
+                fHist_Found_AntiLambda_Mass->Fill(lvV0.M());
+                fHist_Found_AntiLambda_Radius->Fill(TMath::Sqrt(kfV0.GetX() * kfV0.GetX() + kfV0.GetY() * kfV0.GetY()));
+                fHist_Found_AntiLambda_CPAwrtPV->Fill(CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(),
                                                                           fPrimaryVertex->GetY(), fPrimaryVertex->GetZ()));
-                fHist_AntiLambda_DCAwrtPV->Fill(
+                fHist_Found_AntiLambda_DCAwrtPV->Fill(
                     LinePointDCA(lvV0.Px(), lvV0.Py(), lvV0.Pz(), kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), PV[0], PV[1], PV[2]));
             }
 
             if (pdgV0 == 310) {
-                fHist_KaonZeroShort_Mass->Fill(lvV0.M());
-                fHist_KaonZeroShort_CPAwrtPV->Fill(CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(),
+                fHist_Found_KaonZeroShort_Mass->Fill(lvV0.M());
+                fHist_Found_KaonZeroShort_Radius->Fill(TMath::Sqrt(kfV0.GetX() * kfV0.GetX() + kfV0.GetY() * kfV0.GetY()));
+                fHist_Found_KaonZeroShort_CPAwrtPV->Fill(CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(),
                                                                              fPrimaryVertex->GetY(), fPrimaryVertex->GetZ()));
-                fHist_KaonZeroShort_DCAwrtPV->Fill(
+                fHist_Found_KaonZeroShort_DCAwrtPV->Fill(
                     LinePointDCA(lvV0.Px(), lvV0.Py(), lvV0.Pz(), kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), PV[0], PV[1], PV[2]));
             }
 
@@ -1780,8 +2026,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiL
     dca = Calculate_TwoLinesDCA_v1(AntiLambda_momentum, AntiLambda_vertex, KaonZeroShort_momentum, KaonZeroShort_vertex, cpa1, cpa2);
     dca = Calculate_TwoLinesDCA_v2(AntiLambda_momentum, AntiLambda_vertex, KaonZeroShort_momentum, KaonZeroShort_vertex, cpa1, cpa2);
 
-    fHist_AntiSexaquark_DCA->Fill(dca);
-    fHist_AntiSexaquark_Radius->Fill((0.5 * (cpa1 + cpa2)).Perp());
+    fHist_Found_AntiSexaquark_DCA->Fill(dca);
+    fHist_Found_AntiSexaquark_Radius->Fill((0.5 * (cpa1 + cpa2)).Perp());
 
     return kTRUE;
 }
@@ -1844,6 +2090,7 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_Geo(std::vector<AliESDv0
             AliInfoF("idxAL idxKZS             = %i %i", idxAntiLambda, idxKaonZeroShort);
             AliInfoF("idxSignalAL idxSignalKZS = %i %i", idxSignalAntiLambda, idxSignalKaonZeroShort);
 
+            is_signal = kFALSE;
             if (idxSignalAntiLambda >= 0 && idxSignalKaonZeroShort >= 0)
                 is_signal = SignalIDs[idxSignalAntiLambda] == SignalIDs[idxSignalKaonZeroShort];
 
@@ -1861,7 +2108,7 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_Geo(std::vector<AliESDv0
             // calculate the invariant mass of the anti-sexaquark candidate
             lvAntiSexaquark = lvAntiLambda + lvKaonZeroShort - lvStruckNucleon;
 
-            fHist_AntiSexaquark_Mass->Fill(lvAntiSexaquark.M());
+            fHist_Found_AntiSexaquark_Mass->Fill(lvAntiSexaquark.M());
         }
     }
 
