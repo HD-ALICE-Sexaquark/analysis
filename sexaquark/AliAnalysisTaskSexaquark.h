@@ -239,13 +239,16 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                        const Double_t b);
     void GetHelixCenter(const AliExternalTrackParam* track, Double_t center[2], const Double_t b);
     Float_t MCRec_GetImpactParameter(AliESDtrack* track);
-    Double_t Calculate_CPA(Double_t Px, Double_t Py, Double_t Pz, Double_t X, Double_t Y, Double_t Z, Double_t refPointX, Double_t refPointY,
-                           Double_t refPointZ);
+    Double_t CosinePointingAngle(TLorentzVector lvParticle, Double_t X, Double_t Y, Double_t Z, Double_t refPointX, Double_t refPointY,
+                                 Double_t refPointZ);
+    Double_t CosinePointingAngle(Double_t Px, Double_t Py, Double_t Pz, Double_t X, Double_t Y, Double_t Z, Double_t refPointX, Double_t refPointY,
+                                 Double_t refPointZ);
     Double_t Calculate_ArmAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Pos_Px, Double_t Pos_Py, Double_t Pos_Pz, Double_t Neg_Px,
                                 Double_t Neg_Py, Double_t Neg_Pz);
     Double_t Calculate_ArmPt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz);
-    Double_t Calculate_LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t V0_X, Double_t V0_Y, Double_t V0_Z, Double_t PV_X,
-                                    Double_t PV_Y, Double_t PV_Z);
+    Double_t LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t V0_X, Double_t V0_Y, Double_t V0_Z, Double_t refPointX,
+                          Double_t refPointY, Double_t refPointZ);
+    Double_t SquaredDistancePointToLine(const Double_t* t, Double_t point[], Double_t linePoint[], Double_t lineDir[]);
     Double_t SquaredDistanceBetweenLines(const Double_t* t, Double_t pos0[], Double_t dir0[], Double_t pos1[], Double_t dir1[]);
     Double_t Calculate_TwoLinesDCA_v1(TVector3 pos1, TVector3 dir1, TVector3 pos2, TVector3 dir2, TVector3& P1, TVector3& P2);
     Double_t Calculate_TwoLinesDCA_v2(TVector3 pos1, TVector3 dir1, TVector3 pos2, TVector3 dir2, TVector3& P1, TVector3& P2);

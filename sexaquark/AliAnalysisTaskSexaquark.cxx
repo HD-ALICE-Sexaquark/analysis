@@ -39,7 +39,7 @@
 #include "Math/Functor.h"
 #include "Math/Minimizer.h"
 
-#define HomogeneousField  // homogenous field in z direction, required by KFParticle
+#define HomogeneousField  // homogeneous field in z direction, required by KFParticle
 #include "KFPTrack.h"
 #include "KFPVertex.h"
 #include "KFParticle.h"
@@ -377,6 +377,8 @@ void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
 
 /*
  Main function, called per each event at RUNTIME ~ execution on Grid
+ - Uses: `fIsMC`, `fMC_PrimaryVertex`, `fESD`, `fMagneticField`, `fPrimaryVertex`, `fSourceOfV0s`, `fReactionChannel`, `fOutputListOfTrees`,
+ `fOutputListOfHists`
 */
 void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
@@ -407,7 +409,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
      - `size` : number of signal daughters per interaction
     */
     std::vector<Int_t> SignalIDs;
-
     std::vector<Int_t> SignalV0s;  // PENDING: for channels different than channel A, this should be called SignalProducts...
     std::vector<std::pair<Int_t, Int_t>> SignalV0s_Daughters;
     std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters;
@@ -562,45 +563,63 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::vector<Int_t>& SignalIDs, std::
     std::pair<Int_t, Int_t> aux_pair_trueV0_dau;
     std::pair<Int_t, Int_t> aux_pair_signalV0_dau;
 
+    TVector3 decay_vertex(0, 0, 0);
+
     /* Loop over MC gen. particles in a single event */
 
-    AliInfo("   IDX    STATUS    PID MOMIDX MOMPID           ORIGIN           ISPRIM");
     for (Int_t idx_mc = 0; idx_mc < fMC->GetNumberOfTracks(); idx_mc++) {
 
         mcPart = (AliMCParticle*)fMC->GetTrack(idx_mc);
         pdg_mc = mcPart->PdgCode();
 
+        decay_vertex.SetXYZ(0, 0, 0);
+
         /* Fill bookkeeping histograms */
         /* PENDING: it can be simplified */
 
         if (pdg_mc == -3122) {
-            fHist_True_AntiLambda_Bookkeep->Fill(0);
-            TrueV0s.push_back(idx_mc);
+
+            // loop over daughters
             for (Int_t idx_dau = mcPart->GetDaughterFirst(); mcPart->GetNDaughters() && idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
                 mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
                 pdg_dau = mcDaughter->PdgCode();
                 if (pdg_dau == -2212) {
                     aux_pair_trueV0_dau.first = idx_dau;
+                    if (decay_vertex.Mag() == 0) decay_vertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
                 } else if (pdg_dau == 211) {
                     aux_pair_trueV0_dau.second = idx_dau;
+                    if (decay_vertex.Mag() == 0) decay_vertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
                 }
-            }  // end of loop over V0 daughters
+            }  // end of loop over daughters
             TrueV0s_Daughters.push_back(aux_pair_trueV0_dau);
-        }
-        if (pdg_mc == 310) {
-            fHist_True_KaonZeroShort_Bookkeep->Fill(0);
+
+            fHist_True_AntiLambda_Bookkeep->Fill(0);
+
+            // fill vector
             TrueV0s.push_back(idx_mc);
+        }
+
+        if (pdg_mc == 310) {
+
+            // loop over daughters
             for (Int_t idx_dau = mcPart->GetDaughterFirst(); mcPart->GetNDaughters() && idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
                 mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
                 pdg_dau = mcDaughter->PdgCode();
                 if (pdg_dau == -211) {
                     aux_pair_trueV0_dau.first = idx_dau;
+                    if (decay_vertex.Mag() == 0) decay_vertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
                 }
                 if (pdg_dau == 211) {
                     aux_pair_trueV0_dau.second = idx_dau;
+                    if (decay_vertex.Mag() == 0) decay_vertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
                 }
-            }  // end of loop over V0 daughters
+            }  // end of loop over daughters
             TrueV0s_Daughters.push_back(aux_pair_trueV0_dau);
+
+            fHist_True_KaonZeroShort_Bookkeep->Fill(0);
+
+            // fill vector
+            TrueV0s.push_back(idx_mc);
         }
         if (pdg_mc == -2212) fHist_True_AntiProton_Bookkeep->Fill(0);
         if (pdg_mc == 321) fHist_True_PosKaon_Bookkeep->Fill(0);
@@ -644,60 +663,72 @@ void AliAnalysisTaskSexaquark::ProcessMCGen(std::vector<Int_t>& SignalIDs, std::
         /* (PENDING) I should also check if the branching ratio of the decay of the AL and K0S correspond to the real one */
 
         if (pdg_mc == -3122 && is_signal) {
-            cpa_wrt_pv = Calculate_CPA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcPart->Xv(), mcPart->Yv(), mcPart->Zv(), PV[0], PV[1], PV[2]);
-            fHist_True_Signal_AntiLambda_CPAwrtPV->Fill(cpa_wrt_pv);
-            fHist_True_AntiLambda_Bookkeep->Fill(2);
-
-            // fill vectors
-            SignalIDs.push_back(mcPart->MCStatusCode());
-            SignalV0s.push_back(idx_mc);
-
+            // loop over daughters
             for (Int_t idx_dau = mcPart->GetDaughterFirst(); idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
                 mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
                 pdg_dau = mcDaughter->PdgCode();
                 if (pdg_dau == -2212) {
                     fHist_True_AntiProton_Bookkeep->Fill(2);
                     aux_pair_signalV0_dau.first = idx_dau;
+                    if (decay_vertex.Mag() == 0) decay_vertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
                 } else if (pdg_dau == 211) {
                     fHist_True_PiPlus_Bookkeep->Fill(2);
                     aux_pair_signalV0_dau.second = idx_dau;
+                    if (decay_vertex.Mag() == 0) decay_vertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
                 }
-            }  // end of loop over V0 daughters
+            }  // end of loop over daughters
 
-            // fill vector
-            SignalV0s_Daughters.push_back(aux_pair_signalV0_dau);
+            fHist_True_AntiLambda_Bookkeep->Fill(2);
 
-            // debug
-            AliInfoF("int_id, pdg, radius = %i, %i, %f", mcPart->MCStatusCode(), mcPart->PdgCode(),
-                     TMath::Sqrt(mcPart->Xv() * mcPart->Xv() + mcPart->Yv() * mcPart->Yv()));
-        }
-
-        if (pdg_mc == 310 && is_signal) {
-            cpa_wrt_pv = Calculate_CPA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcPart->Xv(), mcPart->Yv(), mcPart->Zv(), PV[0], PV[1], PV[2]);
-            fHist_True_Signal_KaonZeroShort_CPAwrtPV->Fill(cpa_wrt_pv);
-            fHist_True_KaonZeroShort_Bookkeep->Fill(2);
+            fHist_True_Signal_AntiLambda_CPAwrtPV->Fill(  //
+                CosinePointingAngle(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decay_vertex.X(), decay_vertex.Y(), decay_vertex.Z(), PV[0], PV[1],
+                                    PV[2]));
 
             // fill vectors
             SignalIDs.push_back(mcPart->MCStatusCode());
             SignalV0s.push_back(idx_mc);
+            SignalV0s_Daughters.push_back(aux_pair_signalV0_dau);
 
+            // debug
+            AliInfoF("int_id, pdg, radius, dca w.r.t pv = %i, %i, %f, %f",                    //
+                     mcPart->MCStatusCode(),                                                  //
+                     mcPart->PdgCode(),                                                       //
+                     TMath::Sqrt(mcPart->Xv() * mcPart->Xv() + mcPart->Yv() * mcPart->Yv()),  //
+                     LinePointDCA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcPart->Xv(), mcPart->Yv(), mcPart->Zv(), PV[0], PV[1], PV[2]));
+        }
+
+        if (pdg_mc == 310 && is_signal) {
+
+            // loop over daughters
             for (Int_t idx_dau = mcPart->GetDaughterFirst(); idx_dau <= mcPart->GetDaughterLast(); idx_dau++) {
                 mcDaughter = (AliMCParticle*)fMC->GetTrack(idx_dau);
                 pdg_dau = mcDaughter->PdgCode();
                 if (pdg_dau == -211) {
                     fHist_True_PiMinus_Bookkeep->Fill(2);
                     aux_pair_signalV0_dau.first = idx_dau;
+                    if (decay_vertex.Mag() == 0) decay_vertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
                 } else if (pdg_dau == 211) {
                     fHist_True_PiPlus_Bookkeep->Fill(2);
                     aux_pair_signalV0_dau.second = idx_dau;
+                    if (decay_vertex.Mag() == 0) decay_vertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
                 }
             }  // end of loop over V0 daughters
 
-            // fill vector
+            fHist_True_KaonZeroShort_Bookkeep->Fill(2);
+            fHist_True_Signal_KaonZeroShort_CPAwrtPV->Fill(  //
+                CosinePointingAngle(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decay_vertex.X(), decay_vertex.Y(), decay_vertex.Z(), PV[0], PV[1],
+                                    PV[2]));
+
+            // fill vectors
+            SignalIDs.push_back(mcPart->MCStatusCode());
+            SignalV0s.push_back(idx_mc);
             SignalV0s_Daughters.push_back(aux_pair_signalV0_dau);
 
-            AliInfoF("int_id, pdg, radius = %i, %i, %f", mcPart->MCStatusCode(), mcPart->PdgCode(),
-                     TMath::Sqrt(mcPart->Xv() * mcPart->Xv() + mcPart->Yv() * mcPart->Yv()));
+            AliInfoF("int_id, pdg, radius, dca w.r.t pv = %i, %i, %f, %f",                    //
+                     mcPart->MCStatusCode(),                                                  //
+                     mcPart->PdgCode(),                                                       //
+                     TMath::Sqrt(mcPart->Xv() * mcPart->Xv() + mcPart->Yv() * mcPart->Yv()),  //
+                     LinePointDCA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcPart->Xv(), mcPart->Yv(), mcPart->Zv(), PV[0], PV[1], PV[2]));
         }
 
         if (pdg_mc == -2212 && is_signal) {
@@ -1430,7 +1461,7 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegat
             vertex.GetXYZ(V0_X, V0_Y, V0_Z);
 
             // (cut) dca(V0,PV)
-            dca_wrt_pv = Calculate_LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
+            dca_wrt_pv = LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]);
             if (dca_wrt_pv < COV0F_DCAmin_V0_wrtPV) {
                 continue;
             }
@@ -1872,7 +1903,7 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_KF(std::vector<KFParticl
             lvAntiSexaquark = lvTrack0 + lvTrack1 + lvTrack2 + lvTrack3 - lvNucleon;
 
             // (cut) (pending) DCA w.r.t. PV
-            // dca = Calculate_LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(),        //
+            // dca = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(),        //
             //  kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(), kfAntiSexaquark.GetZ(),  //
             //  fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
             // // if (dca > 0.1) continue;
@@ -1933,31 +1964,30 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelE_KF(std::vector<KFParticl
     /* PENDING */
 }
 
-/*** Mathematical Functions ***/
+/*                            */
+/**  Mathematical Functions  **/
+/*** ====================== ***/
 
 /*
- Calculate the cosine of the pointing angle
- of a particle with momentum Px,Py,Pz and vertex X,Y,Z w.r.t. to a reference point
- [based on AliRoot/STEER/ESD/AliESDv0::GetV0CosineOfPointingAngle()]
+ Calculate the cosine of the pointing angle of a particle with momentum Px,Py,Pz and vertex X,Y,Z w.r.t. to a reference point
+ - Input: `lvParticle`, `X`, `Y`, `Z`, `refPointX`, `refPointY`, `refPointZ`
+ - Return: `cos(theta)`
+ (Based on `AliRoot/STEER/ESD/AliESDv0::GetV0CosineOfPointingAngle()`)
 */
-Double_t AliAnalysisTaskSexaquark::Calculate_CPA(Double_t Px, Double_t Py, Double_t Pz,  //
-                                                 Double_t X, Double_t Y, Double_t Z,     //
-                                                 Double_t refPointX, Double_t refPointY, Double_t refPointZ) {
+Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(TLorentzVector lvParticle, Double_t X, Double_t Y, Double_t Z,  //
+                                                       Double_t refPointX, Double_t refPointY, Double_t refPointZ) {
+    TVector3 posRelativeToRef(X - refPointX, Y - refPointY, Z - refPointZ);
+    return TMath::Cos(lvParticle.Angle(posRelativeToRef));
+}
 
-    Double_t deltaPos[3];
-    deltaPos[0] = X - refPointX;
-    deltaPos[1] = Y - refPointY;
-    deltaPos[2] = Z - refPointZ;
-
-    Double_t mom2 = Px * Px + Py * Py + Pz * Pz;
-    Double_t deltaPos2 = deltaPos[0] * deltaPos[0] + deltaPos[1] * deltaPos[1] + deltaPos[2] * deltaPos[2];
-
-    // (protection)
-    if (deltaPos2 == 0. || mom2 == 0.) {
-        return -2.;
-    }
-
-    return (deltaPos[0] * Px + deltaPos[1] * Py + deltaPos[2] * Pz) / TMath::Sqrt(mom2 * deltaPos2);
+/*
+ Overloaded version of `CosinePointingAngle(...)`, using Px, Py, Pz instead of the particle's TLorentzVector.
+*/
+Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(Double_t Px, Double_t Py, Double_t Pz, Double_t X, Double_t Y, Double_t Z,  //
+                                                       Double_t refPointX, Double_t refPointY, Double_t refPointZ) {
+    TVector3 posRelativeToRef(X - refPointX, Y - refPointY, Z - refPointZ);
+    TVector3 momParticle(Px, Py, Pz);
+    return TMath::Cos(momParticle.Angle(posRelativeToRef));
 }
 
 /*
@@ -1997,18 +2027,42 @@ Double_t AliAnalysisTaskSexaquark::Calculate_ArmPt(Double_t V0_Px, Double_t V0_P
  Find the distance of closest approach to the Primary Vertex, after backtracking a V0.
  This function stores the point of closest approach, and returns its distance to the PV.
  (PENDING: are we sure of that?)
+ - Input: `V0_Px`, `V0_Py`, `V0_Pz`, `V0_X`, `V0_Y`, `V0_Z`, `PV_X`, `PV_Y`, `PV_Z`
+ - Return: the distance of closest approach to the PV
 */
-Double_t AliAnalysisTaskSexaquark::Calculate_LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,  //
-                                                          Double_t V0_X, Double_t V0_Y, Double_t V0_Z,     //
-                                                          Double_t PV_X, Double_t PV_Y, Double_t PV_Z) {
+Double_t AliAnalysisTaskSexaquark::LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,  //
+                                                Double_t V0_X, Double_t V0_Y, Double_t V0_Z,     //
+                                                Double_t refPointX, Double_t refPointY, Double_t refPointZ) {
 
     TVector3 V0Momentum(V0_Px, V0_Py, V0_Pz);
     TVector3 V0Vertex(V0_X, V0_Y, V0_Z);
-    TVector3 PrimVertex(PV_X, PV_Y, PV_Z);
+    TVector3 RefVertex(refPointX, refPointY, refPointZ);
 
-    TVector3 CrossProduct = (PrimVertex - V0Vertex).Cross(V0Momentum);
+    TVector3 CrossProduct = (RefVertex - V0Vertex).Cross(V0Momentum);
 
     return CrossProduct.Mag() / V0Momentum.Mag();
+
+    /*
+    // convert input vectors to arrays
+    Double_t ref[3] = {refPointX, refPointY, refPointZ};
+    Double_t pos0[3] = {V0_X, V0_Y, V0_Z};
+    Double_t dir0[3] = {V0_Px, V0_Py, V0_Pz};
+
+    // lambda function
+    auto func = [this, &ref, &pos0, &dir0](const Double_t* t) { return SquaredDistancePointToLine(t, ref, pos0, dir0); };
+    ROOT::Math::Functor f(func, 1);
+
+    // initialize minimizer
+    ROOT::Math::Minimizer* min = ROOT::Math::Factory::CreateMinimizer("Minuit", "Migrad");
+    min->SetFunction(f);
+    min->SetVariable(0, "t", 0., 0.01);
+    min->Minimize();
+
+    // print results
+    const Double_t* xs = min->X();
+
+    return TMath::Sqrt(SquaredDistancePointToLine(xs, ref, pos0, dir0));
+    */
 }
 
 /*
@@ -2067,7 +2121,20 @@ Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v1(TVector3 pos0, TVect
 }
 
 /*
- Given the parametric form of two lines, find their closest distance.
+ Given the parametric form of a line, find the distance between it and a point.
+ - Variable: `t`, the parameter of the line.
+ - Parameters: `point`, the point to which we want to calculate the distance.
+ - Parameters: `linePoint`, `lineDir`, the position and direction of the line.
+ - Return: the square of the distance between the point and the line.
+*/
+Double_t AliAnalysisTaskSexaquark::SquaredDistancePointToLine(const Double_t* t, Double_t point[], Double_t linePoint[], Double_t lineDir[]) {
+    return TMath::Power(point[0] - linePoint[0] - t[0] * lineDir[0], 2) +  //
+           TMath::Power(point[1] - linePoint[1] - t[0] * lineDir[1], 2) +  //
+           TMath::Power(point[2] - linePoint[2] - t[0] * lineDir[2], 2);
+}
+
+/*
+ Given the parametric form of two lines, find their distance.
  - Variable: `t`, array of size 2, where `t[0]` and `t[1] are the parameters for the first and second line, respectively.
  - Parameters: `pos0`, `dir0`, `pos1`, `dir1`, the position and direction of the two lines.
  - Return: the square of the distance between the two lines.
