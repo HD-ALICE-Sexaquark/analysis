@@ -1202,7 +1202,7 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
 
             fHist_AntiLambda_Mass->Fill(aux_mass);
             fHist_AntiLambda_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
-            fHist_AntiLambda_DCAwrtPV->Fill(Calculate_LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+            fHist_AntiLambda_DCAwrtPV->Fill(LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
 
             /* DEBUG */
 
@@ -1233,7 +1233,7 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Official(Bool_t online, std::vecto
 
             fHist_KaonZeroShort_Mass->Fill(aux_mass);
             fHist_KaonZeroShort_CPAwrtPV->Fill(V0->GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
-            fHist_KaonZeroShort_DCAwrtPV->Fill(Calculate_LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+            fHist_KaonZeroShort_DCAwrtPV->Fill(LinePointDCA(V0->Px(), V0->Py(), V0->Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
 
             /* DEBUG */
 
@@ -1539,8 +1539,7 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_Custom(std::vector<Int_t> idxNegat
             if (pdgV0 == 310) {
                 fHist_KaonZeroShort_Mass->Fill(aux_mass);
                 fHist_KaonZeroShort_CPAwrtPV->Fill(vertex.GetV0CosineOfPointingAngle(PV[0], PV[1], PV[2]));
-                fHist_KaonZeroShort_DCAwrtPV->Fill(
-                    Calculate_LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
+                fHist_KaonZeroShort_DCAwrtPV->Fill(LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, PV[0], PV[1], PV[2]));
             }
 
             /* Fill V0s vector */
@@ -1642,13 +1641,115 @@ Bool_t AliAnalysisTaskSexaquark::PassesPosKaonPairCuts_KF(KFParticleMother kfV0,
  - Input: `idxNegativeTracks`, `idxPositiveTracks`, `pdgV0`, `pdgTrackNeg`, `pdgTrackPos`
  - Output: `kfV0s`, `idxDaughters`
 */
-void AliAnalysisTaskSexaquark::ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks,               //
-                                                 std::vector<Int_t> idxPositiveTracks,               //
-                                                 Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos,  //
-                                                 std::vector<KFParticleMother>& kfV0s,               //
+void AliAnalysisTaskSexaquark::ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0,
+                                                 Int_t pdgTrackNeg, Int_t pdgTrackPos, std::vector<KFParticleMother>& kfV0s,
                                                  std::vector<std::pair<Int_t, Int_t>>& idxDaughters) {
-    /* PENDING */
-    return;
+
+    AliESDtrack* esdTrackNeg;
+    AliESDtrack* esdTrackPos;
+
+    Bool_t successful_daughters_check;
+
+    Double_t impar_neg[2], impar_pos[2];
+
+    TLorentzVector lvTrackNeg;
+    TLorentzVector lvTrackPos;
+    TLorentzVector lvV0;
+
+    // prepare primary vertex
+    Double_t PV[3];
+    fPrimaryVertex->GetXYZ(PV);
+
+    for (Int_t& idxTrackNeg : idxNegativeTracks) {
+        for (Int_t& idxTrackPos : idxPositiveTracks) {
+
+            if (idxTrackNeg == idxTrackPos) continue;
+
+            esdTrackNeg = static_cast<AliESDtrack*>(fESD->GetTrack(idxTrackNeg));
+            esdTrackPos = static_cast<AliESDtrack*>(fESD->GetTrack(idxTrackPos));
+
+            /* Kalman Filter */
+
+            KFParticle kfDaughterNeg = CreateKFParticle(*esdTrackNeg, fPDG.GetParticle(pdgTrackNeg)->Mass(), (Int_t)esdTrackNeg->Charge());
+            KFParticle kfDaughterPos = CreateKFParticle(*esdTrackPos, fPDG.GetParticle(pdgTrackPos)->Mass(), (Int_t)esdTrackPos->Charge());
+
+            // (protection)
+            successful_daughters_check = kTRUE;
+            /*  */ KFParticleMother kfCheckPos;
+            kfCheckPos.AddDaughter(kfDaughterNeg);
+            if (!kfCheckPos.CheckDaughter(kfDaughterPos)) successful_daughters_check = kFALSE;
+            /*  */ KFParticleMother kfCheckNeg;
+            if (!kfCheckNeg.CheckDaughter(kfDaughterNeg)) successful_daughters_check = kFALSE;
+            kfCheckNeg.AddDaughter(kfDaughterPos);
+
+            KFParticleMother kfV0;
+            if (successful_daughters_check) {
+                kfV0.SetConstructMethod(2);
+                kfV0.AddDaughter(kfDaughterNeg);
+                kfV0.AddDaughter(kfDaughterPos);
+            } else {
+                kfV0.AddDaughter(kfDaughterNeg);
+                kfV0.AddDaughter(kfDaughterPos);
+            }
+            kfV0.TransportToDecayVertex();
+
+            // get V0 vertex
+            Double_t V0Vertex[3] = {kfV0.GetX(), kfV0.GetY(), kfV0.GetZ()};
+            Double_t V0VertexErr[3] = {kfV0.GetErrX(), kfV0.GetErrY(), kfV0.GetErrZ()};
+            AliESDVertex* esdV0Vertex = new AliESDVertex(V0Vertex, V0VertexErr);
+
+            /* Clone ESD tracks to be able to propagate (~ modify) them. */
+
+            AliESDtrack cloneTrackNeg(*esdTrackNeg);
+            AliESDtrack cloneTrackPos(*esdTrackPos);
+
+            /* Propagate V0 daughters to their DCA w.r.t. V0 vertex. Use ESDs for kinematics. */
+
+            cloneTrackNeg.PropagateToDCA(esdV0Vertex, fMagneticField, 10., impar_neg);
+            cloneTrackPos.PropagateToDCA(esdV0Vertex, fMagneticField, 10., impar_pos);
+
+            /* Reconstruct V0 */
+
+            lvTrackNeg.SetXYZM(cloneTrackNeg.Px(), cloneTrackNeg.Py(), cloneTrackNeg.Pz(), fPDG.GetParticle(pdgTrackNeg)->Mass());
+            lvTrackPos.SetXYZM(cloneTrackPos.Px(), cloneTrackPos.Py(), cloneTrackPos.Pz(), fPDG.GetParticle(pdgTrackPos)->Mass());
+            lvV0 = lvTrackNeg + lvTrackPos;
+
+            /* Apply cuts */
+
+            if (pdgV0 == -3122 && !PassesAntiLambdaCuts_KF(kfV0, kfDaughterNeg, kfDaughterPos, lvV0, lvTrackNeg, lvTrackPos)) continue;
+            if (pdgV0 == 310 && !PassesKaonZeroShortCuts_KF(kfV0, kfDaughterNeg, kfDaughterPos, lvV0, lvTrackNeg, lvTrackPos)) continue;
+            if (pdgV0 == 0 && !PassesPionPairCuts_KF(kfV0, kfDaughterNeg, kfDaughterPos, lvV0, lvTrackNeg, lvTrackPos)) continue;
+
+            /* Fill histograms */
+
+            if (pdgV0 == -3122) {
+                fHist_AntiLambda_Mass->Fill(lvV0.M());
+                fHist_AntiLambda_CPAwrtPV->Fill(CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(),
+                                                                          fPrimaryVertex->GetY(), fPrimaryVertex->GetZ()));
+                fHist_AntiLambda_DCAwrtPV->Fill(
+                    LinePointDCA(lvV0.Px(), lvV0.Py(), lvV0.Pz(), kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), PV[0], PV[1], PV[2]));
+            }
+
+            if (pdgV0 == 310) {
+                fHist_KaonZeroShort_Mass->Fill(lvV0.M());
+                fHist_KaonZeroShort_CPAwrtPV->Fill(CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(),
+                                                                             fPrimaryVertex->GetY(), fPrimaryVertex->GetZ()));
+                fHist_KaonZeroShort_DCAwrtPV->Fill(
+                    LinePointDCA(lvV0.Px(), lvV0.Py(), lvV0.Pz(), kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), PV[0], PV[1], PV[2]));
+            }
+
+            // print the 2D radius of the found V0
+            AliInfoF("%i %i %f", idxTrackNeg, idxTrackPos, TMath::Sqrt(kfV0.GetX() * kfV0.GetX() + kfV0.GetY() * kfV0.GetY()));
+
+            /* Fill V0s vector */
+
+            kfV0s.push_back(kfV0);
+
+            /* Fill daughters vector */
+
+            idxDaughters.push_back(std::make_pair(idxTrackNeg, idxTrackPos));
+        }  // end of loop over pos. tracks
+    }      // end of loop over neg. tracks
 }
 
 /*                                     */
