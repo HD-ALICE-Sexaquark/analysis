@@ -158,21 +158,18 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* MC Generated */
-    void ProcessMCGen(std::vector<Int_t>& SignalIDs, std::vector<Int_t>& SignalV0s, std::vector<std::pair<Int_t, Int_t>>& SignalV0s_Daughters,
-                      std::vector<Int_t>& TrueV0s, std::vector<std::pair<Int_t, Int_t>>& TrueV0s_Daughters);
+    void ProcessMCGen();
+    void GetDaughtersInfo(AliMCParticle* mcPart, Int_t& mcIdxNegDaughter, Int_t& mcIdxPosDaughter, TVector3& decay_vertex);
     void ProcessSignalInteractions(std::vector<Int_t> SignalIDs, std::vector<Int_t> SignalV0s);
 
    public:
     /* Tracks */
-    Bool_t PassesTrackSelection(AliESDtrack* track, Bool_t is_signal, Float_t& n_sigma_proton, Float_t& n_sigma_kaon, Float_t& n_sigma_pion);
-    void ProcessTracks(std::vector<std::pair<Int_t, Int_t>> SignalV0s_Daughters, std::vector<std::pair<Int_t, Int_t>> TrueV0s_Daughters,
-                       std::vector<std::pair<Int_t, Int_t>>& SignalV0s_RecDaughters, std::vector<std::pair<Int_t, Int_t>>& TrueV0s_RecDaughters,
-                       std::vector<Int_t>& idxAntiProtonTracks, std::vector<Int_t>& idxPosKaonTracks, std::vector<Int_t>& idxPiPlusTracks,
-                       std::vector<Int_t>& idxPiMinusTracks);
+    void ProcessTracks();
+    Bool_t PassesTrackSelection(AliESDtrack* track, Float_t& n_sigma_proton, Float_t& n_sigma_kaon, Float_t& n_sigma_pion);
 
    public:
-    /* V0s -- That require True info */
-    void ReconstructV0s_True(std::vector<Int_t> TrueV0s, std::vector<std::pair<Int_t, Int_t>> TrueV0s_RecDaughters);
+    /* V0s -- That Require True Info */
+    void ProcessFindableV0s();
 
    public:
     /* V0s -- ALICE V0 Finders */
@@ -412,6 +409,35 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_Found_AntiSexaquark_Mass;       //!
     TH1F* fHist_Found_AntiSexaquark_DCA;        //!
     TH1F* fHist_Found_AntiSexaquark_Radius;     //!
+
+   private:
+    /* Containers */
+    std::vector<Int_t> mcIndicesOfTrueV0s;  // f
+
+    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;                 // f
+    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSecondaryV0;  // f
+    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfTrueV0;       // f
+    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSignalV0;     // PENDING: is it the same as `isMcIdxSignal`?
+
+    std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromMcIdxOfDau;     // f
+    std::unordered_map<Int_t, Int_t> getMcIdxOfNegDau_fromMcIdxOfTrueV0;  // f
+    std::unordered_map<Int_t, Int_t> getMcIdxOfPosDau_fromMcIdxOfTrueV0;  // f
+
+    std::vector<Int_t> esdIndicesOfAntiProtonTracks;  // f
+    std::vector<Int_t> esdIndicesOfPosKaonTracks;     // f
+    std::vector<Int_t> esdIndicesOfPiPlusTracks;      // f
+    std::vector<Int_t> esdIndicesOfPiMinusTracks;     // f
+
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;                 //
+    std::unordered_map<Int_t, Bool_t> isEsdIdxDaughterOfSecondaryV0;  //
+    std::unordered_map<Int_t, Bool_t> isEsdIdxDaughterOfTrueV0;       //
+
+    std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromEsdIdx;  //
+
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0;  //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0;  //
+
+    void ClearContainers();
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
