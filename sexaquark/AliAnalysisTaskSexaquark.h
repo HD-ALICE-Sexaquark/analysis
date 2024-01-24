@@ -168,21 +168,24 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t PassesTrackSelection(AliESDtrack* track, Float_t& n_sigma_proton, Float_t& n_sigma_kaon, Float_t& n_sigma_pion);
 
    public:
-    /* V0s -- That Require True Info */
+    /* V0s and Anti-Sexaquarks -- That Require True Info */
     void ProcessFindableV0s();
+    void ProcessFindableSexaquarks();
 
    public:
     /* V0s -- ALICE V0 Finders */
+    void OfficialV0Finder(Bool_t online);
+    void CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
     Bool_t PassesAntiLambdaCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
     Bool_t PassesKaonZeroShortCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
-    void ReconstructV0s_Official(Bool_t online, std::vector<std::pair<Int_t, Int_t>>& idxAntiLambdaDaughters,
-                                 std::vector<std::pair<Int_t, Int_t>>& idxKaonZeroShortDaughters, std::vector<Int_t> TrueV0s,
-                                 std::vector<std::pair<Int_t, Int_t>> TrueV0s_RecDaughters, std::vector<Int_t> SignalV0s,
-                                 std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters);
-    void ReconstructV0s_Custom(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0, Int_t pdgTrackNeg,
-                               Int_t pdgTrackPos, std::vector<AliESDv0>& esdV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters,
-                               std::vector<Int_t> TrueV0s, std::vector<std::pair<Int_t, Int_t>> TrueV0s_RecDaughters, std::vector<Int_t> SignalV0s,
-                               std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters);
+
+   public:
+    /* Sexaquark -- Geometrical Finder */
+    void SexaquarkFinder_ChannelA_Geo();
+    Bool_t PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
+    void SexaquarkFinder_ChannelD_Geo();
+    void SexaquarkFinder_ChannelE_Geo();
+    void SexaquarkFinder_ChannelH_Geo();
 
    public:
     /* V0s -- Kalman Filter */
@@ -198,21 +201,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                     TLorentzVector lvTrack1, TLorentzVector lvTrack2);
     void ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0, Int_t pdgTrackNeg,
                            Int_t pdgTrackPos, std::vector<KFParticleMother>& kfV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters);
-
-   public:
-    /* Sexaquark -- Geometric Finder */
-    // Channel A
-    Bool_t PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
-    void SexaquarkFinder_ChannelA_Geo(std::vector<AliESDv0> esdAntiLambdas, std::vector<AliESDv0> esdKaonsZeroShort,
-                                      std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
-                                      std::vector<std::pair<Int_t, Int_t>> idxKaonZeroShortDaughters, std::vector<Int_t>& idxAntiSexaquarkDaughters,
-                                      std::vector<Int_t> SignalIDs, std::vector<std::pair<Int_t, Int_t>> SignalV0s_RecDaughters);
-    // Channel D
-    void SexaquarkFinder_ChannelD_Geo();
-    // Channel E
-    void SexaquarkFinder_ChannelE_Geo();
-    // Channel H
-    void SexaquarkFinder_ChannelH_Geo();
 
    public:
     /* Sexaquark -- Kalman Filter */
@@ -411,7 +399,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_Found_AntiSexaquark_Radius;     //!
 
    private:
-    /* Containers */
+    /* Containers -- mostly hash tables */
     std::vector<Int_t> mcIndicesOfTrueV0s;  // f
 
     std::unordered_map<Int_t, Bool_t> isMcIdxSignal;                 // f
@@ -432,10 +420,25 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Bool_t> isEsdIdxDaughterOfSecondaryV0;  //
     std::unordered_map<Int_t, Bool_t> isEsdIdxDaughterOfTrueV0;       //
 
-    std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromEsdIdx;  //
+    std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromEsdIdx;  // must protect first with `isEsdIdxSignal` `isEsdIdxDaughterOfSecondaryV0`
+                                                                   // `isEsdIdxDaughterOfTrueV0`
 
     std::unordered_map<Int_t, Int_t> getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0;  //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0;  //
+
+    std::vector<AliESDv0> esdAntiLambdas;     // f
+    std::vector<AliESDv0> esdKaonsZeroShort;  // f
+
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;     // f
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;     // f
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;  // f
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromKaonZeroShortIdx;  // f
+
+    std::vector<Bool_t> isAntiLambdaIdxATrueV0;     // f
+    std::vector<Bool_t> isKaonZeroShortIdxATrueV0;  // f
+
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromAntiLambdaIdx;     // f, must protect first with `isAntiLambdaIdxTrueV0`
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromKaonZeroShortIdx;  // f, must protect first with `isKaonZeroShortIdxTrueV0`
 
     void ClearContainers();
 
