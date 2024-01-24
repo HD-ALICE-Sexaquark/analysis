@@ -182,13 +182,14 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    public:
     /* Sexaquark -- Geometrical Finder */
     void SexaquarkFinder_ChannelA_Geo();
-    Bool_t PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
     void SexaquarkFinder_ChannelD_Geo();
     void SexaquarkFinder_ChannelE_Geo();
-    void SexaquarkFinder_ChannelH_Geo();
+    Bool_t PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
 
    public:
     /* V0s -- Kalman Filter */
+    void ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0, Int_t pdgTrackNeg,
+                           Int_t pdgTrackPos, std::vector<KFParticleMother>& kfV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters);
     Bool_t PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
                                    TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
     Bool_t PassesKaonZeroShortCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
@@ -199,26 +200,21 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                      TLorentzVector lvTrack1, TLorentzVector lvTrack2);
     Bool_t PassesPosKaonPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughter1, KFParticle kfDaughter2, TLorentzVector lvV0,
                                     TLorentzVector lvTrack1, TLorentzVector lvTrack2);
-    void ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0, Int_t pdgTrackNeg,
-                           Int_t pdgTrackPos, std::vector<KFParticleMother>& kfV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters);
 
    public:
     /* Sexaquark -- Kalman Filter */
-    // Channel A
-    Bool_t PassesSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
-                                           TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda, TLorentzVector lvKaonZeroShort);
     void SexaquarkFinder_ChannelA_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
                                      std::vector<KFParticleMother> kfKaonsZeroShort, std::vector<std::pair<Int_t, Int_t>> idxKaonZeroShortDaughters,
                                      std::vector<KFParticleMother>& kfAntiSexaquarks);
-    // Channel D
-    Bool_t PassesSexaquarkCuts_ChannelD_KF();
     void SexaquarkFinder_ChannelD_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
                                      std::vector<Int_t> idxPositiveKaons, std::vector<KFParticleMother>& kfAntiSexaquarks);
-    // Channel E
-    Bool_t PassesSexaquarkCuts_ChannelE_KF();
     void SexaquarkFinder_ChannelE_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
                                      std::vector<KFParticleMother> kfChargedPairs, std::vector<std::pair<Int_t, Int_t>> idxChargedPairsTracks,
                                      std::vector<Int_t> idxSinglePositiveTrack, std::vector<KFParticleMother>& kfAntiSexaquarks);
+    Bool_t PassesSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
+                                           TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda, TLorentzVector lvKaonZeroShort);
+    Bool_t PassesSexaquarkCuts_ChannelD_KF();
+    Bool_t PassesSexaquarkCuts_ChannelE_KF();
 
    public:
     /* Utilities */
@@ -259,26 +255,20 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    private:
     /* Input options */
-    Bool_t fIsMC;  //
-    // source of V0 reconstruction:
-    // - "online"
-    // - "offline"
-    // - "custom"
-    // - "kalman"
-    TString fSourceOfV0s;  //
+    Bool_t fIsMC;                    //
+    TString fSourceOfV0s;            // choose V0 finder: "online", "offline", "custom", "kalman"
+    TString fSimulationSet;          // <ReactionID><InjectedSexaquarkMass>
+    Char_t fReactionID;              // could be: 'A', 'D', 'E', 'H'
+    Float_t fInjectedSexaquarkMass;  // (in GeV/c^2), could be: 1.73, 1.8, 1.87, 1.94, 2.01
     // reaction channel, could be:
-    // - 'A' = AntiS + N -> AntiL + K0
-    // - 'D' = AntiS + P -> AntiL + Kp
-    // - 'E' = AntiS + P -> AntiL + Kp + pim + pip
-    // - 'H' = AntiS + P -> AntiP + Kp + Kp + pi0
-    TString fSimulationSet;  //
-    // derived from `fSimulationSet` in `Initialize()`
-    Char_t fReactionID;                         //
-    Float_t fInjectedSexaquarkMass;             //
-    TString fReactionChannel;                   //
+    // - 'A' = "AntiSexaquark,N->AntiLambda,K0S"
+    // - 'D' = "AntiSexaquark,P->AntiLambda,K+"
+    // - 'E' = "AntiSexaquark,P->AntiLambda,K+,pi-,pi+"
+    // - 'H' = "AntiSexaquark,P->AntiProton,K+,K+,pi0"
+    TString fReactionChannel;
     std::vector<Int_t> fProductsPDG;            //
     std::vector<Int_t> fFinalStateProductsPDG;  //
-    Int_t fStruckNucleonPDG;                    //
+    Int_t fStruckNucleonPDG;                    // PDG Code of the struck nucleon, could ber: 2112 o 2212
 
    private:
     /* Cuts */
@@ -399,22 +389,22 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_Found_AntiSexaquark_Radius;     //!
 
    private:
-    /* Containers -- mostly hash tables */
-    std::vector<Int_t> mcIndicesOfTrueV0s;  // f
+    /* Containers -- vectors and hash tables */
+    std::vector<Int_t> mcIndicesOfTrueV0s;  //
 
-    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;                 // f
-    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSecondaryV0;  // f
-    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfTrueV0;       // f
-    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSignalV0;     // PENDING: is it the same as `isMcIdxSignal`?
+    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;                 //
+    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSecondaryV0;  //
+    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfTrueV0;       //
+    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSignalV0;     // PENDING: isn't it the same as `isMcIdxSignal`?
 
-    std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromMcIdxOfDau;     // f
-    std::unordered_map<Int_t, Int_t> getMcIdxOfNegDau_fromMcIdxOfTrueV0;  // f
-    std::unordered_map<Int_t, Int_t> getMcIdxOfPosDau_fromMcIdxOfTrueV0;  // f
+    std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromMcIdxOfDau;     //
+    std::unordered_map<Int_t, Int_t> getMcIdxOfNegDau_fromMcIdxOfTrueV0;  //
+    std::unordered_map<Int_t, Int_t> getMcIdxOfPosDau_fromMcIdxOfTrueV0;  //
 
-    std::vector<Int_t> esdIndicesOfAntiProtonTracks;  // f
-    std::vector<Int_t> esdIndicesOfPosKaonTracks;     // f
-    std::vector<Int_t> esdIndicesOfPiPlusTracks;      // f
-    std::vector<Int_t> esdIndicesOfPiMinusTracks;     // f
+    std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //
+    std::vector<Int_t> esdIndicesOfPosKaonTracks;     //
+    std::vector<Int_t> esdIndicesOfPiPlusTracks;      //
+    std::vector<Int_t> esdIndicesOfPiMinusTracks;     //
 
     std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;                 //
     std::unordered_map<Int_t, Bool_t> isEsdIdxDaughterOfSecondaryV0;  //
@@ -426,19 +416,19 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0;  //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0;  //
 
-    std::vector<AliESDv0> esdAntiLambdas;     // f
-    std::vector<AliESDv0> esdKaonsZeroShort;  // f
+    std::vector<AliESDv0> esdAntiLambdas;     //
+    std::vector<AliESDv0> esdKaonsZeroShort;  //
 
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;     // f
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;     // f
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;  // f
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromKaonZeroShortIdx;  // f
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;     //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;     //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;  //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromKaonZeroShortIdx;  //
 
-    std::vector<Bool_t> isAntiLambdaIdxATrueV0;     // f
-    std::vector<Bool_t> isKaonZeroShortIdxATrueV0;  // f
+    std::vector<Bool_t> isAntiLambdaIdxATrueV0;     //
+    std::vector<Bool_t> isKaonZeroShortIdxATrueV0;  //
 
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromAntiLambdaIdx;     // f, must protect first with `isAntiLambdaIdxTrueV0`
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromKaonZeroShortIdx;  // f, must protect first with `isKaonZeroShortIdxTrueV0`
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromAntiLambdaIdx;     // must protect first with `isAntiLambdaIdxTrueV0`
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromKaonZeroShortIdx;  // must protect first with `isKaonZeroShortIdxTrueV0`
 
     void ClearContainers();
 
