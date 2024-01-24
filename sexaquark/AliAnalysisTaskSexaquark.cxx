@@ -170,7 +170,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists = new TList();
     fOutputListOfHists->SetOwner(kTRUE);
 
-    /* That will be filled with MC Gen. (or True) information */
+    /* MC Gen. histograms */
 
     fHist_True_Signal_SecVertex_Radius = new TH1F("True_Signal_SecVertex_Radius", "", 100, 0., 200.);
     fHist_True_InjBkg_SecVertex_Radius = new TH1F("True_InjBkg_SecVertex_Radius", "", 100, 0., 200.);
@@ -244,7 +244,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_True_InjBkgProducts_Bookkeep);
     fOutputListOfHists->Add(fHist_True_AllSecondaries_MothersPDG);
 
-    /* That will be filled with rec. tracks information (that require MC Gen. information) */
+    /* rec. tracks histograms (that require MC Gen. information) */
 
     fHist_Rec_Signal_AntiProton_Pt = new TH1F("Rec_Signal_AntiProton_Pt", "", 100, 0., 10.);
     fHist_Rec_Signal_PosKaon_Pt = new TH1F("Rec_Signal_PosKaon_Pt", "", 100, 0., 10.);
@@ -256,7 +256,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_Rec_Signal_PiPlus_Pt);
     fOutputListOfHists->Add(fHist_Rec_Signal_PiMinus_Pt);
 
-    /* That will be filled with rec. tracks information (that don't require MC Gen. information) */
+    /* rec. tracks histograms (that don't require MC Gen. information) */
 
     fHist_Rec_AntiProton_Pt = new TH1F("Rec_AntiProton_Pt", "", 100, 0., 10.);
     fHist_Rec_PosKaon_Pt = new TH1F("Rec_PosKaon_Pt", "", 100, 0., 10.);
@@ -272,7 +272,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     fOutputListOfHists->Add(f2DHist_TPC_Signal);
 
-    /* That will be filled with V0s (that require MC Gen. information) */
+    /* V0s histograms (that require MC Gen. information) */
 
     fHist_Findable_True_AntiLambda_Mass = new TH1F("Findable_True_AntiLambda_Mass", "", 100, 0., 10.);
     fHist_Findable_True_AntiLambda_Radius = new TH1F("Findable_True_AntiLambda_Radius", "", 100, 0., 200.);
@@ -346,12 +346,13 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_Found_Signal_KaonZeroShort_CPAwrtPV);
     fOutputListOfHists->Add(fHist_Found_Signal_KaonZeroShort_DCAwrtPV);
 
-    /* That will be filled with V0s information (that don't require MC Gen. information) */
+    /* V0s histograms (that don't require MC Gen. information) */
 
     fHist_Found_AntiLambda_Mass = new TH1F("Found_AntiLambda_Mass", "", 100, 0., 10.);
     fHist_Found_AntiLambda_Radius = new TH1F("Found_AntiLambda_Radius", "", 100, 0., 200.);
     fHist_Found_AntiLambda_CPAwrtPV = new TH1F("Found_AntiLambda_CPAwrtPV", "", 100, -1., 1.);
     fHist_Found_AntiLambda_DCAwrtPV = new TH1F("Found_AntiLambda_DCAwrtPV", "", 100, 0., 10.);
+
     fHist_Found_KaonZeroShort_Mass = new TH1F("Found_KaonZeroShort_Mass", "", 100, 0., 10.);
     fHist_Found_KaonZeroShort_Radius = new TH1F("Found_KaonZeroShort_Radius", "", 100, 0., 200.);
     fHist_Found_KaonZeroShort_CPAwrtPV = new TH1F("Found_KaonZeroShort_CPAwrtPV", "", 100, -1., 1.);
@@ -361,24 +362,35 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_Found_AntiLambda_Radius);
     fOutputListOfHists->Add(fHist_Found_AntiLambda_CPAwrtPV);
     fOutputListOfHists->Add(fHist_Found_AntiLambda_DCAwrtPV);
+
     fOutputListOfHists->Add(fHist_Found_KaonZeroShort_Mass);
     fOutputListOfHists->Add(fHist_Found_KaonZeroShort_Radius);
     fOutputListOfHists->Add(fHist_Found_KaonZeroShort_CPAwrtPV);
     fOutputListOfHists->Add(fHist_Found_KaonZeroShort_DCAwrtPV);
 
-    /* This will be filled with the reconstructed anti-sexaquark information */
+    /* anti-sexaquark histograms (that require MC Gen. information) */
 
     fHist_Findable_AntiSexaquark_Mass = new TH1F("Findable_AntiSexaquark_Mass", "", 150, -5., 10.);
     fHist_Findable_AntiSexaquark_DCA = new TH1F("Findable_AntiSexaquark_DCA", "", 100, 0., 10.);
     fHist_Findable_AntiSexaquark_Radius = new TH1F("Findable_AntiSexaquark_Radius", "", 100, 0., 200.);
 
-    fHist_Found_AntiSexaquark_Mass = new TH1F("Found_AntiSexaquark_Mass", "", 150, -5., 10.);
-    fHist_Found_AntiSexaquark_DCA = new TH1F("Found_AntiSexaquark_DCA", "", 100, 0., 10.);
-    fHist_Found_AntiSexaquark_Radius = new TH1F("Found_AntiSexaquark_Radius", "", 100, 0., 200.);
+    fHist_Found_Signal_AntiSexaquark_Mass = new TH1F("Found_Signal_AntiSexaquark_Mass", "", 150, -5., 10.);
+    fHist_Found_Signal_AntiSexaquark_DCA = new TH1F("Found_Signal_AntiSexaquark_DCA", "", 100, 0., 10.);
+    fHist_Found_Signal_AntiSexaquark_Radius = new TH1F("Found_Signal_AntiSexaquark_Radius", "", 100, 0., 200.);
 
     fOutputListOfHists->Add(fHist_Findable_AntiSexaquark_Mass);
     fOutputListOfHists->Add(fHist_Findable_AntiSexaquark_DCA);
     fOutputListOfHists->Add(fHist_Findable_AntiSexaquark_Radius);
+
+    fOutputListOfHists->Add(fHist_Found_Signal_AntiSexaquark_Mass);
+    fOutputListOfHists->Add(fHist_Found_Signal_AntiSexaquark_DCA);
+    fOutputListOfHists->Add(fHist_Found_Signal_AntiSexaquark_Radius);
+
+    /* anti-sexaquark histograms (that don't require MC Gen. information) */
+
+    fHist_Found_AntiSexaquark_Mass = new TH1F("Found_AntiSexaquark_Mass", "", 150, -5., 10.);
+    fHist_Found_AntiSexaquark_DCA = new TH1F("Found_AntiSexaquark_DCA", "", 100, 0., 10.);
+    fHist_Found_AntiSexaquark_Radius = new TH1F("Found_AntiSexaquark_Radius", "", 100, 0., 200.);
 
     fOutputListOfHists->Add(fHist_Found_AntiSexaquark_Mass);
     fOutputListOfHists->Add(fHist_Found_AntiSexaquark_DCA);
@@ -430,14 +442,14 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     if (fIsMC) {
         ProcessMCGen();
-        // ProcessSignalInteractions(SignalIDs, SignalV0s);
+        ProcessSignalInteractions();
     }
 
     ProcessTracks();
 
     if (fIsMC) {
         ProcessFindableV0s();
-        ProcessFindableSexaquarks();
+        // ProcessFindableSexaquarks();
     }
 
     if (fSourceOfV0s == "offline") {
@@ -494,7 +506,7 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
 /*
  Initialize analysis task.
- */
+*/
 void AliAnalysisTaskSexaquark::Initialize() {
 
     /* Parse TString: get reaction ID and injected sexaquark mass from SimulationSet */
@@ -542,7 +554,7 @@ void AliAnalysisTaskSexaquark::Initialize() {
 
 /*
  - Uses: `fReactionChannel`
- */
+*/
 void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
     kMaxNSigma_Pion = 3.;
     kMaxNSigma_Kaon = 3.;
@@ -693,6 +705,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
                 fHist_True_AntiLambda_Bookkeep->Fill(2);
                 fHist_True_Signal_AntiLambda_Pt->Fill(pt);
                 isMcIdxSignal[mcIdx] = kTRUE;
+                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
+                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
             }
 
             if (is_signal && n_daughters) {
@@ -747,6 +761,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
                 fHist_True_KaonZeroShort_Bookkeep->Fill(2);
                 fHist_True_Signal_KaonZeroShort_Pt->Fill(pt);
                 isMcIdxSignal[mcIdx] = kTRUE;
+                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
+                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
             }
 
             if (is_signal && n_daughters) {
@@ -770,6 +786,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             if (is_signal) {
                 fHist_True_AntiProton_Bookkeep->Fill(2);
                 isMcIdxSignal[mcIdx] = kTRUE;
+                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
+                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
             }
         }
 
@@ -781,6 +799,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             if (is_signal) {
                 fHist_True_PosKaon_Bookkeep->Fill(2);
                 isMcIdxSignal[mcIdx] = kTRUE;
+                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
+                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
             }
         }
 
@@ -792,6 +812,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             if (is_signal) {
                 fHist_True_PiPlus_Bookkeep->Fill(2);
                 isMcIdxSignal[mcIdx] = kTRUE;
+                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
+                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
             }
         }
 
@@ -803,6 +825,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             if (is_signal) {
                 fHist_True_PiMinus_Bookkeep->Fill(2);
                 isMcIdxSignal[mcIdx] = kTRUE;
+                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
+                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
             }
         }
 
@@ -844,7 +868,10 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 }
 
 /*
- */
+ Loop over the daughters of an MC particle.
+ - Input: `mcPart`
+ - Output: `mcIdxNegDaughter`, `mcIdxPosDaughter`, `decayVertex`
+*/
 void AliAnalysisTaskSexaquark::GetDaughtersInfo(AliMCParticle* mcPart, Int_t& mcIdxNegDaughter, Int_t& mcIdxPosDaughter, TVector3& decayVertex) {
 
     Int_t pdg_mc = mcPart->PdgCode();
@@ -871,44 +898,48 @@ void AliAnalysisTaskSexaquark::GetDaughtersInfo(AliMCParticle* mcPart, Int_t& mc
 
 /*
  Loop over antisexaquark-nucleon interactions.
- - Uses: `fMC`, `fPDG`, `fHist_True_*`
- - Input: `SignalIDs`, `SignalV0s`
+ - Uses: `fMC`, `fPDG`, `fStruckNucleonPDG`
+ - Containers: `getMcIdx_fromReactionIdx`
 */
-void AliAnalysisTaskSexaquark::ProcessSignalInteractions(std::vector<Int_t> SignalIDs, std::vector<Int_t> SignalV0s) {
+void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
-    AliMCParticle* mcV0A;
-    AliMCParticle* mcV0B;
+    AliMCParticle* mcProduct;
+    Int_t mcIdxProduct;
 
-    Float_t signal_sec_vertex_radius;
+    /* Declare TLorentzVectors */
 
-    // PENDING: this heavily depends on the chosen reaction channel! must be generalized
-    Int_t NSignalInteractions = (Int_t)SignalV0s.size() / 2;
+    TLorentzVector lvProduct;
 
-    Int_t idxV0A, idxV0B;
+    TLorentzVector lvStruckNucleon(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());  // assume struck nucleon at rest
 
-    TLorentzVector lvV0A;
-    TLorentzVector lvV0B;
-    TLorentzVector lvStruckNucleon(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());
     TLorentzVector lvAntiSexaquark;
 
-    for (Int_t idxInteraction = 0; idxInteraction < NSignalInteractions; idxInteraction++) {
+    /* Loop over interactions */
 
-        idxV0A = SignalV0s[2 * idxInteraction];
-        idxV0B = SignalV0s[2 * idxInteraction + 1];
+    for (Int_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
 
-        mcV0A = (AliMCParticle*)fMC->GetTrack(idxV0A);
-        mcV0B = (AliMCParticle*)fMC->GetTrack(idxV0B);
+        /* Reset anti-sexaquark TLorentzVector */
 
-        lvV0A.SetPxPyPzE(mcV0A->Px(), mcV0A->Py(), mcV0A->Pz(), fPDG.GetParticle(mcV0A->PdgCode())->Mass());
-        lvV0B.SetPxPyPzE(mcV0B->Px(), mcV0B->Py(), mcV0B->Pz(), fPDG.GetParticle(mcV0B->PdgCode())->Mass());
+        lvAntiSexaquark.SetPxPyPzE(0., 0., 0., 0.);
 
-        lvAntiSexaquark = lvV0A + lvV0B - lvStruckNucleon;
+        /* Loop over reaction products */
+
+        for (Int_t productIdx = 0; productIdx < (Int_t)getMcIdx_fromReactionIdx[reactionIdx].size(); productIdx++) {
+
+            mcIdxProduct = getMcIdx_fromReactionIdx[reactionIdx][productIdx];
+
+            mcProduct = (AliMCParticle*)fMC->GetTrack(mcIdxProduct);
+
+            lvProduct.SetPxPyPzE(mcProduct->Px(), mcProduct->Py(), mcProduct->Pz(), mcProduct->E());
+
+            lvAntiSexaquark = lvAntiSexaquark + lvProduct;
+        }
+
+        lvAntiSexaquark = lvAntiSexaquark - lvStruckNucleon;
 
         fHist_True_FermiSexaquark_Pt->Fill(lvAntiSexaquark.Pt());
         fHist_True_FermiSexaquark_Mass->Fill(lvAntiSexaquark.M());
-
-        signal_sec_vertex_radius = TMath::Sqrt(TMath::Power(mcV0A->Xv(), 2) + TMath::Power(mcV0A->Yv(), 2));
-        fHist_True_Signal_SecVertex_Radius->Fill(signal_sec_vertex_radius);
+        fHist_True_Signal_SecVertex_Radius->Fill(TMath::Sqrt(TMath::Power(mcProduct->Xv(), 2) + TMath::Power(mcProduct->Yv(), 2)));
     }
 }
 
@@ -1167,10 +1198,21 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 }
 
 /*
-  PENDING
+  Find the anti-sexaquarks that have all of their final-state particles reconstructed.
+  - For example:
+    -- Reaction Channel A: 1 anti-proton, 2 pi+, 1 pi-
+    -- Reaction Channel D: 1 anti-proton, 1 pi+, 1 K+
+    -- Reaction Channel E: 1 anti-proton, 2 pi+, 1 pi-, 1 K+
+    -- Reaction Channel H: PENDING
 */
 void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
-    // PENDING
+
+    /* Fill histograms  */
+    /*
+        fHist_Findable_AntiSexaquark_Mass->Fill();
+        fHist_Findable_AntiSexaquark_DCA->Fill();
+        fHist_Findable_AntiSexaquark_Radius->Fill();
+        */
     return;
 }
 
@@ -2728,6 +2770,9 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
     getMcIdxOfTrueV0_fromMcIdxOfDau.clear();
     getMcIdxOfNegDau_fromMcIdxOfTrueV0.clear();
     getMcIdxOfPosDau_fromMcIdxOfTrueV0.clear();
+
+    getReactionIdx_fromMcIdx.clear();
+    getMcIdx_fromReactionIdx.clear();
 
     esdIndicesOfAntiProtonTracks.clear();
     esdIndicesOfPosKaonTracks.clear();

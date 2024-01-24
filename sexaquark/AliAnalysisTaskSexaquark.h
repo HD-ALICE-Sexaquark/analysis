@@ -160,7 +160,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* MC Generated */
     void ProcessMCGen();
     void GetDaughtersInfo(AliMCParticle* mcPart, Int_t& mcIdxNegDaughter, Int_t& mcIdxPosDaughter, TVector3& decay_vertex);
-    void ProcessSignalInteractions(std::vector<Int_t> SignalIDs, std::vector<Int_t> SignalV0s);
+    void ProcessSignalInteractions();
 
    public:
     /* Tracks */
@@ -372,6 +372,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_Found_True_KaonZeroShort_CPAwrtPV;  //!
     TH1F* fHist_Found_True_KaonZeroShort_DCAwrtPV;  //!
     // # V0s (that don't require true info)
+    // ## all found
     TH1F* fHist_Found_AntiLambda_Mass;         //!
     TH1F* fHist_Found_AntiLambda_Radius;       //!
     TH1F* fHist_Found_AntiLambda_CPAwrtPV;     //!
@@ -380,13 +381,20 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_Found_KaonZeroShort_Radius;    //!
     TH1F* fHist_Found_KaonZeroShort_CPAwrtPV;  //!
     TH1F* fHist_Found_KaonZeroShort_DCAwrtPV;  //!
-    // # Anti-Sexaquarks
+    // # Anti-Sexaquarks (that require true info)
+    // ## findable signal
     TH1F* fHist_Findable_AntiSexaquark_Mass;    //!
     TH1F* fHist_Findable_AntiSexaquark_DCA;     //!
     TH1F* fHist_Findable_AntiSexaquark_Radius;  //!
-    TH1F* fHist_Found_AntiSexaquark_Mass;       //!
-    TH1F* fHist_Found_AntiSexaquark_DCA;        //!
-    TH1F* fHist_Found_AntiSexaquark_Radius;     //!
+    // ## found signal
+    TH1F* fHist_Found_Signal_AntiSexaquark_Mass;    //!
+    TH1F* fHist_Found_Signal_AntiSexaquark_DCA;     //!
+    TH1F* fHist_Found_Signal_AntiSexaquark_Radius;  //!
+    // # Anti-Sexaquarks (that don't require true info)
+    // ## all found
+    TH1F* fHist_Found_AntiSexaquark_Mass;    //!
+    TH1F* fHist_Found_AntiSexaquark_DCA;     //!
+    TH1F* fHist_Found_AntiSexaquark_Radius;  //!
 
    private:
     /* Containers -- vectors and hash tables */
@@ -400,6 +408,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromMcIdxOfDau;     //
     std::unordered_map<Int_t, Int_t> getMcIdxOfNegDau_fromMcIdxOfTrueV0;  //
     std::unordered_map<Int_t, Int_t> getMcIdxOfPosDau_fromMcIdxOfTrueV0;  //
+
+    std::unordered_map<Int_t, Int_t> getReactionIdx_fromMcIdx;               //
+    std::unordered_map<Int_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;  //
 
     std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //
     std::vector<Int_t> esdIndicesOfPosKaonTracks;     //
