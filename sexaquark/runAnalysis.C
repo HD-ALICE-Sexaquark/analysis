@@ -1,6 +1,6 @@
 #include "AliAnalysisTaskSexaquark.h"
 
-void runAnalysis(Bool_t IsMC, TString SourceOfV0s, TString SimulationSet, Int_t ChooseNEvents = 0) {
+void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Int_t ChooseNEvents = 0) {
 
     // tell root where to look for headers
     gInterpreter->ProcessLine(".include ${ROOTSYS}/include");
@@ -15,10 +15,21 @@ void runAnalysis(Bool_t IsMC, TString SourceOfV0s, TString SimulationSet, Int_t 
     AliMCEventHandler *mcHand = new AliMCEventHandler();
     mgr->SetMCtruthEventHandler(mcHand);
 
+    // choose options depending on data period
+    Int_t n_pass;
+    if (RunPeriod == "LHC15o") {
+        n_pass = 2;
+    } else if (RunPeriod == "LHC18q" || RunPeriod == "LHC18r") {
+        n_pass = 3;
+    } else {
+        printf("Data period not recognized");
+        return;
+    }
+
     // load PID task
     TString pid_response_path = gSystem->ExpandPathName("${ALICE_ROOT}/ANALYSIS/macros/AddTaskPIDResponse.C");
     AliAnalysisTaskPIDResponse *PIDresponseTask = reinterpret_cast<AliAnalysisTaskPIDResponse *>(
-        gInterpreter->ExecuteMacro(Form("%s(%i, 1, 1, \"3\")", pid_response_path.Data(), (Int_t)IsMC)));  // (pending) pass number?
+        gInterpreter->ExecuteMacro(Form("%s(%i, 1, 1, \"%i\")", pid_response_path.Data(), (Int_t)IsMC, n_pass)));
 
     // load sexaquark task
     gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
