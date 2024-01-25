@@ -449,9 +449,10 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     if (fIsMC) {
         ProcessFindableV0s();
-        // ProcessFindableSexaquarks();
+        ProcessFindableSexaquarks();
     }
 
+    /*
     if (fSourceOfV0s == "offline") {
         OfficialV0Finder(kFALSE);
     }
@@ -466,6 +467,7 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
             CustomV0Finder(310, -211, 211);
         }
     }
+    */
 
     /*
         if (fSourceOfV0s == "offline" || fSourceOfV0s == "online" || fSourceOfV0s == "custom") {
@@ -927,7 +929,6 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
         for (Int_t productIdx = 0; productIdx < (Int_t)getMcIdx_fromReactionIdx[reactionIdx].size(); productIdx++) {
 
             mcIdxProduct = getMcIdx_fromReactionIdx[reactionIdx][productIdx];
-
             mcProduct = (AliMCParticle*)fMC->GetTrack(mcIdxProduct);
 
             lvProduct.SetPxPyPzE(mcProduct->Px(), mcProduct->Py(), mcProduct->Pz(), mcProduct->E());
@@ -936,6 +937,8 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
         }
 
         lvAntiSexaquark = lvAntiSexaquark - lvStruckNucleon;
+
+        /* Fill histograms */
 
         fHist_True_FermiSexaquark_Pt->Fill(lvAntiSexaquark.Pt());
         fHist_True_FermiSexaquark_Mass->Fill(lvAntiSexaquark.M());
@@ -975,6 +978,10 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
         mcIdx = TMath::Abs(track->GetLabel());
 
+        /* Fill containers */
+
+        getMcIdx_fromEsdIdx[esdIdxTrack] = mcIdx;
+
         isEsdIdxSignal[esdIdxTrack] = isMcIdxSignal[mcIdx];
         isEsdIdxDaughterOfSecondaryV0[esdIdxTrack] = isMcIdxDaughterOfSecondaryV0[mcIdx];
         isEsdIdxDaughterOfTrueV0[esdIdxTrack] = isMcIdxDaughterOfTrueV0[mcIdx];
@@ -982,6 +989,14 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         /* Apply track selection */
 
         if (!PassesTrackSelection(track, n_sigma_proton, n_sigma_kaon, n_sigma_pion)) continue;
+
+        /* Fill containers -- related to findable anti-sexaquarks */
+
+        if (isMcIdxSignal[mcIdx]) {
+            getReactionIdx_fromEsdIdx[esdIdxTrack] =
+                isMcIdxDaughterOfSignalV0[mcIdx] ? getReactionIdx_fromMcIdx[getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdx]] : getReactionIdx_fromMcIdx[mcIdx];
+            getEsdIdx_fromReactionIdx[getReactionIdx_fromEsdIdx[esdIdxTrack]].push_back(esdIdxTrack);
+        }
 
         /* Fill histograms */
 
@@ -1103,6 +1118,14 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Float_
     if (n_sigma_pion < kMaxNSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(8);
     if (n_sigma_pion < kMaxNSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(8);
 
+    // >> reject low-pT pions
+    if (track->Pt() < 0.2 && n_sigma_pion < kMaxNSigma_Pion) {
+        return kFALSE;
+    }
+
+    if (n_sigma_pion < kMaxNSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(9);
+    if (n_sigma_pion < kMaxNSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(9);
+
     return kTRUE;
 }
 
@@ -1198,7 +1221,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 }
 
 /*
-  Find the anti-sexaquarks that have all of their final-state particles reconstructed.
+  Find the anti-sexaquarks that have all of their *final-state particles* reconstructed.
   - For example:
     -- Reaction Channel A: 1 anti-proton, 2 pi+, 1 pi-
     -- Reaction Channel D: 1 anti-proton, 1 pi+, 1 K+
@@ -1207,13 +1230,106 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 */
 void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
-    /* Fill histograms  */
+    Int_t esdIdxFinalStateParticle;
+
+    AliMCParticle* mcFinalStateParticle;
+    Int_t mcIdxFinalStateParticle;
+
+    AliESDtrack* finalStateTrack;
+    Float_t n_sigma_proton;
+    Float_t n_sigma_kaon;
+    Float_t n_sigma_pion;
+
+    // DEBUG
     /*
-        fHist_Findable_AntiSexaquark_Mass->Fill();
-        fHist_Findable_AntiSexaquark_DCA->Fill();
-        fHist_Findable_AntiSexaquark_Radius->Fill();
+    std::map<Int_t, Int_t> counter_mc_idx;
+    */
+
+    /* Declare TLorentzVectors */
+
+    TLorentzVector lvFinalStateParticle;
+
+    TLorentzVector lvStruckNucleon(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());  // assume struck nucleon at rest
+
+    TLorentzVector lvAntiSexaquark;
+
+    /* Loop over interactions */
+
+    for (Int_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
+
+        /* Reset anti-sexaquark TLorentzVector */
+
+        lvAntiSexaquark.SetPxPyPzE(0., 0., 0., 0.);
+
+        if (getEsdIdx_fromReactionIdx[reactionIdx].size() < fFinalStateProductsPDG.size()) continue;
+
+        /* First loop, to count how many times a MC Idx repeats */
+
+        // DEBUG
+        /*
+        for (Int_t finalStateIdx = 0; finalStateIdx < (Int_t)getEsdIdx_fromReactionIdx[reactionIdx].size(); finalStateIdx++) {
+            esdIdxFinalStateParticle = getEsdIdx_fromReactionIdx[reactionIdx][finalStateIdx];
+            mcIdxFinalStateParticle = getMcIdx_fromEsdIdx[esdIdxFinalStateParticle];
+            counter_mc_idx[mcIdxFinalStateParticle]++;
+        }
         */
-    return;
+
+        /* Second loop, to get the reconstructed final-state particles info */
+
+        for (Int_t finalStateIdx = 0; finalStateIdx < (Int_t)getEsdIdx_fromReactionIdx[reactionIdx].size(); finalStateIdx++) {
+
+            esdIdxFinalStateParticle = getEsdIdx_fromReactionIdx[reactionIdx][finalStateIdx];
+            finalStateTrack = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxFinalStateParticle));
+
+            n_sigma_proton = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(finalStateTrack, AliPID::kProton));
+            n_sigma_kaon = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(finalStateTrack, AliPID::kKaon));
+            n_sigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(finalStateTrack, AliPID::kPion));
+
+            mcIdxFinalStateParticle = getMcIdx_fromEsdIdx[esdIdxFinalStateParticle];
+            mcFinalStateParticle = (AliMCParticle*)fMC->GetTrack(mcIdxFinalStateParticle);
+
+            /*
+            // DEBUG
+            if (counter_mc_idx[mcIdxFinalStateParticle] > 1) {
+                AliInfoF("reaction %i", reactionIdx);
+                AliInfoF("=> \033[1;31mmcIdx %i\033[0m, pdg %i", mcIdxFinalStateParticle, mcFinalStateParticle->PdgCode());
+                AliInfoF("=> mc_px %.2f, mc_py %.2f, mc_pz %.2f, \033[1;31mmc_pt %.2f\033[0m", mcFinalStateParticle->Px(), mcFinalStateParticle->Py(),
+                        mcFinalStateParticle->Pz(), mcFinalStateParticle->Pt());
+                AliInfoF("=> esdIdx %i, n_sigma_proton %.0f, n_sigma_kaon %.0f, n_sigma_pion %.0f", esdIdxFinalStateParticle, n_sigma_proton,
+                        n_sigma_kaon, n_sigma_pion);
+                AliInfoF("=> px %.2f, py %.2f, pz %.2f, \033[1;31mpt %.2f\033[0m", finalStateTrack->Px(), finalStateTrack->Py(),
+                        finalStateTrack->Pz(), finalStateTrack->Pt());
+                AliInfoF("=> global chi2 %.2f, tpc_mom %.2f", finalStateTrack->GetGlobalChi2(), finalStateTrack->GetTPCmomentum());
+            } else {
+                AliInfoF("reaction %i", reactionIdx);
+                AliInfoF("=> mcIdx %i, pdg %i", mcIdxFinalStateParticle, mcFinalStateParticle->PdgCode());
+                AliInfoF("=> mc_px %.2f, mc_py %.2f, mc_pz %.2f, mc_pt %.2f", mcFinalStateParticle->Px(), mcFinalStateParticle->Py(),
+                        mcFinalStateParticle->Pz(), mcFinalStateParticle->Pt());
+                AliInfoF("=> esdIdx %i, n_sigma_proton %.0f, n_sigma_kaon %.0f, n_sigma_pion %.0f", esdIdxFinalStateParticle, n_sigma_proton,
+                        n_sigma_kaon, n_sigma_pion);
+                AliInfoF("=> px %.2f, py %.2f, pz %.2f, pt %.2f", finalStateTrack->Px(), finalStateTrack->Py(), finalStateTrack->Pz(),
+                        finalStateTrack->Pt());
+                AliInfoF("=> global chi2 %.2f, tpc_mom %.2f", finalStateTrack->GetGlobalChi2(), finalStateTrack->GetTPCmomentum());
+            }
+            */
+
+            lvFinalStateParticle.SetPxPyPzE(mcFinalStateParticle->Px(), mcFinalStateParticle->Py(), mcFinalStateParticle->Pz(),
+                                            mcFinalStateParticle->E());
+
+            lvAntiSexaquark = lvAntiSexaquark + lvFinalStateParticle;
+        }
+
+        lvAntiSexaquark = lvAntiSexaquark - lvStruckNucleon;
+
+        /* Fill histograms  */
+
+        fHist_Findable_AntiSexaquark_Mass->Fill(lvAntiSexaquark.M());
+        fHist_Findable_AntiSexaquark_DCA->Fill(  //
+            LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), mcFinalStateParticle->Xv(), mcFinalStateParticle->Yv(),
+                         mcFinalStateParticle->Zv(), fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
+        fHist_Findable_AntiSexaquark_Radius->Fill(  //
+            TMath::Sqrt(TMath::Power(mcFinalStateParticle->Xv(), 2) + TMath::Power(mcFinalStateParticle->Yv(), 2)));
+    }
 }
 
 /*                             */
@@ -2774,10 +2890,15 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
     getReactionIdx_fromMcIdx.clear();
     getMcIdx_fromReactionIdx.clear();
 
+    getReactionIdx_fromEsdIdx.clear();
+    getEsdIdx_fromReactionIdx.clear();
+
     esdIndicesOfAntiProtonTracks.clear();
     esdIndicesOfPosKaonTracks.clear();
     esdIndicesOfPiPlusTracks.clear();
     esdIndicesOfPiMinusTracks.clear();
+
+    getMcIdx_fromEsdIdx.clear();
 
     isEsdIdxSignal.clear();
     isEsdIdxDaughterOfSecondaryV0.clear();

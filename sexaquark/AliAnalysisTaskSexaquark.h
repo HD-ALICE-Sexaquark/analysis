@@ -403,7 +403,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Bool_t> isMcIdxSignal;                 //
     std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSecondaryV0;  //
     std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfTrueV0;       //
-    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSignalV0;     // PENDING: isn't it the same as `isMcIdxSignal`?
+    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSignalV0;     //
 
     std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromMcIdxOfDau;     //
     std::unordered_map<Int_t, Int_t> getMcIdxOfNegDau_fromMcIdxOfTrueV0;  //
@@ -412,10 +412,15 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getReactionIdx_fromMcIdx;               //
     std::unordered_map<Int_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;  //
 
+    std::unordered_map<Int_t, Int_t> getReactionIdx_fromEsdIdx;               //
+    std::unordered_map<Int_t, std::vector<Int_t>> getEsdIdx_fromReactionIdx;  //
+
     std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //
     std::vector<Int_t> esdIndicesOfPosKaonTracks;     //
     std::vector<Int_t> esdIndicesOfPiPlusTracks;      //
     std::vector<Int_t> esdIndicesOfPiMinusTracks;     //
+
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;  //
 
     std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;                 //
     std::unordered_map<Int_t, Bool_t> isEsdIdxDaughterOfSecondaryV0;  //
