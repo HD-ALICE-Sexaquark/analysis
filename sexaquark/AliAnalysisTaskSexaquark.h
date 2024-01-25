@@ -233,8 +233,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                           Double_t refPointY, Double_t refPointZ);
     Double_t SquaredDistancePointToLine(const Double_t* t, Double_t point[], Double_t linePoint[], Double_t lineDir[]);
     Double_t SquaredDistanceBetweenLines(const Double_t* t, Double_t pos0[], Double_t dir0[], Double_t pos1[], Double_t dir1[]);
-    Double_t Calculate_TwoLinesDCA_v1(TVector3 pos1, TVector3 dir1, TVector3 pos2, TVector3 dir2, TVector3& P1, TVector3& P2);
-    Double_t Calculate_TwoLinesDCA_v2(TVector3 pos1, TVector3 dir1, TVector3 pos2, TVector3 dir2, TVector3& P1, TVector3& P2);
+    Double_t Calculate_TwoLinesDCA_v1(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
+    Double_t Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
 
    public:
     /* Tree Operations */
@@ -383,18 +383,26 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_Found_KaonZeroShort_DCAwrtPV;  //!
     // # Anti-Sexaquarks (that require true info)
     // ## findable signal
-    TH1F* fHist_Findable_AntiSexaquark_Mass;    //!
-    TH1F* fHist_Findable_AntiSexaquark_DCA;     //!
-    TH1F* fHist_Findable_AntiSexaquark_Radius;  //!
+    TH1F* fHist_Findable_AntiSexaquark_Mass;      //!
+    TH1F* fHist_Findable_AntiSexaquark_Pt;        //!
+    TH1F* fHist_Findable_AntiSexaquark_DCAwrtPV;  //!
+    TH1F* fHist_Findable_AntiSexaquark_CPAwrtPV;  //!
+    TH1F* fHist_Findable_AntiSexaquark_Radius;    //!
     // ## found signal
-    TH1F* fHist_Found_Signal_AntiSexaquark_Mass;    //!
-    TH1F* fHist_Found_Signal_AntiSexaquark_DCA;     //!
-    TH1F* fHist_Found_Signal_AntiSexaquark_Radius;  //!
+    TH1F* fHist_Found_Signal_AntiSexaquark_Mass;       //!
+    TH1F* fHist_Found_Signal_AntiSexaquark_Pt;         //!
+    TH1F* fHist_Found_Signal_AntiSexaquark_DCAbtwDau;  //!
+    TH1F* fHist_Found_Signal_AntiSexaquark_DCAwrtPV;   //!
+    TH1F* fHist_Found_Signal_AntiSexaquark_CPAwrtPV;   //!
+    TH1F* fHist_Found_Signal_AntiSexaquark_Radius;     //!
     // # Anti-Sexaquarks (that don't require true info)
     // ## all found
-    TH1F* fHist_Found_AntiSexaquark_Mass;    //!
-    TH1F* fHist_Found_AntiSexaquark_DCA;     //!
-    TH1F* fHist_Found_AntiSexaquark_Radius;  //!
+    TH1F* fHist_Found_AntiSexaquark_Mass;       //!
+    TH1F* fHist_Found_AntiSexaquark_Pt;         //!
+    TH1F* fHist_Found_AntiSexaquark_DCAbtwDau;  //!
+    TH1F* fHist_Found_AntiSexaquark_DCAwrtPV;   //!
+    TH1F* fHist_Found_AntiSexaquark_CPAwrtPV;   //!
+    TH1F* fHist_Found_AntiSexaquark_Radius;     //!
 
    private:
     /* Containers -- vectors and hash tables */
