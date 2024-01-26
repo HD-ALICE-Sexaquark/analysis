@@ -26,6 +26,15 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
         return;
     }
 
+    // CDB CONNECT
+    /*
+    // - to use this, one needs to clone https://gitlab.cern.ch/alisw/AliRootOCDB
+    // - then, one needs to set the environment variable ALIROOT_OCDB_ROOT to the directory where the repo is cloned
+    AliTaskCDBconnect *taskCDB = reinterpret_cast<AliTaskCDBconnect *>(
+        gInterpreter->ExecuteMacro("${ALICE_PHYSICS}/PWGPP/PilotTrain/AddTaskCDBconnect.C(\"local://${ALIROOT_OCDB_ROOT}/OCDB\")"));
+    taskCDB->SetFallBackToRaw(kTRUE);
+    */
+
     // load PID task
     TString pid_response_path = gSystem->ExpandPathName("${ALICE_ROOT}/ANALYSIS/macros/AddTaskPIDResponse.C");
     AliAnalysisTaskPIDResponse *PIDresponseTask = reinterpret_cast<AliAnalysisTaskPIDResponse *>(
