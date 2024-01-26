@@ -137,6 +137,7 @@ class KFParticleMother : public KFParticle {
 
 class AliPIDResponse;
 class KFParticle;
+class KFParticleMother;
 class KFParticleBase;
 
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
@@ -188,8 +189,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* V0s -- Kalman Filter */
-    void ReconstructV0s_KF(std::vector<Int_t> idxNegativeTracks, std::vector<Int_t> idxPositiveTracks, Int_t pdgV0, Int_t pdgTrackNeg,
-                           Int_t pdgTrackPos, std::vector<KFParticleMother>& kfV0s, std::vector<std::pair<Int_t, Int_t>>& idxDaughters);
+    void ReconstructV0s_KF(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
     Bool_t PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
                                    TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
     Bool_t PassesKaonZeroShortCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
@@ -453,6 +453,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     std::unordered_map<Int_t, Int_t> getMcIdx_fromAntiLambdaIdx;     // must protect first with `isAntiLambdaIdxTrueV0`
     std::unordered_map<Int_t, Int_t> getMcIdx_fromKaonZeroShortIdx;  // must protect first with `isKaonZeroShortIdxTrueV0`
+
+    std::vector<KFParticleMother> kfAntiLambdas;     //
+    std::vector<KFParticleMother> kfKaonsZeroShort;  //
 
     void ClearContainers();
 
