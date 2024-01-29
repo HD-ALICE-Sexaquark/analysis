@@ -128,8 +128,7 @@ class KFParticleMother : public KFParticle {
    public:
     Bool_t CheckDaughter(KFParticle daughter) {
         Float_t m[8], mV[36], D[3][3];
-        if (KFParticleBase::GetMeasurement(daughter, m, mV, D)) return kTRUE;
-        return kFALSE;
+        return KFParticleBase::GetMeasurement(daughter, m, mV, D);
     }
 };
 
@@ -202,9 +201,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* Sexaquark -- Kalman Filter */
-    void SexaquarkFinder_ChannelA_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
-                                     std::vector<KFParticleMother> kfKaonsZeroShort, std::vector<std::pair<Int_t, Int_t>> idxKaonZeroShortDaughters,
-                                     std::vector<KFParticleMother>& kfAntiSexaquarks);
+    void SexaquarkFinder_ChannelA_KF();
     void SexaquarkFinder_ChannelD_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
                                      std::vector<Int_t> idxPositiveKaons, std::vector<KFParticleMother>& kfAntiSexaquarks);
     void SexaquarkFinder_ChannelE_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
