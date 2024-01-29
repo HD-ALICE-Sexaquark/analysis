@@ -481,8 +481,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         }
     }
 
-    AliInfo("Did we get here?");
-
     if (fSourceOfV0s == "kalman") {
         if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S") {
             ReconstructV0s_KF(-3122, -2212, 211);
@@ -1614,11 +1612,11 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     std::vector<Int_t> esdIndicesNegTracks;
     std::vector<Int_t> esdIndicesPosTracks;
 
-    if (pdgV0 == 310) {
-        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
-        esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
-    } else if (pdgV0 == -3122) {
+    if (pdgV0 == -3122) {
         esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
+        esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
+    } else if (pdgV0 == 310) {
+        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
         esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
     }
 
@@ -2096,15 +2094,13 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_KF(Int_t pdgV0, Int_t pdgTrackNeg,
     std::vector<Int_t> esdIndicesNegTracks;
     std::vector<Int_t> esdIndicesPosTracks;
 
-    if (pdgV0 == 310) {
-        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
-        esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
-    } else if (pdgV0 == -3122) {
+    if (pdgV0 == -3122) {
         esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
         esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
+    } else if (pdgV0 == 310) {
+        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
+        esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
     }
-
-    AliInfo("Before loop");
 
     /* Loop over all possible pairs of tracks */
 
@@ -2164,9 +2160,11 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_KF(Int_t pdgV0, Int_t pdgTrackNeg,
 
             /* Apply cuts */
 
+            /*
             if (pdgV0 == -3122 && !PassesAntiLambdaCuts_KF(kfV0, kfDaughterNeg, kfDaughterPos, lvV0, lvTrackNeg, lvTrackPos)) continue;
             if (pdgV0 == 310 && !PassesKaonZeroShortCuts_KF(kfV0, kfDaughterNeg, kfDaughterPos, lvV0, lvTrackNeg, lvTrackPos)) continue;
             if (pdgV0 == 0 && !PassesPionPairCuts_KF(kfV0, kfDaughterNeg, kfDaughterPos, lvV0, lvTrackNeg, lvTrackPos)) continue;
+            */
 
             /* Calculate variables */
 
@@ -2229,11 +2227,11 @@ void AliAnalysisTaskSexaquark::ReconstructV0s_KF(Int_t pdgV0, Int_t pdgTrackNeg,
 
                 kfKaonsZeroShort.push_back(kfV0);
 
-                getEsdIdxOfNegDau_fromAntiLambdaIdx[kfKaonsZeroShort.size() - 1] = esdIdxNeg;
-                getEsdIdxOfPosDau_fromAntiLambdaIdx[kfKaonsZeroShort.size() - 1] = esdIdxPos;
+                getEsdIdxOfNegDau_fromKaonZeroShortIdx[kfKaonsZeroShort.size() - 1] = esdIdxNeg;
+                getEsdIdxOfPosDau_fromKaonZeroShortIdx[kfKaonsZeroShort.size() - 1] = esdIdxPos;
 
-                isAntiLambdaIdxATrueV0.push_back(isEsdIdxDaughterOfTrueV0[esdIdxNeg] && isEsdIdxDaughterOfTrueV0[esdIdxPos] &&
-                                                 getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg] == getMcIdxOfTrueV0_fromEsdIdx[esdIdxPos]);
+                isKaonZeroShortIdxATrueV0.push_back(isEsdIdxDaughterOfTrueV0[esdIdxNeg] && isEsdIdxDaughterOfTrueV0[esdIdxPos] &&
+                                                    getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg] == getMcIdxOfTrueV0_fromEsdIdx[esdIdxPos]);
 
                 /* Fill histograms */
 

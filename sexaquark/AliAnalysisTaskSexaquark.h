@@ -137,7 +137,6 @@ class KFParticleMother : public KFParticle {
 
 class AliPIDResponse;
 class KFParticle;
-class KFParticleMother;
 class KFParticleBase;
 
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
