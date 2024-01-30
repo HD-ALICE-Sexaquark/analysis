@@ -294,18 +294,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_True_InjBkg_SecVertex_Radius;        //!
     TH1F* fHist_True_FermiSexaquark_Pt;              //!
     TH1F* fHist_True_FermiSexaquark_Mass;            //!
-    TH1F* fHist_True_Signal_AntiLambda_Pt;           //!
-    TH1F* fHist_True_Signal_AntiLambda_DCAwrtPV;     //!
-    TH1F* fHist_True_Signal_AntiLambda_CPAwrtPV;     //!
-    TH1F* fHist_True_Signal_KaonZeroShort_Pt;        //!
-    TH1F* fHist_True_Signal_KaonZeroShort_DCAwrtPV;  //!
-    TH1F* fHist_True_Signal_KaonZeroShort_CPAwrtPV;  //!
-    TH1F* fHist_True_AntiLambda_Pt;                  //!
-    TH1F* fHist_True_AntiLambda_DCAwrtPV;            //!
-    TH1F* fHist_True_AntiLambda_CPAwrtPV;            //!
-    TH1F* fHist_True_KaonZeroShort_Pt;               //!
-    TH1F* fHist_True_KaonZeroShort_DCAwrtPV;         //!
-    TH1F* fHist_True_KaonZeroShort_CPAwrtPV;         //!
     TH1F* fHist_True_AntiLambda_Bookkeep;            //!
     TH1F* fHist_True_KaonZeroShort_Bookkeep;         //!
     TH1F* fHist_True_AntiProton_Bookkeep;            //!
@@ -330,66 +318,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_Rec_PiPlus_Pt;      //!
     TH1F* fHist_Rec_PiMinus_Pt;     //!
     TH2F* f2DHist_TPC_Signal;       //!
-    // # V0s (that require true info)
-    // ## findable signal
-    TH1F* fHist_Findable_Signal_AntiLambda_Mass;         //!
-    TH1F* fHist_Findable_Signal_AntiLambda_Radius;       //!
-    TH1F* fHist_Findable_Signal_AntiLambda_CPAwrtPV;     //!
-    TH1F* fHist_Findable_Signal_AntiLambda_DCAwrtPV;     //!
-    TH1F* fHist_Findable_Signal_KaonZeroShort_Mass;      //!
-    TH1F* fHist_Findable_Signal_KaonZeroShort_Radius;    //!
-    TH1F* fHist_Findable_Signal_KaonZeroShort_CPAwrtPV;  //!
-    TH1F* fHist_Findable_Signal_KaonZeroShort_DCAwrtPV;  //!
-    // ## found signal
-    TH1F* fHist_Found_Signal_AntiLambda_Mass;            //!
-    TH1F* fHist_Found_Signal_AntiLambda_Radius;          //!
-    TH1F* fHist_Found_Signal_AntiLambda_CPAwrtPV;        //!
-    TH1F* fHist_Found_Signal_AntiLambda_DCAwrtPV;        //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_Mass;         //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_Radius;       //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_DCAwrtPV;     //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_CPAwrtPV;     //!
-    /*
-    TH1F* fHist_Found_Signal_KaonZeroShort_DCAbtwDau;    //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_DCAnegV0;     //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_DCAposV0;     //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_DecayLength;  //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_Zv;           //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_DCAwrtPV;     //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_Pt;           //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_Pz;           //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_ArmQt;        //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_ArmAlpha;     //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_Chi2ndf;      //!
-    */
-    // ## findable true
-    TH1F* fHist_Findable_True_AntiLambda_Mass;         //!
-    TH1F* fHist_Findable_True_AntiLambda_Radius;       //!
-    TH1F* fHist_Findable_True_AntiLambda_CPAwrtPV;     //!
-    TH1F* fHist_Findable_True_AntiLambda_DCAwrtPV;     //!
-    TH1F* fHist_Findable_True_KaonZeroShort_Mass;      //!
-    TH1F* fHist_Findable_True_KaonZeroShort_Radius;    //!
-    TH1F* fHist_Findable_True_KaonZeroShort_CPAwrtPV;  //!
-    TH1F* fHist_Findable_True_KaonZeroShort_DCAwrtPV;  //!
-    // ## found true
-    TH1F* fHist_Found_True_AntiLambda_Mass;         //!
-    TH1F* fHist_Found_True_AntiLambda_Radius;       //!
-    TH1F* fHist_Found_True_AntiLambda_CPAwrtPV;     //!
-    TH1F* fHist_Found_True_AntiLambda_DCAwrtPV;     //!
-    TH1F* fHist_Found_True_KaonZeroShort_Mass;      //!
-    TH1F* fHist_Found_True_KaonZeroShort_Radius;    //!
-    TH1F* fHist_Found_True_KaonZeroShort_CPAwrtPV;  //!
-    TH1F* fHist_Found_True_KaonZeroShort_DCAwrtPV;  //!
-    // # V0s (that don't require true info)
-    // ## all found
-    TH1F* fHist_Found_AntiLambda_Mass;         //!
-    TH1F* fHist_Found_AntiLambda_Radius;       //!
-    TH1F* fHist_Found_AntiLambda_CPAwrtPV;     //!
-    TH1F* fHist_Found_AntiLambda_DCAwrtPV;     //!
-    TH1F* fHist_Found_KaonZeroShort_Mass;      //!
-    TH1F* fHist_Found_KaonZeroShort_Radius;    //!
-    TH1F* fHist_Found_KaonZeroShort_CPAwrtPV;  //!
-    TH1F* fHist_Found_KaonZeroShort_DCAwrtPV;  //!
+
+    // key: `stage, set, pdg, property`, value: histogram
+    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;
+
     // # Anti-Sexaquarks (that require true info)
     // ## findable signal
     TH1F* fHist_Findable_AntiSexaquark_Mass;      //!
