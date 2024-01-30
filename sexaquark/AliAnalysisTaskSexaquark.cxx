@@ -477,15 +477,15 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     if (fSourceOfV0s == "offline" || fSourceOfV0s == "online" || fSourceOfV0s == "custom") {
         if (fReactionID == 'A') {
-            SexaquarkFinder_ChannelA_Geo();
+            GeoSexaquarkFinder_ChannelA();
         }
     }
 
     if (fSourceOfV0s == "kalman") {
         if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S") {
-            ReconstructV0s_KF(-3122, -2212, 211);
-            ReconstructV0s_KF(310, -211, 211);
-            SexaquarkFinder_ChannelA_KF();
+            KalmanV0Finder(-3122, -2212, 211);
+            KalmanV0Finder(310, -211, 211);
+            KalmanSexaquarkFinder_ChannelA();
         }
     }
 
@@ -1903,7 +1903,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesKaonZeroShortCuts_OfficialCustom(AliESDv0
  - Containers: `esdAntiLambdas`, `esdKaonsZeroShort`, `getEsdIdxOfNegDau_fromAntiLambdaIdx`, `getEsdIdxOfNegDau_fromKaonZeroShortIdx`,
  `getEsdIdxOfPosDau_fromKaonZeroShortIdx`, `getEsdIdxOfPosDau_fromAntiLambdaIdx`
 */
-void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_Geo() {
+void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
 
     /* Declare AliESDv0 objects */
 
@@ -2017,7 +2017,7 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_Geo() {
 /*
  PENDING
 */
-void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelD_Geo() {
+void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelD() {
     // PENDING
     return;
 }
@@ -2025,7 +2025,7 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelD_Geo() {
 /*
  PENDING
 */
-void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelE_Geo() {
+void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelE() {
     // PENDING
     return;
 }
@@ -2069,7 +2069,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiL
  - Input: `pdgV0`, `pdgTrackNeg`, `pdgTrackPos`
  - Output: `kfV0s`, `idxDaughters`
 */
-void AliAnalysisTaskSexaquark::ReconstructV0s_KF(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos) {
+void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos) {
 
     AliESDtrack* esdTrackNeg;
     AliESDtrack* esdTrackPos;
@@ -2385,15 +2385,12 @@ Bool_t AliAnalysisTaskSexaquark::PassesPosKaonPairCuts_KF(KFParticleMother kfV0,
 
 /*
  Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel A.
+ - Uses: `fStruckNucleonPDG`, `fPDG`, `fPrimaryVertex`, `fESD`, `fMagneticField`
  - Containers: `kf[AntiLambdas|KaonsZeroShort]`, `getEsdIdxOf[Neg|Pos]Dau_from[AntiLambda|KaonZeroShort]Idx`
 */
-void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_KF() {
+void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
 
     Double_t impar[2];
-    Bool_t fStatusT0PropToDCA;
-    Bool_t fStatusT1PropToDCA;
-    Bool_t fStatusT2PropToDCA;
-    Bool_t fStatusT3PropToDCA;
 
     Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
     Int_t esdIdxNeg_KaonZeroShort, esdIdxPos_KaonZeroShort;
@@ -2418,18 +2415,10 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_KF() {
     Float_t dca_wrt_pv;
     Bool_t is_signal;
 
-    Int_t N_Comb = 0;
-    Int_t N_PossibleComb = (Int_t)kfAntiLambdas.size() * (Int_t)kfKaonsZeroShort.size();
-
-    AliInfoF("N_PossibleComb = %i", N_PossibleComb);
-
     /* Loop over all possible pairs of anti-lambdas and K0S */
 
     for (Int_t idxAntiLambda = 0; idxAntiLambda < (Int_t)kfAntiLambdas.size(); idxAntiLambda++) {
         for (Int_t idxKaonZeroShort = 0; idxKaonZeroShort < (Int_t)kfKaonsZeroShort.size(); idxKaonZeroShort++) {
-
-            N_Comb++;
-            if (N_Comb % (Int_t)TMath::Floor((Float_t)N_PossibleComb / 20.) == 0) AliInfoF("N_Comb = %i", N_Comb);
 
             /* Check that no daughter is repeated between the V0s */
 
@@ -2456,38 +2445,10 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_KF() {
             Double_t vertexErr_KaonZeroShort[3] = {KaonZeroShort.GetErrX(), KaonZeroShort.GetErrY(), KaonZeroShort.GetErrZ()};
             esdVertex_KaonZeroShort = new AliESDVertex(vertex_KaonZeroShort, vertexErr_KaonZeroShort);
 
-            /*
-                AliInfoF("anti_lambda: vertex, radius, charge = (%f, %f, %f), (%f, %f, %f), %f, %i", AntiLambda.Px(), AntiLambda.Py(),
-                AntiLambda.Pz(), AntiLambda.GetX(), AntiLambda.GetY(), AntiLambda.GetZ(), al_radius,
-                (Int_t)AntiLambda.GetQ()); AliInfoF("kaon_zero_short: vertex, radius, charge = (%f, %f, %f), (%f, %f, %f), %f, %i",
-               KaonZeroShort.Px(), KaonZeroShort.Py(), KaonZeroShort.Pz(), KaonZeroShort.GetX(),
-               KaonZeroShort.GetY(), KaonZeroShort.GetZ(), k0s_radius, (Int_t)KaonZeroShort.GetQ());
-             */
-
-            /* Add protection against ??? */
-
-            // KFParticleMother CheckALAfterEmpty;
-
-            // KFParticleMother CheckK0SAfterAL;
-            // CheckK0SAfterAL.AddDaughter(AntiLambda);
-
             KFParticleMother AntiSexaquark;
-            // if (CheckALAfterEmpty.CheckDaughter(AntiLambda) && CheckK0SAfterAL.CheckDaughter(KaonZeroShort)) {
-            // AntiSexaquark.SetConstructMethod(2);
-            // AntiSexaquark.AddDaughter(AntiLambda);
-            // AntiSexaquark.AddDaughter(KaonZeroShort);
-            // } else {
             AntiSexaquark.AddDaughter(AntiLambda);
             AntiSexaquark.AddDaughter(KaonZeroShort);
-            // }
             AntiSexaquark.TransportToDecayVertex();
-
-            /*
-            // get Secondary Vertex
-            Double_t SecVertex[3] = {AntiSexaquark.GetX(), AntiSexaquark.GetY(), AntiSexaquark.GetZ()};
-            Double_t SecVertexErr[3] = {AntiSexaquark.GetErrX(), AntiSexaquark.GetErrY(), AntiSexaquark.GetErrZ()};
-            AliESDVertex* esdSecVertex = new AliESDVertex(SecVertex, SecVertexErr);
-            */
 
             /* Transport V0s to the secondary vertex */
 
@@ -2580,10 +2541,10 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelA_KF() {
  - Input: `kfAntiLambdas`, `idxAntiLambdaDaughters`, `idxPositiveKaons`
  - Output: `kfAntiSexaquarks`
 */
-void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelD_KF(std::vector<KFParticleMother> kfAntiLambdas,                  //
-                                                           std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,  //
-                                                           std::vector<Int_t> idxPositiveKaons,                          //
-                                                           std::vector<KFParticleMother>& kfAntiSexaquarks) {
+void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD(std::vector<KFParticleMother> kfAntiLambdas,                  //
+                                                              std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,  //
+                                                              std::vector<Int_t> idxPositiveKaons,                          //
+                                                              std::vector<KFParticleMother>& kfAntiSexaquarks) {
     /* PENDING */
 }
 
@@ -2597,12 +2558,12 @@ void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelD_KF(std::vector<KFParticl
  - Input: `kfAntiLambdas`, `idxAntiLambdaDaughters`, `idxPositiveKaons`
  - Output: `kfAntiSexaquarks`
 */
-void AliAnalysisTaskSexaquark::SexaquarkFinder_ChannelE_KF(std::vector<KFParticleMother> kfAntiLambdas,                  //
-                                                           std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,  //
-                                                           std::vector<KFParticleMother> kfChargedPairs,                 //
-                                                           std::vector<std::pair<Int_t, Int_t>> idxChargedPairsTracks,   //
-                                                           std::vector<Int_t> idxSinglePositiveTrack,                    //
-                                                           std::vector<KFParticleMother>& kfAntiSexaquarks) {
+void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE(std::vector<KFParticleMother> kfAntiLambdas,                  //
+                                                              std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,  //
+                                                              std::vector<KFParticleMother> kfChargedPairs,                 //
+                                                              std::vector<std::pair<Int_t, Int_t>> idxChargedPairsTracks,   //
+                                                              std::vector<Int_t> idxSinglePositiveTrack,                    //
+                                                              std::vector<KFParticleMother>& kfAntiSexaquarks) {
     /* PENDING */
 }
 
@@ -2616,12 +2577,20 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA_KF(KFParticleMothe
                                                                  TLorentzVector lvAntiLambda, TLorentzVector lvKaonZeroShort) {
 
     // >> DCA w.r.t. PV
-    Double_t dca = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(),
-                                kfAntiSexaquark.GetZ(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
-    if (dca > 0.1) {
-        AliInfo("Found Sexaquark that had DCA w.r.t. PV > 0.1");
-        return kFALSE;
-    }
+    Double_t dca_wrt_pv =
+        LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(),
+                     kfAntiSexaquark.GetZ(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+
+    // >> CPA w.r.t. PV
+    Double_t cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(), kfAntiSexaquark.GetZ(),
+                                              fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+
+    if (cpa_wrt_pv < 0.98) return kFALSE;
+
+    // >> DCA between daughters
+    Double_t dca_btw_dau = kfAntiLambda.GetDistanceFromVertexXY(kfKaonZeroShort);
+
+    if (dca_btw_dau > 0.1) return kFALSE;
 
     return kTRUE;
 }

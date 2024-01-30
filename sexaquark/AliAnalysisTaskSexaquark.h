@@ -180,14 +180,14 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* Sexaquark -- Geometrical Finder */
-    void SexaquarkFinder_ChannelA_Geo();
-    void SexaquarkFinder_ChannelD_Geo();
-    void SexaquarkFinder_ChannelE_Geo();
+    void GeoSexaquarkFinder_ChannelA();
+    void GeoSexaquarkFinder_ChannelD();
+    void GeoSexaquarkFinder_ChannelE();
     Bool_t PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
 
    public:
     /* V0s -- Kalman Filter */
-    void ReconstructV0s_KF(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
+    void KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
     Bool_t PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
                                    TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
     Bool_t PassesKaonZeroShortCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
@@ -201,10 +201,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* Sexaquark -- Kalman Filter */
-    void SexaquarkFinder_ChannelA_KF();
-    void SexaquarkFinder_ChannelD_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
+    void KalmanSexaquarkFinder_ChannelA();
+    void KalmanSexaquarkFinder_ChannelD(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
                                      std::vector<Int_t> idxPositiveKaons, std::vector<KFParticleMother>& kfAntiSexaquarks);
-    void SexaquarkFinder_ChannelE_KF(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
+    void KalmanSexaquarkFinder_ChannelE(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
                                      std::vector<KFParticleMother> kfChargedPairs, std::vector<std::pair<Int_t, Int_t>> idxChargedPairsTracks,
                                      std::vector<Int_t> idxSinglePositiveTrack, std::vector<KFParticleMother>& kfAntiSexaquarks);
     Bool_t PassesSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
@@ -341,14 +341,27 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_Findable_Signal_KaonZeroShort_CPAwrtPV;  //!
     TH1F* fHist_Findable_Signal_KaonZeroShort_DCAwrtPV;  //!
     // ## found signal
-    TH1F* fHist_Found_Signal_AntiLambda_Mass;         //!
-    TH1F* fHist_Found_Signal_AntiLambda_Radius;       //!
-    TH1F* fHist_Found_Signal_AntiLambda_CPAwrtPV;     //!
-    TH1F* fHist_Found_Signal_AntiLambda_DCAwrtPV;     //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_Mass;      //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_Radius;    //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_CPAwrtPV;  //!
-    TH1F* fHist_Found_Signal_KaonZeroShort_DCAwrtPV;  //!
+    TH1F* fHist_Found_Signal_AntiLambda_Mass;            //!
+    TH1F* fHist_Found_Signal_AntiLambda_Radius;          //!
+    TH1F* fHist_Found_Signal_AntiLambda_CPAwrtPV;        //!
+    TH1F* fHist_Found_Signal_AntiLambda_DCAwrtPV;        //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_Mass;         //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_Radius;       //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_DCAwrtPV;     //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_CPAwrtPV;     //!
+    /*
+    TH1F* fHist_Found_Signal_KaonZeroShort_DCAbtwDau;    //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_DCAnegV0;     //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_DCAposV0;     //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_DecayLength;  //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_Zv;           //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_DCAwrtPV;     //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_Pt;           //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_Pz;           //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_ArmQt;        //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_ArmAlpha;     //!
+    TH1F* fHist_Found_Signal_KaonZeroShort_Chi2ndf;      //!
+    */
     // ## findable true
     TH1F* fHist_Findable_True_AntiLambda_Mass;         //!
     TH1F* fHist_Findable_True_AntiLambda_Radius;       //!
