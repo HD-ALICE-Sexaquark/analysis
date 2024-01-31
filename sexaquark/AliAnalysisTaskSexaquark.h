@@ -217,6 +217,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t Preoptimize(const AliExternalTrackParam* nt, AliExternalTrackParam* pt, Double_t* lPreprocessxn, Double_t* lPreprocessxp,
                        const Double_t b);
     void GetHelixCenter(const AliExternalTrackParam* track, Double_t center[2], const Double_t b);
+    void Evaluate(const Double_t* h, Double_t t, Double_t r[3], Double_t g[3], Double_t gg[3]);
     Float_t MCRec_GetImpactParameter(AliESDtrack* track);
     Double_t CosinePointingAngle(TLorentzVector lvParticle, Double_t X, Double_t Y, Double_t Z, Double_t refPointX, Double_t refPointY,
                                  Double_t refPointZ);
