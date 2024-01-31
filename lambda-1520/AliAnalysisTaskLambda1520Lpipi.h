@@ -44,7 +44,6 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
                                   TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
   Bool_t PassesLambda1520Cuts_KF(KFParticleMother kfLambda1520, KFParticle kfLambda, KFParticle kfPion2, KFParticle kfPion3,  //
                                  TLorentzVector lvLambda1520, TLorentzVector lvLambda, TLorentzVector lvPion2, TLorentzVector lvPion3);
-  Bool_t PassesSexaquarkCuts_KF();
 
   virtual void ProcessMCGen(std::set<Int_t>&, std::set<Int_t>&);
   virtual void ProcessTracks(std::set<Int_t> Indices_MCGen_FS_Signal,                                        // (pending)
@@ -62,12 +61,6 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
                                 std::vector<std::vector<Int_t>> idxSecondV0Daughters,  //
                                 std::vector<Int_t> pdgDaughters,                       //
                                 std::vector<KFParticleMother>& kfLambdas1520);
-  void SexaquarkFinder_ChannelA(std::vector<KFParticleMother> kfFirstV0s,              //
-                                std::vector<std::vector<Int_t>> idxFirstV0Daughters,   //
-                                std::vector<KFParticleMother> kfSecondV0s,             //
-                                std::vector<std::vector<Int_t>> idxSecondV0Daughters,  //
-                                std::vector<Int_t> pdgDaughters,                       //
-                                std::vector<KFParticleMother>& kfAntiSexaquarks);
   virtual void ProcessOfficialV0s(std::vector<Int_t>);
 
   virtual void ProcessTrueV0s();

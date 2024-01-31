@@ -40,6 +40,9 @@
 
 class AliAnalysisTaskLambda1520Lpipi;
 
+/*
+ Default constructor
+ */
 AliAnalysisTaskLambda1520Lpipi::AliAnalysisTaskLambda1520Lpipi()
     : AliAnalysisTaskSE(),
       fIsMC(0),
@@ -63,6 +66,9 @@ AliAnalysisTaskLambda1520Lpipi::AliAnalysisTaskLambda1520Lpipi()
       fHist_TrueAntiLambda_Pz(0),
       fHist_TrueAntiLambda_Radius(0) {}
 
+/*
+ Constructor
+ */
 AliAnalysisTaskLambda1520Lpipi::AliAnalysisTaskLambda1520Lpipi(const char* name, Bool_t IsMC)
     : AliAnalysisTaskSE(name),
       fIsMC(IsMC),
@@ -169,33 +175,13 @@ void AliAnalysisTaskLambda1520Lpipi::UserCreateOutputObjects() {
  Define cuts, depending on type of analysis.
  */
 void AliAnalysisTaskLambda1520Lpipi::DefineCuts(TString cuts_option) {
-  if (cuts_option == "Lambda1520->Lambda,pi,pi//Standard") {
     kMaxNSigma_Pion = 3.;
     kMaxNSigma_Kaon = 3.;
     kMaxNSigma_Proton = 3.;
+  if (cuts_option == "Lambda1520->Lambda,pi,pi//Standard") {
     kMaxDCATracks = 1.;     // cm
     kArmLambdaSlope = 0.2;  // (pending) figure units
     kMinCPA_Lambda_SV = 0.999;
-  }
-  if (cuts_option == "AntiSexaquark,N->AntiLambda,K0S//Standard") {
-    kMaxNSigma_Pion = 3.;
-    kMaxNSigma_Kaon = 3.;
-    kMaxNSigma_Proton = 3.;
-  }
-  if (cuts_option == "AntiSexaquark,P->AntiLambda,K+//Standard") {
-    kMaxNSigma_Pion = 3.;
-    kMaxNSigma_Kaon = 3.;
-    kMaxNSigma_Proton = 3.;
-  }
-  if (cuts_option == "AntiSexaquark,P->AntiLambda,K+,pi-,pi+//Standard") {
-    kMaxNSigma_Pion = 3.;
-    kMaxNSigma_Kaon = 3.;
-    kMaxNSigma_Proton = 3.;
-  }
-  if (cuts_option == "AntiSexaquark,P->X,K+,K+//Standard") {
-    kMaxNSigma_Pion = 3.;
-    kMaxNSigma_Kaon = 3.;
-    kMaxNSigma_Proton = 3.;
   }
 }
 
@@ -250,12 +236,13 @@ Bool_t AliAnalysisTaskLambda1520Lpipi::PassesLambdaCuts_KF(KFParticleMother kfV0
                                       lvPosDau.Px(), lvPosDau.Py(), lvPosDau.Pz());
   Double_t armPt = ArmenterosQt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), kfNegDau.Px(), kfNegDau.Py(), kfNegDau.Pz());
   Float_t mass = lvV0.M();
-  // Double_t cpa = CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(),  //
-  //  fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+  Double_t cpa = CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(),  //
+                                     fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
 
   if (kfDCA_tracks > kMaxDCATracks) return kFALSE;
   if ((armPt / TMath::Abs(armAlpha)) > kArmLambdaSlope) return kFALSE;
   if (mass > 1.13 || mass < 1.10) return kFALSE;  // (pending) refactorize
+  if (cpa < 0.9) return kFALSE;                   // (pending)
 
   return kTRUE;
 }
@@ -270,10 +257,15 @@ Bool_t AliAnalysisTaskLambda1520Lpipi::PassesPionPairCuts_KF(KFParticleMother kf
 
   Float_t kfDCA_NegPion_V0 = TMath::Abs(kfNegDau.GetDistanceFromVertexXY(kfV0));
   Float_t kfDCA_PosPion_V0 = TMath::Abs(kfPosDau.GetDistanceFromVertexXY(kfV0));
+  Float_t kfD_V0_PV = TMath::Sqrt(TMath::Power(kfV0.GetX() - (Float_t)fPrimaryVertex->GetX(), 2) +
+                                  TMath::Power(kfV0.GetY() - (Float_t)fPrimaryVertex->GetY(), 2) +
+                                  TMath::Power(kfV0.GetZ() - (Float_t)fPrimaryVertex->GetZ(), 2));
 
-  if (kfDCA_tracks > 0.5) return kFALSE; // (pending) refactorize
-  if (kfDCA_NegPion_V0 > 0.5) return kFALSE; // (pending) refactorize
-  if (kfDCA_PosPion_V0 > 0.5) return kFALSE; // (pending) refactorize
+  // (pending) refactorize all these cuts
+  if (kfDCA_tracks > 0.5) return kFALSE;
+  if (kfDCA_NegPion_V0 > 0.5) return kFALSE;
+  if (kfDCA_PosPion_V0 > 0.5) return kFALSE;
+  if (kfD_V0_PV > 1.) return kFALSE;
 
   return kTRUE;
 }
@@ -318,11 +310,6 @@ Bool_t AliAnalysisTaskLambda1520Lpipi::PassesLambda1520Cuts_KF(KFParticleMother 
 }
 
 /*
- Apply AntiSexaquark candidate cuts.
-*/
-Bool_t AliAnalysisTaskLambda1520Lpipi::PassesSexaquarkCuts_KF() { return kTRUE; }
-
-/*
  Main function, called per each event.
  */
 void AliAnalysisTaskLambda1520Lpipi::UserExec(Option_t*) {
@@ -333,8 +320,8 @@ void AliAnalysisTaskLambda1520Lpipi::UserExec(Option_t*) {
   DefineCuts(mode);
 
   // containers
-  std::set<Int_t> Indices_MCGen_FS;
-  std::set<Int_t> Indices_MCGen_FS_Signal;  // FS: final-state
+  std::set<Int_t> Indices_MCGen_FS; // FS: final-state
+  std::set<Int_t> Indices_MCGen_FS_Signal;
 
   std::vector<Int_t> idxPiPlusTracks, idxPiMinusTracks;
   std::vector<Int_t> idxKaonPlusTracks, idxKaonMinusTracks;
@@ -627,12 +614,14 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessTracks(std::set<Int_t> Indices_MCGen
     counter++;  // (debug)
 
     idx_true = TMath::Abs(track->GetLabel());
-/*
+
     // (cut) (pending) temporal cut to get only signal tracks
+    /*
     if (!Indices_MCGen_FS_Signal.count(idx_true)) {
       continue;
     }
- */
+    */
+
     if (!PassesTrackSelection(track, n_sigma_pion, n_sigma_kaon, n_sigma_proton)) continue;
 
     if (TMath::Abs(n_sigma_pion) < kMaxNSigma_Pion) {
@@ -875,7 +864,7 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
   Double_t esdCPA_tracks, esdCPA_neg_V0, esdCPA_pos_V0;
   Double_t kfCPA_tracks, kfCPA_neg_V0, kfCPA_pos_V0;
   Double_t armAlpha, armPtNeg, armPtPos;
-  Double_t cpa;
+  Double_t cpa, d_v0_pv;
 
   Bool_t successful_daughters_check;
 
@@ -890,11 +879,13 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
 
   std::vector<Int_t> aux_idx_vector;
 
+  Int_t n_v0s = 0;  // (debug)
+
 #ifdef DEBUG_MODE
   AliInfo("Idx(Neg) Idx(Pos)    X(V0)    Y(V0)    Z(V0)    M(V0) Chi2/NDF ESD : DCA(Tracks) DCA(Neg,V0) DCA(Pos,V0)");
   AliInfo("                                                               ESD2: DCA(Tracks) DCA(Neg,V0) DCA(Pos,V0)");
   AliInfo("                                                               KF  : DCA(Tracks) DCA(Neg,V0) DCA(Pos,V0)");
-  AliInfo("                                                                     CPA(V0,PV)");
+  AliInfo("                                                                     CPA(V0,PV)  D(V0,PV)");
   AliInfo("                                                                  qT(Neg)/Alpha qT(Pos)/Alpha");
 #endif
   for (Int_t& idxTrackNeg : idxNegativeTracks) {
@@ -968,6 +959,9 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
                               lvTrackPos.Px(), lvTrackPos.Py(), lvTrackPos.Pz());
       cpa = CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(),  //
                                 fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+      d_v0_pv = TMath::Sqrt(TMath::Power(kfV0.GetX() - (Float_t)fPrimaryVertex->GetX(), 2) +
+                            TMath::Power(kfV0.GetY() - (Float_t)fPrimaryVertex->GetY(), 2) +
+                            TMath::Power(kfV0.GetZ() - (Float_t)fPrimaryVertex->GetZ(), 2));
 
       // (cut) V0 selection
       if (TMath::Abs(pdgV0) == 3122 && !PassesLambdaCuts_KF(kfV0, kfDaughterNeg, kfDaughterPos, lvV0, lvTrackNeg, lvTrackPos)) continue;
@@ -980,9 +974,11 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
                "", esdDCA_tracks, esdDCA_neg_V0, esdDCA_pos_V0);
       AliInfoF("%68s %11.3f %11.3f %11.3f", "", esdaltDCA_tracks, esdaltDCA_neg_V0, esdaltDCA_pos_V0);
       AliInfoF("%68s %11.3f %11.3f %11.3f %i", "", kfDCA_tracks, kfDCA_neg_V0, kfDCA_pos_V0, (Int_t)kfV0.GetQ());
-      AliInfoF("%68s %11.3f", "", cpa);
+      AliInfoF("%68s %11.3f %11.3f", "", cpa, d_v0_pv);
       AliInfoF("%68s %11.3f %11.3f", "", armPtNeg / TMath::Abs(armAlpha), armPtPos / TMath::Abs(armAlpha));
 #endif
+
+      n_v0s++;  // (debug)
 
       // finally, store info
       kfV0s.push_back(kfV0);
@@ -994,6 +990,8 @@ void AliAnalysisTaskLambda1520Lpipi::ReconstructV0s_KF(std::vector<Int_t> idxNeg
       aux_idx_vector.clear();
     }  // end of loop over pos. tracks
   }    // end of loop over neg. tracks
+
+  AliInfoF(">> %i %ss have been found.", n_v0s, fPDG.GetParticle(pdgV0)->GetName());
 }
 
 /*
