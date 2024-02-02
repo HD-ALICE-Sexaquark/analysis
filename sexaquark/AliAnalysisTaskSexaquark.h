@@ -291,12 +291,29 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // hists
     TList* fOutputListOfHists;
     // # mc gen. (or true)
-    TH1F* fHist_True_Signal_SecVertex_Radius;       //!
-    TH1F* fHist_True_InjBkg_SecVertex_Radius;       //!
-    TH1F* fHist_True_FermiSexaquark_Pt;             //!
-    TH1F* fHist_True_FermiSexaquark_Mass;           //!
-    TH1F* fHist_True_AntiLambda_Bookkeep;           //!
-    TH1F* fHist_True_KaonZeroShort_Bookkeep;        //!
+    TH1F* fHist_True_Signal_SecVertex_Radius;  //!
+    TH1F* fHist_True_InjBkg_SecVertex_Radius;  //!
+    TH1F* fHist_True_FermiSexaquark_Pt;        //!
+    TH1F* fHist_True_FermiSexaquark_Mass;      //!
+
+    /*
+     key: `V0 pdg code`
+     - `0` : MC V0s
+     - `1` : MC V0s w/ charged decay products
+     - `2` : secondary MC V0s
+     - `3` : secondary MC V0s w/ charged decay products
+     - `4` : signal MC V0s
+     - `5` : signal MC V0s w/ charged decay products
+     - `6` : findable true V0s
+     - `7` : findable true secondary V0s
+     - `8` : findable true signal V0s
+     - `9` : found V0s
+     - `10` : found true V0s
+     - `11` : found true secondary V0s
+     - `12` : found true signal V0s
+    */
+    std::map<Int_t, TH1F*> fHist_V0s_Bookkeep;  //!
+
     TH1F* fHist_True_AntiProton_Bookkeep;           //!
     TH1F* fHist_True_PosKaon_Bookkeep;              //!
     TH1F* fHist_True_PiPlus_Bookkeep;               //!
@@ -350,6 +367,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Containers -- vectors and hash tables */
     std::vector<Int_t> mcIndicesOfTrueV0s;  //
 
+    std::unordered_map<Int_t, Bool_t> isMcIdxSecondary;              //
     std::unordered_map<Int_t, Bool_t> isMcIdxSignal;                 //
     std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSecondaryV0;  //
     std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfTrueV0;       //

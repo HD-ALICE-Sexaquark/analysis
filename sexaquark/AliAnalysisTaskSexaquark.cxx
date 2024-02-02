@@ -185,15 +185,11 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->Add(fHist_True_FermiSexaquark_Pt);
     fOutputListOfHists->Add(fHist_True_FermiSexaquark_Mass);
 
-    fHist_True_AntiLambda_Bookkeep = new TH1F("True_AntiLambda_Bookkeep", "", 10, 0., 10.);
-    fHist_True_KaonZeroShort_Bookkeep = new TH1F("True_KaonZeroShort_Bookkeep", "", 10, 0., 10.);
     fHist_True_AntiProton_Bookkeep = new TH1F("True_AntiProton_Bookkeep", "", 10, 0., 10.);
     fHist_True_PosKaon_Bookkeep = new TH1F("True_PosKaon_Bookkeep", "", 10, 0., 10.);
     fHist_True_PiPlus_Bookkeep = new TH1F("True_PiPlus_Bookkeep", "", 10, 0., 10.);
     fHist_True_PiMinus_Bookkeep = new TH1F("True_PiMinus_Bookkeep", "", 10, 0., 10.);
 
-    fOutputListOfHists->Add(fHist_True_AntiLambda_Bookkeep);
-    fOutputListOfHists->Add(fHist_True_KaonZeroShort_Bookkeep);
     fOutputListOfHists->Add(fHist_True_AntiProton_Bookkeep);
     fOutputListOfHists->Add(fHist_True_PosKaon_Bookkeep);
     fOutputListOfHists->Add(fHist_True_PiPlus_Bookkeep);
@@ -245,10 +241,10 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     fOutputListOfHists->Add(f2DHist_TPC_Signal);
 
-    /* V0s histograms (that require MC Gen. information) */
+    /* V0s histograms */
 
-    TString stages[3] = {"MC", "Findable", "Found"};
-    TString sets[3] = {"All", "True", "Signal"};  // PENDING: add "Secondary"
+    TString stages[3] = {"MCGen", "Findable", "Found"};
+    TString sets[4] = {"All", "True", "Secondary", "Signal"};
     Int_t V0_species[2] = {-3122, 310};
     std::map<Int_t, TString> V0_name = {{-3122, "AntiLambda"}, {310, "KaonZeroShort"}};
 
@@ -278,19 +274,31 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
                                 10.,  20.,  2.,    //
                                 1.,   10.};
 
+    for (Int_t& species : V0_species) {
+        fHist_V0s_Bookkeep[species] = new TH1F(Form("%s_Bookkeep", V0_name[species].Data()), "", 15, 0., 15.);
+        fOutputListOfHists->Add(fHist_V0s_Bookkeep[species]);
+    }
+
     for (TString& stage : stages) {
         for (TString& set : sets) {
             for (Int_t& species : V0_species) {
                 for (Int_t prop_idx = 0; prop_idx < N_props; prop_idx++) {
 
-                    if ((stage == "MC" || stage == "Findable") && set == "All") continue;
-                    if (stage == "Findable" && (V0_props[prop_idx] == "Mass" || V0_props[prop_idx] == "DCAbtwDau" ||
+                    if (stage == "Findable" && set == "All") continue;
+                    if (stage == "MCGen" && set == "True") continue;
+
+                    /* PENDING: I think `DCAnegPV` and `DCAposPV` are possible to get, but maybe too difficult to implement*/
+                    if (stage == "Findable" && (V0_props[prop_idx] == "Mass" || V0_props[prop_idx] == "DCAbtwDau" ||     //
                                                 V0_props[prop_idx] == "DCAnegV0" || V0_props[prop_idx] == "DCAposV0" ||  //
-                                                V0_props[prop_idx] == "DCAnegPV" || V0_props[prop_idx] == "DCAposPV"     // PENDING: I guess they're
-                                                                                                                         // possible, but maybe too
-                                                                                                                         // difficult to implement
-                                                || V0_props[prop_idx] == "Chi2ndf"))
+                                                V0_props[prop_idx] == "DCAnegPV" || V0_props[prop_idx] == "DCAposPV" ||  //
+                                                V0_props[prop_idx] == "Chi2ndf")) {
                         continue;
+                    }
+                    if (stage == "MCGen" && (V0_props[prop_idx] == "DCAbtwDau" || V0_props[prop_idx] == "DCAnegV0" ||  //
+                                             V0_props[prop_idx] == "DCAposV0" || V0_props[prop_idx] == "DCAnegPV" ||   //
+                                             V0_props[prop_idx] == "DCAposPV" || V0_props[prop_idx] == "Chi2ndf")) {
+                        continue;
+                    }
 
                     TString histName = Form("%s_%s_%s_%s", stage.Data(), set.Data(), V0_name[species].Data(), V0_props[prop_idx].Data());
                     std::tuple<TString, TString, Int_t, TString> histKey = std::make_tuple(stage, set, species, V0_props[prop_idx]);
@@ -539,8 +547,11 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
     AliMCParticle* mcMother;
     Int_t pdg_mother;
 
-    AliMCParticle* mcDaughter;
-    Int_t pdg_dau;
+    AliMCParticle* mcDaughter;  // PENDING: to delete after figuring what to do with neutrons
+    Int_t pdg_dau;              // PENDING: to delete after figuring what to do with neutrons
+
+    AliMCParticle* mcNegDau;
+    AliMCParticle* mcPosDau;
 
     Float_t antineutron_radius;
     Int_t n_daughters = 0;
@@ -601,27 +612,26 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         // If they're signal, their MC status number should be among 600 and 619.
         // This is done exclusively for the sexaquark MC productions.
         // This was done to recognize each interaction, assigning a different number to each of
-        // the 20 antisexaquark-nucleon reactions that were injected in a single event .
+        // the 20 antisexaquark-nucleon reactions that were injected in a single event.
         is_signal = mcPart->MCStatusCode() >= 600 && mcPart->MCStatusCode() < 620;
 
-        // Include signal particles, as well, because they were injected as primaries, and we intend that they are not
+        /* Include signal particles, as well, because they were injected as primaries, and we intend that they are not */
+
         is_secondary = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || is_signal;
 
         /** Fill histograms, indices vector and maps **/
 
-        /* anti-lambdas */
+        /* Neutral particles: anti-lambdas and K0S */
 
-        if (pdg_mc == -3122) {
+        if (pdg_mc == -3122 || pdg_mc == 310) {
 
-            fHist_True_AntiLambda_Bookkeep->Fill(0);
-            // fHist_True_AntiLambda_Pt->Fill(pt);  // PENDING
+            fHist_V0s_Bookkeep[pdg_mc]->Fill(0);
 
-            if (n_daughters) {
-                // fHist_True_AntiLambda_CPAwrtPV->Fill(cpa_wrt_pv);  // PENDING
-                // fHist_True_AntiLambda_DCAwrtPV->Fill(dca_wrt_pv);  // PENDING
-            }
+            if (n_daughters && mcIdxNegDaughter && mcIdxPosDaughter) {
 
-            if (mcIdxNegDaughter && mcIdxPosDaughter) {
+                mcNegDau = (AliMCParticle*)fMC->GetTrack(mcIdxNegDaughter);
+                mcPosDau = (AliMCParticle*)fMC->GetTrack(mcIdxPosDaughter);
+
                 mcIndicesOfTrueV0s.push_back(mcIdx);
                 isMcIdxDaughterOfTrueV0[mcIdxNegDaughter] = kTRUE;
                 isMcIdxDaughterOfTrueV0[mcIdxPosDaughter] = kTRUE;
@@ -629,95 +639,86 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
                 getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxPosDaughter] = mcIdx;
                 getMcIdxOfNegDau_fromMcIdxOfTrueV0[mcIdx] = mcIdxNegDaughter;
                 getMcIdxOfPosDau_fromMcIdxOfTrueV0[mcIdx] = mcIdxPosDaughter;
+
+                fHist_V0s_Bookkeep[pdg_mc]->Fill(1);
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Mass")]->Fill(mcPart->M());
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Radius")]->Fill(decayVertex.Perp());
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DecayLength")]->Fill((originVertex - decayVertex).Mag());
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Zv")]->Fill(decayVertex.Z());
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Pt")]->Fill(mcPart->Pt());
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Pz")]->Fill(mcPart->Pz());
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmQt")]->Fill(  //
+                    Calculate_ArmPt(mcPart->Px(), mcPart->Py(), mcPart->Pz(),       //
+                                    mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz()));
+                fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmAlpha")]->Fill(   //
+                    Calculate_ArmAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(),        //
+                                       mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),  //
+                                       mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz()));
             }
 
             if (is_secondary) {
-                fHist_True_AntiLambda_Bookkeep->Fill(1);
+                isMcIdxSecondary[mcIdx] = kTRUE;
+
+                fHist_V0s_Bookkeep[pdg_mc]->Fill(2);
             }
 
-            // if (is_secondary && n_daughters) {
-            //     // PENDING
-            // }
-
-            if (is_secondary && mcIdxNegDaughter && mcIdxPosDaughter) {
+            if (is_secondary && n_daughters && mcIdxNegDaughter && mcIdxPosDaughter) {
                 isMcIdxDaughterOfSecondaryV0[mcIdxNegDaughter] = kTRUE;
                 isMcIdxDaughterOfSecondaryV0[mcIdxPosDaughter] = kTRUE;
+
+                fHist_V0s_Bookkeep[pdg_mc]->Fill(3);
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Mass")]->Fill(mcPart->M());
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Radius")]->Fill(decayVertex.Perp());
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DecayLength")]->Fill((originVertex - decayVertex).Mag());
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Zv")]->Fill(decayVertex.Z());
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Eta")]->Fill(mcPart->Eta());
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pt")]->Fill(mcPart->Pt());
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pz")]->Fill(mcPart->Pz());
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmQt")]->Fill(  //
+                    Calculate_ArmPt(mcPart->Px(), mcPart->Py(), mcPart->Pz(),             //
+                                    mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz()));
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmAlpha")]->Fill(  //
+                    Calculate_ArmAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(),             //
+                                       mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),       //
+                                       mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz()));
             }
 
             if (is_signal) {
-                fHist_True_AntiLambda_Bookkeep->Fill(2);
-                // fHist_True_Signal_AntiLambda_Pt->Fill(pt);  // PENDING
                 isMcIdxSignal[mcIdx] = kTRUE;
                 getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
                 getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
+
+                fHist_V0s_Bookkeep[pdg_mc]->Fill(4);
             }
 
-            if (is_signal && n_daughters) {
-                // fHist_True_Signal_AntiLambda_CPAwrtPV->Fill(cpa_wrt_pv);  // PENDING
-                // fHist_True_Signal_AntiLambda_DCAwrtPV->Fill(dca_wrt_pv);  // PENDING
-            }
-
-            if (is_signal && mcIdxNegDaughter && mcIdxPosDaughter) {
+            if (is_signal && n_daughters && mcIdxNegDaughter && mcIdxPosDaughter) {
                 isMcIdxSignal[mcIdxNegDaughter] = kTRUE;
                 isMcIdxSignal[mcIdxPosDaughter] = kTRUE;
                 isMcIdxDaughterOfSignalV0[mcIdxNegDaughter] = kTRUE;
                 isMcIdxDaughterOfSignalV0[mcIdxPosDaughter] = kTRUE;
-            }
-        }
 
-        /* k0s */
-
-        if (pdg_mc == 310) {
-
-            fHist_True_KaonZeroShort_Bookkeep->Fill(0);
-            // fHist_True_KaonZeroShort_Pt->Fill(pt);
-
-            if (n_daughters) {
-                // fHist_True_KaonZeroShort_CPAwrtPV->Fill(cpa_wrt_pv);
-                // fHist_True_KaonZeroShort_DCAwrtPV->Fill(dca_wrt_pv);
-            }
-
-            if (mcIdxNegDaughter && mcIdxPosDaughter) {
-                mcIndicesOfTrueV0s.push_back(mcIdx);
-                isMcIdxDaughterOfTrueV0[mcIdxNegDaughter] = kTRUE;
-                isMcIdxDaughterOfTrueV0[mcIdxPosDaughter] = kTRUE;
-                getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxNegDaughter] = mcIdx;
-                getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxPosDaughter] = mcIdx;
-                getMcIdxOfNegDau_fromMcIdxOfTrueV0[mcIdx] = mcIdxNegDaughter;
-                getMcIdxOfPosDau_fromMcIdxOfTrueV0[mcIdx] = mcIdxPosDaughter;
-            }
-
-            if (is_secondary) {
-                fHist_True_KaonZeroShort_Bookkeep->Fill(1);
-            }
-
-            // if (is_secondary && n_daughters) {
-            //     // PENDING
-            // }
-
-            if (is_secondary && mcIdxNegDaughter && mcIdxPosDaughter) {
-                isMcIdxDaughterOfSecondaryV0[mcIdxNegDaughter] = kTRUE;
-                isMcIdxDaughterOfSecondaryV0[mcIdxPosDaughter] = kTRUE;
-            }
-
-            if (is_signal) {
-                fHist_True_KaonZeroShort_Bookkeep->Fill(2);
-                // fHist_True_Signal_KaonZeroShort_Pt->Fill(pt);
-                isMcIdxSignal[mcIdx] = kTRUE;
-                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
-                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
-            }
-
-            if (is_signal && n_daughters) {
-                // fHist_True_Signal_KaonZeroShort_CPAwrtPV->Fill(cpa_wrt_pv);
-                // fHist_True_Signal_KaonZeroShort_DCAwrtPV->Fill(dca_wrt_pv);
-            }
-
-            if (is_signal && mcIdxNegDaughter && mcIdxPosDaughter) {
-                isMcIdxSignal[mcIdxNegDaughter] = kTRUE;
-                isMcIdxSignal[mcIdxPosDaughter] = kTRUE;
-                isMcIdxDaughterOfSignalV0[mcIdxNegDaughter] = kTRUE;
-                isMcIdxDaughterOfSignalV0[mcIdxPosDaughter] = kTRUE;
+                fHist_V0s_Bookkeep[pdg_mc]->Fill(5);
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Mass")]->Fill(mcPart->M());
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Radius")]->Fill(decayVertex.Perp());
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DecayLength")]->Fill((originVertex - decayVertex).Mag());
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Zv")]->Fill(decayVertex.Z());
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Eta")]->Fill(mcPart->Eta());
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pt")]->Fill(mcPart->Pt());
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pz")]->Fill(mcPart->Pz());
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmQt")]->Fill(  //
+                    Calculate_ArmPt(mcPart->Px(), mcPart->Py(), mcPart->Pz(),          //
+                                    mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz()));
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmAlpha")]->Fill(  //
+                    Calculate_ArmAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(),          //
+                                       mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),    //
+                                       mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz()));
             }
         }
 
@@ -835,7 +836,7 @@ void AliAnalysisTaskSexaquark::GetDaughtersInfo(AliMCParticle* mcPart, Int_t& mc
 
         /* In any case, get the decay vertex of the V0 */
 
-        if (decayVertex.Mag() == 0) decayVertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
+        decayVertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
     }
 }
 
@@ -997,6 +998,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Float_
 
     // >> particle identification
     if (n_sigma_pion > kMaxNSigma_Pion && n_sigma_kaon > kMaxNSigma_Kaon && n_sigma_proton > kMaxNSigma_Proton) {
+        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by PID cuts !!");
         return kFALSE;
     }
 
@@ -1011,6 +1013,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Float_
 
     // >> eta
     if (TMath::Abs(track->Eta()) > 0.9) {
+        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by Eta cut !!");
         return kFALSE;
     }
 
@@ -1021,6 +1024,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Float_
 
     // >> TPC clusters
     if (track->GetTPCNcls() < 50) {
+        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by N TPC Clusters cut !!");
         return kFALSE;
     }
 
@@ -1031,6 +1035,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Float_
 
     // >> chi2 per TPC cluster
     if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) {
+        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by Chi2/NClusters cut !!");
         return kFALSE;
     }
 
@@ -1041,6 +1046,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Float_
 
     // >> require TPC refit
     if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) {
+        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by TPC Refit cut !!");
         return kFALSE;
     }
 
@@ -1051,6 +1057,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Float_
 
     // >> reject kinks
     if (track->GetKinkIndex(0) != 0) {
+        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by Kinks cut !!");
         return kFALSE;
     }
 
@@ -1061,6 +1068,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Float_
 
     // >> reject low-pT pions
     if (track->Pt() < 0.2 && n_sigma_pion < kMaxNSigma_Pion) {
+        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by min. pT for pions cut !!");
         return kFALSE;
     }
 
@@ -1091,8 +1099,8 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
     AliMCParticle* mcNegDaughter;
     AliMCParticle* mcPosDaughter;
 
-    Bool_t is_secondary;  // PENDING
     Bool_t is_signal;
+    Bool_t is_secondary;
 
     Int_t pdg_code;
     Float_t radius;
@@ -1115,6 +1123,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
         }
 
         is_signal = mcV0->MCStatusCode() >= 600 && mcV0->MCStatusCode() < 620;
+        is_secondary = mcV0->IsSecondaryFromMaterial() || mcV0->IsSecondaryFromWeakDecay() || is_signal;
 
         /* Get the V0 decay vertex from one of the true daughters */
 
@@ -1129,9 +1138,8 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
                                          fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
         dca_wrt_pv = LinePointDCA(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Xv(), mcNegDaughter->Yv(), mcNegDaughter->Zv(),
                                   fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
-        decay_length = TMath::Sqrt(TMath::Power(mcNegDaughter->Xv() - fMC_PrimaryVertex->GetX(), 2) +
-                                   TMath::Power(mcNegDaughter->Yv() - fMC_PrimaryVertex->GetY(), 2) +
-                                   TMath::Power(mcNegDaughter->Zv() - fMC_PrimaryVertex->GetZ(), 2));
+        decay_length = TMath::Sqrt(TMath::Power(mcNegDaughter->Xv() - mcV0->Xv(), 2) + TMath::Power(mcNegDaughter->Yv() - mcV0->Yv(), 2) +
+                                   TMath::Power(mcNegDaughter->Zv() - mcV0->Zv(), 2));
         arm_qt = Calculate_ArmPt(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz());
         arm_alpha = Calculate_ArmAlpha(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcPosDaughter->Px(), mcPosDaughter->Py(), mcPosDaughter->Pz(),
                                        mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz());
@@ -1140,8 +1148,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
         if (pdg_code == -3122 || pdg_code == 310) {
 
-            if (pdg_code == -3122) fHist_True_AntiLambda_Bookkeep->Fill(3);
-            if (pdg_code == 310) fHist_True_AntiLambda_Bookkeep->Fill(3);
+            fHist_V0s_Bookkeep[pdg_code]->Fill(6);
 
             fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1154,10 +1161,24 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
             fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "ArmQt")]->Fill(arm_qt);
             fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
 
+            if (!is_secondary) continue;
+
+            fHist_V0s_Bookkeep[pdg_code]->Fill(7);
+
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Radius")]->Fill(radius);
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "DecayLength")]->Fill(decay_length);
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Zv")]->Fill(mcNegDaughter->Zv());
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Eta")]->Fill(mcV0->Eta());
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Pt")]->Fill(mcV0->Pt());
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Pz")]->Fill(mcV0->Pz());
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "ArmQt")]->Fill(arm_qt);
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
+
             if (!is_signal) continue;
 
-            if (pdg_code == -3122) fHist_True_AntiLambda_Bookkeep->Fill(4);
-            if (pdg_code == 310) fHist_True_AntiLambda_Bookkeep->Fill(4);
+            fHist_V0s_Bookkeep[pdg_code]->Fill(8);
 
             fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1170,7 +1191,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
             fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "ArmQt")]->Fill(arm_qt);
             fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
         }
-    }
+    }  // end of loop over true V0s
 }
 
 /*
@@ -1404,6 +1425,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
             /* Fill histograms */
 
+            fHist_V0s_Bookkeep[-3122]->Fill(9);
             fHist_V0s[std::make_tuple("Found", "All", -3122, "Mass")]->Fill(mass);
             fHist_V0s[std::make_tuple("Found", "All", -3122, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "All", -3122, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1428,6 +1450,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
                 if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] == -3122) {
 
+                    fHist_V0s_Bookkeep[-3122]->Fill(10);
                     fHist_V0s[std::make_tuple("Found", "True", -3122, "Mass")]->Fill(mass);
                     fHist_V0s[std::make_tuple("Found", "True", -3122, "Radius")]->Fill(radius);
                     fHist_V0s[std::make_tuple("Found", "True", -3122, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1446,25 +1469,48 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
                     fHist_V0s[std::make_tuple("Found", "True", -3122, "ArmAlpha")]->Fill(V0->AlphaV0());
                     fHist_V0s[std::make_tuple("Found", "True", -3122, "Chi2ndf")]->Fill(V0->GetChi2V0());
 
-                    if (isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) {
+                    if (isMcIdxSecondary[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) {
 
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Mass")]->Fill(mass);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Radius")]->Fill(radius);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAwrtPV")]->Fill(dca_wrt_pv);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAbtwDau")]->Fill(dca_btw_dau);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAnegV0")]->Fill(dca_neg_v0);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAposV0")]->Fill(dca_pos_v0);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAnegPV")]->Fill(dca_neg_pv);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAposPV")]->Fill(dca_pos_pv);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DecayLength")]->Fill(decay_length);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Zv")]->Fill(V0_Z);
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Eta")]->Fill(V0->Eta());
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Pt")]->Fill(V0->Pt());
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Pz")]->Fill(V0->Pz());
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "ArmQt")]->Fill(V0->PtArmV0());
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "ArmAlpha")]->Fill(V0->AlphaV0());
-                        fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Chi2ndf")]->Fill(V0->GetChi2V0());
+                        fHist_V0s_Bookkeep[-3122]->Fill(11);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "Mass")]->Fill(mass);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "Radius")]->Fill(radius);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "DCAbtwDau")]->Fill(dca_btw_dau);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "DCAnegV0")]->Fill(dca_neg_v0);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "DCAposV0")]->Fill(dca_pos_v0);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "DCAnegPV")]->Fill(dca_neg_pv);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "DCAposPV")]->Fill(dca_pos_pv);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "DecayLength")]->Fill(decay_length);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "Zv")]->Fill(V0_Z);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "Eta")]->Fill(V0->Eta());
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "Pt")]->Fill(V0->Pt());
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "Pz")]->Fill(V0->Pz());
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "ArmQt")]->Fill(V0->PtArmV0());
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "ArmAlpha")]->Fill(V0->AlphaV0());
+                        fHist_V0s[std::make_tuple("Found", "Secondary", -3122, "Chi2ndf")]->Fill(V0->GetChi2V0());
+
+                        if (isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) {
+
+                            fHist_V0s_Bookkeep[-3122]->Fill(12);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Mass")]->Fill(mass);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Radius")]->Fill(radius);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAbtwDau")]->Fill(dca_btw_dau);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAnegV0")]->Fill(dca_neg_v0);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAposV0")]->Fill(dca_pos_v0);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAnegPV")]->Fill(dca_neg_pv);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DCAposPV")]->Fill(dca_pos_pv);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "DecayLength")]->Fill(decay_length);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Zv")]->Fill(V0_Z);
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Eta")]->Fill(V0->Eta());
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Pt")]->Fill(V0->Pt());
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Pz")]->Fill(V0->Pz());
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "ArmQt")]->Fill(V0->PtArmV0());
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "ArmAlpha")]->Fill(V0->AlphaV0());
+                            fHist_V0s[std::make_tuple("Found", "Signal", -3122, "Chi2ndf")]->Fill(V0->GetChi2V0());
+                        }
                     }
                 }
             }
@@ -1493,6 +1539,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
             /* Fill histograms */
 
+            fHist_V0s_Bookkeep[310]->Fill(9);
             fHist_V0s[std::make_tuple("Found", "All", 310, "Mass")]->Fill(mass);
             fHist_V0s[std::make_tuple("Found", "All", 310, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "All", 310, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1517,6 +1564,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
                 if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] == 310) {
 
+                    fHist_V0s_Bookkeep[310]->Fill(10);
                     fHist_V0s[std::make_tuple("Found", "True", 310, "Mass")]->Fill(mass);
                     fHist_V0s[std::make_tuple("Found", "True", 310, "Radius")]->Fill(radius);
                     fHist_V0s[std::make_tuple("Found", "True", 310, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1535,25 +1583,48 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
                     fHist_V0s[std::make_tuple("Found", "True", 310, "ArmAlpha")]->Fill(V0->AlphaV0());
                     fHist_V0s[std::make_tuple("Found", "True", 310, "Chi2ndf")]->Fill(V0->GetChi2V0());
 
-                    if (isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) {
+                    if (isMcIdxSecondary[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) {
 
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "Mass")]->Fill(mass);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "Radius")]->Fill(radius);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAwrtPV")]->Fill(dca_wrt_pv);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAbtwDau")]->Fill(dca_btw_dau);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAnegV0")]->Fill(dca_neg_v0);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAposV0")]->Fill(dca_pos_v0);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAnegPV")]->Fill(dca_neg_pv);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAposPV")]->Fill(dca_pos_pv);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "DecayLength")]->Fill(decay_length);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "Zv")]->Fill(V0_Z);
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "Eta")]->Fill(V0->Eta());
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "Pt")]->Fill(V0->Pt());
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "Pz")]->Fill(V0->Pz());
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "ArmQt")]->Fill(V0->PtArmV0());
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "ArmAlpha")]->Fill(V0->AlphaV0());
-                        fHist_V0s[std::make_tuple("Found", "Signal", 310, "Chi2ndf")]->Fill(V0->GetChi2V0());
+                        fHist_V0s_Bookkeep[310]->Fill(11);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "Mass")]->Fill(mass);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "Radius")]->Fill(radius);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "DCAbtwDau")]->Fill(dca_btw_dau);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "DCAnegV0")]->Fill(dca_neg_v0);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "DCAposV0")]->Fill(dca_pos_v0);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "DCAnegPV")]->Fill(dca_neg_pv);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "DCAposPV")]->Fill(dca_pos_pv);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "DecayLength")]->Fill(decay_length);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "Zv")]->Fill(V0_Z);
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "Eta")]->Fill(V0->Eta());
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "Pt")]->Fill(V0->Pt());
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "Pz")]->Fill(V0->Pz());
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "ArmQt")]->Fill(V0->PtArmV0());
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "ArmAlpha")]->Fill(V0->AlphaV0());
+                        fHist_V0s[std::make_tuple("Found", "Secondary", 310, "Chi2ndf")]->Fill(V0->GetChi2V0());
+
+                        if (isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) {
+
+                            fHist_V0s_Bookkeep[310]->Fill(12);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "Mass")]->Fill(mass);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "Radius")]->Fill(radius);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAbtwDau")]->Fill(dca_btw_dau);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAnegV0")]->Fill(dca_neg_v0);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAposV0")]->Fill(dca_pos_v0);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAnegPV")]->Fill(dca_neg_pv);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "DCAposPV")]->Fill(dca_pos_pv);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "DecayLength")]->Fill(decay_length);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "Zv")]->Fill(V0_Z);
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "Eta")]->Fill(V0->Eta());
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "Pt")]->Fill(V0->Pt());
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "Pz")]->Fill(V0->Pz());
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "ArmQt")]->Fill(V0->PtArmV0());
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "ArmAlpha")]->Fill(V0->AlphaV0());
+                            fHist_V0s[std::make_tuple("Found", "Signal", 310, "Chi2ndf")]->Fill(V0->GetChi2V0());
+                        }
                     }
                 }
             }
@@ -1817,6 +1888,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             /* Fill histograms */
 
+            fHist_V0s_Bookkeep[pdgV0]->Fill(9);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Mass")]->Fill(mass);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1842,6 +1914,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] != pdgV0) continue;
 
+            fHist_V0s_Bookkeep[pdgV0]->Fill(10);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Mass")]->Fill(mass);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1861,8 +1934,31 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "ArmAlpha")]->Fill(vertex.AlphaV0());
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Chi2ndf")]->Fill(vertex.GetChi2V0());
 
+            if (!isMcIdxSecondary[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
+
+            fHist_V0s_Bookkeep[pdgV0]->Fill(11);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Mass")]->Fill(mass);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Radius")]->Fill(radius);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAbtwDau")]->Fill(1.);  // PENDING
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegV0")]->Fill(1.);   // PENDING
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegV0")]->Fill(1.);   // PENDING
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposV0")]->Fill(1.);   // PENDING
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegPV")]->Fill(1.);   // PENDING
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposPV")]->Fill(1.);   // PENDING
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DecayLength")]->Fill(decay_length);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Zv")]->Fill(V0_Z);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Eta")]->Fill(vertex.Eta());
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Pt")]->Fill(vertex.Pt());
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Pz")]->Fill(vertex.Pz());
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "ArmQt")]->Fill(vertex.PtArmV0());
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "ArmAlpha")]->Fill(vertex.AlphaV0());
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Chi2ndf")]->Fill(vertex.GetChi2V0());
+
             if (!isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
 
+            fHist_V0s_Bookkeep[pdgV0]->Fill(12);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Mass")]->Fill(mass);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2225,6 +2321,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             /* Fill histograms */
 
+            fHist_V0s_Bookkeep[pdgV0]->Fill(9);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2352,6 +2449,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] != pdgV0) continue;
 
+            fHist_V0s_Bookkeep[pdgV0]->Fill(10);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2370,8 +2468,30 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "ArmAlpha")]->Fill(arm_alpha);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Chi2ndf")]->Fill((Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF());
 
+            if (!isMcIdxSecondary[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
+
+            fHist_V0s_Bookkeep[pdgV0]->Fill(11);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Mass")]->Fill(lvV0.M());
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Radius")]->Fill(radius);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAwrtPV")]->Fill(kfV0.GetDistanceFromVertex(kfPrimaryVertex));
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAbtwDau")]->Fill(kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos));
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegV0")]->Fill(kfDaughterNeg.GetDistanceFromVertex(kfV0));
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposV0")]->Fill(kfDaughterPos.GetDistanceFromVertex(kfV0));
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegPV")]->Fill(kfDaughterNeg.GetDistanceFromVertex(kfPrimaryVertex));
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposPV")]->Fill(kfDaughterPos.GetDistanceFromVertex(kfPrimaryVertex));
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DecayLength")]->Fill(decay_length);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Zv")]->Fill(kfV0.GetZ());
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Eta")]->Fill(lvV0.Eta());
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Pt")]->Fill(lvV0.Pt());
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Pz")]->Fill(lvV0.Pz());
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "ArmQt")]->Fill(arm_qt);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "ArmAlpha")]->Fill(arm_alpha);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Chi2ndf")]->Fill((Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF());
+
             if (!isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
 
+            fHist_V0s_Bookkeep[pdgV0]->Fill(12);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -3224,6 +3344,7 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
 
     mcIndicesOfTrueV0s.clear();
 
+    isMcIdxSecondary.clear();
     isMcIdxSignal.clear();
     isMcIdxDaughterOfSecondaryV0.clear();
     isMcIdxDaughterOfTrueV0.clear();
