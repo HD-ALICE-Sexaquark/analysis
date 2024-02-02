@@ -203,10 +203,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Sexaquark -- Kalman Filter */
     void KalmanSexaquarkFinder_ChannelA();
     void KalmanSexaquarkFinder_ChannelD(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
-                                     std::vector<Int_t> idxPositiveKaons, std::vector<KFParticleMother>& kfAntiSexaquarks);
+                                        std::vector<Int_t> idxPositiveKaons, std::vector<KFParticleMother>& kfAntiSexaquarks);
     void KalmanSexaquarkFinder_ChannelE(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
-                                     std::vector<KFParticleMother> kfChargedPairs, std::vector<std::pair<Int_t, Int_t>> idxChargedPairsTracks,
-                                     std::vector<Int_t> idxSinglePositiveTrack, std::vector<KFParticleMother>& kfAntiSexaquarks);
+                                        std::vector<KFParticleMother> kfChargedPairs, std::vector<std::pair<Int_t, Int_t>> idxChargedPairsTracks,
+                                        std::vector<Int_t> idxSinglePositiveTrack, std::vector<KFParticleMother>& kfAntiSexaquarks);
     Bool_t PassesSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
                                            TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda, TLorentzVector lvKaonZeroShort);
     Bool_t PassesSexaquarkCuts_ChannelD_KF();
@@ -291,23 +291,23 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // hists
     TList* fOutputListOfHists;
     // # mc gen. (or true)
-    TH1F* fHist_True_Signal_SecVertex_Radius;        //!
-    TH1F* fHist_True_InjBkg_SecVertex_Radius;        //!
-    TH1F* fHist_True_FermiSexaquark_Pt;              //!
-    TH1F* fHist_True_FermiSexaquark_Mass;            //!
-    TH1F* fHist_True_AntiLambda_Bookkeep;            //!
-    TH1F* fHist_True_KaonZeroShort_Bookkeep;         //!
-    TH1F* fHist_True_AntiProton_Bookkeep;            //!
-    TH1F* fHist_True_PosKaon_Bookkeep;               //!
-    TH1F* fHist_True_PiPlus_Bookkeep;                //!
-    TH1F* fHist_True_PiMinus_Bookkeep;               //!
-    TH1F* fHist_True_AntiNeutron_Pt;                 //!
-    TH1F* fHist_True_AntiNeutronThatInteracted_Pt;   //!
-    TH1F* fHist_True_AntiNeutron_NDaughters;         //!
-    TH1F* fHist_True_AntiNeutron_PDGDaughters;       //!
-    TH1F* fHist_True_AntiNeutron_Bookkeep;           //!
-    TH1F* fHist_True_InjBkgProducts_Bookkeep;        //!
-    TH1F* fHist_True_AllSecondaries_MothersPDG;      //!
+    TH1F* fHist_True_Signal_SecVertex_Radius;       //!
+    TH1F* fHist_True_InjBkg_SecVertex_Radius;       //!
+    TH1F* fHist_True_FermiSexaquark_Pt;             //!
+    TH1F* fHist_True_FermiSexaquark_Mass;           //!
+    TH1F* fHist_True_AntiLambda_Bookkeep;           //!
+    TH1F* fHist_True_KaonZeroShort_Bookkeep;        //!
+    TH1F* fHist_True_AntiProton_Bookkeep;           //!
+    TH1F* fHist_True_PosKaon_Bookkeep;              //!
+    TH1F* fHist_True_PiPlus_Bookkeep;               //!
+    TH1F* fHist_True_PiMinus_Bookkeep;              //!
+    TH1F* fHist_True_AntiNeutron_Pt;                //!
+    TH1F* fHist_True_AntiNeutronThatInteracted_Pt;  //!
+    TH1F* fHist_True_AntiNeutron_NDaughters;        //!
+    TH1F* fHist_True_AntiNeutron_PDGDaughters;      //!
+    TH1F* fHist_True_AntiNeutron_Bookkeep;          //!
+    TH1F* fHist_True_InjBkgProducts_Bookkeep;       //!
+    TH1F* fHist_True_AllSecondaries_MothersPDG;     //!
     // # tracks (that require true info)
     TH1F* fHist_Rec_Signal_AntiProton_Pt;  //!
     TH1F* fHist_Rec_Signal_PosKaon_Pt;     //!
@@ -359,6 +359,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getMcIdxOfNegDau_fromMcIdxOfTrueV0;  //
     std::unordered_map<Int_t, Int_t> getMcIdxOfPosDau_fromMcIdxOfTrueV0;  //
 
+    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;                   //
     std::unordered_map<Int_t, Int_t> getReactionIdx_fromMcIdx;               //
     std::unordered_map<Int_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;  //
 

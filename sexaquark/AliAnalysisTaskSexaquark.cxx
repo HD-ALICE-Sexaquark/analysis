@@ -588,6 +588,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         originVertex.SetXYZ(mcPart->Xv(), mcPart->Yv(), mcPart->Zv());
         radius = originVertex.Perp();
 
+        getPdgCode_fromMcIdx[mcIdx] = pdg_mc;
+
         if (n_daughters) {
             GetDaughtersInfo(mcPart, mcIdxNegDaughter, mcIdxPosDaughter, decayVertex);
             cpa_wrt_pv = CosinePointingAngle(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decayVertex.X(), decayVertex.Y(), decayVertex.Z(),
@@ -1332,8 +1334,6 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
     Float_t dca_neg_pv, dca_pos_pv;
     Float_t decay_length;
 
-    AliMCParticle* mcV0;
-
     AliESDv0 outputV0;
 
     /* Loop over V0s that are stored in the ESD */
@@ -1426,9 +1426,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
                 getMcIdx_fromAntiLambdaIdx[esdAntiLambdas.size() - 1] = getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg];
 
-                mcV0 = (AliMCParticle*)fMC->GetTrack(getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]);
-
-                if (mcV0->PdgCode() == -3122) {
+                if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] == -3122) {
 
                     fHist_V0s[std::make_tuple("Found", "True", -3122, "Mass")]->Fill(mass);
                     fHist_V0s[std::make_tuple("Found", "True", -3122, "Radius")]->Fill(radius);
@@ -1517,9 +1515,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
                 getMcIdx_fromKaonZeroShortIdx[esdKaonsZeroShort.size() - 1] = getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg];
 
-                mcV0 = (AliMCParticle*)fMC->GetTrack(getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]);
-
-                if (mcV0->PdgCode() == 310) {
+                if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] == 310) {
 
                     fHist_V0s[std::make_tuple("Found", "True", 310, "Mass")]->Fill(mass);
                     fHist_V0s[std::make_tuple("Found", "True", 310, "Radius")]->Fill(radius);
@@ -1595,10 +1591,6 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     Double_t dca_btw_dau;
     Double_t dca_neg_v0;
     Double_t dca_pos_v0;
-
-    AliMCParticle* mcV0;
-    AliMCParticle* mcNeg;
-    AliMCParticle* mcPos;
 
     // define cuts
     Double_t COV0F_DNmin = 0.1;            // (d=0.1) min imp parameter for the negative daughter (depends on PV!)
@@ -1848,9 +1840,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             (*getMcIdx_fromFoundV0Idx)[esdFoundV0s->size() - 1] = getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg];
 
-            mcV0 = (AliMCParticle*)fMC->GetTrack(getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]);
-
-            if (mcV0->PdgCode() != pdgV0) continue;
+            if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] != pdgV0) continue;
 
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Mass")]->Fill(mass);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Radius")]->Fill(radius);
@@ -2257,7 +2247,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             (*getMcIdx_fromFoundV0Idx)[kfFoundV0s->size() - 1] = getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg];
 
-            mcV0 = (AliMCParticle*)fMC->GetTrack(getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]);
+            mcV0 = (AliMCParticle*)fMC->GetTrack(getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]);  // PENDING: rm after debug
 
             /* --- INVESTIGATION --- */
 
@@ -2353,13 +2343,14 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             AliInfo("");
 
             AliInfo("Checking my LineToPointDCA");
-            AliInfoF("LineToPointDCA     : %.4f", dca_wrt_pv);
+            AliInfoF("LineToPointDCA     : %.4f", LinePointDCA(lvV0.Px(), lvV0.Py(), lvV0.Pz(), kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(),
+                                                               fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ()));
             AliInfoF("DistanceFromVertex : %.4f", kfV0.GetDistanceFromVertex(kfPrimaryVertex));
             AliInfo("");
 
             /* --- END OF INVESTIGATION --- */
 
-            if (mcV0->PdgCode() != pdgV0) continue;
+            if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] != pdgV0) continue;
 
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Radius")]->Fill(radius);
@@ -3242,6 +3233,7 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
     getMcIdxOfNegDau_fromMcIdxOfTrueV0.clear();
     getMcIdxOfPosDau_fromMcIdxOfTrueV0.clear();
 
+    getPdgCode_fromMcIdx.clear();
     getReactionIdx_fromMcIdx.clear();
     getMcIdx_fromReactionIdx.clear();
 
