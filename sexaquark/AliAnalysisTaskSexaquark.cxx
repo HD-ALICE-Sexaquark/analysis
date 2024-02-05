@@ -1336,9 +1336,6 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
     AliESDtrack* neg_track;
     AliESDtrack* pos_track;
-    Float_t nsigma_pos_pion;
-    Float_t nsigma_neg_pion;
-    Float_t nsigma_antiproton;
 
     Double_t V0_X, V0_Y, V0_Z;
     Double_t N_Px, N_Py, N_Pz;
@@ -1358,6 +1355,8 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
     AliESDv0 outputV0;
 
     Double_t xthiss, xpp;
+    Float_t impar_neg_v0[2], impar_pos_v0[2];
+    Float_t impar_neg_pv[2], impar_pos_pv[2];
 
     /* Loop over V0s that are stored in the ESD */
 
@@ -1391,15 +1390,11 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
         V0->GetPPxPyPz(P_Px, P_Py, P_Pz);
         V0->GetNPxPyPz(N_Px, N_Py, N_Pz);
 
-        Float_t impar_neg_v0[2], impar_pos_v0[2];
         neg_track->GetDZ(V0_X, V0_Y, V0_Z, fMagneticField, impar_neg_v0);
         pos_track->GetDZ(V0_X, V0_Y, V0_Z, fMagneticField, impar_pos_v0);
 
-        Float_t impar_neg_pv[2], impar_pos_pv[2];
         neg_track->GetDZ(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ(), fMagneticField, impar_neg_pv);
         pos_track->GetDZ(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ(), fMagneticField, impar_pos_pv);
-
-        Double_t x_neg, x_pos;
 
         radius = TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y);
         cpa_wrt_pv = V0->GetV0CosineOfPointingAngle(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
@@ -1670,10 +1665,13 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     Double_t neg_energy;
     Double_t mass;
     Double_t cpa_wrt_pv;
-    Double_t dca_wrt_pv;
-    Double_t dca_btw_dau;
-    Double_t dca_neg_v0;
-    Double_t dca_pos_v0;
+    Double_t dca_wrt_pv, dca_btw_dau;
+    Double_t dca_neg_v0, dca_pos_v0;
+    Double_t dca_neg_pv, dca_pos_pv;
+
+    Double_t xthiss, xpp;
+    Float_t impar_neg_v0[2], impar_pos_v0[2];
+    Float_t impar_neg_pv[2], impar_pos_pv[2];
 
     // define cuts
     Double_t COV0F_DNmin = 0.1;            // (d=0.1) min imp parameter for the negative daughter (depends on PV!)
@@ -1779,8 +1777,8 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             /* Cut on DCA between daughters */
 
-            Double_t dca = ntp->GetDCA(ptp, fMagneticField, xn, xp);
-            if (dca > COV0F_DCAmax) {
+            Double_t dca_after_preopt = ntp->GetDCA(ptp, fMagneticField, xn, xp);
+            if (dca_after_preopt > COV0F_DCAmax) {
                 continue;
             }
 
@@ -1795,6 +1793,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             pt.PropagateTo(xp, fMagneticField);
 
             /* Prepare the AliESDv0 */
+            /* -- Note: declaration here, within the loop, because it has important functions on its constructor */
 
             AliESDv0 vertex(nt, esdIdxNeg, pt, esdIdxPos);
 
@@ -1808,12 +1807,11 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
                 continue;
             }
 
-            vertex.SetDcaV0Daughters(dca);
+            vertex.SetDcaV0Daughters(dca_after_preopt);
 
             /* Cut on CPA w.r.t. PV */
 
             cpa_wrt_pv = vertex.GetV0CosineOfPointingAngle(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
-            vertex.SetV0CosineOfPointingAngle(cpa_wrt_pv);  // PENDING: remove this
             if (cpa_wrt_pv < COV0F_CPAmin) {
                 continue;
             }
@@ -1876,6 +1874,17 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             vertex.GetNPxPyPz(N_Px, N_Py, N_Pz);
             vertex.GetPPxPyPz(P_Px, P_Py, P_Pz);
 
+            neg_track->GetDZ(V0_X, V0_Y, V0_Z, fMagneticField, impar_neg_v0);
+            pos_track->GetDZ(V0_X, V0_Y, V0_Z, fMagneticField, impar_pos_v0);
+
+            neg_track->GetDZ(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ(), fMagneticField, impar_neg_pv);
+            pos_track->GetDZ(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ(), fMagneticField, impar_pos_pv);
+
+            dca_btw_dau = TMath::Abs(neg_track->GetDCA(pos_track, fMagneticField, xthiss, xpp));  // DCAxyz
+            dca_neg_v0 = TMath::Sqrt(impar_neg_v0[0] * impar_neg_v0[0] + impar_neg_v0[1] * impar_neg_v0[1]);
+            dca_pos_v0 = TMath::Sqrt(impar_pos_v0[0] * impar_pos_v0[0] + impar_pos_v0[1] * impar_pos_v0[1]);
+            dca_neg_pv = TMath::Sqrt(impar_neg_pv[0] * impar_neg_pv[0] + impar_neg_pv[1] * impar_neg_pv[1]);
+            dca_pos_pv = TMath::Sqrt(impar_pos_pv[0] * impar_pos_pv[0] + impar_pos_pv[1] * impar_pos_pv[1]);
             decay_length = TMath::Sqrt((V0_X - fPrimaryVertex->GetX()) * (V0_X - fPrimaryVertex->GetX()) +
                                        (V0_Y - fPrimaryVertex->GetY()) * (V0_Y - fPrimaryVertex->GetY()) +
                                        (V0_Z - fPrimaryVertex->GetZ()) * (V0_Z - fPrimaryVertex->GetZ()));
@@ -1905,12 +1914,11 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAwrtPV")]->Fill(dca_wrt_pv);
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAbtwDau")]->Fill(1.);  // PENDING
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAnegV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAnegV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAposV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAnegPV")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAposPV")]->Fill(1.);   // PENDING
+            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAbtwDau")]->Fill(dca_btw_dau);
+            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
+            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
+            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAnegPV")]->Fill(dca_neg_pv);
+            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAposPV")]->Fill(dca_pos_pv);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DecayLength")]->Fill(decay_length);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Zv")]->Fill(V0_Z);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Eta")]->Fill(vertex.Eta());
@@ -1931,12 +1939,11 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAwrtPV")]->Fill(dca_wrt_pv);
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAbtwDau")]->Fill(1.);  // PENDING
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAnegV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAnegV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAposV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAnegPV")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAposPV")]->Fill(1.);   // PENDING
+            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAbtwDau")]->Fill(dca_btw_dau);
+            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
+            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
+            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAnegPV")]->Fill(dca_neg_pv);
+            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAposPV")]->Fill(dca_pos_pv);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DecayLength")]->Fill(decay_length);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Zv")]->Fill(V0_Z);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Eta")]->Fill(vertex.Eta());
@@ -1953,12 +1960,11 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAwrtPV")]->Fill(dca_wrt_pv);
-            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAbtwDau")]->Fill(1.);  // PENDING
-            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegPV")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposPV")]->Fill(1.);   // PENDING
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAbtwDau")]->Fill(dca_btw_dau);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegPV")]->Fill(dca_neg_pv);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposPV")]->Fill(dca_pos_pv);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DecayLength")]->Fill(decay_length);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Zv")]->Fill(V0_Z);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Eta")]->Fill(vertex.Eta());
@@ -1975,12 +1981,11 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAwrtPV")]->Fill(dca_wrt_pv);
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAbtwDau")]->Fill(1.);  // PENDING
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAnegV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAnegV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAposV0")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAnegPV")]->Fill(1.);   // PENDING
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAposPV")]->Fill(1.);   // PENDING
+            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAbtwDau")]->Fill(dca_btw_dau);
+            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
+            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
+            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAnegPV")]->Fill(dca_neg_pv);
+            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAposPV")]->Fill(dca_pos_pv);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DecayLength")]->Fill(decay_length);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Zv")]->Fill(V0_Z);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Eta")]->Fill(vertex.Eta());
@@ -2333,7 +2338,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAwrtPV")]->Fill(kfV0.GetDistanceFromVertex(kfPrimaryVertex));
+            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAwrtPV")]->Fill(TMath::Abs(kfV0.GetDistanceFromVertex(kfPrimaryVertex)));
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAbtwDau")]->Fill(TMath::Abs(kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos)));
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAnegV0")]->Fill(TMath::Abs(kfDaughterNeg.GetDistanceFromVertex(kfV0)));
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAposV0")]->Fill(TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfV0)));
