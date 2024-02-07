@@ -153,13 +153,26 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Initialization */
     void CheckForInputErrors();
     void Initialize();
-    void DefineCuts(TString cuts_option);
 
    public:
     /* MC Generated */
     void ProcessMCGen();
     void GetDaughtersInfo(AliMCParticle* mcPart, Int_t& mcIdxNegDaughter, Int_t& mcIdxPosDaughter, TVector3& decay_vertex);
     void ProcessSignalInteractions();
+
+   public:
+    /* Cuts */
+    void DefineCuts(TString cuts_option);
+    /*  */
+    Bool_t PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
+    Bool_t PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
+                        TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+    /*  */
+    Bool_t PassesSexaquarkCuts_ChannelA(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
+    Bool_t PassesSexaquarkCuts_ChannelA(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
+                                        TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda, TLorentzVector lvKaonZeroShort);
+    // Bool_t PassesSexaquarkCuts_ChannelD_KF();
+    // Bool_t PassesSexaquarkCuts_ChannelE_KF();
 
    public:
     /* Tracks */
@@ -175,42 +188,22 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* V0s -- ALICE V0 Finders */
     void OfficialV0Finder(Bool_t online);
     void CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
-    Bool_t PassesAntiLambdaCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
-    Bool_t PassesKaonZeroShortCuts_OfficialCustom(AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
 
    public:
     /* Sexaquark -- Geometrical Finder */
     void GeoSexaquarkFinder_ChannelA();
-    void GeoSexaquarkFinder_ChannelD();
-    void GeoSexaquarkFinder_ChannelE();
-    Bool_t PassesSexaquarkCuts_ChannelA_Geo(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
+    // void GeoSexaquarkFinder_ChannelD();
+    // void GeoSexaquarkFinder_ChannelE();
 
    public:
     /* V0s -- Kalman Filter */
     void KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
-    Bool_t PassesAntiLambdaCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
-                                   TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
-    Bool_t PassesKaonZeroShortCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
-                                      TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
-    Bool_t PassesPionPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
-                                 TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
-    Bool_t PassesKaonPionPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughter1, KFParticle kfDaughter2, TLorentzVector lvV0,
-                                     TLorentzVector lvTrack1, TLorentzVector lvTrack2);
-    Bool_t PassesPosKaonPairCuts_KF(KFParticleMother kfV0, KFParticle kfDaughter1, KFParticle kfDaughter2, TLorentzVector lvV0,
-                                    TLorentzVector lvTrack1, TLorentzVector lvTrack2);
 
    public:
     /* Sexaquark -- Kalman Filter */
     void KalmanSexaquarkFinder_ChannelA();
-    void KalmanSexaquarkFinder_ChannelD(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
-                                        std::vector<Int_t> idxPositiveKaons, std::vector<KFParticleMother>& kfAntiSexaquarks);
-    void KalmanSexaquarkFinder_ChannelE(std::vector<KFParticleMother> kfAntiLambdas, std::vector<std::pair<Int_t, Int_t>> idxAntiLambdaDaughters,
-                                        std::vector<KFParticleMother> kfChargedPairs, std::vector<std::pair<Int_t, Int_t>> idxChargedPairsTracks,
-                                        std::vector<Int_t> idxSinglePositiveTrack, std::vector<KFParticleMother>& kfAntiSexaquarks);
-    Bool_t PassesSexaquarkCuts_ChannelA_KF(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
-                                           TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda, TLorentzVector lvKaonZeroShort);
-    Bool_t PassesSexaquarkCuts_ChannelD_KF();
-    Bool_t PassesSexaquarkCuts_ChannelE_KF();
+    // void KalmanSexaquarkFinder_ChannelD();
+    // void KalmanSexaquarkFinder_ChannelE();
 
    public:
     /* Utilities */
@@ -266,12 +259,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::vector<Int_t> fProductsPDG;            //
     std::vector<Int_t> fFinalStateProductsPDG;  //
     Int_t fStruckNucleonPDG;                    // PDG Code of the struck nucleon, could ber: 2112 o 2212
-
-   private:
-    /* Cuts */
-    Float_t kMaxNSigma_Pion;
-    Float_t kMaxNSigma_Kaon;
-    Float_t kMaxNSigma_Proton;
 
    private:
     /* AliRoot objects */
@@ -419,6 +406,30 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::vector<KFParticleMother> kfKaonsZeroShort;  //
 
     void ClearContainers();
+
+   private:
+    /*** Cuts ***/
+    /* Track selection */
+    Float_t kMax_NSigma_Pion;
+    Float_t kMax_NSigma_Kaon;
+    Float_t kMax_NSigma_Proton;
+    /* V0s */
+    std::unordered_map<Int_t, Float_t> kMin_V0_Mass;
+    std::unordered_map<Int_t, Float_t> kMax_V0_Mass;
+    std::unordered_map<Int_t, Float_t> kMax_V0_ArmPtOverAlpha;
+    std::unordered_map<Int_t, Float_t> kMin_V0_Pt;
+    std::unordered_map<Int_t, Float_t> kMin_V0_DecayLength;
+    std::unordered_map<Int_t, Float_t> kMin_V0_CPAwrtPV;
+    std::unordered_map<Int_t, Float_t> kMin_V0_DCAwrtPV;
+    std::unordered_map<Int_t, Float_t> kMax_V0_DCAbtwDau;
+    std::unordered_map<Int_t, Float_t> kMax_V0_DCAnegV0;
+    std::unordered_map<Int_t, Float_t> kMax_V0_DCAposV0;
+    std::unordered_map<Int_t, Float_t> kMin_V0_DCAnegPV;
+    std::unordered_map<Int_t, Float_t> kMin_V0_DCAposPV;
+    /* exclusives */
+    std::unordered_map<Int_t, Float_t> kMax_V0_Chi2;
+    std::unordered_map<Int_t, Float_t> kMax_V0_ImprvDCAbtwDau;
+    std::unordered_map<Int_t, Float_t> kMax_V0_Chi2ndf;
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
