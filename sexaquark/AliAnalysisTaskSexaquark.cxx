@@ -519,6 +519,7 @@ void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
         kMax_V0_Mass[-3122] = 1.16;
         kMax_V0_ArmPtOverAlpha[-3122] = 0.2;
         kMin_V0_Pt[-3122] = 1.0;
+        kMin_V0_Radius[-3122] = 20.;
         kMin_V0_DecayLength[-3122] = 40.;
         kMin_V0_CPAwrtPV[-3122] = 0.;
         kMin_V0_DCAwrtPV[-3122] = 4.;
@@ -528,18 +529,19 @@ void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
         kMin_V0_DCAnegPV[-3122] = 2.;
         kMin_V0_DCAposPV[-3122] = 2.;
 
-        kMin_V0_Mass[310] = 1.08;
-        kMax_V0_Mass[310] = 1.16;
+        kMin_V0_Mass[310] = 0.4;
+        kMax_V0_Mass[310] = 0.6;
         kMax_V0_ArmPtOverAlpha[310] = 0.2;
         kMin_V0_Pt[310] = 1.0;
-        kMin_V0_DecayLength[310] = 40.;
-        kMin_V0_CPAwrtPV[310] = 0.;
+        kMin_V0_Radius[310] = 10.;
+        kMin_V0_DecayLength[310] = 15.;
+        kMin_V0_CPAwrtPV[310] = 0.2;
         kMin_V0_DCAwrtPV[310] = 4.;
         kMax_V0_DCAbtwDau[310] = 2.;
         kMax_V0_DCAnegV0[310] = 2.;
         kMax_V0_DCAposV0[310] = 2.;
-        kMin_V0_DCAnegPV[310] = 2.;
-        kMin_V0_DCAposPV[310] = 2.;
+        kMin_V0_DCAnegPV[310] = 6.;
+        kMin_V0_DCAposPV[310] = 6.;
 
         if (fSourceOfV0s == "Offline" || fSourceOfV0s == "Online" || fSourceOfV0s == "Custom") {
             // kMax_AntiLambda_Chi2 = ??;
@@ -547,8 +549,8 @@ void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
             // kMax_KaonZeroShort_Chi2 = ??;
             // kMax_KaonZeroShort_ImprvDCAbtwDau = ??;
         } else {  // fSourceOfV0s == "Kalman"
-            kMax_V0_Chi2ndf[-3122] = 1.;
-            kMax_V0_Chi2ndf[310] = 1.;
+            kMax_V0_Chi2ndf[-3122] = 0.5;
+            kMax_V0_Chi2ndf[310] = 0.5;
         }
     }
 
@@ -2060,14 +2062,18 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 */
 Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track) {
 
+    Double_t V0_X, V0_Y, V0_Z;
+    V0->GetXYZ(V0_X, V0_Y, V0_Z);
+
+    Double_t Radius = TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y);
+    if (Radius < kMin_V0_Radius[pdgV0]) return kFALSE;
+
     std::unordered_map<Int_t, Int_t> getPdgNeg_fromPdgV0;
     getPdgNeg_fromPdgV0[-3122] = -2212;
     getPdgNeg_fromPdgV0[310] = -211;
     std::unordered_map<Int_t, Int_t> getPdgPos_fromPdgV0;
     getPdgPos_fromPdgV0[-3122] = 211;
     getPdgPos_fromPdgV0[310] = 211;
-
-    /* Get properties */
 
     Double_t N_Px, N_Py, N_Pz;
     Double_t P_Px, P_Py, P_Pz;
@@ -2081,44 +2087,55 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDt
     lvTrackNeg.SetPxPyPzE(N_Px, N_Py, N_Pz, TMath::Sqrt(N_Mom * N_Mom + N_Mass * N_Mass));
     lvTrackPos.SetPxPyPzE(P_Px, P_Py, P_Pz, TMath::Sqrt(P_Mom * P_Mom + P_Mass * P_Mass));
     TLorentzVector lvV0 = lvTrackNeg + lvTrackPos;
+
     Double_t Mass = lvV0.M();
+    // if (Mass > kMin_V0_Mass[pdgV0] || Mass < kMax_V0_Mass[pdgV0]) return kFALSE;
+
     Double_t ArmPt = Calculate_ArmPt(v0->Px(), v0->Py(), v0->Pz(), N_Px, N_Py, N_Pz);
     Double_t ArmAlpha = Calculate_ArmAlpha(v0->Px(), v0->Py(), v0->Pz(), P_Px, P_Py, P_Pz, N_Px, N_Py, N_Pz);
+
     Double_t ArmPtOverAlpha = ArmPt / TMath::Abs(ArmAlpha);
+    // if (ArmPtOverAlpha > kMax_V0_ArmPtOverAlpha[pdgV0]) return kFALSE;  // PENDING: depends on V0 species
+
     Double_t Pt = v0->Pt();
+    if (Pt < kMin_V0_Pt[pdgV0]) return kFALSE;
+
     Double_t DecayLength = TMath::Sqrt(TMath::Power(v0->Xv() - fPrimaryVertex->GetX(), 2) + TMath::Power(v0->Yv() - fPrimaryVertex->GetY(), 2) +
                                        TMath::Power(v0->Zv() - fPrimaryVertex->GetZ(), 2));
+    if (DecayLength < kMin_V0_DecayLength[pdgV0]) return kFALSE;
+
     Double_t CPAwrtPV = v0->GetV0CosineOfPointingAngle(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+    if (CPAwrtPV < kMin_V0_CPAwrtPV[pdgV0]) return kFALSE;
+
     Double_t DCAwrtPV = LinePointDCA(v0->Px(), v0->Py(), v0->Pz(), v0->Xv(), v0->Yv(), v0->Zv(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(),
                                      fPrimaryVertex->GetZ());
+    if (DCAwrtPV < kMin_V0_DCAwrtPV[pdgV0]) return kFALSE;
+
     Double_t ImprvDCAbtwDau = v0->GetDcaV0Daughters();
+    if (ImprvDCAbtwDau > kMax_V0_ImprvDCAbtwDau[pdgV0]) return kFALSE;  // exclusive
+
     Float_t impar_neg_v0[2], impar_pos_v0[2];
     neg_track->GetDZ(v0->Xv(), v0->Yv(), v0->Zv(), fMagneticField, impar_neg_v0);
     pos_track->GetDZ(v0->Xv(), v0->Yv(), v0->Zv(), fMagneticField, impar_pos_v0);
+
+    Double_t DCAnegV0 = TMath::Sqrt(impar_neg_v0[0] * impar_neg_v0[0] + impar_neg_v0[1] * impar_neg_v0[1]);
+    Double_t DCAposV0 = TMath::Sqrt(impar_pos_v0[0] * impar_pos_v0[0] + impar_pos_v0[1] * impar_pos_v0[1]);
+    if (DCAnegV0 > kMax_V0_DCAnegV0[pdgV0]) return kFALSE;
+    if (DCAposV0 > kMax_V0_DCAposV0[pdgV0]) return kFALSE;
+
     Float_t impar_neg_pv[2], impar_pos_pv[2];
     neg_track->GetDZ(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ(), fMagneticField, impar_neg_pv);
     pos_track->GetDZ(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ(), fMagneticField, impar_pos_pv);
-    Double_t DCAnegV0 = TMath::Sqrt(impar_neg_v0[0] * impar_neg_v0[0] + impar_neg_v0[1] * impar_neg_v0[1]);
-    Double_t DCAposV0 = TMath::Sqrt(impar_pos_v0[0] * impar_pos_v0[0] + impar_pos_v0[1] * impar_pos_v0[1]);
-    Double_t DCAnegPV = TMath::Sqrt(impar_neg_pv[0] * impar_neg_pv[0] + impar_neg_pv[1] * impar_neg_pv[1]);
-    Double_t DCAposPV = TMath::Sqrt(impar_pos_pv[0] * impar_pos_pv[0] + impar_pos_pv[1] * impar_pos_pv[1]);
-    Double_t Chi2 = v0->GetChi2V0();
 
-    /* Apply cuts */
-    /*
-        // if (Mass > kMin_V0_Mass[pdgV0] || Mass < kMax_V0_Mass[pdgV0]) return kFALSE;
-        // if (ArmPtOverAlpha > kMax_V0_ArmPtOverAlpha[pdgV0]) return kFALSE;  // PENDING: depends on V0 species
-        if (Pt < kMin_V0_Pt[pdgV0]) return kFALSE;
-        if (DecayLength < kMin_V0_DecayLength[pdgV0]) return kFALSE;
-        if (CPAwrtPV < kMin_V0_CPAwrtPV[pdgV0]) return kFALSE;
-        if (DCAwrtPV < kMin_V0_DCAwrtPV[pdgV0]) return kFALSE;
-        if (ImprvDCAbtwDau > kMax_V0_ImprvDCAbtwDau[pdgV0]) return kFALSE;  // exclusive
-        if (DCAnegV0 > kMax_V0_DCAnegV0[pdgV0]) return kFALSE;
-        if (DCAposV0 > kMax_V0_DCAposV0[pdgV0]) return kFALSE;
-        if (DCAnegPV < kMin_V0_DCAnegPV[pdgV0]) return kFALSE;
-        if (DCAposPV < kMin_V0_DCAposPV[pdgV0]) return kFALSE;
-        if (Chi2 > kMax_V0_Chi2[pdgV0]) return kFALSE;  // exclusive
-     */
+    Double_t DCAnegPV = TMath::Sqrt(impar_neg_pv[0] * impar_neg_pv[0] + impar_neg_pv[1] * impar_neg_pv[1]);
+    if (DCAnegPV < kMin_V0_DCAnegPV[pdgV0]) return kFALSE;
+
+    Double_t DCAposPV = TMath::Sqrt(impar_pos_pv[0] * impar_pos_pv[0] + impar_pos_pv[1] * impar_pos_pv[1]);
+    if (DCAposPV < kMin_V0_DCAposPV[pdgV0]) return kFALSE;
+
+    Double_t Chi2 = v0->GetChi2V0();
+    if (Chi2 > kMax_V0_Chi2[pdgV0]) return kFALSE;  // exclusive
+
     return kTRUE;
 }
 
@@ -2131,44 +2148,51 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDt
 Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,
                                               TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos) {
 
-    /* Get properties */
+    Double_t Radius = TMath::Sqrt(kfV0.GetX() * kfV0.GetX() + kfV0.GetY() * kfV0.GetY());
+    if (Radius < kMin_V0_Radius[pdgV0]) return kFALSE;
 
     Double_t Mass = lvV0.M();
+    if (Mass < kMin_V0_Mass[pdgV0] || Mass > kMax_V0_Mass[pdgV0]) return kFALSE;
+
     Double_t ArmPt = Calculate_ArmPt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
     Double_t ArmAlpha = Calculate_ArmAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackPos.Px(), lvTrackPos.Py(), lvTrackPos.Pz(), lvTrackNeg.Px(),
-       lvTrackNeg.Py(), lvTrackNeg.Pz());
+                                           lvTrackNeg.Py(), lvTrackNeg.Pz());
     Double_t ArmPtOverAlpha = ArmPt / TMath::Abs(ArmAlpha);
+    // if (ArmPtOverAlpha > kMax_V0_ArmPtOverAlpha[pdgV0]) return kFALSE;  // PENDING: depends on V0 species
+
     Double_t Pt = lvV0.Pt();
+    if (Pt < kMin_V0_Pt[pdgV0]) return kFALSE;
+
     Double_t DecayLength = TMath::Sqrt(TMath::Power(kfV0.GetX() - fPrimaryVertex->GetX(), 2) + TMath::Power(kfV0.GetY() - fPrimaryVertex->GetY(), 2) +
                                        TMath::Power(kfV0.GetZ() - fPrimaryVertex->GetZ(), 2));
+    if (DecayLength < kMin_V0_DecayLength[pdgV0]) return kFALSE;
+
     Double_t CPAwrtPV =
         CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+    if (CPAwrtPV < kMin_V0_CPAwrtPV[pdgV0]) return kFALSE;
+
     Double_t DCAwrtPV = LinePointDCA(lvV0.Px(), lvV0.Py(), lvV0.Pz(), kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(),
                                      fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+    if (DCAwrtPV < kMin_V0_DCAwrtPV[pdgV0]) return kFALSE;
+
     Double_t DCAbtwDau = TMath::Abs(kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos));
+    if (DCAbtwDau > kMax_V0_DCAbtwDau[pdgV0]) return kFALSE;
+
     KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
     Double_t DCAnegV0 = TMath::Abs(kfDaughterNeg.GetDistanceFromVertex(kfV0));
-    Double_t DCAposV0 = TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfV0));
-    Double_t DCAnegPV = TMath::Abs(kfDaughterNeg.GetDistanceFromVertex(kfPrimaryVertex));
-    Double_t DCAposPV = TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfPrimaryVertex));
-    Double_t Chi2ndf = (Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF();
-
-    /* Apply cuts */
-
-    /*
-    if (Mass > kMin_V0_Mass[pdgV0] || Mass < kMax_V0_Mass[pdgV0]) return kFALSE;
-    // if (ArmPtOverAlpha > kMax_V0_ArmPtOverAlpha[pdgV0]) return kFALSE;  // PENDING: depends on V0 species
-    if (Pt < kMin_V0_Pt[pdgV0]) return kFALSE;
-    if (DecayLength < kMin_V0_DecayLength[pdgV0]) return kFALSE;
-    if (CPAwrtPV < kMin_V0_CPAwrtPV[pdgV0]) return kFALSE;
-    if (DCAwrtPV < kMin_V0_DCAwrtPV[pdgV0]) return kFALSE;
-    if (DCAbtwDau > kMax_V0_DCAbtwDau[pdgV0]) return kFALSE;
     if (DCAnegV0 > kMax_V0_DCAnegV0[pdgV0]) return kFALSE;
+
+    Double_t DCAposV0 = TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfV0));
     if (DCAposV0 > kMax_V0_DCAposV0[pdgV0]) return kFALSE;
+
+    Double_t DCAnegPV = TMath::Abs(kfDaughterNeg.GetDistanceFromVertex(kfPrimaryVertex));
     if (DCAnegPV < kMin_V0_DCAnegPV[pdgV0]) return kFALSE;
+
+    Double_t DCAposPV = TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfPrimaryVertex));
     if (DCAposPV < kMin_V0_DCAposPV[pdgV0]) return kFALSE;
-    if (Chi2ndf > kMax_V0_Chi2ndf[pdgV0]) return kFALSE;  // exclusive
-    */
+
+    Double_t Chi2ndf = (Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF();
+    if (Chi2ndf > kMax_V0_Chi2ndf[pdgV0]) return kFALSE;  // exclusive for KF method
 
     return kTRUE;
 }
@@ -3739,7 +3763,7 @@ KFParticle AliAnalysisTaskSexaquark::TransportKFParticle(KFParticle kfThis, KFPa
     kfThis.Transport(dS[0], dsdr[0], mP, mC);
 
     float mM = fPDG.GetParticle(pdgThis)->Mass();
-    float mQ = chargeThis; // only valid for charged particles with Q = +/- 1
+    float mQ = chargeThis;  // only valid for charged particles with Q = +/- 1
 
     KFParticle kfTransported;
     kfTransported.Create(mP, mC, mQ, mM);

@@ -419,6 +419,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Float_t> kMax_V0_Mass;
     std::unordered_map<Int_t, Float_t> kMax_V0_ArmPtOverAlpha;
     std::unordered_map<Int_t, Float_t> kMin_V0_Pt;
+    std::unordered_map<Int_t, Float_t> kMin_V0_Radius;
     std::unordered_map<Int_t, Float_t> kMin_V0_DecayLength;
     std::unordered_map<Int_t, Float_t> kMin_V0_CPAwrtPV;
     std::unordered_map<Int_t, Float_t> kMin_V0_DCAwrtPV;
