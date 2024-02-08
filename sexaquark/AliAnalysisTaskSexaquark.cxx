@@ -2133,11 +2133,11 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0
 
     /* Get properties */
 
-    // Double_t Mass = lvV0.M();
-    // Double_t ArmPt = Calculate_ArmPt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
-    // Double_t ArmAlpha = Calculate_ArmAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackPos.Px(), lvTrackPos.Py(), lvTrackPos.Pz(), lvTrackNeg.Px(),
-    //    lvTrackNeg.Py(), lvTrackNeg.Pz());
-    // Double_t ArmPtOverAlpha = ArmPt / TMath::Abs(ArmAlpha);
+    Double_t Mass = lvV0.M();
+    Double_t ArmPt = Calculate_ArmPt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
+    Double_t ArmAlpha = Calculate_ArmAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackPos.Px(), lvTrackPos.Py(), lvTrackPos.Pz(), lvTrackNeg.Px(),
+       lvTrackNeg.Py(), lvTrackNeg.Pz());
+    Double_t ArmPtOverAlpha = ArmPt / TMath::Abs(ArmAlpha);
     Double_t Pt = lvV0.Pt();
     Double_t DecayLength = TMath::Sqrt(TMath::Power(kfV0.GetX() - fPrimaryVertex->GetX(), 2) + TMath::Power(kfV0.GetY() - fPrimaryVertex->GetY(), 2) +
                                        TMath::Power(kfV0.GetZ() - fPrimaryVertex->GetZ(), 2));
@@ -2155,7 +2155,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0
 
     /* Apply cuts */
 
-    // if (Mass > kMin_V0_Mass[pdgV0] || Mass < kMax_V0_Mass[pdgV0]) return kFALSE;
+    /*
+    if (Mass > kMin_V0_Mass[pdgV0] || Mass < kMax_V0_Mass[pdgV0]) return kFALSE;
     // if (ArmPtOverAlpha > kMax_V0_ArmPtOverAlpha[pdgV0]) return kFALSE;  // PENDING: depends on V0 species
     if (Pt < kMin_V0_Pt[pdgV0]) return kFALSE;
     if (DecayLength < kMin_V0_DecayLength[pdgV0]) return kFALSE;
@@ -2167,6 +2168,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0
     if (DCAnegPV < kMin_V0_DCAnegPV[pdgV0]) return kFALSE;
     if (DCAposPV < kMin_V0_DCAposPV[pdgV0]) return kFALSE;
     if (Chi2ndf > kMax_V0_Chi2ndf[pdgV0]) return kFALSE;  // exclusive
+    */
 
     return kTRUE;
 }
@@ -2417,36 +2419,18 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
                 kfV0.AddDaughter(kfDaughterNeg);
                 kfV0.AddDaughter(kfDaughterPos);
             }
+
+            /* Transport V0 and daughters */
+
             kfV0.TransportToDecayVertex();
 
-            // get V0 vertex
-            Double_t V0Vertex[3] = {kfV0.GetX(), kfV0.GetY(), kfV0.GetZ()};
-            Double_t V0VertexErr[3] = {kfV0.GetErrX(), kfV0.GetErrY(), kfV0.GetErrZ()};
-            AliESDVertex* esdV0Vertex = new AliESDVertex(V0Vertex, V0VertexErr);
-
-            /* Clone ESD tracks to be able to propagate (~ modify) them. */
-
-            AliESDtrack cloneTrackNeg(*esdTrackNeg);
-            AliESDtrack cloneTrackPos(*esdTrackPos);
-
-            AliInfo("Before Propagation");
-            AliInfoF("P(neg): (%.4f, %.4f, %.4f)", cloneTrackNeg.Px(), cloneTrackNeg.Py(), cloneTrackNeg.Pz());
-            AliInfoF("P(pos): (%.4f, %.4f, %.4f)", cloneTrackPos.Px(), cloneTrackPos.Py(), cloneTrackPos.Pz());
-
-            /* Propagate V0 daughters to their DCA w.r.t. V0 vertex. Use ESDs for kinematics. */
-
-            cloneTrackNeg.PropagateToDCA(esdV0Vertex, fMagneticField, 10., impar_neg);
-            cloneTrackPos.PropagateToDCA(esdV0Vertex, fMagneticField, 10., impar_pos);
-
-            AliInfo("After Propagation");
-            AliInfoF("P(neg): (%.4f, %.4f, %.4f)", cloneTrackNeg.Px(), cloneTrackNeg.Py(), cloneTrackNeg.Pz());
-            AliInfoF("P(pos): (%.4f, %.4f, %.4f)", cloneTrackPos.Px(), cloneTrackPos.Py(), cloneTrackPos.Pz());
-            AliInfo("");
+            KFParticle kfTransportedNeg = TransportKFParticle(kfDaughterNeg, kfDaughterPos, pdgTrackNeg, (Int_t)esdTrackNeg->Charge());
+            KFParticle kfTransportedPos = TransportKFParticle(kfDaughterPos, kfDaughterNeg, pdgTrackPos, (Int_t)esdTrackPos->Charge());
 
             /* Reconstruct V0 */
 
-            lvTrackNeg.SetXYZM(cloneTrackNeg.Px(), cloneTrackNeg.Py(), cloneTrackNeg.Pz(), fPDG.GetParticle(pdgTrackNeg)->Mass());
-            lvTrackPos.SetXYZM(cloneTrackPos.Px(), cloneTrackPos.Py(), cloneTrackPos.Pz(), fPDG.GetParticle(pdgTrackPos)->Mass());
+            lvTrackNeg.SetXYZM(kfTransportedNeg.Px(), kfTransportedNeg.Py(), kfTransportedNeg.Pz(), fPDG.GetParticle(pdgTrackNeg)->Mass());
+            lvTrackPos.SetXYZM(kfTransportedPos.Px(), kfTransportedPos.Py(), kfTransportedPos.Pz(), fPDG.GetParticle(pdgTrackPos)->Mass());
             lvV0 = lvTrackNeg + lvTrackPos;
 
             /* Apply cuts */
@@ -3737,4 +3721,28 @@ KFVertex AliAnalysisTaskSexaquark::CreateKFVertex(const AliVVertex& vertex) {
     KFVertex KFVtx(kfpVtx);
 
     return KFVtx;
+}
+
+/*
+ Transport a KFParticle to the point of closest approach w.r.t. another KFParticle.
+ - Uses: `fPDG`
+ - Input: `kfThis`, `kfOther`, `pdgThis`, `chargeThis`
+ - Return: `kfTransported`
+*/
+KFParticle AliAnalysisTaskSexaquark::TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis) {
+
+    float dsdr[4][6];
+    float dS[2];
+    kfThis.GetDStoParticle(kfOther, dS, dsdr);
+
+    float mP[8], mC[36];
+    kfThis.Transport(dS[0], dsdr[0], mP, mC);
+
+    float mM = fPDG.GetParticle(pdgThis)->Mass();
+    float mQ = chargeThis; // only valid for charged particles with Q = +/- 1
+
+    KFParticle kfTransported;
+    kfTransported.Create(mP, mC, mQ, mM);
+
+    return kfTransported;
 }

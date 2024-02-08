@@ -239,6 +239,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Kalman Filter Utilities */
     KFParticle CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge);
     KFVertex CreateKFVertex(const AliVVertex& vertex);
+    KFParticle TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis);
 
    private:
     Event_tt fEvent;
