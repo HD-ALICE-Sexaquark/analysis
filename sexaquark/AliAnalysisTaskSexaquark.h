@@ -300,7 +300,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      - `11` : found true secondary V0s
      - `12` : found true signal V0s
     */
-    std::map<Int_t, TH1F*> fHist_V0s_Bookkeep;  //!
+    std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;  //!
 
     TH1F* fHist_True_AntiProton_Bookkeep;           //!
     TH1F* fHist_True_PosKaon_Bookkeep;              //!
@@ -327,6 +327,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     // key: `stage, set, pdg, property`, value: histogram
     std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;
+
+    // key: `stage, set, property`, value: histogram
+    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_AntiSexaquarks;
 
     // # Anti-Sexaquarks (that require true info)
     // ## findable signal
