@@ -177,7 +177,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    public:
     /* Tracks */
     void ProcessTracks();
-    Bool_t PassesTrackSelection(AliESDtrack* track, Float_t& n_sigma_proton, Float_t& n_sigma_kaon, Float_t& n_sigma_pion);
+    Bool_t PassesTrackSelection(AliESDtrack* track);
 
    public:
     /* V0s and Anti-Sexaquarks -- That Require True Info */
@@ -278,11 +278,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TTree* fTree;
     // hists
     TList* fOutputListOfHists;
-    // # mc gen. (or true)
-    TH1F* fHist_True_Signal_SecVertex_Radius;  //!
-    TH1F* fHist_True_InjBkg_SecVertex_Radius;  //!
-    TH1F* fHist_True_FermiSexaquark_Pt;        //!
-    TH1F* fHist_True_FermiSexaquark_Mass;      //!
 
     /*
      key: `V0 pdg code`
@@ -302,10 +297,19 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     */
     std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;  //!
 
-    TH1F* fHist_True_AntiProton_Bookkeep;           //!
-    TH1F* fHist_True_PosKaon_Bookkeep;              //!
-    TH1F* fHist_True_PiPlus_Bookkeep;               //!
-    TH1F* fHist_True_PiMinus_Bookkeep;              //!
+    /*
+     key: `pdg code`
+     - `0` : MC tracks
+     - `1` : secondary MC tracks
+     - `2` : signal MC tracks
+     (PENDING)
+     -- PENDING: in a sim.set of reactionID='A', signal K+ appear where they shouldn't exist, because of signal particles that were mis-id
+     -- Note: should I only, besides if they're signal or not, use their true id? I think so, because it's a bookkeeping of TRUE particles
+    */
+    std::unordered_map<Int_t, TH1F*> fHist_Tracks_Bookkeep;  //!
+
+    // anti-neutron related
+    TH1F* fHist_True_InjBkg_SecVertex_Radius;       //!
     TH1F* fHist_True_AntiNeutron_Pt;                //!
     TH1F* fHist_True_AntiNeutronThatInteracted_Pt;  //!
     TH1F* fHist_True_AntiNeutron_NDaughters;        //!
@@ -313,46 +317,18 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_True_AntiNeutron_Bookkeep;          //!
     TH1F* fHist_True_InjBkgProducts_Bookkeep;       //!
     TH1F* fHist_True_AllSecondaries_MothersPDG;     //!
-    // # tracks (that require true info)
-    TH1F* fHist_Rec_Signal_AntiProton_Pt;  //!
-    TH1F* fHist_Rec_Signal_PosKaon_Pt;     //!
-    TH1F* fHist_Rec_Signal_PiPlus_Pt;      //!
-    TH1F* fHist_Rec_Signal_PiMinus_Pt;     //!
-    // # tracks (that don't require true info)
-    TH1F* fHist_Rec_AntiProton_Pt;  //!
-    TH1F* fHist_Rec_PosKaon_Pt;     //!
-    TH1F* fHist_Rec_PiPlus_Pt;      //!
-    TH1F* fHist_Rec_PiMinus_Pt;     //!
-    TH2F* f2DHist_TPC_Signal;       //!
+
+    // key: `stage, set, pdg, property`, value: histogram
+    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;
+
+    // 2D histograms (PENDING: to deal later)
+    TH2F* f2DHist_TPC_Signal;  //!
 
     // key: `stage, set, pdg, property`, value: histogram
     std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;
 
     // key: `stage, set, property`, value: histogram
     std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_AntiSexaquarks;
-
-    // # Anti-Sexaquarks (that require true info)
-    // ## findable signal
-    TH1F* fHist_Findable_AntiSexaquark_Mass;      //!
-    TH1F* fHist_Findable_AntiSexaquark_Pt;        //!
-    TH1F* fHist_Findable_AntiSexaquark_DCAwrtPV;  //!
-    TH1F* fHist_Findable_AntiSexaquark_CPAwrtPV;  //!
-    TH1F* fHist_Findable_AntiSexaquark_Radius;    //!
-    // ## found signal
-    TH1F* fHist_Found_Signal_AntiSexaquark_Mass;       //!
-    TH1F* fHist_Found_Signal_AntiSexaquark_Pt;         //!
-    TH1F* fHist_Found_Signal_AntiSexaquark_DCAbtwDau;  //!
-    TH1F* fHist_Found_Signal_AntiSexaquark_DCAwrtPV;   //!
-    TH1F* fHist_Found_Signal_AntiSexaquark_CPAwrtPV;   //!
-    TH1F* fHist_Found_Signal_AntiSexaquark_Radius;     //!
-    // # Anti-Sexaquarks (that don't require true info)
-    // ## all found
-    TH1F* fHist_Found_AntiSexaquark_Mass;       //!
-    TH1F* fHist_Found_AntiSexaquark_Pt;         //!
-    TH1F* fHist_Found_AntiSexaquark_DCAbtwDau;  //!
-    TH1F* fHist_Found_AntiSexaquark_DCAwrtPV;   //!
-    TH1F* fHist_Found_AntiSexaquark_CPAwrtPV;   //!
-    TH1F* fHist_Found_AntiSexaquark_Radius;     //!
 
    private:
     /* Containers -- vectors and hash tables */
@@ -368,17 +344,17 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getMcIdxOfNegDau_fromMcIdxOfTrueV0;  //
     std::unordered_map<Int_t, Int_t> getMcIdxOfPosDau_fromMcIdxOfTrueV0;  //
 
-    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;                   //
-    std::unordered_map<Int_t, Int_t> getReactionIdx_fromMcIdx;               //
-    std::unordered_map<Int_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;  //
+    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;                    //
+    std::unordered_map<Int_t, UInt_t> getReactionIdx_fromMcIdx;               //
+    std::unordered_map<UInt_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;  //
 
-    std::unordered_map<Int_t, Int_t> getReactionIdx_fromEsdIdx;               //
-    std::unordered_map<Int_t, std::vector<Int_t>> getEsdIdx_fromReactionIdx;  //
+    std::unordered_map<Int_t, UInt_t> getReactionIdx_fromEsdIdx;               //
+    std::unordered_map<UInt_t, std::vector<Int_t>> getEsdIdx_fromReactionIdx;  //
 
     std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //
     std::vector<Int_t> esdIndicesOfPosKaonTracks;     //
-    std::vector<Int_t> esdIndicesOfPiPlusTracks;      //
     std::vector<Int_t> esdIndicesOfPiMinusTracks;     //
+    std::vector<Int_t> esdIndicesOfPiPlusTracks;      //
 
     std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;  //
 

@@ -171,63 +171,69 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists = new TList();
     fOutputListOfHists->SetOwner(kTRUE);
 
-    /* MC Gen. histograms */
-
-    fHist_True_InjBkg_SecVertex_Radius = new TH1F("True_InjBkg_SecVertex_Radius", "", 100, 0., 200.);
-
-    fOutputListOfHists->Add(fHist_True_InjBkg_SecVertex_Radius);
-
-    fHist_True_AntiProton_Bookkeep = new TH1F("True_AntiProton_Bookkeep", "", 10, 0., 10.);
-    fHist_True_PosKaon_Bookkeep = new TH1F("True_PosKaon_Bookkeep", "", 10, 0., 10.);
-    fHist_True_PiPlus_Bookkeep = new TH1F("True_PiPlus_Bookkeep", "", 10, 0., 10.);
-    fHist_True_PiMinus_Bookkeep = new TH1F("True_PiMinus_Bookkeep", "", 10, 0., 10.);
-
-    fOutputListOfHists->Add(fHist_True_AntiProton_Bookkeep);
-    fOutputListOfHists->Add(fHist_True_PosKaon_Bookkeep);
-    fOutputListOfHists->Add(fHist_True_PiPlus_Bookkeep);
-    fOutputListOfHists->Add(fHist_True_PiMinus_Bookkeep);
+    /* Anti-Neutron Histograms (PENDING) */
 
     fHist_True_AntiNeutron_Pt = new TH1F("True_AntiNeutron_Pt", "", 100, 0., 10.);
     fHist_True_AntiNeutronThatInteracted_Pt = new TH1F("True_AntiNeutronThatInteracted_Pt", "", 100, 0., 10.);
     fHist_True_AntiNeutron_NDaughters = new TH1F("True_AntiNeutron_NDaughters", "", 100, 0., 100.);
     fHist_True_AntiNeutron_PDGDaughters = new TH1F("True_AntiNeutron_PDGDaughters", "", 7000, -3500., 3500.);
     fHist_True_AntiNeutron_Bookkeep = new TH1F("True_AntiNeutron_Bookkeep", "", 10, 0., 10.);
+    fHist_True_InjBkg_SecVertex_Radius = new TH1F("True_InjBkg_SecVertex_Radius", "", 100, 0., 200.);
+    fHist_True_InjBkgProducts_Bookkeep = new TH1F("True_InjBkgProducts_Bookkeep", "", 50, 0., 50.);
+    fHist_True_AllSecondaries_MothersPDG = new TH1F("True_AllSecondaries_MothersPDG", "", 7000, -3500, 3500.);
 
     fOutputListOfHists->Add(fHist_True_AntiNeutron_Pt);
     fOutputListOfHists->Add(fHist_True_AntiNeutronThatInteracted_Pt);
     fOutputListOfHists->Add(fHist_True_AntiNeutron_NDaughters);
     fOutputListOfHists->Add(fHist_True_AntiNeutron_PDGDaughters);
     fOutputListOfHists->Add(fHist_True_AntiNeutron_Bookkeep);
-
-    fHist_True_InjBkgProducts_Bookkeep = new TH1F("True_InjBkgProducts_Bookkeep", "", 50, 0., 50.);
-    fHist_True_AllSecondaries_MothersPDG = new TH1F("True_AllSecondaries_MothersPDG", "", 7000, -3500, 3500.);
-
+    fOutputListOfHists->Add(fHist_True_InjBkg_SecVertex_Radius);
     fOutputListOfHists->Add(fHist_True_InjBkgProducts_Bookkeep);
     fOutputListOfHists->Add(fHist_True_AllSecondaries_MothersPDG);
 
-    /* rec. tracks histograms (that require MC Gen. information) */
+    /* Charged Particles / Rec. Tracks Histograms */
 
-    fHist_Rec_Signal_AntiProton_Pt = new TH1F("Rec_Signal_AntiProton_Pt", "", 100, 0., 10.);
-    fHist_Rec_Signal_PosKaon_Pt = new TH1F("Rec_Signal_PosKaon_Pt", "", 100, 0., 10.);
-    fHist_Rec_Signal_PiPlus_Pt = new TH1F("Rec_Signal_PiPlus_Pt", "", 100, 0., 10.);
-    fHist_Rec_Signal_PiMinus_Pt = new TH1F("Rec_Signal_PiMinus_Pt", "", 100, 0., 10.);
+    TString tracks_stages[2] = {"MCGen", "Found"};
+    TString tracks_sets[4] = {"All", "True", "Secondary", "Signal"};
+    Int_t tracks_species[4] = {-2212, 321, 211, -211};
+    std::map<Int_t, TString> tracks_name = {{-2212, "AntiProton"}, {321, "PosKaon"}, {211, "PiPlus"}, {-211, "PiMinus"}};
 
-    fOutputListOfHists->Add(fHist_Rec_Signal_AntiProton_Pt);
-    fOutputListOfHists->Add(fHist_Rec_Signal_PosKaon_Pt);
-    fOutputListOfHists->Add(fHist_Rec_Signal_PiPlus_Pt);
-    fOutputListOfHists->Add(fHist_Rec_Signal_PiMinus_Pt);
+    const Int_t N_tracks_props = 9;
+    TString tracks_props[N_tracks_props] = {"Pt",           "Pz",           "Eta",             //
+                                            "DCAwrtPV",     "NTPCClusters", "Chi2/NClusters",  //
+                                            "NSigmaProton", "NSigmaKaon",   "NSigmaPion"};
+    Int_t tracks_nbins[N_tracks_props] = {100, 100, 100, 100, 100, 100, 100, 100, 100};
+    Double_t tracks_min[N_tracks_props] = {0., -20., -4., 0., 0., 0., -7.5, -7.5, -7.5};
+    Double_t tracks_max[N_tracks_props] = {10., 20., 4., 200., 1000., 50., 7.5, 7.5, 7.5};
 
-    /* rec. tracks histograms (that don't require MC Gen. information) */
+    for (Int_t& species : tracks_species) {
+        fHist_Tracks_Bookkeep[species] = new TH1F(Form("%s_Bookkeep", tracks_name[species].Data()), "", 15, 0., 15.);
+        fOutputListOfHists->Add(fHist_Tracks_Bookkeep[species]);
+    }
 
-    fHist_Rec_AntiProton_Pt = new TH1F("Rec_AntiProton_Pt", "", 100, 0., 10.);
-    fHist_Rec_PosKaon_Pt = new TH1F("Rec_PosKaon_Pt", "", 100, 0., 10.);
-    fHist_Rec_PiPlus_Pt = new TH1F("Rec_PiPlus_Pt", "", 100, 0., 10.);
-    fHist_Rec_PiMinus_Pt = new TH1F("Rec_PiMinus_Pt", "", 100, 0., 10.);
+    for (TString& stage : tracks_stages) {
+        for (TString& set : tracks_sets) {
+            for (Int_t& species : tracks_species) {
+                for (Int_t prop_idx = 0; prop_idx < N_tracks_props; prop_idx++) {
 
-    fOutputListOfHists->Add(fHist_Rec_AntiProton_Pt);
-    fOutputListOfHists->Add(fHist_Rec_PosKaon_Pt);
-    fOutputListOfHists->Add(fHist_Rec_PiPlus_Pt);
-    fOutputListOfHists->Add(fHist_Rec_PiMinus_Pt);
+                    if (stage == "MCGen" && set == "True") continue;
+
+                    if (stage == "MCGen" && (tracks_props[prop_idx] == "DCAwrtPV" || tracks_props[prop_idx] == "NTPCClusters" ||
+                                             tracks_props[prop_idx] == "Chi2/NClusters" || tracks_props[prop_idx] == "NSigmaPion" ||
+                                             tracks_props[prop_idx] == "NSigmaKaon" || tracks_props[prop_idx] == "NSigmaProton")) {
+                        continue;
+                    }
+
+                    TString histName = Form("%s_%s_%s_%s", stage.Data(), set.Data(), tracks_name[species].Data(), tracks_props[prop_idx].Data());
+                    std::tuple<TString, TString, Int_t, TString> histKey = std::make_tuple(stage, set, species, tracks_props[prop_idx]);
+                    fHist_Tracks[histKey] = new TH1F(histName, "", tracks_nbins[prop_idx], tracks_min[prop_idx], tracks_max[prop_idx]);
+                    fOutputListOfHists->Add(fHist_Tracks[histKey]);
+                }
+            }
+        }
+    }
+
+    /* 2D Histogram (PENDING: to deal later) */
 
     f2DHist_TPC_Signal = new TH2F("TPC_Signal", "", 500, 0., 10., 500, 0., 1000.);
 
@@ -510,7 +516,7 @@ void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
     if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S" && cuts_option == "Standard") {
 
         /* V0 cuts */
-        // PENDING: what about radius, and eta, or rapidity, or chi2 and imprvdca_btw_dau
+        // PENDING: what about eta, or rapidity, or chi2 and imprvdca_btw_dau
 
         kMin_V0_Mass[-3122] = 1.08;
         kMax_V0_Mass[-3122] = 1.16;
@@ -589,7 +595,6 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
     Int_t pdg_mc;
 
     AliMCParticle* mcMother;
-    Int_t pdg_mother;
 
     AliMCParticle* mcDaughter;  // PENDING: to delete after figuring what to do with neutrons
     Int_t pdg_dau;              // PENDING: to delete after figuring what to do with neutrons
@@ -610,10 +615,10 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
     Float_t radius;
     Float_t dca_wrt_pv;
     Float_t cpa_wrt_pv;
+
     Bool_t is_secondary;
     Bool_t is_signal;
-
-    std::vector<Int_t> relevantPdg = {-3122, 310, -2212, 321, 211, -211, -2112, 111};
+    UInt_t status_code;
 
     /*** Loop over MC gen. particles in a single event ***/
 
@@ -627,11 +632,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         mcIdxPosDaughter = 0;
         decayVertex.SetXYZ(0., 0., 0.);
 
-        /* Check if the particle is relevant for the analysis */
-
-        if (!std::any_of(relevantPdg.begin(), relevantPdg.end(), [pdg_mc](Int_t pdg_rel) { return pdg_rel == pdg_mc; })) {
-            continue;
-        }
+        /* Protection in case of a particle with no momentum */
 
         if (mcPart->P() < 1E-6) {
             continue;
@@ -658,12 +659,47 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         // This was done to recognize each interaction, assigning a different number to each of
         // the 20 antisexaquark-nucleon reactions that were injected in a single event.
         is_signal = mcPart->MCStatusCode() >= 600 && mcPart->MCStatusCode() < 620;
+        if (is_signal) status_code = mcPart->MCStatusCode();
+
+        if (mcPart->GetMother() >= 0) {
+            mcMother = (AliMCParticle*)fMC->GetTrack(mcPart->GetMother());
+            is_signal = is_signal || (mcMother->MCStatusCode() >= 600 && mcMother->MCStatusCode() < 620);
+            if (is_signal) status_code = mcMother->MCStatusCode();
+        }
 
         /* Include signal particles, as well, because they were injected as primaries, and we intend that they are not */
 
         is_secondary = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || is_signal;
 
         /** Fill histograms, indices vector and maps **/
+
+        /* Charged particles: anti-protons, kaons, pions */
+
+        if (pdg_mc == -2212 || pdg_mc == 321 || pdg_mc == 211 || pdg_mc == -211) {
+
+            fHist_Tracks_Bookkeep[pdg_mc]->Fill(0);
+            fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Pt")]->Fill(mcPart->Pt());
+            fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Pz")]->Fill(mcPart->Pz());
+            fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
+
+            if (is_secondary) {
+                fHist_Tracks_Bookkeep[pdg_mc]->Fill(1);
+                fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pt")]->Fill(mcPart->Pt());
+                fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pz")]->Fill(mcPart->Pz());
+                fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Eta")]->Fill(mcPart->Eta());
+            }
+
+            if (is_signal) {
+                isMcIdxSignal[mcIdx] = kTRUE;
+                getReactionIdx_fromMcIdx[mcIdx] = status_code;
+                getMcIdx_fromReactionIdx[status_code].push_back(mcIdx);
+
+                fHist_Tracks_Bookkeep[pdg_mc]->Fill(2);
+                fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Pt")]->Fill(mcPart->Pt());
+                fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Pz")]->Fill(mcPart->Pz());
+                fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Eta")]->Fill(mcPart->Eta());
+            }
+        }
 
         /* Neutral particles: anti-lambdas and K0S */
 
@@ -766,58 +802,6 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             }
         }
 
-        /* anti-protons */
-
-        if (pdg_mc == -2212) {
-            fHist_True_AntiProton_Bookkeep->Fill(0);
-            if (is_secondary) fHist_True_AntiProton_Bookkeep->Fill(1);
-            if (is_signal) {
-                fHist_True_AntiProton_Bookkeep->Fill(2);
-                isMcIdxSignal[mcIdx] = kTRUE;
-                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
-                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
-            }
-        }
-
-        /* positive kaons */
-
-        if (pdg_mc == 321) {
-            fHist_True_PosKaon_Bookkeep->Fill(0);
-            if (is_secondary) fHist_True_PosKaon_Bookkeep->Fill(1);
-            if (is_signal) {
-                fHist_True_PosKaon_Bookkeep->Fill(2);
-                isMcIdxSignal[mcIdx] = kTRUE;
-                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
-                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
-            }
-        }
-
-        /* positive pions */
-
-        if (pdg_mc == 211) {
-            fHist_True_PiPlus_Bookkeep->Fill(0);
-            if (is_secondary) fHist_True_PiPlus_Bookkeep->Fill(1);
-            if (is_signal) {
-                fHist_True_PiPlus_Bookkeep->Fill(2);
-                isMcIdxSignal[mcIdx] = kTRUE;
-                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
-                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
-            }
-        }
-
-        /* negative pions */
-
-        if (pdg_mc == -211) {
-            fHist_True_PiMinus_Bookkeep->Fill(0);
-            if (is_secondary) fHist_True_PiMinus_Bookkeep->Fill(1);
-            if (is_signal) {
-                fHist_True_PiMinus_Bookkeep->Fill(2);
-                isMcIdxSignal[mcIdx] = kTRUE;
-                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
-                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
-            }
-        }
-
         /* anti-neutrons */
         // PENDING
 
@@ -898,13 +882,13 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
     TLorentzVector lvProduct;
 
-    TLorentzVector lvStruckNucleon(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());  // assume struck nucleon at rest
+    TLorentzVector lvStruckNucleon;
 
     TLorentzVector lvAntiSexaquark;
 
     /* Loop over interactions */
 
-    for (Int_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
+    for (UInt_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
 
         /* Reset anti-sexaquark TLorentzVector */
 
@@ -922,6 +906,7 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
             lvAntiSexaquark = lvAntiSexaquark + lvProduct;
         }
 
+        lvStruckNucleon.SetPxPyPzE(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());  // assume struck nucleon at rest
         lvAntiSexaquark = lvAntiSexaquark - lvStruckNucleon;
 
         /* Fill histograms */
@@ -959,13 +944,16 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
     AliESDtrack* track;
 
     Int_t mcIdx;
+    Int_t mcPdgCode;
     Int_t mcIdxOfTrueV0;
 
-    Float_t n_sigma_pion;
-    Float_t n_sigma_kaon;
+    Float_t pt, pz, eta;
+    Float_t impar_pv[2], dca_wrt_pv;
+    Float_t n_tpc_clusters;
+    Float_t chi2_over_nclusters;
     Float_t n_sigma_proton;
-
-    Float_t pt;
+    Float_t n_sigma_kaon;
+    Float_t n_sigma_pion;
 
     /* Loop over tracks in a single event */
 
@@ -978,6 +966,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         /* Get MC info */
 
         mcIdx = TMath::Abs(track->GetLabel());
+        mcPdgCode = getPdgCode_fromMcIdx[mcIdx];
 
         /* Fill containers */
 
@@ -989,7 +978,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
         /* Apply track selection */
 
-        if (!PassesTrackSelection(track, n_sigma_proton, n_sigma_kaon, n_sigma_pion)) continue;
+        if (!PassesTrackSelection(track)) continue;
 
         /* Fill containers -- related to findable anti-sexaquarks */
 
@@ -999,34 +988,82 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             getEsdIdx_fromReactionIdx[getReactionIdx_fromEsdIdx[esdIdxTrack]].push_back(esdIdxTrack);
         }
 
-        /* Fill histograms */
+        /* Get track properties */
 
         pt = track->Pt();
+        pz = track->Pz();
+        eta = track->Eta();
+        track->GetDZ(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ(), fMagneticField, impar_pv);
+        dca_wrt_pv = TMath::Sqrt(impar_pv[0] * impar_pv[0] + impar_pv[1] * impar_pv[1]);
+        n_tpc_clusters = track->GetTPCncls();
+        chi2_over_nclusters = n_tpc_clusters ? track->GetTPCchi2() / (Double_t)n_tpc_clusters : 999.;
+        n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
+        n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
+        n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
 
-        f2DHist_TPC_Signal->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
+        /* Fill histograms */
 
-        if (n_sigma_proton < kMax_NSigma_Proton && track->Charge() < 0.) {
-            esdIndicesOfAntiProtonTracks.push_back(esdIdxTrack);
-            fHist_Rec_AntiProton_Pt->Fill(pt);
-            if (isEsdIdxSignal[esdIdxTrack]) fHist_Rec_Signal_AntiProton_Pt->Fill(pt);
-        }
+        f2DHist_TPC_Signal->Fill(track->P() * track->GetSign(), track->GetTPCsignal());  // PENDING: 2D hists...
 
-        if (n_sigma_kaon < kMax_NSigma_Kaon && track->Charge() > 0.) {
-            esdIndicesOfPosKaonTracks.push_back(esdIdxTrack);
-            fHist_Rec_PosKaon_Pt->Fill(pt);
-            if (isEsdIdxSignal[esdIdxTrack]) fHist_Rec_Signal_PosKaon_Pt->Fill(pt);  // PENDING
-        }
+        std::vector<Int_t> possiblePID;
+        if (TMath::Abs(n_sigma_proton) < kMax_NSigma_Proton && track->Charge() < 0.) possiblePID.push_back(-2212);
+        if (TMath::Abs(n_sigma_kaon) < kMax_NSigma_Kaon && track->Charge() > 0.) possiblePID.push_back(321);
+        if (TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion && track->Charge() < 0.) possiblePID.push_back(-211);
+        if (TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion && track->Charge() > 0.) possiblePID.push_back(211);
 
-        if (n_sigma_pion < kMax_NSigma_Pion && track->Charge() > 0.) {
-            esdIndicesOfPiPlusTracks.push_back(esdIdxTrack);
-            fHist_Rec_PiPlus_Pt->Fill(pt);
-            if (isEsdIdxSignal[esdIdxTrack]) fHist_Rec_Signal_PiPlus_Pt->Fill(pt);
-        }
+        for (Int_t& esdPdgCode : possiblePID) {
 
-        if (n_sigma_pion < kMax_NSigma_Pion && track->Charge() < 0.) {
-            esdIndicesOfPiMinusTracks.push_back(esdIdxTrack);
-            fHist_Rec_PiMinus_Pt->Fill(pt);
-            if (isEsdIdxSignal[esdIdxTrack]) fHist_Rec_Signal_PiMinus_Pt->Fill(pt);
+            if (esdPdgCode == -2212) esdIndicesOfAntiProtonTracks.push_back(esdIdxTrack);
+            if (esdPdgCode == 321) esdIndicesOfPosKaonTracks.push_back(esdIdxTrack);
+            if (esdPdgCode == -211) esdIndicesOfPiMinusTracks.push_back(esdIdxTrack);
+            if (esdPdgCode == 211) esdIndicesOfPiPlusTracks.push_back(esdIdxTrack);
+
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pt")]->Fill(pt);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pz")]->Fill(pz);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Eta")]->Fill(eta);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+
+            if (mcPdgCode == esdPdgCode) {
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pt")]->Fill(pt);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pz")]->Fill(pz);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Eta")]->Fill(eta);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+            }
+
+            if (mcPdgCode == esdPdgCode &&
+                (isEsdIdxDaughterOfSecondaryV0[esdIdxTrack] || isEsdIdxDaughterOfTrueV0[esdIdxTrack])) {  // PENDING: this def. can be refined
+                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pt")]->Fill(pt);
+                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pz")]->Fill(pz);
+                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Eta")]->Fill(eta);
+                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
+                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
+                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
+                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
+                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+            }
+
+            if (mcPdgCode == esdPdgCode && isEsdIdxSignal[esdIdxTrack]) {
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pt")]->Fill(pt);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pz")]->Fill(pz);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Eta")]->Fill(eta);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+            }
         }
 
         /* Fill vectors */
@@ -1049,90 +1086,35 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
  - Input: `track`
  - Output: `n_sigma_pion`, `n_sigma_kaon`, `n_sigma_proton`
  */
-Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Float_t& n_sigma_proton, Float_t& n_sigma_kaon, Float_t& n_sigma_pion) {
+Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track) {
 
-    n_sigma_proton = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton));
-    n_sigma_kaon = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon));
-    n_sigma_pion = TMath::Abs(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion));
+    Float_t n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
+    Float_t n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
+    Float_t n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
 
     // >> particle identification
-    if (n_sigma_pion > kMax_NSigma_Pion && n_sigma_kaon > kMax_NSigma_Kaon && n_sigma_proton > kMax_NSigma_Proton) {
-        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by PID cuts !!");
+    if (TMath::Abs(n_sigma_pion) > kMax_NSigma_Pion && TMath::Abs(n_sigma_kaon) > kMax_NSigma_Kaon &&
+        TMath::Abs(n_sigma_proton) > kMax_NSigma_Proton) {
         return kFALSE;
     }
-
-    /* Fill bookkeeping histograms */
-    /* -- PENDING: in a sim.set of reactionID='A', signal K+ appear where they shouldn't exist, because of signal particles that were mis-id */
-    /* -- Note: should I only, besides if they're signal or not, use their true id? I think so, because it's a bookkeeping of TRUE particles*/
-
-    if (n_sigma_proton < kMax_NSigma_Proton && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(3);
-    if (n_sigma_kaon < kMax_NSigma_Kaon && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(3);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(3);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(3);
 
     // >> eta
-    if (TMath::Abs(track->Eta()) > 0.9) {
-        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by Eta cut !!");
-        return kFALSE;
-    }
-
-    if (n_sigma_proton < kMax_NSigma_Proton && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(4);
-    if (n_sigma_kaon < kMax_NSigma_Kaon && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(4);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(4);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(4);
+    if (TMath::Abs(track->Eta()) > 0.9) return kFALSE;
 
     // >> TPC clusters
-    if (track->GetTPCNcls() < 50) {
-        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by N TPC Clusters cut !!");
-        return kFALSE;
-    }
-
-    if (n_sigma_proton < kMax_NSigma_Proton && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(5);
-    if (n_sigma_kaon < kMax_NSigma_Kaon && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(5);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(5);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(5);
+    if (track->GetTPCNcls() < 50) return kFALSE;
 
     // >> chi2 per TPC cluster
-    if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) {
-        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by Chi2/NClusters cut !!");
-        return kFALSE;
-    }
-
-    if (n_sigma_proton < kMax_NSigma_Proton && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(6);
-    if (n_sigma_kaon < kMax_NSigma_Kaon && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(6);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(6);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(6);
+    if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) return kFALSE;
 
     // >> require TPC refit
-    if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) {
-        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by TPC Refit cut !!");
-        return kFALSE;
-    }
-
-    if (n_sigma_proton < kMax_NSigma_Proton && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(7);
-    if (n_sigma_kaon < kMax_NSigma_Kaon && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(7);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(7);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(7);
+    if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) return kFALSE;
 
     // >> reject kinks
-    if (track->GetKinkIndex(0) != 0) {
-        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by Kinks cut !!");
-        return kFALSE;
-    }
-
-    if (n_sigma_proton < kMax_NSigma_Proton && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_AntiProton_Bookkeep->Fill(8);
-    if (n_sigma_kaon < kMax_NSigma_Kaon && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PosKaon_Bookkeep->Fill(8);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(8);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(8);
+    if (track->GetKinkIndex(0) != 0) return kFALSE;
 
     // >> reject low-pT pions
-    if (track->Pt() < 0.2 && n_sigma_pion < kMax_NSigma_Pion) {
-        if (isEsdIdxDaughterOfSecondaryV0[track->GetID()]) AliInfo("!! Daughter of Secondary V0 has been killed -- by min. pT for pions cut !!");
-        return kFALSE;
-    }
-
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() > 0.) fHist_True_PiPlus_Bookkeep->Fill(9);
-    if (n_sigma_pion < kMax_NSigma_Pion && isEsdIdxSignal[track->GetID()] && track->Charge() < 0.) fHist_True_PiMinus_Bookkeep->Fill(9);
+    if (track->Pt() < 0.2 && TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion) return kFALSE;
 
     return kTRUE;
 }
