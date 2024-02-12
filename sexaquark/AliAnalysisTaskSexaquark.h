@@ -178,6 +178,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Tracks */
     void ProcessTracks();
     Bool_t PassesTrackSelection(AliESDtrack* track);
+    void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
 
    public:
     /* V0s and Anti-Sexaquarks -- That Require True Info */
@@ -393,14 +394,22 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMax_NSigma_Pion;
     Float_t kMax_NSigma_Kaon;
     Float_t kMax_NSigma_Proton;
+    std::unordered_map<Int_t, Float_t> kMax_Track_Eta;
+    std::unordered_map<Int_t, Float_t> kMin_Track_Pt;
+    std::unordered_map<Int_t, Float_t> kMax_Track_TPCNcls;
+    std::unordered_map<Int_t, Float_t> kMax_Track_Chi2OverTPCNcls;
+    std::unordered_map<Int_t, Float_t> kMin_Track_DCAwrtPV;
+
     /* V0s */
     std::unordered_map<Int_t, Float_t> kMin_V0_Mass;
     std::unordered_map<Int_t, Float_t> kMax_V0_Mass;
+    std::unordered_map<Int_t, Float_t> kMax_V0_Eta;  // new
     std::unordered_map<Int_t, Float_t> kMax_V0_ArmPtOverAlpha;
     std::unordered_map<Int_t, Float_t> kMin_V0_Pt;
     std::unordered_map<Int_t, Float_t> kMin_V0_Radius;
     std::unordered_map<Int_t, Float_t> kMin_V0_DecayLength;
     std::unordered_map<Int_t, Float_t> kMin_V0_CPAwrtPV;
+    std::unordered_map<Int_t, Float_t> kMax_V0_CPAwrtPV;  // new
     std::unordered_map<Int_t, Float_t> kMin_V0_DCAwrtPV;
     std::unordered_map<Int_t, Float_t> kMax_V0_DCAbtwDau;
     std::unordered_map<Int_t, Float_t> kMax_V0_DCAnegV0;

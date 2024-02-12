@@ -11,6 +11,7 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
 
     AliESDInputHandler *esdH = new AliESDInputHandler();
     mgr->SetInputEventHandler(esdH);
+    esdH->SetNeedField();  // necessary to get GoldenChi2
 
     AliMCEventHandler *mcHand = new AliMCEventHandler();
     mgr->SetMCtruthEventHandler(mcHand);

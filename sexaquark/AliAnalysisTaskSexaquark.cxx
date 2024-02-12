@@ -198,13 +198,17 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     Int_t tracks_species[4] = {-2212, 321, 211, -211};
     std::map<Int_t, TString> tracks_name = {{-2212, "AntiProton"}, {321, "PosKaon"}, {211, "PiPlus"}, {-211, "PiMinus"}};
 
-    const Int_t N_tracks_props = 9;
+    const Int_t N_tracks_props = 11;
     TString tracks_props[N_tracks_props] = {"Pt",           "Pz",           "Eta",             //
                                             "DCAwrtPV",     "NTPCClusters", "Chi2/NClusters",  //
-                                            "NSigmaProton", "NSigmaKaon",   "NSigmaPion"};
-    Int_t tracks_nbins[N_tracks_props] = {100, 100, 100, 100, 100, 100, 100, 100, 100};
-    Double_t tracks_min[N_tracks_props] = {0., -20., -4., 0., 0., 0., -7.5, -7.5, -7.5};
-    Double_t tracks_max[N_tracks_props] = {10., 20., 4., 200., 1000., 50., 7.5, 7.5, 7.5};
+                                            "NSigmaProton", "NSigmaKaon",   "NSigmaPion",
+                                            "Status",       "GoldenChi2"};
+    Int_t tracks_nbins[N_tracks_props] = {100, 100, 100, 100, 100, 100,  //
+                                          100, 100, 100, 16,  100};
+    Double_t tracks_min[N_tracks_props] = {0.,   -20., -4.,  0., 0., 0.,  //
+                                           -7.5, -7.5, -7.5, 0,  -10};
+    Double_t tracks_max[N_tracks_props] = {10., 20., 4.,  200., 1000., 50.,  //
+                                           7.5, 7.5, 7.5, 16,   40};
 
     for (Int_t& species : tracks_species) {
         fHist_Tracks_Bookkeep[species] = new TH1F(Form("%s_Bookkeep", tracks_name[species].Data()), "", 15, 0., 15.);
@@ -954,6 +958,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
     Float_t n_sigma_proton;
     Float_t n_sigma_kaon;
     Float_t n_sigma_pion;
+    Float_t golden_chi2;
 
     /* Loop over tracks in a single event */
 
@@ -993,13 +998,17 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         pt = track->Pt();
         pz = track->Pz();
         eta = track->Eta();
-        track->GetDZ(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ(), fMagneticField, impar_pv);
-        dca_wrt_pv = TMath::Sqrt(impar_pv[0] * impar_pv[0] + impar_pv[1] * impar_pv[1]);
-        n_tpc_clusters = track->GetTPCncls();
+
+        Float_t xy_impar_wrt_pv, z_impar_wrt_pv;
+        track->GetImpactParameters(xy_impar_wrt_pv, z_impar_wrt_pv);  // pre-calculated DCA w.r.t. PV
+        dca_wrt_pv = TMath::Sqrt(xy_impar_wrt_pv * xy_impar_wrt_pv + z_impar_wrt_pv * z_impar_wrt_pv);
+
+        n_tpc_clusters = track->GetTPCNcls();  // note: capital N
         chi2_over_nclusters = n_tpc_clusters ? track->GetTPCchi2() / (Double_t)n_tpc_clusters : 999.;
         n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
         n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
         n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
+        golden_chi2 = track->GetChi2TPCConstrainedVsGlobal(fPrimaryVertex);
 
         /* Fill histograms */
 
@@ -1027,6 +1036,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
+            PlotStatus(track, "All", esdPdgCode);
 
             if (mcPdgCode == esdPdgCode) {
                 fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pt")]->Fill(pt);
@@ -1038,6 +1049,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
                 fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
                 fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
                 fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
+                PlotStatus(track, "True", esdPdgCode);
             }
 
             if (mcPdgCode == esdPdgCode &&
@@ -1051,6 +1064,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
                 fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
                 fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
                 fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
+                PlotStatus(track, "Secondary", esdPdgCode);
             }
 
             if (mcPdgCode == esdPdgCode && isEsdIdxSignal[esdIdxTrack]) {
@@ -1063,6 +1078,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
                 fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
                 fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
                 fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
+                PlotStatus(track, "Signal", esdPdgCode);
             }
         }
 
@@ -1099,24 +1116,55 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track) {
     }
 
     // >> eta
-    if (TMath::Abs(track->Eta()) > 0.9) return kFALSE;
+    if (TMath::Abs(track->Eta()) > 1.0) return kFALSE;
 
     // >> TPC clusters
     if (track->GetTPCNcls() < 50) return kFALSE;
 
     // >> chi2 per TPC cluster
-    if (track->GetTPCchi2() / (Float_t)track->GetTPCNcls() > 7.0) return kFALSE;
+    if (track->GetTPCchi2() / (Double_t)track->GetTPCNcls() > 7.0) return kFALSE;
 
     // >> require TPC refit
-    if (!(track->GetStatus() & AliESDtrack::kTPCrefit)) return kFALSE;
+    if (!(track->GetStatus() & AliESDtrack::kITSin) && !(track->GetStatus() & AliESDtrack::kITSout) &&
+        !(track->GetStatus() & AliESDtrack::kITSrefit) && (track->GetStatus() & AliESDtrack::kTPCin) &&  //
+        (track->GetStatus() & AliESDtrack::kTPCout) && (track->GetStatus() & AliESDtrack::kTPCrefit)) {
+        // nothing
+    } else {
+        return kFALSE;
+    }
 
-    // >> reject kinks
-    if (track->GetKinkIndex(0) != 0) return kFALSE;
+    // // >> reject kinks // PENDING: should I plot this?
+    // if (track->GetKinkIndex(0) != 0) return kFALSE;
+
+    // >> cut on DCA to primary vertex
+    Float_t xy_impar, z_impar;
+    track->GetImpactParameters(xy_impar, z_impar);
+    Float_t dca_wrt_pv = TMath::Sqrt(xy_impar * xy_impar + z_impar * z_impar);
+    if (dca_wrt_pv < 2.0) return kFALSE;
 
     // >> reject low-pT pions
     if (track->Pt() < 0.2 && TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion) return kFALSE;
 
+    // >> reject low-pT protons
+    if (track->Pt() < 0.4 && TMath::Abs(n_sigma_proton) < kMax_NSigma_Proton) return kFALSE;
+
     return kTRUE;
+}
+
+/*
+ Plot the status of the track.
+ - Input: `track`, `stage`, `esdPdgCode`
+*/
+void AliAnalysisTaskSexaquark::PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode) {
+
+    ULong64_t StatusCollection[16] = {AliESDtrack::kITSin,   AliESDtrack::kITSout,     AliESDtrack::kITSrefit,    AliESDtrack::kITSpid,
+                                      AliESDtrack::kTPCin,   AliESDtrack::kTPCout,     AliESDtrack::kTPCrefit,    AliESDtrack::kTPCpid,
+                                      AliESDtrack::kITSupg,  AliESDtrack::kSkipFriend, AliESDtrack::kGlobalMerge, AliESDtrack::kMultInV0,
+                                      AliESDtrack::kMultSec, AliESDtrack::kEmbedded,   AliESDtrack::kITSpureSA,   AliESDtrack::kESDpid};
+
+    for (Int_t i = 0; i < 16; i++) {
+        if ((track->GetStatus() & StatusCollection[i])) fHist_Tracks[std::make_tuple("Found", set, esdPdgCode, "Status")]->Fill(i);
+    }
 }
 
 /*                                                       */
@@ -3833,6 +3881,18 @@ KFVertex AliAnalysisTaskSexaquark::CreateKFVertex(const AliVVertex& vertex) {
 KFParticle AliAnalysisTaskSexaquark::TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis) {
 
     float dsdr[4][6];
+    float dS[2];
+    kfThis.GetDStoParticle(kfOther, dS, dsdr);
+
+    float mP[8], mC[36];
+    kfThis.Transport(dS[0], dsdr[0], mP, mC);
+
+    float mM = fPDG.GetParticle(pdgThis)->Mass();
+    float mQ = chargeThis;  // only valid for charged particles with Q = +/- 1
+
+    KFParticle kfTransported;
+    kfTransported.Create(mP, mC, mQ, mM);
+float dsdr[4][6];
     float dS[2];
     kfThis.GetDStoParticle(kfOther, dS, dsdr);
 
