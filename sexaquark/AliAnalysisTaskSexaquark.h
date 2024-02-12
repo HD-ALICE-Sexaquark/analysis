@@ -188,7 +188,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    public:
     /* V0s -- ALICE V0 Finders */
     void OfficialV0Finder(Bool_t online);
-    void CustomV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
+    void CustomV0Finder(Int_t pdgV0);
 
    public:
     /* Sexaquark -- Geometrical Finder */
@@ -352,6 +352,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, UInt_t> getReactionIdx_fromEsdIdx;               //
     std::unordered_map<UInt_t, std::vector<Int_t>> getEsdIdx_fromReactionIdx;  //
 
+    std::unordered_map<Int_t, Bool_t> doesEsdIdxPassTrackSelection;  //
+
     std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //
     std::vector<Int_t> esdIndicesOfPosKaonTracks;     //
     std::vector<Int_t> esdIndicesOfPiMinusTracks;     //
@@ -365,6 +367,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromEsdIdx;  // must protect first with `isEsdIdxSignal` `isEsdIdxDaughterOfSecondaryV0`
                                                                    // `isEsdIdxDaughterOfTrueV0`
+
+    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;
+    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;
 
     std::unordered_map<Int_t, Int_t> getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0;  //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0;  //
@@ -390,6 +395,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    private:
     /*** Cuts ***/
+
     /* Track selection */
     Float_t kMax_NSigma_Pion;
     Float_t kMax_NSigma_Kaon;
@@ -414,11 +420,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Float_t> kMax_V0_DCAbtwDau;
     std::unordered_map<Int_t, Float_t> kMax_V0_DCAnegV0;
     std::unordered_map<Int_t, Float_t> kMax_V0_DCAposV0;
-    std::unordered_map<Int_t, Float_t> kMin_V0_DCAnegPV;
-    std::unordered_map<Int_t, Float_t> kMin_V0_DCAposPV;
-    /* exclusives */
-    std::unordered_map<Int_t, Float_t> kMax_V0_Chi2;
     std::unordered_map<Int_t, Float_t> kMax_V0_ImprvDCAbtwDau;
+    std::unordered_map<Int_t, Float_t> kMax_V0_Chi2;
     std::unordered_map<Int_t, Float_t> kMax_V0_Chi2ndf;
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
