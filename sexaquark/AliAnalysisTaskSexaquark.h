@@ -270,6 +270,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliPIDResponse* fPIDResponse;   // pid response object
     AliESDVertex* fPrimaryVertex;   // primary vertex
     Double_t fMagneticField;        // magnetic field
+    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;
+    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;
 
    private:
     /* ROOT objects */
@@ -368,9 +370,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromEsdIdx;  // must protect first with `isEsdIdxSignal` `isEsdIdxDaughterOfSecondaryV0`
                                                                    // `isEsdIdxDaughterOfTrueV0`
 
-    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;
-    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;
-
     std::unordered_map<Int_t, Int_t> getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0;  //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0;  //
 
@@ -400,11 +399,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMax_NSigma_Pion;
     Float_t kMax_NSigma_Kaon;
     Float_t kMax_NSigma_Proton;
-    std::unordered_map<Int_t, Float_t> kMax_Track_Eta;
+    Float_t kMax_Track_Eta;
+    Float_t kMin_Track_NTPCClusters;
+    Float_t kMax_Track_Chi2PerNTPCClusters;
+    Bool_t kTurnedOn_Track_StatusCuts;
+    Bool_t kTurnedOn_Track_RejectKinks;
+    Float_t kMin_Track_DCAwrtPV;
     std::unordered_map<Int_t, Float_t> kMin_Track_Pt;
-    std::unordered_map<Int_t, Float_t> kMax_Track_TPCNcls;
-    std::unordered_map<Int_t, Float_t> kMax_Track_Chi2OverTPCNcls;
-    std::unordered_map<Int_t, Float_t> kMin_Track_DCAwrtPV;
 
     /* V0s */
     std::unordered_map<Int_t, Float_t> kMin_V0_Mass;

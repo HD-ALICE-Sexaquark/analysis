@@ -523,9 +523,22 @@ void AliAnalysisTaskSexaquark::Initialize() {
 */
 void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
 
+    /* Track selection cuts */
+
     kMax_NSigma_Pion = 3.;
     kMax_NSigma_Kaon = 3.;
     kMax_NSigma_Proton = 3.;
+
+    kMax_Track_Eta = 1.;
+    kMin_Track_NTPCClusters = 50;
+    kMax_Track_Chi2PerNTPCClusters = 7.;
+    kTurnedOn_Track_StatusCuts = kTRUE;
+    kTurnedOn_Track_RejectKinks = kFALSE;  // PENDING: need to study further
+    kMin_Track_DCAwrtPV = 2.;
+
+    kMin_Track_Pt[2212] = 0.4;
+    kMin_Track_Pt[321] = 0.0; // PENDING: to check when analyzing the next reaction channels
+    kMin_Track_Pt[211] = 0.2;
 
     if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S" && cuts_option == "Standard") {
 
@@ -557,10 +570,10 @@ void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
         kMax_V0_DCAposV0[310] = 2.;
 
         if (fSourceOfV0s == "Offline" || fSourceOfV0s == "Online" || fSourceOfV0s == "Custom") {
-            // kMax_AntiLambda_Chi2 = ??;
-            // kMax_AntiLambda_ImprvDCAbtwDau = ??;
-            // kMax_KaonZeroShort_Chi2 = ??;
-            // kMax_KaonZeroShort_ImprvDCAbtwDau = ??;
+            // kMax_V0_Chi2[-3122] = ??;
+            // kMax_V0_ImprvDCAbtwDau[-3122] = ??;
+            // kMax_Chi2[310] = ??;
+            // kMax_ImprvDCAbtwDau[310] = ??;
         } else {  // fSourceOfV0s == "Kalman"
             kMax_V0_Chi2ndf[-3122] = 0.5;
             kMax_V0_Chi2ndf[310] = 0.5;
@@ -1118,43 +1131,43 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track) {
     Float_t n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
 
     // >> particle identification
-    if (TMath::Abs(n_sigma_pion) > kMax_NSigma_Pion && TMath::Abs(n_sigma_kaon) > kMax_NSigma_Kaon &&
-        TMath::Abs(n_sigma_proton) > kMax_NSigma_Proton) {
-        return kFALSE;
-    }
+    std::vector<Int_t> possiblePID;
+    if (TMath::Abs(n_sigma_proton) < kMax_NSigma_Proton) possiblePID.push_back(2212);
+    if (TMath::Abs(n_sigma_kaon) < kMax_NSigma_Kaon) possiblePID.push_back(321);
+    if (TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion) possiblePID.push_back(211);
+    if (!possiblePID.size()) return kFALSE;
 
     // >> eta
-    if (TMath::Abs(track->Eta()) > 1.0) return kFALSE;
+    if (TMath::Abs(track->Eta()) > kMax_Track_Eta) return kFALSE;
 
     // >> TPC clusters
-    if (track->GetTPCNcls() < 50) return kFALSE;
+    if (track->GetTPCNcls() < kMin_Track_NTPCClusters) return kFALSE;
 
     // >> chi2 per TPC cluster
-    if (track->GetTPCchi2() / (Double_t)track->GetTPCNcls() > 7.0) return kFALSE;
+    if (track->GetTPCchi2() / (Double_t)track->GetTPCNcls() > kMax_Track_Chi2PerNTPCClusters) return kFALSE;
 
-    // >> require TPC refit
-    if (!(track->GetStatus() & AliESDtrack::kITSin) && !(track->GetStatus() & AliESDtrack::kITSout) &&
-        !(track->GetStatus() & AliESDtrack::kITSrefit) && (track->GetStatus() & AliESDtrack::kTPCin) &&  //
-        (track->GetStatus() & AliESDtrack::kTPCout) && (track->GetStatus() & AliESDtrack::kTPCrefit)) {
-        // nothing
-    } else {
-        return kFALSE;
-    }
+    // >> TPC and ITS status
+    Bool_t tpc_status = (track->GetStatus() & AliESDtrack::kTPCin) &&
+        (track->GetStatus() & AliESDtrack::kTPCout) && (track->GetStatus() & AliESDtrack::kTPCrefit);
+    Bool_t its_status = !(track->GetStatus() & AliESDtrack::kITSin) && !(track->GetStatus() & AliESDtrack::kITSout) &&
+        !(track->GetStatus() & AliESDtrack::kITSrefit);
+    if (kTurnedOn_Track_StatusCuts && (!tpc_status || !its_status)) return kFALSE;
 
-    // // >> reject kinks // PENDING: should I plot this?
-    // if (track->GetKinkIndex(0) != 0) return kFALSE;
+    // >> reject kinks
+    if (kTurnedOn_Track_RejectKinks && track->GetKinkIndex(0) != 0) return kFALSE;
 
-    // >> cut on DCA to primary vertex
+    // >> DCA w.r.t Primary Vertex
     Float_t xy_impar, z_impar;
     track->GetImpactParameters(xy_impar, z_impar);
     Float_t dca_wrt_pv = TMath::Sqrt(xy_impar * xy_impar + z_impar * z_impar);
-    if (dca_wrt_pv < 2.0) return kFALSE;
+    if (dca_wrt_pv < kMin_Track_DCAwrtPV) return kFALSE;
 
     // >> reject low-pT pions
-    if (track->Pt() < 0.2 && TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion) return kFALSE;
-
-    // >> reject low-pT protons
-    if (track->Pt() < 0.4 && TMath::Abs(n_sigma_proton) < kMax_NSigma_Proton) return kFALSE;
+    // -- PENDING: this will also affect tracks with multiple PID hypotheses:
+    // -- if a track both id as pion and proton, it will be cut by the highest pT cut
+    for (Int_t& esdPdgCode : possiblePID) {
+        if (track->Pt() < kMin_Track_Pt[esdPdgCode]) return kFALSE;
+    }
 
     return kTRUE;
 }
@@ -1401,10 +1414,6 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
     Double_t N_Px, N_Py, N_Pz;
     Double_t P_Px, P_Py, P_Pz;
 
-    Double_t pos_energy;
-    Double_t neg_energy;
-
-    Float_t mass;
     Float_t radius;
     Float_t cpa_wrt_pv;
     Float_t dca_wrt_pv, dca_btw_dau;
@@ -1635,9 +1644,6 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
     Double_t radius;
     Double_t decay_length;
-    Double_t pos_energy;
-    Double_t neg_energy;
-    Double_t mass;
     Double_t cpa_wrt_pv;
     Double_t dca_wrt_pv, dca_btw_dau;
     Double_t dca_neg_v0, dca_pos_v0;
