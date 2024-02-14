@@ -217,8 +217,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                  Double_t refPointZ);
     Double_t CosinePointingAngle(Double_t Px, Double_t Py, Double_t Pz, Double_t X, Double_t Y, Double_t Z, Double_t refPointX, Double_t refPointY,
                                  Double_t refPointZ);
-    Double_t Calculate_ArmAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Pos_Px, Double_t Pos_Py, Double_t Pos_Pz, Double_t Neg_Px,
-                                Double_t Neg_Py, Double_t Neg_Pz);
+    Double_t Calculate_ArmAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz, Double_t Pos_Px,
+                                Double_t Pos_Py, Double_t Pos_Pz);
     Double_t Calculate_ArmPt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz);
     Double_t LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t V0_X, Double_t V0_Y, Double_t V0_Z, Double_t refPointX,
                           Double_t refPointY, Double_t refPointZ);
@@ -276,12 +276,31 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    private:
     /* ROOT objects */
     TDatabasePDG fPDG;
-    // trees
     TList* fOutputListOfTrees;
     TTree* fTree;
-    // hists
     TList* fOutputListOfHists;
 
+   private:
+    /* Tracks Histograms */
+    /*
+     key: `pdg code`
+     - `0` : MC tracks
+     - `1` : secondary MC tracks
+     - `2` : signal MC tracks
+     (PENDING)
+     -- PENDING: in a sim.set of reactionID='A', signal K+ appear where they shouldn't exist, because of signal particles that were mis-id
+     -- Note: should I only, besides if they're signal or not, use their true id? I think so, because it's a bookkeeping of TRUE particles
+    */
+    std::unordered_map<Int_t, TH1F*> fHist_Tracks_Bookkeep;
+
+    // key: `stage, set, pdg, property`, value: histogram
+    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;
+
+    // key: `set`, value: histogram
+    std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;
+
+   private:
+    /* V0s Histograms */
     /*
      key: `V0 pdg code`
      - `0` : MC V0s
@@ -298,20 +317,21 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      - `11` : found true secondary V0s
      - `12` : found true signal V0s
     */
-    std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;  //!
+    std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;
 
-    /*
-     key: `pdg code`
-     - `0` : MC tracks
-     - `1` : secondary MC tracks
-     - `2` : signal MC tracks
-     (PENDING)
-     -- PENDING: in a sim.set of reactionID='A', signal K+ appear where they shouldn't exist, because of signal particles that were mis-id
-     -- Note: should I only, besides if they're signal or not, use their true id? I think so, because it's a bookkeeping of TRUE particles
-    */
-    std::unordered_map<Int_t, TH1F*> fHist_Tracks_Bookkeep;  //!
+    // key: `stage, set, pdg, property`, value: histogram
+    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;
 
-    // anti-neutron related
+    // key: `set`, value: histogram
+    std::map<TString, TH2F*> f2DHist_V0s_ArmenterosPodolanski;
+
+   private:
+    /* Anti-Sexaquark Histograms */
+    // key: `stage, set, property`, value: histogram
+    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_AntiSexaquarks;
+
+   private:
+    /* Anti-Neutron Histograms */
     TH1F* fHist_True_InjBkg_SecVertex_Radius;       //!
     TH1F* fHist_True_AntiNeutron_Pt;                //!
     TH1F* fHist_True_AntiNeutronThatInteracted_Pt;  //!
@@ -320,18 +340,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_True_AntiNeutron_Bookkeep;          //!
     TH1F* fHist_True_InjBkgProducts_Bookkeep;       //!
     TH1F* fHist_True_AllSecondaries_MothersPDG;     //!
-
-    // key: `stage, set, pdg, property`, value: histogram
-    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;
-
-    // 2D histograms (PENDING: to deal later)
-    TH2F* f2DHist_TPC_Signal;  //!
-
-    // key: `stage, set, pdg, property`, value: histogram
-    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;
-
-    // key: `stage, set, property`, value: histogram
-    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_AntiSexaquarks;
 
    private:
     /* Containers -- vectors and hash tables */
@@ -410,13 +418,14 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* V0s */
     std::unordered_map<Int_t, Float_t> kMin_V0_Mass;
     std::unordered_map<Int_t, Float_t> kMax_V0_Mass;
-    std::unordered_map<Int_t, Float_t> kMax_V0_Eta;  // new
+    std::unordered_map<Int_t, Float_t> kMax_V0_Eta;
     std::unordered_map<Int_t, Float_t> kMax_V0_ArmPtOverAlpha;
     std::unordered_map<Int_t, Float_t> kMin_V0_Pt;
     std::unordered_map<Int_t, Float_t> kMin_V0_Radius;
     std::unordered_map<Int_t, Float_t> kMin_V0_DecayLength;
+    std::unordered_map<Int_t, Float_t> kMax_V0_DecayLength;
     std::unordered_map<Int_t, Float_t> kMin_V0_CPAwrtPV;
-    std::unordered_map<Int_t, Float_t> kMax_V0_CPAwrtPV;  // new
+    std::unordered_map<Int_t, Float_t> kMax_V0_CPAwrtPV;
     std::unordered_map<Int_t, Float_t> kMin_V0_DCAwrtPV;
     std::unordered_map<Int_t, Float_t> kMax_V0_DCAbtwDau;
     std::unordered_map<Int_t, Float_t> kMax_V0_DCAnegV0;
