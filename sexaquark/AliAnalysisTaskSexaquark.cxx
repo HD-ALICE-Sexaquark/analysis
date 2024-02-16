@@ -254,30 +254,42 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     std::map<Int_t, TString> V0_name = {{-3122, "AntiLambda"}, {310, "KaonZeroShort"}};
 
     const Int_t N_V0_props = 18;
-    TString V0_props[N_V0_props] = {"Mass",     "Radius",      "CPAwrtPV",        //
-                                    "DCAwrtPV", "DCAbtwDau",   "DCAnegV0",        //
-                                    "DCAposV0", "DecayLength", "Zv",              //
-                                    "Eta",      "Pt",          "Pz",              //
-                                    "ArmQt",    "ArmAlpha",    "OpeningAngle", //
-                                    "ImprvDCAbtwDau",  "Chi2",     "Chi2ndf"};
+    TString V0_props[N_V0_props] = {"Mass",
+                                    "Radius",
+                                    "CPAwrtPV",  //
+                                    "DCAwrtPV",
+                                    "DCAbtwDau",
+                                    "DCAnegV0",  //
+                                    "DCAposV0",
+                                    "DecayLength",
+                                    "Zv",  //
+                                    "Eta",
+                                    "Pt",
+                                    "Pz",  //
+                                    "ArmQt",
+                                    "ArmAlpha",
+                                    "OpeningAngle",  //
+                                    "ImprvDCAbtwDau",
+                                    "Chi2",
+                                    "Chi2ndf"};
     Int_t V0_nbins[N_V0_props] = {100, 100, 100,  //
                                   100, 100, 100,  //
                                   100, 100, 100,  //
                                   100, 100, 100,  //
                                   100, 100, 100,  //
                                   100, 100, 100};
-    Double_t V0_min[N_V0_props] = {0.,  0.,  0.,   //
-                                   0.,  0.,  0.,    //
-                                   0.,  0.,  -50.,  //
-                                   -4., 0.,  -20.,  //
-                                   0.,  -1., -0.5 * TMath::Pi(),    //
-                                   0.,  0., 0.};
-    Double_t V0_max[N_V0_props] = {10.,  250., 1.,    //
-                                   200., 2., 2.,  //
-                                   2., 500., 50.,   //
-                                   4.,   10.,  20.,   //
-                                   0.3,   1., 0.5 * TMath::Pi(), //
-                                   200.,  50.,  0.5};
+    Double_t V0_min[N_V0_props] = {0.,  0.,  0.,                  //
+                                   0.,  0.,  0.,                  //
+                                   0.,  0.,  -50.,                //
+                                   -4., 0.,  -20.,                //
+                                   0.,  -1., -0.5 * TMath::Pi(),  //
+                                   0.,  0.,  0.};
+    Double_t V0_max[N_V0_props] = {10.,  250., 1.,                 //
+                                   200., 2.,   2.,                 //
+                                   2.,   500., 50.,                //
+                                   4.,   10.,  20.,                //
+                                   0.3,  1.,   0.5 * TMath::Pi(),  //
+                                   200., 50.,  0.5};
 
     for (Int_t& species : V0_species) {
         fHist_V0s_Bookkeep[species] = new TH1F(Form("%s_Bookkeep", V0_name[species].Data()), "", 15, 0., 15.);
@@ -557,7 +569,7 @@ void AliAnalysisTaskSexaquark::DefineCuts(TString cuts_option) {
 
         kMin_V0_Mass[-3122] = 1.08;
         kMax_V0_Mass[-3122] = 1.16;
-        kMax_V0_ArmPtOverAlpha[-3122] = 0.2; // exclusive for anti-lambdas
+        kMax_V0_ArmPtOverAlpha[-3122] = 0.2;  // exclusive for anti-lambdas
         kMin_V0_Pt[-3122] = 1.0;
         kMax_V0_Eta[-3122] = 0.9;
         kMin_V0_Radius[-3122] = 20.;
@@ -1272,7 +1284,8 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
         decay_length = TMath::Sqrt(TMath::Power(mcNegDaughter->Xv() - mcV0->Xv(), 2) + TMath::Power(mcNegDaughter->Yv() - mcV0->Yv(), 2) +
                                    TMath::Power(mcNegDaughter->Zv() - mcV0->Zv(), 2));
         arm_qt = Calculate_ArmPt(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz());
-        arm_alpha = Calculate_ArmAlpha(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz(), mcPosDaughter->Px(), mcPosDaughter->Py(), mcPosDaughter->Pz());
+        arm_alpha = Calculate_ArmAlpha(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz(),
+                                       mcPosDaughter->Px(), mcPosDaughter->Py(), mcPosDaughter->Pz());
 
         /* Fill bookkeeping histograms */
 
@@ -1579,6 +1592,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "OpeningAngle")]->Fill(opening_angle);
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "ImprvDCAbtwDau")]->Fill(V0->GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
+            f2DHist_V0s_ArmenterosPodolanski["All"]->Fill(arm_alpha, arm_qt);
 
             if (!isFoundV0IdxATrueV0->back()) continue;
 
@@ -1604,6 +1618,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "OpeningAngle")]->Fill(opening_angle);
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "ImprvDCAbtwDau")]->Fill(V0->GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
+            f2DHist_V0s_ArmenterosPodolanski["True"]->Fill(arm_alpha, arm_qt);
 
             if (!isMcIdxSecondary[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
 
@@ -1625,6 +1640,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "OpeningAngle")]->Fill(opening_angle);
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "ImprvDCAbtwDau")]->Fill(V0->GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
+            f2DHist_V0s_ArmenterosPodolanski["Secondary"]->Fill(arm_alpha, arm_qt);
 
             if (!isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
 
@@ -1646,38 +1662,25 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
             fHist_V0s[std::make_tuple("Found", "Signal", v0PdgCode, "OpeningAngle")]->Fill(opening_angle);
             fHist_V0s[std::make_tuple("Found", "Signal", v0PdgCode, "ImprvDCAbtwDau")]->Fill(V0->GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "Signal", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
+            f2DHist_V0s_ArmenterosPodolanski["Signal"]->Fill(arm_alpha, arm_qt);
         }
     }  // end of loop over V0s
 }
 
 /*
  Custom V0 Finder.
- (Copied and adapted from `AliRoot/STEER/ESD/AliV0vertexer.cxx`)
+ (Adapted from `AliRoot/STEER/ESD/AliV0vertexer.cxx`)
  - Uses: `fESD`, `fMC`, `fPDG`, `fPrimaryVertex`, `fMagneticField`
- - Input: `pdgV0`, `pdgTrackNeg`, `pdgTrackPos`
+ - Input: `pdgV0`
 */
 void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
     AliESDtrack* neg_track;
     AliESDtrack* pos_track;
 
-    Int_t nentr = fESD->GetNumberOfTracks();
-    TArrayI neg(nentr);
-    TArrayI pos(nentr);
-
     Double_t V0_X, V0_Y, V0_Z;
     Double_t N_Px, N_Py, N_Pz;
     Double_t P_Px, P_Py, P_Pz;
-
-    Double_t radius;
-    Double_t decay_length;
-    Double_t cpa_wrt_pv;
-    Double_t dca_wrt_pv, dca_btw_dau;
-    Double_t dca_neg_v0, dca_pos_v0;
-    Double_t opening_angle;
-
-    Double_t xthiss, xpp;
-    Float_t impar_neg_v0[2], impar_pos_v0[2];
 
     /* Declare TLorentzVectors */
 
@@ -1685,50 +1688,26 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
     TLorentzVector lvTrackPos;
     TLorentzVector lvV0;
 
-    // define cuts
-    Double_t COV0F_DNmin = 0.1;            // (d=0.1) min imp parameter for the negative daughter (depends on PV!)
-    Double_t COV0F_DPmin = 0.1;            // (d=0.1) min imp parameter for the positive daughter (depends on PV!)
-    Double_t COV0F_Chi2max = 33.;          // (d=33.) max chi2
-    Double_t COV0F_DCAmax = 0.6;           // (d=1.) max DCA between the daughter tracks
-    Double_t COV0F_CPAmin = 0.4;           // (d=0.998) max cosine of V0's pointing angle (depends on PV!)
-    Double_t COV0F_Rmin = 50.;             // (d=0.9) min radius of the V0 radius
-    Double_t COV0F_Rmax = 200.;            // (d=100) max radius of the V0 radius
-    Double_t COV0F_Etamax_V0 = 1.0;        // (d=1.) max eta of V0
-    Double_t COV0F_DCAmin_V0_wrtPV = 5.;   // min DCA between V0 and PV
-    Double_t COV0F_Etamax_NegDau = 1.5;    // max eta of negative daughter
-    Double_t COV0F_Etamax_PosDau = 1.5;    // max eta of positive daughter
-    Int_t COV0F_NClustersTPCmin_Dau = 50;  // minimun number of clusters in the TPC
-    Double_t COV0F_Ptmin = 1.0;            // min Pt of V0
+    /* Auxiliary variables */
 
-    if (nentr < 2) {
-        return;
-    }
+    Double_t neg_d_wrt_pv, pos_d_wrt_pv;
+    Double_t radius;
+    Double_t decay_length;
+    Double_t cpa_wrt_pv;
+    Double_t dca_wrt_pv, dca_btw_dau;
+    Double_t dca_neg_v0, dca_pos_v0;
+    Double_t arm_qt, arm_alpha;
+    Double_t opening_angle;
 
-    // (addition)
-    Bool_t UseImprovedFinding = kTRUE;
+    Double_t xthiss, xpp;
+    Float_t impar_neg_v0[2], impar_pos_v0[2];
 
-    // (addition)
-    // [based on `AliV0HypSel::AccountBField(b)` and `AliV0HypSel::SetBFieldCoef(v)`]
-    // account effect of B-field on pT resolution, ignoring the fact that the V0 mass resolution
-    // is only partially determined by the prongs pT resolution
-    const Float_t kNomField = 5.00668e+00;
-    Float_t babs = TMath::Abs(fMagneticField);
-    Float_t BFieldCoef;
-    if (babs > 1E-3) {
-        BFieldCoef = kNomField / babs > 0. ? kNomField / babs : 1.0;
-    }
+    /* Custom V0 Finder's Technical Cuts */
 
-    // (addition)
-    const Int_t nHypSel = 6;
-    TString v0_hyp_name[nHypSel] = {"gamma", "K0", "Lambda", "antiLambda", "HyperTriton", "antiHyperTriton"};
-    Float_t v0_hyp_m0[nHypSel] = {0.5486e-3, 139.570e-3, 938.272e-3, 139.570e-3, 2.8092, 139.570e-3};
-    Float_t v0_hyp_m1[nHypSel] = {0.5486e-3, 139.570e-3, 139.570e-3, 938.272e-3, 139.570e-3, 2.8092};
-    Float_t v0_hyp_mass[nHypSel] = {1.099e-3, 497.7e-3, 1115.683e-3, 1115.683e-3, 2.992, 2.992};
-    Float_t v0_hyp_sigma[nHypSel] = {0.001, 0.003, 0.001, 0.001, 0.0025, 0.0025};
-    Float_t v0_hyp_cf0[nHypSel] = {20, 20, 20, 20, 14, 14};
-    Float_t v0_hyp_cf1[nHypSel] = {0.6, 0.07, 0.07, 0.07, 0.07, 0.07};
-    Float_t v0_hyp_nsig[nHypSel] = {0.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-    Float_t v0_hyp_margin[nHypSel] = {0.0, 0.5, 0.5, 0.5, 0.5, 0.5};
+    Double_t COV0F_DCAmax = 0.6;  // (d=1.) max DCA between the daughter tracks
+    Double_t COV0F_Rmin = 50.;    // (d=0.9) min radius of the V0 radius
+    Double_t COV0F_Rmax = 200.;   // (d=100) max radius of the V0 radius
+    Bool_t COV0F_UseImprovedFinding = kTRUE;
 
     /*  Choose between anti-lambda and K0S */
 
@@ -1758,159 +1737,85 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
         getMcIdx_fromFoundV0Idx = &getMcIdx_fromKaonZeroShortIdx;
     }
 
-    /* Loop over all possible pairs of tracks */
+    /* Loop over all possible pairs of selected tracks */
 
     for (Int_t& esdIdxNeg : esdIndicesNegTracks) {
         for (Int_t& esdIdxPos : esdIndicesPosTracks) {
-
-            /* Check if both tracks passed track selection */
-
-            if (!doesEsdIdxPassTrackSelection[esdIdxNeg] || !doesEsdIdxPassTrackSelection[esdIdxPos]) {
-                continue;
-            }
 
             /* Get tracks */
 
             neg_track = fESD->GetTrack(esdIdxNeg);
             pos_track = fESD->GetTrack(esdIdxPos);
 
-            /* Cut on eta of daughters */
+            /* --------------------------------------------- */
+            /* --- Beginning of Core of Custom V0 Finder --- */
 
-            if (TMath::Abs(pos_track->Eta()) > COV0F_Etamax_PosDau) {
-                continue;
-            }
-
-            if (TMath::Abs(neg_track->Eta()) > COV0F_Etamax_NegDau) {
-                continue;
-            }
+            neg_d_wrt_pv = neg_track->GetD(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fMagneticField);
+            if (TMath::Abs(neg_d_wrt_pv) > COV0F_Rmax) continue;
+            pos_d_wrt_pv = pos_track->GetD(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fMagneticField);
+            if (TMath::Abs(pos_d_wrt_pv) > COV0F_Rmax) continue;
 
             AliExternalTrackParam nt(*neg_track), pt(*pos_track), *ntp = &nt, *ptp = &pt;
 
             Double_t xn, xp;
-            if (UseImprovedFinding && Preoptimize(ntp, ptp, &xn, &xp, fMagneticField)) {
-                // Move tracks to a better position if that helps
+            if (COV0F_UseImprovedFinding && Preoptimize(ntp, ptp, &xn, &xp, fMagneticField)) {
                 nt.PropagateTo(xn, fMagneticField);
                 pt.PropagateTo(xp, fMagneticField);
             }
 
-            /* Cut on DCA between daughters */
-
             Double_t dca_after_preopt = ntp->GetDCA(ptp, fMagneticField, xn, xp);
-            if (dca_after_preopt > COV0F_DCAmax) {
-                continue;
-            }
-
-            if ((xn + xp) > 2 * COV0F_Rmax) {
-                continue;
-            }
-            if ((xn + xp) < 2 * COV0F_Rmin) {
-                continue;
-            }
+            if (dca_after_preopt > COV0F_DCAmax) continue;
+            if ((xn + xp) > 2 * COV0F_Rmax) continue;
+            if ((xn + xp) < 2 * COV0F_Rmin) continue;
 
             nt.PropagateTo(xn, fMagneticField);
             pt.PropagateTo(xp, fMagneticField);
 
-            /* Prepare the AliESDv0 */
-            /* -- Note: declaration here, within the loop, because it has important functions on its constructor */
-
+            /* Note: declaration of AliESDv0 within the loop, because it has important functions on its constructor */
             AliESDv0 vertex(nt, esdIdxNeg, pt, esdIdxPos);
-
-            if (UseImprovedFinding) {
-                vertex.Refit();  // imp pos + cov mat
-            }
-
-            /* Cut on Chi2 */
-
-            if (vertex.GetChi2V0() > COV0F_Chi2max) {
-                continue;
-            }
+            if (COV0F_UseImprovedFinding) vertex.Refit();
 
             vertex.SetDcaV0Daughters(dca_after_preopt);
 
-            /* Cut on CPA w.r.t. PV */
-
-            cpa_wrt_pv = vertex.GetV0CosineOfPointingAngle(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
-            if (cpa_wrt_pv < COV0F_CPAmin) {
-                continue;
-            }
-
-            /* Cut on radius */
-
-            radius = TMath::Sqrt(vertex.Xv() * vertex.Xv() + vertex.Yv() * vertex.Yv());
-            if (radius < COV0F_Rmin) {
-                continue;
-            }
-            if (radius > COV0F_Rmax) {
-                continue;
-            }
-
-            /* Load coordinates and momentum of each component of the V0 */
-
-            vertex.GetXYZ(V0_X, V0_Y, V0_Z);
-
-            /* Cut on DCA w.r.t. PV */
-
-            dca_wrt_pv = LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, fPrimaryVertex->GetX(), fPrimaryVertex->GetY(),
-                                      fPrimaryVertex->GetZ());
-            if (dca_wrt_pv < COV0F_DCAmin_V0_wrtPV) {
-                continue;
-            }
-
-            /* Check if mass is compatible with any V0 hypothesis */
-
-            if (nHypSel) {
-                Bool_t reject = kTRUE;
-                Float_t v0_pt = vertex.Pt();
-                for (Int_t hh = 0; hh < nHypSel; hh++) {
-                    Double_t v0_eff_mass = vertex.GetEffMassExplicit(v0_hyp_m0[hh], v0_hyp_m1[hh]);
-                    Float_t v0_mass_margin =
-                        v0_hyp_nsig[hh] * BFieldCoef * v0_hyp_sigma[hh] * (v0_hyp_cf0[hh] + v0_pt * v0_hyp_cf1[hh]) + v0_hyp_margin[hh];
-                    if (TMath::Abs(v0_eff_mass - v0_hyp_mass[hh]) < v0_mass_margin) {
-                        reject = kFALSE;
-                        break;
-                    }
-                }
-                if (reject) {
-                    continue;
-                }
-            }
-
-            /* Cut on Eta */
-
-            if (TMath::Abs(vertex.Eta()) > COV0F_Etamax_V0) {
-                continue;
-            }
-
-            /* Cut on Pt */
-
-            if (vertex.Pt() < COV0F_Ptmin) {
-                continue;
-            }
+            /* --- End of Core of Custom V0 Finder --- */
+            /* --------------------------------------- */
 
             /* Apply cuts */
-            // PENDING: check that they don't override the previous cuts
 
-            // if (!PassesV0Cuts(pdgV0, &vertex, neg_track, pos_track)) continue;
+            if (!PassesV0Cuts(pdgV0, &vertex, neg_track, pos_track)) continue;
 
             /* Get V0 properties */
 
+            vertex.GetXYZ(V0_X, V0_Y, V0_Z);
             vertex.GetNPxPyPz(N_Px, N_Py, N_Pz);
             vertex.GetPPxPyPz(P_Px, P_Py, P_Pz);
 
-            neg_track->GetDZ(V0_X, V0_Y, V0_Z, fMagneticField, impar_neg_v0);
-            pos_track->GetDZ(V0_X, V0_Y, V0_Z, fMagneticField, impar_pos_v0);
+            radius = TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y);
+            cpa_wrt_pv = vertex.GetV0CosineOfPointingAngle(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+            dca_wrt_pv = LinePointDCA(vertex.Px(), vertex.Py(), vertex.Pz(), V0_X, V0_Y, V0_Z, fPrimaryVertex->GetX(), fPrimaryVertex->GetY(),
+                                      fPrimaryVertex->GetZ());
 
-            dca_btw_dau = TMath::Abs(neg_track->GetDCA(pos_track, fMagneticField, xthiss, xpp));              // DCAxyz
+            dca_btw_dau = TMath::Abs(neg_track->GetDCA(pos_track, fMagneticField, xthiss, xpp));  // DCAxyz
+
+            neg_track->GetDZ(V0_X, V0_Y, V0_Z, fMagneticField, impar_neg_v0);
             dca_neg_v0 = TMath::Sqrt(impar_neg_v0[0] * impar_neg_v0[0] + impar_neg_v0[1] * impar_neg_v0[1]);  // DCAxyz
+
+            pos_track->GetDZ(V0_X, V0_Y, V0_Z, fMagneticField, impar_pos_v0);
             dca_pos_v0 = TMath::Sqrt(impar_pos_v0[0] * impar_pos_v0[0] + impar_pos_v0[1] * impar_pos_v0[1]);  // DCAxyz
+
             decay_length = TMath::Sqrt((V0_X - fPrimaryVertex->GetX()) * (V0_X - fPrimaryVertex->GetX()) +
                                        (V0_Y - fPrimaryVertex->GetY()) * (V0_Y - fPrimaryVertex->GetY()) +
                                        (V0_Z - fPrimaryVertex->GetZ()) * (V0_Z - fPrimaryVertex->GetZ()));
+
+            /* Reconstruct V0 mass */
 
             lvTrackNeg.SetXYZM(N_Px, N_Py, N_Pz, fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[pdgV0])->Mass());
             lvTrackPos.SetXYZM(P_Px, P_Py, P_Pz, fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[pdgV0])->Mass());
             lvV0 = lvTrackNeg + lvTrackPos;
 
+            arm_qt = Calculate_ArmPt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
+            arm_alpha = Calculate_ArmAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz(), lvTrackPos.Px(),
+                                           lvTrackPos.Py(), lvTrackPos.Pz());
             opening_angle = lvTrackNeg.Angle(lvTrackPos.Vect());
 
             /* Store V0 */
@@ -1943,6 +1848,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "OpeningAngle")]->Fill(opening_angle);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "ImprvDCAbtwDau")]->Fill(vertex.GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
+            f2DHist_V0s_ArmenterosPodolanski["All"]->Fill(arm_alpha, arm_qt);
 
             if (!isFoundV0IdxATrueV0->back()) continue;
 
@@ -1968,6 +1874,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "OpeningAngle")]->Fill(opening_angle);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "ImprvDCAbtwDau")]->Fill(vertex.GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
+            f2DHist_V0s_ArmenterosPodolanski["True"]->Fill(arm_alpha, arm_qt);
 
             if (!isMcIdxSecondary[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
 
@@ -1989,6 +1896,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "OpeningAngle")]->Fill(opening_angle);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "ImprvDCAbtwDau")]->Fill(vertex.GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
+            f2DHist_V0s_ArmenterosPodolanski["Secondary"]->Fill(arm_alpha, arm_qt);
 
             if (!isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
 
@@ -2010,6 +1918,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "OpeningAngle")]->Fill(opening_angle);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "ImprvDCAbtwDau")]->Fill(vertex.GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
+            f2DHist_V0s_ArmenterosPodolanski["Signal"]->Fill(arm_alpha, arm_qt);
         }  // end of loop over pos. tracks
     }      // end of loop over neg. tracks
 }
@@ -2142,8 +2051,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0
     if (DCAposV0 > kMax_V0_DCAposV0[pdgV0]) return kFALSE;
 
     Double_t ArmPt = Calculate_ArmPt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
-    Double_t ArmAlpha = Calculate_ArmAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(),
-                                           lvTrackNeg.Py(), lvTrackNeg.Pz(), lvTrackPos.Px(), lvTrackPos.Py(), lvTrackPos.Pz());
+    Double_t ArmAlpha = Calculate_ArmAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz(), lvTrackPos.Px(),
+                                           lvTrackPos.Py(), lvTrackPos.Pz());
     Double_t ArmPtOverAlpha = TMath::Abs(ArmPt / ArmAlpha);
     if (pdgV0 == -3122 && ArmPtOverAlpha > kMax_V0_ArmPtOverAlpha[pdgV0]) return kFALSE;
 
@@ -2876,7 +2785,7 @@ Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(Double_t Px, Double_t Py,
  (Based on `AliRoot/STEER/ESD/AliESDv0::AlphaV0()`)
 */
 Double_t AliAnalysisTaskSexaquark::Calculate_ArmAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz,     //
-                                                      Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz, //
+                                                      Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz,  //
                                                       Double_t Pos_Px, Double_t Pos_Py, Double_t Pos_Pz) {
     TVector3 momTot(V0_Px, V0_Py, V0_Pz);
     TVector3 momNeg(Neg_Px, Neg_Py, Neg_Pz);
