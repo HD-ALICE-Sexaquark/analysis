@@ -146,6 +146,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     virtual void UserCreateOutputObjects();
+    void PrepareTracksHistograms();
+    void PrepareV0Histograms();
+    void PrepareAntiSexaquarkHistograms();
+    void PrepareAntiNeutronHistograms();
     virtual void UserExec(Option_t* option);
     virtual void Terminate(Option_t* option) { return; }
 

@@ -142,7 +142,8 @@ AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
 */
 void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
-    // add the PID routine
+    /** Add mandatory routines **/
+
     AliAnalysisManager* man = AliAnalysisManager::GetAnalysisManager();
     if (!man) {
         AliFatal("ERROR: AliAnalysisManager couldn't be found.");
@@ -155,7 +156,9 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     fPIDResponse = inputHandler->GetPIDResponse();
 
-    /*** Trees ***/
+    /** Prepare output  **/
+
+    /* Trees */
 
     fOutputListOfTrees = new TList();
     fOutputListOfTrees->SetOwner(kTRUE);
@@ -166,32 +169,24 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     PostData(1, fOutputListOfTrees);
 
-    /*** Histograms ***/
+    /* Histograms */
 
     fOutputListOfHists = new TList();
     fOutputListOfHists->SetOwner(kTRUE);
 
-    /* Anti-Neutron Histograms (PENDING) */
+    PrepareTracksHistograms();
+    PrepareV0Histograms();
+    PrepareAntiSexaquarkHistograms();
+    PrepareAntiNeutronHistograms();
 
-    fHist_True_AntiNeutron_Pt = new TH1F("True_AntiNeutron_Pt", "", 100, 0., 10.);
-    fHist_True_AntiNeutronThatInteracted_Pt = new TH1F("True_AntiNeutronThatInteracted_Pt", "", 100, 0., 10.);
-    fHist_True_AntiNeutron_NDaughters = new TH1F("True_AntiNeutron_NDaughters", "", 100, 0., 100.);
-    fHist_True_AntiNeutron_PDGDaughters = new TH1F("True_AntiNeutron_PDGDaughters", "", 7000, -3500., 3500.);
-    fHist_True_AntiNeutron_Bookkeep = new TH1F("True_AntiNeutron_Bookkeep", "", 10, 0., 10.);
-    fHist_True_InjBkg_SecVertex_Radius = new TH1F("True_InjBkg_SecVertex_Radius", "", 100, 0., 200.);
-    fHist_True_InjBkgProducts_Bookkeep = new TH1F("True_InjBkgProducts_Bookkeep", "", 50, 0., 50.);
-    fHist_True_AllSecondaries_MothersPDG = new TH1F("True_AllSecondaries_MothersPDG", "", 7000, -3500, 3500.);
+    PostData(2, fOutputListOfHists);
+}
 
-    fOutputListOfHists->Add(fHist_True_AntiNeutron_Pt);
-    fOutputListOfHists->Add(fHist_True_AntiNeutronThatInteracted_Pt);
-    fOutputListOfHists->Add(fHist_True_AntiNeutron_NDaughters);
-    fOutputListOfHists->Add(fHist_True_AntiNeutron_PDGDaughters);
-    fOutputListOfHists->Add(fHist_True_AntiNeutron_Bookkeep);
-    fOutputListOfHists->Add(fHist_True_InjBkg_SecVertex_Radius);
-    fOutputListOfHists->Add(fHist_True_InjBkgProducts_Bookkeep);
-    fOutputListOfHists->Add(fHist_True_AllSecondaries_MothersPDG);
-
-    /* Charged Particles / Rec. Tracks Histograms */
+/*
+ Define and add tracks' histograms to the histograms output list.
+ - Uses: `fHist_Tracks_Bookkeep`, `fHist_Tracks`, `fOutputListOfHists`
+*/
+void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
 
     TString tracks_stages[2] = {"MCGen", "Found"};
     TString tracks_sets[5] = {"All", "Selected", "True", "Secondary", "Signal"};
@@ -245,8 +240,13 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
         f2DHist_Tracks_TPCsignal[set] = new TH2F(histName, "", 200, 0., 10., 200, 0., 400.);
         fOutputListOfHists->Add(f2DHist_Tracks_TPCsignal[set]);
     }
+}
 
-    /* V0 Histograms */
+/*
+ Define and add V0s' histograms to the histograms output list.
+ - Uses: `fSourceOfV0s`, `fOutputListOfHists`
+*/
+void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
 
     TString V0_stages[3] = {"MCGen", "Findable", "Found"};
     TString V0_sets[4] = {"All", "True", "Secondary", "Signal"};
@@ -322,15 +322,20 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
         f2DHist_V0s_ArmenterosPodolanski[set] = new TH2F(histName, "", 200, -1., 1., 200, 0., 0.3);
         fOutputListOfHists->Add(f2DHist_V0s_ArmenterosPodolanski[set]);
     }
+}
 
-    /* AntiSexaquark Histograms */
+/*
+ Define and add anti-sexaquark histograms to the histograms output list.
+ - Uses: `fHist_AntiSexaquarks`, `fOutputListOfHists`
+*/
+void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
 
     TString AS_stages[3] = {"MCGen", "Findable", "Found"};
     TString AS_sets[2] = {"All", "Signal"};
 
     const Int_t N_AS_props = 18;
-    TString AS_props[N_AS_props] = {"Mass",     "Pt",          "Pz",          "Radius",      "Zv",          "Eta",
-                                    "Rapidity", "DecayLength", "CPAwrtPV",    "DCAwrtPV",    "DCAbtwV0s",   "DCAv0aSV",
+    TString AS_props[N_AS_props] = {"Mass",     "Pt",          "Pz",          "Radius",      "Zv",          "Eta",       //
+                                    "Rapidity", "DecayLength", "CPAwrtPV",    "DCAwrtPV",    "DCAbtwV0s",   "DCAv0aSV",  //
                                     "DCAv0bSV", "DCAv0anegSV", "DCAv0aposSV", "DCAv0bnegSV", "DCAv0bposSV", "Chi2ndf"};
     Int_t AS_nbins[N_AS_props] = {100, 100, 100, 100, 100, 100,  //
                                   100, 100, 100, 100, 100, 100,  //
@@ -363,8 +368,31 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
             }
         }
     }
+}
 
-    PostData(2, fOutputListOfHists);
+/*
+ Define and add anti-neutron histograms to the histograms output list.
+ (PENDING)
+*/
+void AliAnalysisTaskSexaquark::PrepareAntiNeutronHistograms() {
+
+    fHist_True_AntiNeutron_Pt = new TH1F("True_AntiNeutron_Pt", "", 100, 0., 10.);
+    fHist_True_AntiNeutronThatInteracted_Pt = new TH1F("True_AntiNeutronThatInteracted_Pt", "", 100, 0., 10.);
+    fHist_True_AntiNeutron_NDaughters = new TH1F("True_AntiNeutron_NDaughters", "", 100, 0., 100.);
+    fHist_True_AntiNeutron_PDGDaughters = new TH1F("True_AntiNeutron_PDGDaughters", "", 7000, -3500., 3500.);
+    fHist_True_AntiNeutron_Bookkeep = new TH1F("True_AntiNeutron_Bookkeep", "", 10, 0., 10.);
+    fHist_True_InjBkg_SecVertex_Radius = new TH1F("True_InjBkg_SecVertex_Radius", "", 100, 0., 200.);
+    fHist_True_InjBkgProducts_Bookkeep = new TH1F("True_InjBkgProducts_Bookkeep", "", 50, 0., 50.);
+    fHist_True_AllSecondaries_MothersPDG = new TH1F("True_AllSecondaries_MothersPDG", "", 7000, -3500, 3500.);
+
+    fOutputListOfHists->Add(fHist_True_AntiNeutron_Pt);
+    fOutputListOfHists->Add(fHist_True_AntiNeutronThatInteracted_Pt);
+    fOutputListOfHists->Add(fHist_True_AntiNeutron_NDaughters);
+    fOutputListOfHists->Add(fHist_True_AntiNeutron_PDGDaughters);
+    fOutputListOfHists->Add(fHist_True_AntiNeutron_Bookkeep);
+    fOutputListOfHists->Add(fHist_True_InjBkg_SecVertex_Radius);
+    fOutputListOfHists->Add(fHist_True_InjBkgProducts_Bookkeep);
+    fOutputListOfHists->Add(fHist_True_AllSecondaries_MothersPDG);
 }
 
 /*
