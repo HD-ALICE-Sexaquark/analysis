@@ -162,7 +162,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    public:
     /* Cuts */
-    void DefineCuts(TString cuts_option);
+    void DefineTracksCuts(TString cuts_option);
+    void DefineV0Cuts(TString cuts_option);
     /*  */
     Bool_t PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
     Bool_t PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
