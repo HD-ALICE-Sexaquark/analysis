@@ -174,10 +174,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
                         TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
     /*  */
-    Bool_t PassesSexaquarkCuts_ChannelA(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
-    Bool_t PassesSexaquarkCuts_ChannelA(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
-                                        KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfKaonZeroShortNeg,
-                                        KFParticle kfKaonZeroShortPos, TLorentzVector lvAntiSexaquark);
+    Bool_t PassesSexaquarkCuts_ChannelA(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDv0 esdKaonZeroShort,
+                                        AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos, AliESDtrack* esdKaonZeroShortNeg,
+                                        AliESDtrack* esdKaonZeroShortPos);
+    Bool_t PassesSexaquarkCuts_ChannelA(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
+                                        KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos,
+                                        KFParticle kfKaonZeroShortNeg, KFParticle kfKaonZeroShortPos);
     // Bool_t PassesSexaquarkCuts_ChannelD_KF();
     // Bool_t PassesSexaquarkCuts_ChannelE_KF();
 
