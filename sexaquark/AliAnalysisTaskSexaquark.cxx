@@ -69,9 +69,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fPIDResponse(0),
       fPrimaryVertex(0),
       fMagneticField(0.),
-      kMax_NSigma_Pion(0.),
-      kMax_NSigma_Kaon(0.),
-      kMax_NSigma_Proton(0.),
       fPDG(),
       fTree(0),
       fEvent(),
@@ -82,7 +79,32 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       isMcIdxDaughterOfSignalV0(),
       getMcIdxOfTrueV0_fromMcIdxOfDau(),
       getMcIdxOfNegDau_fromMcIdxOfTrueV0(),
-      getMcIdxOfPosDau_fromMcIdxOfTrueV0() {}
+      getMcIdxOfPosDau_fromMcIdxOfTrueV0(),
+      kMax_NSigma_Pion(0.),
+      kMax_NSigma_Kaon(0.),
+      kMax_NSigma_Proton(0.),
+      kMax_Track_Eta(0.),
+      kMin_Track_NTPCClusters(0.),
+      kMax_Track_Chi2PerNTPCClusters(0.),
+      kTurnedOn_Track_StatusCuts(0.),
+      kTurnedOn_Track_RejectKinks(0.),
+      kMin_Track_DCAwrtPV(0.),
+      kMax_Sexa_Mass(0.),
+      kMin_Sexa_Pt(0.),
+      kMax_Sexa_Eta(0.),
+      kMax_Sexa_Rapidity(0.),
+      kMin_Sexa_DecayLength(0.),
+      kMin_Sexa_Radius(0.),
+      kMax_Sexa_CPAwrtPV(0.),
+      kMax_Sexa_DCAwrtPV(0.),
+      kMax_Sexa_DCAbtwV0s(0.),
+      kMax_Sexa_DCAv0aSV(0.),
+      kMax_Sexa_DCAv0bSV(0.),
+      kMax_Sexa_DCAv0anegSV(0.),
+      kMax_Sexa_DCAv0aposSV(0.),
+      kMax_Sexa_DCAv0bnegSV(0.),
+      kMax_Sexa_DCAv0bposSV(0.),
+      kMax_Sexa_Chi2ndf(0.) {}
 
 /*
  Constructor, called locally.
@@ -104,9 +126,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       fPIDResponse(0),
       fPrimaryVertex(0),
       fMagneticField(0.),
-      kMax_NSigma_Pion(0.),
-      kMax_NSigma_Kaon(0.),
-      kMax_NSigma_Proton(0.),
       fPDG(),
       fTree(0),
       fEvent(),
@@ -117,7 +136,32 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       isMcIdxDaughterOfSignalV0(),
       getMcIdxOfTrueV0_fromMcIdxOfDau(),
       getMcIdxOfNegDau_fromMcIdxOfTrueV0(),
-      getMcIdxOfPosDau_fromMcIdxOfTrueV0() {
+      getMcIdxOfPosDau_fromMcIdxOfTrueV0(),
+      kMax_NSigma_Pion(0.),
+      kMax_NSigma_Kaon(0.),
+      kMax_NSigma_Proton(0.),
+      kMax_Track_Eta(0.),
+      kMin_Track_NTPCClusters(0.),
+      kMax_Track_Chi2PerNTPCClusters(0.),
+      kTurnedOn_Track_StatusCuts(0.),
+      kTurnedOn_Track_RejectKinks(0.),
+      kMin_Track_DCAwrtPV(0.),
+      kMax_Sexa_Mass(0.),
+      kMin_Sexa_Pt(0.),
+      kMax_Sexa_Eta(0.),
+      kMax_Sexa_Rapidity(0.),
+      kMin_Sexa_DecayLength(0.),
+      kMin_Sexa_Radius(0.),
+      kMax_Sexa_CPAwrtPV(0.),
+      kMax_Sexa_DCAwrtPV(0.),
+      kMax_Sexa_DCAbtwV0s(0.),
+      kMax_Sexa_DCAv0aSV(0.),
+      kMax_Sexa_DCAv0bSV(0.),
+      kMax_Sexa_DCAv0anegSV(0.),
+      kMax_Sexa_DCAv0aposSV(0.),
+      kMax_Sexa_DCAv0bnegSV(0.),
+      kMax_Sexa_DCAv0bposSV(0.),
+      kMax_Sexa_Chi2ndf(0.) {
     DefineInput(0, TChain::Class());
     DefineOutput(1, TList::Class());
     DefineOutput(2, TList::Class());
@@ -257,24 +301,9 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
     TString V0_props[N_V0_props] = {"Mass", "Radius", "CPAwrtPV", "DCAwrtPV", "DCAbtwDau", "DCAnegV0", "DCAposV0",     "DecayLength",
                                     "Zv",   "Eta",    "Pt",       "Pz",       "ArmQt",     "ArmAlpha", "OpeningAngle", "ImprvDCAbtwDau",
                                     "Chi2", "Chi2ndf"};
-    Int_t V0_nbins[N_V0_props] = {100, 100, 100,  //
-                                  100, 100, 100,  //
-                                  100, 100, 100,  //
-                                  100, 100, 100,  //
-                                  100, 100, 100,  //
-                                  100, 100, 100};
-    Double_t V0_min[N_V0_props] = {0.,  0.,  0.,                  //
-                                   0.,  0.,  0.,                  //
-                                   0.,  0.,  -50.,                //
-                                   -4., 0.,  -20.,                //
-                                   0.,  -1., -0.5 * TMath::Pi(),  //
-                                   0.,  0.,  0.};
-    Double_t V0_max[N_V0_props] = {10.,  250., 1.,                 //
-                                   200., 2.,   2.,                 //
-                                   2.,   500., 50.,                //
-                                   4.,   10.,  20.,                //
-                                   0.3,  1.,   0.5 * TMath::Pi(),  //
-                                   1.,   2.,   0.5};
+    Int_t V0_nbins[N_V0_props] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
+    Double_t V0_min[N_V0_props] = {0., 0., 0., 0., 0., 0., 0., 0., -50., -4., 0., -20., 0., -1., -0.5 * TMath::Pi(), 0., 0., 0.};
+    Double_t V0_max[N_V0_props] = {10., 250., 1., 200., 2., 2., 2., 500., 50., 4., 10., 20., 0.3, 1., 0.5 * TMath::Pi(), 1., 2., 0.5};
 
     for (Int_t& species : V0_species) {
         fHist_V0s_Bookkeep[species] = new TH1F(Form("%s_Bookkeep", V0_name[species].Data()), "", 15, 0., 15.);
@@ -343,9 +372,9 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
     Double_t AS_min[N_AS_props] = {-10., -10., -50., 0., -50., -2.,  //
                                    -5.,  0.,   0.,   0., 0.,   0.,   //
                                    0.,   0.,   0.,   0., 0.,   0.};
-    Double_t AS_max[N_AS_props] = {10.,  10.,  50.,  200., 50.,  2.,    //
-                                   5.,   500., 1.,   10.,  200., 200.,  //
-                                   200., 200., 200., 200., 200., 50.};
+    Double_t AS_max[N_AS_props] = {10., 10.,  50., 200., 50., 2.,  //
+                                   5.,  500., 1.,  10.,  2.,  2.,  //
+                                   2.,  10.,  10., 10.,  10., 1.};
 
     for (TString& stage : AS_stages) {
         for (TString& set : AS_sets) {
@@ -535,6 +564,7 @@ void AliAnalysisTaskSexaquark::Initialize() {
 
     DefineTracksCuts("Standard");
     DefineV0Cuts("Standard");
+    DefineSexaquarkCuts("Standard");
 
     AliInfo("Initializing AliAnalysisTaskSexaquark...");
     AliInfo("INPUT OPTIONS:");
@@ -636,6 +666,48 @@ void AliAnalysisTaskSexaquark::DefineV0Cuts(TString cuts_option) {
         kMax_V0_DCAnegV0[310] = 0.25;
         kMax_V0_DCAposV0[310] = 0.25;
         kMax_V0_Chi2ndf[310] = 0.4;
+    }
+}
+
+/*
+ Define anti-sexaquark candidates selection cuts.
+ - Uses: `fSourceOfV0s`
+ - Input: `cuts_option`
+*/
+void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
+
+    /* Common */
+
+    // none so far
+
+    if (fSourceOfV0s == "offline") {
+
+        // none so far
+    }
+
+    if (fSourceOfV0s == "online") {
+
+        // none so far
+    }
+
+    if (fSourceOfV0s == "custom") {
+
+        // none so far
+    }
+
+    if (fSourceOfV0s == "kalman") {
+
+        kMin_Sexa_Radius = 40;
+        kMin_Sexa_CPAwrtPV = 0.99;
+        kMax_Sexa_CPAwrtPV = 1.;
+        kMax_Sexa_DCAbtwV0s = 2.;
+        kMax_Sexa_DCAv0aSV = 2.;
+        kMax_Sexa_DCAv0bSV = 2.;
+        kMax_Sexa_DCAv0anegSV = 10.;
+        kMax_Sexa_DCAv0aposSV = 10.;
+        kMax_Sexa_DCAv0bnegSV = 10.;
+        kMax_Sexa_DCAv0bposSV = 10.;
+        kMax_Sexa_Chi2ndf = 0.5;
     }
 }
 
@@ -1978,8 +2050,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDt
     Double_t Pt = lvV0.Pt();
     if (kMin_V0_Pt[pdgV0] && Pt < kMin_V0_Pt[pdgV0]) return kFALSE;
 
-    Double_t Eta = lvV0.Eta();
-    if (kMax_V0_Eta[pdgV0] && TMath::Abs(Eta) > kMax_V0_Eta[pdgV0]) return kFALSE;
+    Double_t Eta = TMath::Abs(lvV0.Eta());
+    if (kMax_V0_Eta[pdgV0] && Eta > kMax_V0_Eta[pdgV0]) return kFALSE;
 
     Double_t DecayLength = TMath::Sqrt(TMath::Power(v0->Xv() - fPrimaryVertex->GetX(), 2) + TMath::Power(v0->Yv() - fPrimaryVertex->GetY(), 2) +
                                        TMath::Power(v0->Zv() - fPrimaryVertex->GetZ(), 2));
@@ -2039,8 +2111,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0
     Double_t Pt = lvV0.Pt();
     if (kMin_V0_Pt[pdgV0] && Pt < kMin_V0_Pt[pdgV0]) return kFALSE;
 
-    Double_t Eta = lvV0.Eta();
-    if (kMax_V0_Eta[pdgV0] && TMath::Abs(Eta) > kMax_V0_Eta[pdgV0]) return kFALSE;
+    Double_t Eta = TMath::Abs(lvV0.Eta());
+    if (kMax_V0_Eta[pdgV0] && Eta > kMax_V0_Eta[pdgV0]) return kFALSE;
 
     Double_t DecayLength = TMath::Sqrt(TMath::Power(kfV0.GetX() - fPrimaryVertex->GetX(), 2) + TMath::Power(kfV0.GetY() - fPrimaryVertex->GetY(), 2) +
                                        TMath::Power(kfV0.GetZ() - fPrimaryVertex->GetZ(), 2));
@@ -2667,11 +2739,10 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
 
             /* Apply cuts */
 
-            /*
-            if (!PassesSexaquarkCuts_ChannelA(AntiSexaquark, AntiLambda, KaonZeroShort, lvAntiSexaquark, lvAntiLambda, lvKaonZeroShort)) {
+            if (!PassesSexaquarkCuts_ChannelA(kfAntiSexaquark, kfAntiLambda, kfKaonZeroShort, kfAntiLambdaNegDau, kfAntiLambdaPosDau,
+                                              kfKaonZeroShortNegDau, kfKaonZeroShortPosDau, lvAntiSexaquark)) {
                 continue;
             }
-            */
 
             /* Get anti-sexaquark's properties */
 
@@ -2747,28 +2818,62 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
 
 /*
  Apply anti-sexaquark candidate cuts.
- - Input: `kf[AntiSexaquark|AntiLambda|KaonZeroShort]`, `lv[AntiSexaquark|AntiLambda|KaonZeroShort]`
+ - Input: `kf[AntiSexaquark|AntiLambda|KaonZeroShort|AntiLambdaNeg|AntiLambdaPos|KaonZeroShortNeg|KaonZeroShortPos]`, `lvAntiSexaquark`
  - Uses: `fPrimaryVertex`
 */
 Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
-                                                              TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda,
-                                                              TLorentzVector lvKaonZeroShort) {
+                                                              KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfKaonZeroShortNeg,
+                                                              KFParticle kfKaonZeroShortPos, TLorentzVector lvAntiSexaquark) {
 
-    // >> DCA w.r.t. PV
-    Double_t dca_wrt_pv =
-        LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(),
-                     kfAntiSexaquark.GetZ(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+    Double_t mass = lvAntiSexaquark.M();
+    if (kMin_Sexa_Mass && mass < kMin_Sexa_Mass) return kFALSE;
+    if (kMax_Sexa_Mass && mass > kMax_Sexa_Mass) return kFALSE;
 
-    // >> CPA w.r.t. PV
+    Double_t pt = lvAntiSexaquark.Pt();
+    if (kMin_Sexa_Pt && pt < kMin_Sexa_Pt) return kFALSE;
+
+    Double_t eta = TMath::Abs(lvAntiSexaquark.Eta());
+    if (kMax_Sexa_Eta && eta > kMax_Sexa_Eta) return kFALSE;
+
+    Double_t rapidity = TMath::Abs(lvAntiSexaquark.Rapidity());
+    if (kMax_Sexa_Rapidity && rapidity > kMax_Sexa_Rapidity) return kFALSE;
+
+    Double_t radius = TMath::Sqrt(kfAntiSexaquark.GetX() * kfAntiSexaquark.GetX() + kfAntiSexaquark.GetY() * kfAntiSexaquark.GetY());
+    if (kMin_Sexa_Radius && radius < kMin_Sexa_Radius) return kFALSE;
+
+    Double_t decay_length = TMath::Sqrt((kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) * (kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) +
+                                        (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) * (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) +
+                                        (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()) * (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()));
+    if (kMin_Sexa_DecayLength && decay_length < kMin_Sexa_DecayLength) return kFALSE;
+
     Double_t cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(), kfAntiSexaquark.GetZ(),
                                               fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+    if (kMin_Sexa_CPAwrtPV && cpa_wrt_pv < kMin_Sexa_CPAwrtPV) return kFALSE;
+    if (kMax_Sexa_CPAwrtPV && cpa_wrt_pv > kMax_Sexa_CPAwrtPV) return kFALSE;
 
-    if (cpa_wrt_pv < 0.98) return kFALSE;
+    Double_t dca_btw_v0s = TMath::Abs(kfAntiLambda.GetDistanceFromParticle(kfKaonZeroShort));
+    if (kMax_Sexa_DCAbtwV0s && dca_btw_v0s > kMax_Sexa_DCAbtwV0s) return kFALSE;
 
-    // >> DCA between daughters
-    Double_t dca_btw_dau = kfAntiLambda.GetDistanceFromVertexXY(kfKaonZeroShort);
+    Double_t dca_v0a_sv = TMath::Abs(kfAntiLambda.GetDistanceFromVertex(kfAntiSexaquark));
+    if (kMax_Sexa_DCAv0aSV && dca_v0a_sv > kMax_Sexa_DCAv0aSV) return kFALSE;
 
-    if (dca_btw_dau > 0.1) return kFALSE;
+    Double_t dca_v0b_sv = TMath::Abs(kfKaonZeroShort.GetDistanceFromVertex(kfAntiSexaquark));
+    if (kMax_Sexa_DCAv0bSV && dca_v0b_sv > kMax_Sexa_DCAv0bSV) return kFALSE;
+
+    Double_t dca_v0a_neg_sv = TMath::Abs(kfAntiLambdaNeg.GetDistanceFromVertex(kfAntiSexaquark));
+    if (kMax_Sexa_DCAv0anegSV && dca_v0a_neg_sv > kMax_Sexa_DCAv0anegSV) return kFALSE;
+
+    Double_t dca_v0a_pos_sv = TMath::Abs(kfAntiLambdaPos.GetDistanceFromVertex(kfAntiSexaquark));
+    if (kMax_Sexa_DCAv0aposSV && dca_v0a_pos_sv > kMax_Sexa_DCAv0aposSV) return kFALSE;
+
+    Double_t dca_v0b_neg_sv = TMath::Abs(kfKaonZeroShortNeg.GetDistanceFromVertex(kfAntiSexaquark));
+    if (kMax_Sexa_DCAv0bnegSV && dca_v0b_neg_sv > kMax_Sexa_DCAv0bnegSV) return kFALSE;
+
+    Double_t dca_v0b_pos_sv = TMath::Abs(kfKaonZeroShortPos.GetDistanceFromVertex(kfAntiSexaquark));
+    if (kMax_Sexa_DCAv0bposSV && dca_v0b_pos_sv > kMax_Sexa_DCAv0bposSV) return kFALSE;
+
+    Double_t chi2ndf = (Double_t)kfAntiSexaquark.GetChi2() / (Double_t)kfAntiSexaquark.GetNDF();
+    if (kMax_Sexa_Chi2ndf && chi2ndf > kMax_Sexa_Chi2ndf) return kFALSE;
 
     return kTRUE;
 }

@@ -168,6 +168,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Cuts */
     void DefineTracksCuts(TString cuts_option);
     void DefineV0Cuts(TString cuts_option);
+    void DefineSexaquarkCuts(TString cuts_option);
     /*  */
     Bool_t PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
     Bool_t PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
@@ -175,7 +176,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /*  */
     Bool_t PassesSexaquarkCuts_ChannelA(AliESDv0 AntiLambda, AliESDv0 KaonZeroShort);
     Bool_t PassesSexaquarkCuts_ChannelA(KFParticleMother kfAntiSexaquark, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
-                                        TLorentzVector lvAntiSexaquark, TLorentzVector lvAntiLambda, TLorentzVector lvKaonZeroShort);
+                                        KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfKaonZeroShortNeg,
+                                        KFParticle kfKaonZeroShortPos, TLorentzVector lvAntiSexaquark);
     // Bool_t PassesSexaquarkCuts_ChannelD_KF();
     // Bool_t PassesSexaquarkCuts_ChannelE_KF();
 
@@ -438,6 +440,24 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Float_t> kMax_V0_ImprvDCAbtwDau;
     std::unordered_map<Int_t, Float_t> kMax_V0_Chi2;
     std::unordered_map<Int_t, Float_t> kMax_V0_Chi2ndf;
+
+    /* Anti-Sexaquark candidates */
+    Float_t kMin_Sexa_Mass, kMax_Sexa_Mass;
+    Float_t kMin_Sexa_Pt;
+    Float_t kMax_Sexa_Eta;
+    Float_t kMax_Sexa_Rapidity;
+    Float_t kMin_Sexa_DecayLength;
+    Float_t kMin_Sexa_Radius;
+    Float_t kMin_Sexa_CPAwrtPV, kMax_Sexa_CPAwrtPV;
+    Float_t kMin_Sexa_DCAwrtPV, kMax_Sexa_DCAwrtPV;
+    Float_t kMax_Sexa_DCAbtwV0s;
+    Float_t kMax_Sexa_DCAv0aSV;
+    Float_t kMax_Sexa_DCAv0bSV;
+    Float_t kMax_Sexa_DCAv0anegSV;
+    Float_t kMax_Sexa_DCAv0aposSV;
+    Float_t kMax_Sexa_DCAv0bnegSV;
+    Float_t kMax_Sexa_DCAv0bposSV;
+    Float_t kMax_Sexa_Chi2ndf;
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
