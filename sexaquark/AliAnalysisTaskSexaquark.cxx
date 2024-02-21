@@ -2522,25 +2522,9 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             KFParticle kfDaughterNeg = CreateKFParticle(*esdTrackNeg, fPDG.GetParticle(pdgTrackNeg)->Mass(), (Int_t)esdTrackNeg->Charge());
             KFParticle kfDaughterPos = CreateKFParticle(*esdTrackPos, fPDG.GetParticle(pdgTrackPos)->Mass(), (Int_t)esdTrackPos->Charge());
 
-            // (protection) PENDING
-            successful_daughters_check = kTRUE;
-            /*  */ KFParticleMother kfCheckPos;
-            kfCheckPos.AddDaughter(kfDaughterNeg);
-            if (!kfCheckPos.CheckDaughter(kfDaughterPos)) successful_daughters_check = kFALSE;
-            /*  */ KFParticleMother kfCheckNeg;
-            if (!kfCheckNeg.CheckDaughter(kfDaughterNeg)) successful_daughters_check = kFALSE;
-            kfCheckNeg.AddDaughter(kfDaughterPos);
-
             KFParticleMother kfV0;
-            kfV0.SetMassHypo(fPDG.GetParticle(pdgV0)->Mass());
-            if (successful_daughters_check) {
-                kfV0.SetConstructMethod(2);
-                kfV0.AddDaughter(kfDaughterNeg);
-                kfV0.AddDaughter(kfDaughterPos);
-            } else {
-                kfV0.AddDaughter(kfDaughterNeg);
-                kfV0.AddDaughter(kfDaughterPos);
-            }
+            kfV0.AddDaughter(kfDaughterNeg);
+            kfV0.AddDaughter(kfDaughterPos);
 
             /* Transport V0 and daughters */
 
