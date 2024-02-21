@@ -1043,6 +1043,10 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
     for (UInt_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
 
+        /* Protection in case of general-purpose simulations */
+
+        if (!getMcIdx_fromReactionIdx[reactionIdx].size()) continue;
+
         /* Reset anti-sexaquark TLorentzVector */
 
         lvAntiSexaquark.SetPxPyPzE(0., 0., 0., 0.);
@@ -1330,15 +1334,9 @@ void AliAnalysisTaskSexaquark::PlotStatus(AliESDtrack* track, TString set, Int_t
 /*** ================================================= ***/
 
 /*
- Find all true V0s that had both of their daughters reconstructed. Useful for bookkeeping.
- - Uses: `fTrueV0s_McIdx`, `fMC`, `fPDG`, `fESD`, `fMC_PrimaryVertex`
- - Notes: to get any rec. value from the true V0s, I need to do vertexing first. That means:
-   (a) true vertexing & true values => trivial and already done by `ProcessMCGen()`
-   (b) true vertexing & rec. values => feels artificial...
-   (c) standard vertexing (a-la official V0 finders)
-   (d) KF vertexing
-   Considering (c) and (d), then this function should be used only as bookkeeping, and for calling the real "reconstructers"
-   I'm using (a) for now. (PENDING)
+ Find all true V0s that both of their daughters passed track selection.
+ Variables are true MC vertexing & kinematics.
+ - Uses: `fMC`, `fMC_PrimaryVertex`, `fHist_V0s`, `fHist_V0s_Bookkeep`
 */
 void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
