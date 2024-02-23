@@ -5,6 +5,60 @@
 #include "AliAnalysisTaskSE.h"
 #endif
 
+#include <algorithm>
+#include <array>
+#include <iostream>
+#include <map>
+#include <tuple>
+#include <vector>
+
+#include "TArray.h"
+#include "TChain.h"
+#include "TDatabasePDG.h"
+#include "TH1.h"
+#include "TH1F.h"
+#include "TList.h"
+#include "TLorentzVector.h"
+#include "TROOT.h"
+#include "TString.h"
+#include "TTree.h"
+#include "TVector3.h"
+
+#include "AliAnalysisManager.h"
+#include "AliAnalysisTask.h"
+#include "AliExternalTrackParam.h"
+#include "AliHelix.h"
+#include "AliInputEventHandler.h"
+#include "AliLog.h"
+#include "AliPIDResponse.h"
+
+#include "AliESD.h"
+#include "AliESDEvent.h"
+#include "AliESDInputHandler.h"
+#include "AliESDVertex.h"
+#include "AliESDtrack.h"
+#include "AliESDv0.h"
+
+#include "AliMCEvent.h"
+#include "AliMCEventHandler.h"
+#include "AliMCParticle.h"
+#include "AliVVertex.h"
+
+#include "Math/Factory.h"
+#include "Math/Functor.h"
+#include "Math/Minimizer.h"
+
+#define HomogeneousField  // homogeneous field in z direction, required by KFParticle
+#include "KFPTrack.h"
+#include "KFPVertex.h"
+#include "KFParticle.h"
+#include "KFParticleBase.h"
+#include "KFVertex.h"
+
+class AliPIDResponse;
+class KFParticle;
+class KFVertex;
+
 struct V0_tt {
     //
     // Default common structure for the V0s
@@ -131,12 +185,6 @@ class KFParticleMother : public KFParticle {
         return KFParticleBase::GetMeasurement(daughter, m, mV, D);
     }
 };
-
-// ClassImp(AliAnalysisTaskSexaquark);
-
-class AliPIDResponse;
-class KFParticle;
-class KFParticleBase;
 
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    public:

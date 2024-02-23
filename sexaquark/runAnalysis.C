@@ -1,3 +1,12 @@
+#include "TChain.h"
+#include "TROOT.h"
+#include "TSystem.h"
+
+#include "AliAnalysisManager.h"
+#include "AliAnalysisTaskPIDResponse.h"
+#include "AliESDInputHandler.h"
+#include "AliMCEventHandler.h"
+
 #include "AliAnalysisTaskSexaquark.h"
 
 void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Int_t ChooseNEvents = 0) {
@@ -5,6 +14,8 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
     // tell root where to look for headers
     gInterpreter->ProcessLine(".include ${ROOTSYS}/include");
     gInterpreter->ProcessLine(".include ${ALICE_ROOT}/include");
+    gInterpreter->ProcessLine(".include ${ALICE_PHYSICS}/include");
+    gInterpreter->ProcessLine(".include ${KFPARTICLE_ROOT}/include");
 
     // create the analysis manager
     AliAnalysisManager *mgr = new AliAnalysisManager("AnalysisTaskExample");
