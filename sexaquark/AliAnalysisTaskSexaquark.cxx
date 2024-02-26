@@ -180,7 +180,6 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     PrepareTracksHistograms();
     PrepareV0Histograms();
     PrepareAntiSexaquarkHistograms();
-    PrepareAntiNeutronHistograms();
 
     PostData(2, fOutputListOfHists);
 }
@@ -356,31 +355,6 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
             }
         }
     }
-}
-
-/*
- Define and add anti-neutron histograms to the histograms output list.
- (PENDING)
-*/
-void AliAnalysisTaskSexaquark::PrepareAntiNeutronHistograms() {
-
-    fHist_True_AntiNeutron_Pt = new TH1F("True_AntiNeutron_Pt", "", 100, 0., 10.);
-    fHist_True_AntiNeutronThatInteracted_Pt = new TH1F("True_AntiNeutronThatInteracted_Pt", "", 100, 0., 10.);
-    fHist_True_AntiNeutron_NDaughters = new TH1F("True_AntiNeutron_NDaughters", "", 100, 0., 100.);
-    fHist_True_AntiNeutron_PDGDaughters = new TH1F("True_AntiNeutron_PDGDaughters", "", 7000, -3500., 3500.);
-    fHist_True_AntiNeutron_Bookkeep = new TH1F("True_AntiNeutron_Bookkeep", "", 10, 0., 10.);
-    fHist_True_InjBkg_SecVertex_Radius = new TH1F("True_InjBkg_SecVertex_Radius", "", 100, 0., 200.);
-    fHist_True_InjBkgProducts_Bookkeep = new TH1F("True_InjBkgProducts_Bookkeep", "", 50, 0., 50.);
-    fHist_True_AllSecondaries_MothersPDG = new TH1F("True_AllSecondaries_MothersPDG", "", 7000, -3500, 3500.);
-
-    fOutputListOfHists->Add(fHist_True_AntiNeutron_Pt);
-    fOutputListOfHists->Add(fHist_True_AntiNeutronThatInteracted_Pt);
-    fOutputListOfHists->Add(fHist_True_AntiNeutron_NDaughters);
-    fOutputListOfHists->Add(fHist_True_AntiNeutron_PDGDaughters);
-    fOutputListOfHists->Add(fHist_True_AntiNeutron_Bookkeep);
-    fOutputListOfHists->Add(fHist_True_InjBkg_SecVertex_Radius);
-    fOutputListOfHists->Add(fHist_True_InjBkgProducts_Bookkeep);
-    fOutputListOfHists->Add(fHist_True_AllSecondaries_MothersPDG);
 }
 
 /*
@@ -702,13 +676,9 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
     AliMCParticle* mcMother;
 
-    AliMCParticle* mcDaughter;  // PENDING: to delete after figuring what to do with neutrons
-    Int_t pdg_dau;              // PENDING: to delete after figuring what to do with neutrons
-
     AliMCParticle* mcNegDau;
     AliMCParticle* mcPosDau;
 
-    Float_t antineutron_radius;
     Int_t n_daughters = 0;
 
     Int_t mcIdxNegDaughter = 0;
@@ -905,41 +875,6 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
                     Calculate_ArmAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(),          //
                                        mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),    //
                                        mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz()));
-            }
-        }
-
-        /* anti-neutrons */
-        // PENDING
-
-        if (pdg_mc == -2112) {
-
-            fHist_True_AntiNeutron_Bookkeep->Fill(0);
-            fHist_True_AntiNeutron_Pt->Fill(pt);
-
-            if (n_daughters) {
-
-                fHist_True_AntiNeutron_Bookkeep->Fill(1);
-                fHist_True_AntiNeutron_NDaughters->Fill(mcPart->GetNDaughters());
-                fHist_True_AntiNeutronThatInteracted_Pt->Fill(pt);
-
-                /* Fill, then, the PDG code of its daughters */
-
-                for (Int_t mcIdxDaughter = mcPart->GetDaughterFirst(); mcIdxDaughter <= mcPart->GetDaughterLast(); mcIdxDaughter++) {
-
-                    mcDaughter = (AliMCParticle*)fMC->GetTrack(mcIdxDaughter);
-                    pdg_dau = mcDaughter->PdgCode();
-
-                    if (TMath::Abs(pdg_dau) < 3500) {
-                        fHist_True_AntiNeutron_PDGDaughters->Fill(pdg_dau);
-                    } else {
-                        fHist_True_AntiNeutron_PDGDaughters->Fill(0);
-                    }
-
-                    if (mcIdxDaughter == mcPart->GetDaughterFirst()) {
-                        antineutron_radius = TMath::Sqrt(TMath::Power(mcDaughter->Xv(), 2) + TMath::Power(mcDaughter->Yv(), 2));
-                        fHist_True_InjBkg_SecVertex_Radius->Fill(antineutron_radius);
-                    }
-                }
             }
         }
     }  // end of loop over MC particles

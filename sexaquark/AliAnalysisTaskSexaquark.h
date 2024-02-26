@@ -197,7 +197,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void PrepareTracksHistograms();
     void PrepareV0Histograms();
     void PrepareAntiSexaquarkHistograms();
-    void PrepareAntiNeutronHistograms();
     virtual void UserExec(Option_t* option);
     virtual void Terminate(Option_t* option) { return; }
 
@@ -386,17 +385,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Anti-Sexaquark Histograms */
     // key: `stage, set, property`, value: histogram
     std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_AntiSexaquarks;
-
-   private:
-    /* Anti-Neutron Histograms */
-    TH1F* fHist_True_InjBkg_SecVertex_Radius;       //!
-    TH1F* fHist_True_AntiNeutron_Pt;                //!
-    TH1F* fHist_True_AntiNeutronThatInteracted_Pt;  //!
-    TH1F* fHist_True_AntiNeutron_NDaughters;        //!
-    TH1F* fHist_True_AntiNeutron_PDGDaughters;      //!
-    TH1F* fHist_True_AntiNeutron_Bookkeep;          //!
-    TH1F* fHist_True_InjBkgProducts_Bookkeep;       //!
-    TH1F* fHist_True_AllSecondaries_MothersPDG;     //!
 
    private:
     /* Containers -- vectors and hash tables */
