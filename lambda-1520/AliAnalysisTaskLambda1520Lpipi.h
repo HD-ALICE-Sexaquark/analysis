@@ -101,9 +101,9 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
                         TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
 
     /* Lambda1520 */
-    void KalmanLambda1520Finder();
-    Bool_t PassesLambda1520Cuts(KFParticleMother kfLambda1520, TLorentzVector lvLambda1520, KFParticle kfAntiLambda, KFParticle kfKaonZeroShort,
-                                KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfKaonZeroShortNeg, KFParticle kfKaonZeroShortPos);
+    void KalmanLambda1520Finder(Int_t pdgLambda1520);
+    Bool_t PassesLambda1520Cuts(KFParticleMother kfLambda1520, TLorentzVector lvLambda1520, KFParticle kfAntiLambda, KFParticle kfAntiLambdaNeg,
+                                KFParticle kfAntiLambdaPos, KFParticle kfPiMinus, KFParticle kfPiPlus);
 
     /* Utilities */
     Double_t LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t V0_X, Double_t V0_Y, Double_t V0_Z, Double_t PV_X, Double_t PV_Y,
@@ -227,15 +227,20 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromLambdaIdx;      //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;  //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;  //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromPionPairIdx;    //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromPionPairIdx;    //
 
     std::vector<Bool_t> isLambdaIdxATrueV0;      //
     std::vector<Bool_t> isAntiLambdaIdxATrueV0;  //
+    std::vector<Bool_t> isPionPairIdxATrueV0;    //
 
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromLambdaIdx;      // must protect first with `isAntiLambdaIdxTrueV0`
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromLambdaIdx;      // must protect first with `isLambdaIdxTrueV0`
     std::unordered_map<Int_t, Int_t> getMcIdx_fromAntiLambdaIdx;  // must protect first with `isAntiLambdaIdxTrueV0`
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromPionPairIdx;    // must protect first with `isPionPairIdxTrueV0`
 
     std::vector<KFParticleMother> kfLambdas;      //
     std::vector<KFParticleMother> kfAntiLambdas;  //
+    std::vector<KFParticleMother> kfPionPairs;    //
 
     void ClearContainers();
 

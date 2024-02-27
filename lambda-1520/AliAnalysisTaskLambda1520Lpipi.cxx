@@ -218,8 +218,8 @@ void AliAnalysisTaskLambda1520Lpipi::PrepareV0Histograms() {
 
     TString V0_stages[3] = {"MCGen", "Findable", "Found"};
     TString V0_sets[3] = {"All", "True", "Signal"};
-    Int_t V0_species[2] = {3122, -3122};
-    std::map<Int_t, TString> V0_name = {{3122, "Lambda"}, {-3122, "AntiLambda"}};
+    Int_t V0_species[3] = {3122, -3122, 422};
+    std::map<Int_t, TString> V0_name = {{3122, "Lambda"}, {-3122, "AntiLambda"}, {422, "PionPair"}};
 
     const Int_t N_V0_props = 16;
     TString V0_props[N_V0_props] = {"Mass", "Radius", "CPAwrtPV", "DCAwrtPV", "DCAbtwDau", "DCAnegV0", "DCAposV0",     "DecayLength",
@@ -238,8 +238,9 @@ void AliAnalysisTaskLambda1520Lpipi::PrepareV0Histograms() {
             for (Int_t& species : V0_species) {
                 for (Int_t prop_idx = 0; prop_idx < N_V0_props; prop_idx++) {
 
-                    if (stage == "Findable" && set == "All") continue;  // only keep "Findable True" and "Findable Signal"
-                    if (stage == "MCGen" && set == "True") continue;    // only keep "MCGen All" and "MCGen Signal"
+                    if (stage == "Findable" && set == "All") continue;                          // only keep "Findable True" and "Findable Signal"
+                    if (stage == "MCGen" && set == "True") continue;                            // only keep "MCGen All" and "MCGen Signal"
+                    if ((stage == "MCGen" || stage == "Findable") && species == 422) continue;  // PionPair is not a particle
 
                     if ((stage == "MCGen" || stage == "Findable") && (V0_props[prop_idx] == "DCAbtwDau" || V0_props[prop_idx] == "DCAnegV0" ||
                                                                       V0_props[prop_idx] == "DCAposV0" || V0_props[prop_idx] == "Chi2ndf")) {
@@ -284,10 +285,10 @@ void AliAnalysisTaskLambda1520Lpipi::PrepareLambda1520Histograms() {
     Int_t LS_nbins[N_LS_props] = {100, 100, 100, 100, 100, 100,  //
                                   100, 100, 100, 100, 100, 100,  //
                                   100, 100, 100, 100, 100, 100};
-    Double_t LS_min[N_LS_props] = {-10., -10., -50., 0., -50., -2.,  //
+    Double_t LS_min[N_LS_props] = {1.44, -10., -50., 0., -50., -2.,  //
                                    -5.,  0.,   0.,   0., 0.,   0.,   //
                                    0.,   0.,   0.,   0., 0.,   0.};
-    Double_t LS_max[N_LS_props] = {10., 10.,  50., 200., 50., 2.,  //
+    Double_t LS_max[N_LS_props] = {1.6, 10.,  50., 200., 50., 2.,  //
                                    5.,  500., 1.,  10.,  2.,  2.,  //
                                    2.,  10.,  10., 10.,  10., 1.};
 
@@ -347,6 +348,13 @@ void AliAnalysisTaskLambda1520Lpipi::DefineTracksCuts(TString cuts_option) {
 */
 void AliAnalysisTaskLambda1520Lpipi::DefineV0Cuts(TString cuts_option) {
 
+    /* Pions Pairs */
+
+    kMin_V0_Mass[422] = 0.;
+    kMax_V0_Mass[422] = 10.;
+
+    /* Lambdas and Anti-Lambdas */
+
     for (const Int_t& pdgV0 : {-3122, 3122}) {
         kMin_V0_Mass[pdgV0] = 1.08;
         kMax_V0_Mass[pdgV0] = 1.16;
@@ -370,7 +378,8 @@ void AliAnalysisTaskLambda1520Lpipi::DefineV0Cuts(TString cuts_option) {
 */
 void AliAnalysisTaskLambda1520Lpipi::DefineLambda1520Cuts(TString cuts_option) {
 
-    // none so far
+    kMin_LStar_Mass = 1.44;
+    kMax_LStar_Mass = 1.6;
 }
 
 /*
@@ -421,17 +430,18 @@ void AliAnalysisTaskLambda1520Lpipi::UserExec(Option_t*) {
 
     KalmanV0Finder(-3122, -2212, 211);
 
+    /* X -> pi-,pi+ */
+    // NOTE: I reserved `422` for the pions pair, since there's not known particle with that code
+
+    KalmanV0Finder(422, -211, 211);
+
     /* Lambda(1520) -> Lambda,pi-,pi+ */
 
-    // pdgTracks = {-211, 2212, -211, 211};
-    // KalmanLambda1520Finder(kfLambdas, idxLambdaDaughters, kfPionPairs, idxPionPairDaughters, pdgTracks, kfLambdas1520);
-    // KalmanLambda1520Finder();
+    KalmanLambda1520Finder(3124);
 
     /* AntiLambda(1520) -> AntiLambda,pi-,pi+ */
 
-    // pdgTracks = {-2212, 211, -211, 211};
-    // KalmanLambda1520Finder(kfAntiLambdas, idxAntiLambdaDaughters, kfPionPairs, idxPionPairDaughters, pdgTracks, kfAntiLambdas1520);
-    // KalmanLambda1520Finder();
+    KalmanLambda1520Finder(-3124);
 
     ClearContainers();
 
@@ -522,6 +532,13 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
 
             if (n_daughters && mcIdxNeutralDaughter && mcIdxNegDaughter && mcIdxPosDaughter) {
 
+                isMcIdxDaughterOfTrueV0[mcIdxNegDaughter] = kTRUE;
+                isMcIdxDaughterOfTrueV0[mcIdxPosDaughter] = kTRUE;
+                getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxNegDaughter] = mcIdx;
+                getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxPosDaughter] = mcIdx;
+                getMcIdxOfNegDau_fromMcIdxOfTrueV0[mcIdx] = mcIdxNegDaughter;
+                getMcIdxOfPosDau_fromMcIdxOfTrueV0[mcIdx] = mcIdxPosDaughter;
+
                 fHist_Lambdas1520_Bookkeep[pdg_mc]->Fill(1);
                 fHist_Lambdas1520[std::make_tuple("MCGen", "All", pdg_mc, "Mass")]->Fill(mcPart->M());
                 fHist_Lambdas1520[std::make_tuple("MCGen", "All", pdg_mc, "Pt")]->Fill(mcPart->Pt());
@@ -541,6 +558,23 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
         if (TMath::Abs(pdg_mc) == 3122) {
 
             fHist_V0s_Bookkeep[pdg_mc]->Fill(0);
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Mass")]->Fill(mcPart->M());
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Radius")]->Fill(decayVertex.Perp());
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DecayLength")]->Fill((originVertex - decayVertex).Mag());
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Zv")]->Fill(decayVertex.Z());
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Pt")]->Fill(mcPart->Pt());
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Pz")]->Fill(mcPart->Pz());
+            // PENDING!
+            // fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmQt")]->Fill(
+            // ArmenterosQt(mcPart->Px(), mcPart->Py(), mcPart->Pz(),
+            // mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz()));
+            // fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmAlpha")]->Fill(
+            // ArmenterosAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(),
+            //    mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),
+            //    mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz()));
 
             if (isMcIdxSignal[mcIdx]) fHist_V0s_Bookkeep[pdg_mc]->Fill(1);
 
@@ -616,8 +650,8 @@ void AliAnalysisTaskLambda1520Lpipi::GetDaughtersInfo(AliMCParticle* mcPart, Int
 
         if (TMath::Abs(pdg_mc) == 3124) {
             if (TMath::Abs(pdg_dau) == 3122) mcIdxNeutralDaughter = mcIdxDaughter;
-            if (pdg_dau == 211) mcIdxPosDaughter = mcIdxDaughter;
             if (pdg_dau == -211) mcIdxNegDaughter = mcIdxDaughter;
+            if (pdg_dau == 211) mcIdxPosDaughter = mcIdxDaughter;
         }
 
         if (pdg_mc == 3122) {
@@ -722,8 +756,8 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessTracks() {
 
         for (Int_t& esdPdgCode : possiblePID) {
 
-            if (esdPdgCode == 2212) esdIndicesOfProtonTracks.push_back(esdIdxTrack);
             if (esdPdgCode == -2212) esdIndicesOfAntiProtonTracks.push_back(esdIdxTrack);
+            if (esdPdgCode == 2212) esdIndicesOfProtonTracks.push_back(esdIdxTrack);
             if (esdPdgCode == -211) esdIndicesOfPiMinusTracks.push_back(esdIdxTrack);
             if (esdPdgCode == 211) esdIndicesOfPiPlusTracks.push_back(esdIdxTrack);
 
@@ -776,6 +810,11 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessTracks() {
             getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0] = esdIdxTrack;
         } else {
             getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0] = esdIdxTrack;
+        }
+
+        if (isMcIdxDaughterOfTrueV0[mcIdx] && TMath::Abs(getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdx]]) == 3124) {
+            AliInfoF("esdIdxTrack: %i, mcIdx: %i, mcPdgCode: %i, isMcIdxSignal: %i, isMcIdxDaughterOfTrueV0: %i, getMcIdxOfTrueV0_fromMcIdxOfDau: %i",
+                     esdIdxTrack, mcIdx, mcPdgCode, isMcIdxSignal[mcIdx], isMcIdxDaughterOfTrueV0[mcIdx], getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdx]);
         }
 
     }  // end of loop over tracks
@@ -999,6 +1038,14 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackN
         getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromAntiLambdaIdx;
         isFoundV0IdxATrueV0 = &isAntiLambdaIdxATrueV0;
         getMcIdx_fromFoundV0Idx = &getMcIdx_fromAntiLambdaIdx;
+    } else if (pdgV0 == 422) {
+        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
+        esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
+        kfFoundV0s = &kfPionPairs;
+        getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromPionPairIdx;
+        getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromPionPairIdx;
+        isFoundV0IdxATrueV0 = &isPionPairIdxATrueV0;
+        getMcIdx_fromFoundV0Idx = &getMcIdx_fromPionPairIdx;
     }
 
     /* Loop over all possible pairs of tracks */
@@ -1089,7 +1136,10 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackN
 
             (*getMcIdx_fromFoundV0Idx)[kfFoundV0s->size() - 1] = getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg];
 
-            if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] != pdgV0) continue;
+            if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] != pdgV0 &&
+                !(pdgV0 == 422 && TMath::Abs(getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) == 3124)) {
+                continue;
+            }
 
             fHist_V0s_Bookkeep[pdgV0]->Fill(10);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Mass")]->Fill(lvV0.M());
@@ -1192,142 +1242,228 @@ Bool_t AliAnalysisTaskLambda1520Lpipi::PassesV0Cuts(Int_t pdgV0, KFParticleMothe
     return kTRUE;
 }
 
-/*                */
-/**  Lambda1520  **/
-/*** ========== ***/
+/*                      */
+/**  (Anti)Lambda1520  **/
+/*** ================ ***/
 
 /*
  Find all Lambda1520 candidates.
- // (pending) add more description
- - input: kfFirstV0s, idxFirstV0Daughters, kfSecondV0s, idxSecondV0Daughters, pdgDaughters
- - output: kfLambda1520s
+ - Input: `pdgLambda1520`
 */
-void AliAnalysisTaskLambda1520Lpipi::KalmanLambda1520Finder() {
-#ifdef PENDING
+void AliAnalysisTaskLambda1520Lpipi::KalmanLambda1520Finder(Int_t pdgLambda1520) {
 
-    Double_t impar[2];
-    Bool_t fStatusT0PropToDCA;
-    Bool_t fStatusT1PropToDCA;
-    Bool_t fStatusT2PropToDCA;
-    Bool_t fStatusT3PropToDCA;
+    Int_t esdIdxNeg_V0, esdIdxPos_V0;
+    Int_t esdIdx_PiMinus, esdIdx_PiPlus;
 
-    Int_t idxV0A_NegDau, idxV0A_PosDau;
-    Int_t idxV0B_NegDau, idxV0B_PosDau;
+    AliESDtrack *esdV0NegDau, *esdV0PosDau;
+    AliESDtrack *esdPiMinus, *esdPiPlus;
 
-    TLorentzVector lvTrack0, lvTrack1, lvTrack2, lvTrack3;
-    TLorentzVector lvLambda, lvPionPair;
+    /* Declare TLorentzVectors */
+
+    TLorentzVector lvV0, lvV0NegDau, lvV0PosDau;
+
+    TLorentzVector lvPiMinus, lvPiPlus;
+
     TLorentzVector lvLambda1520;
 
-    Double_t dca_sv_pv, cpa_sv_pv, dca_v0a_sv, cpa_v0a_sv, dca_t2_sv, dca_t3_sv, dca_v0a_v0b;
+    /* Define primary vertex as a KFVertex */
 
-    for (Int_t idxV0A = 0; idxV0A < (Int_t)kfFirstV0s.size(); idxV0A++) {
-        for (Int_t idxV0B = 0; idxV0B < (Int_t)kfSecondV0s.size(); idxV0B++) {
+    KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
 
-            idxV0A_NegDau = idxFirstV0Daughters[idxV0A][0];
-            idxV0A_PosDau = idxFirstV0Daughters[idxV0A][1];
-            idxV0B_NegDau = idxSecondV0Daughters[idxV0B][0];
-            idxV0B_PosDau = idxSecondV0Daughters[idxV0B][1];
+    /* Auxiliary variables */
 
-            // (protection) avoid repetition of daughters
-            if (idxV0A_NegDau == idxV0B_NegDau || idxV0A_PosDau == idxV0B_PosDau) continue;
+    Float_t radius;
+    Float_t decay_length;
+    Float_t cpa_wrt_pv;
+    Float_t dca_wrt_pv;
+    Float_t dca_btw_v0s;
+    Float_t dca_v0a_sv;
+    Float_t dca_v0b_sv;
+    Float_t dca_v0a_neg_sv;
+    Float_t dca_v0a_pos_sv;
+    Float_t dca_v0b_neg_sv;
+    Float_t dca_v0b_pos_sv;
 
-            AliESDtrack* esdTrack0 = static_cast<AliESDtrack*>(fESD->GetTrack(idxV0A_NegDau));  // not used
-            AliESDtrack* esdTrack1 = static_cast<AliESDtrack*>(fESD->GetTrack(idxV0A_PosDau));  // not used
-            AliESDtrack* esdTrack2 = static_cast<AliESDtrack*>(fESD->GetTrack(idxV0B_NegDau));
-            AliESDtrack* esdTrack3 = static_cast<AliESDtrack*>(fESD->GetTrack(idxV0B_PosDau));
+    Bool_t is_signal;
+
+    Float_t impar_v0a_neg_sv[2], impar_v0a_pos_sv[2];
+    Float_t impar_v0b_neg_sv[2], impar_v0b_pos_sv[2];
+
+    /* Choose between Lambda(1520) and Anti-Lambda(1520) */
+
+    std::vector<Int_t> pdgCodeOfV0sDaughters;
+    std::vector<KFParticleMother> kfFoundV0s;
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromFoundV0Idx;
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromFoundV0Idx;
+
+    if (pdgLambda1520 == -3124) {
+        pdgCodeOfV0sDaughters = {-2212, 211};
+        kfFoundV0s = kfAntiLambdas;
+        getEsdIdxOfNegDau_fromFoundV0Idx = getEsdIdxOfNegDau_fromAntiLambdaIdx;
+        getEsdIdxOfPosDau_fromFoundV0Idx = getEsdIdxOfPosDau_fromAntiLambdaIdx;
+    } else if (pdgLambda1520 == 3124) {
+        pdgCodeOfV0sDaughters = {-211, 2212};
+        kfFoundV0s = kfLambdas;
+        getEsdIdxOfNegDau_fromFoundV0Idx = getEsdIdxOfNegDau_fromLambdaIdx;
+        getEsdIdxOfPosDau_fromFoundV0Idx = getEsdIdxOfPosDau_fromLambdaIdx;
+    }
+
+    /* Loop over all possible combinations of (anti)lambdas and pion pairs */
+
+    for (Int_t idxV0 = 0; idxV0 < (Int_t)kfFoundV0s.size(); idxV0++) {
+        for (Int_t idxPionPair = 0; idxPionPair < (Int_t)kfPionPairs.size(); idxPionPair++) {
+
+            /* Check that no daughter is repeated between the V0s */
+
+            esdIdxNeg_V0 = getEsdIdxOfNegDau_fromFoundV0Idx[idxV0];
+            esdIdxPos_V0 = getEsdIdxOfPosDau_fromFoundV0Idx[idxV0];
+            esdIdx_PiMinus = getEsdIdxOfNegDau_fromPionPairIdx[idxPionPair];
+            esdIdx_PiPlus = getEsdIdxOfPosDau_fromPionPairIdx[idxPionPair];
+
+            if (esdIdxNeg_V0 == esdIdx_PiMinus || esdIdxNeg_V0 == esdIdx_PiPlus ||  //
+                esdIdxPos_V0 == esdIdx_PiMinus || esdIdxPos_V0 == esdIdx_PiPlus) {
+                continue;
+            }
 
             /* Kalman Filter */
 
-            KFParticleMother kfV0A = kfFirstV0s[idxV0A];
-            KFParticleMother kfV0B = kfSecondV0s[idxV0B];  // not used
+            esdPiMinus = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdx_PiMinus));
+            esdPiPlus = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdx_PiPlus));
 
-            KFParticle kfTrack0 = CreateKFParticle(*esdTrack0,                                           //
-                                                   fPDG.GetParticle(pdgDaughters[0])->Mass(),            //
-                                                   (Int_t)fPDG.GetParticle(pdgDaughters[0])->Charge());  // not used
-            KFParticle kfTrack1 = CreateKFParticle(*esdTrack1,                                           //
-                                                   fPDG.GetParticle(pdgDaughters[1])->Mass(),            //
-                                                   (Int_t)fPDG.GetParticle(pdgDaughters[1])->Charge());  // not used
-            KFParticle kfTrack2 = CreateKFParticle(*esdTrack2,                                           //
-                                                   fPDG.GetParticle(pdgDaughters[2])->Mass(),            //
-                                                   (Int_t)fPDG.GetParticle(pdgDaughters[2])->Charge());
-            KFParticle kfTrack3 = CreateKFParticle(*esdTrack3,                                 //
-                                                   fPDG.GetParticle(pdgDaughters[3])->Mass(),  //
-                                                   (Int_t)fPDG.GetParticle(pdgDaughters[3])->Charge());
+            KFParticleMother kfV0 = kfFoundV0s[idxV0];
+            KFParticle kfPiMinus = CreateKFParticle(*esdPiMinus, fPDG.GetParticle(-211)->Mass(), (Int_t)esdPiMinus->Charge());
+            KFParticle kfPiPlus = CreateKFParticle(*esdPiPlus, fPDG.GetParticle(211)->Mass(), (Int_t)esdPiPlus->Charge());
 
             KFParticleMother kfLambda1520;
-            kfLambda1520.AddDaughter(kfV0A);
-            kfLambda1520.AddDaughter(kfTrack2);
-            kfLambda1520.AddDaughter(kfTrack3);
+            kfLambda1520.AddDaughter(kfV0);
+            kfLambda1520.AddDaughter(kfPiMinus);
+            kfLambda1520.AddDaughter(kfPiPlus);
+
+            /* Transport ... */
+
             kfLambda1520.TransportToDecayVertex();
 
-            // clone ESD tracks
-            AliESDtrack cloneTrack0(*esdTrack0);
-            AliESDtrack cloneTrack1(*esdTrack1);
-            AliESDtrack cloneTrack2(*esdTrack2);
-            AliESDtrack cloneTrack3(*esdTrack3);
+            kfV0.SetProductionVertex(kfLambda1520);
 
-            // get V0 vertex
-            Double_t V0Vertex[3] = {kfV0A.GetX(), kfV0A.GetY(), kfV0A.GetZ()};
-            Double_t V0VertexErr[3] = {kfV0A.GetErrX(), kfV0A.GetErrY(), kfV0A.GetErrZ()};
-            AliESDVertex* esdV0Vertex = new AliESDVertex(V0Vertex, V0VertexErr);
-            // propagate V0 daughters to their DCA w.r.t. V0 vertex
-            fStatusT0PropToDCA = cloneTrack0.PropagateToDCA(esdV0Vertex, fMagneticField, 10., impar) == 1;
-            fStatusT1PropToDCA = cloneTrack1.PropagateToDCA(esdV0Vertex, fMagneticField, 10., impar) == 1;
+            kfV0.TransportToProductionVertex();
 
-            // (question) should I find a way to propagate the V0 to the SV?
+            /* Get and transport the final-state AliESDtracks */
 
-            // get Secondary Vertex
-            Double_t SecVertex[3] = {kfLambda1520.GetX(), kfLambda1520.GetY(), kfLambda1520.GetZ()};
-            Double_t SecVertexErr[3] = {kfLambda1520.GetErrX(), kfLambda1520.GetErrY(), kfLambda1520.GetErrZ()};
-            AliESDVertex* esdSecVertex = new AliESDVertex(SecVertex, SecVertexErr);
-            // propagate remaining particles to their DCA w.r.t. Secondary Vertex
-            fStatusT2PropToDCA = cloneTrack2.PropagateToDCA(esdSecVertex, fMagneticField, 10, impar) == 1;
-            fStatusT3PropToDCA = cloneTrack3.PropagateToDCA(esdSecVertex, fMagneticField, 10, impar) == 1;
+            esdV0NegDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg_V0));
+            esdV0PosDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos_V0));
 
-            /* Reconstruct Lambda(1520) */
+            KFParticle kfV0NegDau = CreateKFParticle(*esdV0NegDau, fPDG.GetParticle(pdgCodeOfV0sDaughters[0])->Mass(), (Int_t)esdV0NegDau->Charge());
+            KFParticle kfV0PosDau = CreateKFParticle(*esdV0PosDau, fPDG.GetParticle(pdgCodeOfV0sDaughters[1])->Mass(), (Int_t)esdV0PosDau->Charge());
 
-            lvTrack0.SetXYZM(cloneTrack0.Px(), cloneTrack0.Py(), cloneTrack0.Pz(), fPDG.GetParticle(pdgDaughters[0])->Mass());
-            lvTrack1.SetXYZM(cloneTrack1.Px(), cloneTrack1.Py(), cloneTrack1.Pz(), fPDG.GetParticle(pdgDaughters[1])->Mass());
-            lvTrack2.SetXYZM(cloneTrack2.Px(), cloneTrack2.Py(), cloneTrack2.Pz(), fPDG.GetParticle(pdgDaughters[2])->Mass());
-            lvTrack3.SetXYZM(cloneTrack3.Px(), cloneTrack3.Py(), cloneTrack3.Pz(), fPDG.GetParticle(pdgDaughters[3])->Mass());
+            kfV0NegDau =
+                TransportKFParticle(kfV0NegDau, kfV0PosDau, fPDG.GetParticle(pdgCodeOfV0sDaughters[0])->PdgCode(), (Int_t)esdV0NegDau->Charge());
+            kfV0PosDau =
+                TransportKFParticle(kfV0PosDau, kfV0NegDau, fPDG.GetParticle(pdgCodeOfV0sDaughters[1])->PdgCode(), (Int_t)esdV0PosDau->Charge());
+            KFParticle kfTransportedPiMinus =
+                TransportKFParticle(kfPiMinus, kfPiPlus, fPDG.GetParticle(-211)->PdgCode(), (Int_t)esdPiMinus->Charge());
+            KFParticle kfTransportedPiPlus = TransportKFParticle(kfPiPlus, kfPiMinus, fPDG.GetParticle(211)->PdgCode(), (Int_t)esdPiPlus->Charge());
 
-            lvLambda = lvTrack0 + lvTrack1;
-            lvPionPair = lvTrack2 + lvTrack3;
-            lvLambda1520 = lvTrack0 + lvTrack1 + lvTrack2 + lvTrack3;
+            lvV0NegDau.SetXYZM(kfV0NegDau.Px(), kfV0NegDau.Py(), kfV0NegDau.Pz(), fPDG.GetParticle(pdgCodeOfV0sDaughters[0])->Mass());
+            lvV0PosDau.SetXYZM(kfV0PosDau.Px(), kfV0PosDau.Py(), kfV0PosDau.Pz(), fPDG.GetParticle(pdgCodeOfV0sDaughters[1])->Mass());
+            lvPiMinus.SetXYZM(kfTransportedPiMinus.Px(), kfTransportedPiMinus.Py(), kfTransportedPiMinus.Pz(), fPDG.GetParticle(-211)->Mass());
+            lvPiPlus.SetXYZM(kfTransportedPiPlus.Px(), kfTransportedPiPlus.Py(), kfTransportedPiPlus.Pz(), fPDG.GetParticle(211)->Mass());
 
-            /* Get properties */
+            /* Reconstruct (Anti)Lambda1520 candidate */
 
-            dca_sv_pv = LinePointDCA(lvLambda1520.Px(), lvLambda1520.Py(), lvLambda1520.Pz(),        //
-                                     kfLambda1520.GetX(), kfLambda1520.GetY(), kfLambda1520.GetZ(),  //
-                                     fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
-            cpa_sv_pv = CosinePointingAngle(lvLambda1520, kfLambda1520.GetX(), kfLambda1520.GetY(), kfLambda1520.GetZ(),  //
-                                            fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
-            dca_v0a_sv = LinePointDCA(lvLambda.Px(), lvLambda.Py(), lvLambda.Pz(),  //
-                                      kfV0A.GetX(), kfV0A.GetY(), kfV0A.GetZ(),     //
-                                      kfLambda1520.GetX(), kfLambda1520.GetY(), kfLambda1520.GetZ());
-            cpa_v0a_sv = CosinePointingAngle(lvLambda, kfV0A.GetX(), kfV0A.GetY(), kfV0A.GetZ(),  //
-                                             kfLambda1520.GetX(), kfLambda1520.GetY(), kfLambda1520.GetZ());
-            dca_t2_sv = kfTrack2.GetDistanceFromVertexXY(kfLambda1520);
-            dca_t3_sv = kfTrack3.GetDistanceFromVertexXY(kfLambda1520);
-            dca_v0a_v0b = kfV0A.GetDistanceFromParticleXY(kfV0B);  // (pending)
+            lvV0 = lvV0NegDau + lvV0PosDau;
 
-            // (cut) lambdas1520 selection
-            if (!PassesLambda1520Cuts_KF(kfLambda1520, kfV0A, kfTrack2, kfTrack3, lvLambda1520, lvLambda, lvTrack2, lvTrack3)) continue;
+            lvLambda1520 = lvV0 + lvPiMinus + lvPiPlus;
 
-            /* Histograms! */
-        }
-    }
-#endif
+            /* Apply cuts */
+
+            if (!PassesLambda1520Cuts(kfLambda1520, lvLambda1520, kfV0, kfV0NegDau, kfV0PosDau, kfPiMinus, kfPiPlus)) {
+                continue;
+            }
+
+            /* Get (Anti)Lambda1520's properties */
+
+            radius = TMath::Sqrt(kfLambda1520.GetX() * kfLambda1520.GetX() + kfLambda1520.GetY() * kfLambda1520.GetY());
+            decay_length = TMath::Sqrt((kfLambda1520.GetX() - fPrimaryVertex->GetX()) * (kfLambda1520.GetX() - fPrimaryVertex->GetX()) +
+                                       (kfLambda1520.GetY() - fPrimaryVertex->GetY()) * (kfLambda1520.GetY() - fPrimaryVertex->GetY()) +
+                                       (kfLambda1520.GetZ() - fPrimaryVertex->GetZ()) * (kfLambda1520.GetZ() - fPrimaryVertex->GetZ()));
+            cpa_wrt_pv = CosinePointingAngle(lvLambda1520, kfLambda1520.GetX(), kfLambda1520.GetY(), kfLambda1520.GetZ(),  //
+                                             fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+            dca_wrt_pv = TMath::Abs(kfLambda1520.GetDistanceFromVertex(kfPrimaryVertex));
+            // dca_btw_v0s = TMath::Abs(kfAntiLambda.GetDistanceFromParticle(kfKaonZeroShort));
+            // dca_v0a_sv = TMath::Abs(kfAntiLambda.GetDistanceFromVertex(kfLambda1520));
+            // dca_v0b_sv = TMath::Abs(kfKaonZeroShort.GetDistanceFromVertex(kfLambda1520));
+
+            // dca_v0a_neg_sv = TMath::Abs(kfAntiLambdaNegDau.GetDistanceFromVertex(kfLambda1520));
+            // dca_v0a_pos_sv = TMath::Abs(kfAntiLambdaPosDau.GetDistanceFromVertex(kfLambda1520));
+            // dca_v0b_neg_sv = TMath::Abs(kfKaonZeroShortNegDau.GetDistanceFromVertex(kfLambda1520));
+            // dca_v0b_pos_sv = TMath::Abs(kfKaonZeroShortPosDau.GetDistanceFromVertex(kfLambda1520));
+
+            is_signal =
+                isEsdIdxSignal[esdIdxNeg_V0] && isEsdIdxSignal[esdIdxPos_V0] && isEsdIdxSignal[esdIdx_PiMinus] && isEsdIdxSignal[esdIdx_PiPlus];
+            is_signal = is_signal && getLStarIdx_fromEsdIdx[esdIdxNeg_V0] == getLStarIdx_fromEsdIdx[esdIdxPos_V0] &&
+                        getLStarIdx_fromEsdIdx[esdIdxPos_V0] == getLStarIdx_fromEsdIdx[esdIdx_PiMinus] &&
+                        getLStarIdx_fromEsdIdx[esdIdx_PiMinus] == getLStarIdx_fromEsdIdx[esdIdx_PiPlus];
+
+            /* Fill histograms */
+
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "Mass")]->Fill(lvLambda1520.M());
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "Pt")]->Fill(lvLambda1520.Pt());
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "Pz")]->Fill(lvLambda1520.Pz());
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "Radius")]->Fill(radius);
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "Zv")]->Fill(kfLambda1520.GetZ());
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "Eta")]->Fill(lvLambda1520.Eta());
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "Rapidity")]->Fill(lvLambda1520.Rapidity());
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "DecayLength")]->Fill(decay_length);
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "DCAbtwV0s")]->Fill(dca_btw_v0s);
+            // fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "DCAv0aSV")]->Fill(dca_v0a_sv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "DCAv0bSV")]->Fill(dca_v0b_sv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "DCAv0anegSV")]->Fill(dca_v0a_neg_sv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "DCAv0aposSV")]->Fill(dca_v0a_pos_sv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "DCAv0bnegSV")]->Fill(dca_v0b_neg_sv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "DCAv0bposSV")]->Fill(dca_v0b_pos_sv);
+            fHist_Lambdas1520[std::make_tuple("Found", "All", pdgLambda1520, "Chi2ndf")]->Fill((Double_t)kfLambda1520.GetChi2() /
+                                                                                               (Double_t)kfLambda1520.GetNDF());
+
+            if (!is_signal) continue;
+
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "Mass")]->Fill(lvLambda1520.M());
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "Pt")]->Fill(lvLambda1520.Pt());
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "Pz")]->Fill(lvLambda1520.Pz());
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "Radius")]->Fill(radius);
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "Zv")]->Fill(kfLambda1520.GetZ());
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "Eta")]->Fill(lvLambda1520.Eta());
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "Rapidity")]->Fill(lvLambda1520.Rapidity());
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "DecayLength")]->Fill(decay_length);
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "DCAbtwV0s")]->Fill(dca_btw_v0s);
+            // fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "DCAv0aSV")]->Fill(dca_v0a_sv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "DCAv0bSV")]->Fill(dca_v0b_sv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "DCAv0anegSV")]->Fill(dca_v0a_neg_sv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "DCAv0aposSV")]->Fill(dca_v0a_pos_sv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "DCAv0bnegSV")]->Fill(dca_v0b_neg_sv);
+            // fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "DCAv0bposSV")]->Fill(dca_v0b_pos_sv);
+            fHist_Lambdas1520[std::make_tuple("Found", "Signal", pdgLambda1520, "Chi2ndf")]->Fill((Double_t)kfLambda1520.GetChi2() /
+                                                                                                  (Double_t)kfLambda1520.GetNDF());
+
+        }  // end of loop over pion pairs
+    }      // end of loop over (anti)lambdas
 }
 
 /*
  Apply Lambda(1520) candidate cuts.
 */
-Bool_t AliAnalysisTaskLambda1520Lpipi::PassesLambda1520Cuts(KFParticleMother kfLambda1520, TLorentzVector lvLambda1520, KFParticle kfAntiLambda,
-                                                            KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos,
-                                                            KFParticle kfKaonZeroShortNeg, KFParticle kfKaonZeroShortPos) {
+Bool_t AliAnalysisTaskLambda1520Lpipi::PassesLambda1520Cuts(KFParticleMother kfLambda1520, TLorentzVector lvLambda1520, KFParticle kfV0,
+                                                            KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfPiMinus,
+                                                            KFParticle kfPiPlus) {
 
-    // PENDING
+    // PENDING!
+
+    Double_t Mass = lvLambda1520.M();
+    if (kMin_LStar_Mass && Mass < kMin_LStar_Mass) return kFALSE;
+    if (kMax_LStar_Mass && Mass > kMax_LStar_Mass) return kFALSE;
 
     return kTRUE;
 }
@@ -1579,13 +1715,18 @@ void AliAnalysisTaskLambda1520Lpipi::ClearContainers() {
     getEsdIdxOfPosDau_fromLambdaIdx.clear();
     getEsdIdxOfNegDau_fromAntiLambdaIdx.clear();
     getEsdIdxOfPosDau_fromAntiLambdaIdx.clear();
+    getEsdIdxOfNegDau_fromPionPairIdx.clear();
+    getEsdIdxOfPosDau_fromPionPairIdx.clear();
 
     isLambdaIdxATrueV0.clear();
     isAntiLambdaIdxATrueV0.clear();
+    isPionPairIdxATrueV0.clear();
 
     getMcIdx_fromLambdaIdx.clear();
     getMcIdx_fromAntiLambdaIdx.clear();
+    getMcIdx_fromPionPairIdx.clear();
 
     kfLambdas.clear();
     kfAntiLambdas.clear();
+    kfPionPairs.clear();
 }
