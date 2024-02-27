@@ -137,7 +137,8 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
     TDatabasePDG fPDG;
     TList* fOutputListOfHists;
 
-    /* Tracks Histograms */
+    /** Tracks Histograms **/
+
     /*
      key: `pdg code`
      - `0` : MC tracks
@@ -153,8 +154,8 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
     // key: `set`, value: histogram
     std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;
 
-    /*****************/
-    /* V0 Histograms */
+    /** V0 Histograms **/
+
     /*
      key: `V0 pdg code`
      - `0` : MC V0s
@@ -175,8 +176,8 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
     // key: `set`, value: histogram
     std::map<TString, TH2F*> f2DHist_V0s_ArmenterosPodolanski;
 
-    /********************************/
-    /* (Anti)Lambdas1520 Histograms */
+    /** (Anti)Lambdas1520 Histograms **/
+
     /*
      key: `Lambda(1520) pdg code`
      - 0: n events
@@ -188,25 +189,40 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
     // key: `stage, set, pdg code, property`, value: histogram
     std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Lambdas1520;
 
-    /**************/
-    /* Containers */
-    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;  //
+    /** Containers **/
 
-    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;                 //
+    /* filled at ProcessMCGen */
+    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;  //
+
+    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;            //
+    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfTrueV0;  //
+
     std::unordered_map<Int_t, UInt_t> getLStarIdx_fromMcIdx;               //
     std::unordered_map<UInt_t, std::vector<Int_t>> getMcIdx_fromLStarIdx;  //
+
+    std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromMcIdxOfDau;     //
+    std::unordered_map<Int_t, Int_t> getMcIdxOfNegDau_fromMcIdxOfTrueV0;  //
+    std::unordered_map<Int_t, Int_t> getMcIdxOfPosDau_fromMcIdxOfTrueV0;  //
+
+    /* filled at ProcessTracks */
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;  //
+
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;            //
+    std::unordered_map<Int_t, Bool_t> isEsdIdxDaughterOfTrueV0;  //
 
     std::unordered_map<Int_t, UInt_t> getLStarIdx_fromEsdIdx;               //
     std::unordered_map<UInt_t, std::vector<Int_t>> getEsdIdx_fromLStarIdx;  //
 
+    std::vector<Int_t> esdIndicesOfProtonTracks;      //
     std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //
     std::vector<Int_t> esdIndicesOfPiMinusTracks;     //
     std::vector<Int_t> esdIndicesOfPiPlusTracks;      //
 
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;  //
+    std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromEsdIdx;             //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0;  //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0;  //
 
-    std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;  //
-
+    /* filled at KalmanV0Finder */
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromLambdaIdx;      //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromLambdaIdx;      //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;  //
@@ -227,7 +243,6 @@ class AliAnalysisTaskLambda1520Lpipi : public AliAnalysisTaskSE {
 
     /* Track selection */
     Float_t kMax_NSigma_Pion;
-    Float_t kMax_NSigma_Kaon;
     Float_t kMax_NSigma_Proton;
     Float_t kMax_Track_Eta;
     Float_t kMin_Track_NTPCClusters;

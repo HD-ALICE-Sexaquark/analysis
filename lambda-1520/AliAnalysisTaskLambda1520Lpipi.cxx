@@ -17,7 +17,6 @@ AliAnalysisTaskLambda1520Lpipi::AliAnalysisTaskLambda1520Lpipi()
       fPDG(),
       fOutputListOfHists(0),
       kMax_NSigma_Pion(0.),
-      kMax_NSigma_Kaon(0.),
       kMax_NSigma_Proton(0.),
       kMax_Track_Eta(0.),
       kMin_Track_NTPCClusters(0.),
@@ -60,7 +59,6 @@ AliAnalysisTaskLambda1520Lpipi::AliAnalysisTaskLambda1520Lpipi(const char* name,
       fPDG(),
       fOutputListOfHists(0),
       kMax_NSigma_Pion(0.),
-      kMax_NSigma_Kaon(0.),
       kMax_NSigma_Proton(0.),
       kMax_Track_Eta(0.),
       kMin_Track_NTPCClusters(0.),
@@ -165,17 +163,15 @@ void AliAnalysisTaskLambda1520Lpipi::PrepareTracksHistograms() {
     Int_t tracks_species[4] = {2212, -2212, 211, -211};
     std::map<Int_t, TString> tracks_name = {{2212, "Proton"}, {-2212, "AntiProton"}, {211, "PiPlus"}, {-211, "PiMinus"}};
 
-    const Int_t N_tracks_props = 11;
-    TString tracks_props[N_tracks_props] = {"Pt",           "Pz",           "Eta",             //
-                                            "DCAwrtPV",     "NTPCClusters", "Chi2/NClusters",  //
-                                            "NSigmaProton", "NSigmaKaon",   "NSigmaPion",
-                                            "Status",       "GoldenChi2"};
-    Int_t tracks_nbins[N_tracks_props] = {100, 100, 100, 100, 100, 100,  //
+    const Int_t N_tracks_props = 10;
+    TString tracks_props[N_tracks_props] = {"Pt",           "Pz",         "Eta",    "DCAwrtPV",  "NTPCClusters", "Chi2/NClusters",
+                                            "NSigmaProton", "NSigmaPion", "Status", "GoldenChi2"};
+    Int_t tracks_nbins[N_tracks_props] = {100, 100, 100, 100, 100,  //
                                           100, 100, 100, 16,  100};
-    Double_t tracks_min[N_tracks_props] = {0.,   -20., -4.,  0., 0., 0.,  //
-                                           -7.5, -7.5, -7.5, 0,  -10};
-    Double_t tracks_max[N_tracks_props] = {10., 20., 4.,  200., 1000., 50.,  //
-                                           7.5, 7.5, 7.5, 16,   40};
+    Double_t tracks_min[N_tracks_props] = {0., -20., -4.,  0., 0.,  //
+                                           0., -7.5, -7.5, 0,  -10};
+    Double_t tracks_max[N_tracks_props] = {10., 20., 4.,  200., 1000.,  //
+                                           50., 7.5, 7.5, 16,   40};
 
     for (Int_t& species : tracks_species) {
         fHist_Tracks_Bookkeep[species] = new TH1F(Form("%s_Bookkeep", tracks_name[species].Data()), "", 15, 0., 15.);
@@ -193,8 +189,8 @@ void AliAnalysisTaskLambda1520Lpipi::PrepareTracksHistograms() {
 
                     if (stage == "MCGen" && (tracks_props[prop_idx] == "DCAwrtPV" || tracks_props[prop_idx] == "NTPCClusters" ||
                                              tracks_props[prop_idx] == "Chi2/NClusters" || tracks_props[prop_idx] == "NSigmaProton" ||
-                                             tracks_props[prop_idx] == "NSigmaKaon" || tracks_props[prop_idx] == "NSigmaPion" ||
-                                             tracks_props[prop_idx] == "Status" || tracks_props[prop_idx] == "GoldenChi2")) {
+                                             tracks_props[prop_idx] == "NSigmaPion" || tracks_props[prop_idx] == "Status" ||  //
+                                             tracks_props[prop_idx] == "GoldenChi2")) {
                         continue;
                     }
 
@@ -333,26 +329,40 @@ void AliAnalysisTaskLambda1520Lpipi::PrepareLambda1520Histograms() {
 void AliAnalysisTaskLambda1520Lpipi::DefineTracksCuts(TString cuts_option) {
 
     kMax_NSigma_Pion = 3.;
-    kMax_NSigma_Kaon = 3.;
     kMax_NSigma_Proton = 3.;
 
-    kMax_Track_Eta = 1.;
-    kMin_Track_NTPCClusters = 50;
-    kMax_Track_Chi2PerNTPCClusters = 7.;
-    kTurnedOn_Track_StatusCuts = kTRUE;
-    kTurnedOn_Track_RejectKinks = kFALSE;  // PENDING: need to study further
-    kMin_Track_DCAwrtPV = 2.;
+    kMax_Track_Eta = 0;                    // 1.;
+    kMin_Track_NTPCClusters = 0;           // 50;
+    kMax_Track_Chi2PerNTPCClusters = 0;    // 7.;
+    kTurnedOn_Track_StatusCuts = kFALSE;   // kTRUE;
+    kTurnedOn_Track_RejectKinks = kFALSE;  // kFALSE;  // PENDING: need to study further
+    kMin_Track_DCAwrtPV = 0;               // 2.;
 
-    kMin_Track_Pt[2212] = 0.4;
-    kMin_Track_Pt[211] = 0.2;
+    kMin_Track_Pt[2212] = 0;  // 0.4;
+    kMin_Track_Pt[211] = 0;   // 0.2;
 }
 
 /*
- Define Lambda1520 candidate cuts.
+ Define V0 cuts.
 */
 void AliAnalysisTaskLambda1520Lpipi::DefineV0Cuts(TString cuts_option) {
 
-    // none so far
+    for (const Int_t& pdgV0 : {-3122, 3122}) {
+        kMin_V0_Mass[pdgV0] = 1.08;
+        kMax_V0_Mass[pdgV0] = 1.16;
+        kMin_V0_Pt[pdgV0] = 0;              // 1.0;
+        kMax_V0_Eta[pdgV0] = 0;             // 0.9;
+        kMin_V0_Radius[pdgV0] = 0;          // 20.;
+        kMin_V0_DecayLength[pdgV0] = 0;     // 40.;
+        kMin_V0_CPAwrtPV[pdgV0] = 0;        // 0.1;
+        kMax_V0_CPAwrtPV[pdgV0] = 0;        // 0.99;
+        kMin_V0_DCAwrtPV[pdgV0] = 0;        // 4.;
+        kMax_V0_DCAbtwDau[pdgV0] = 0;       // 2.;
+        kMax_V0_DCAnegV0[pdgV0] = 0;        // 2.;
+        kMax_V0_DCAposV0[pdgV0] = 0;        // 2.;
+        kMax_V0_ArmPtOverAlpha[pdgV0] = 0;  // 0.2;
+        kMax_V0_Chi2ndf[pdgV0] = 0;         // 0.4;
+    }
 }
 
 /*
@@ -396,7 +406,7 @@ void AliAnalysisTaskLambda1520Lpipi::UserExec(Option_t*) {
 
     if (fIsMC) ProcessMCGen();
 
-    // ProcessTracks();
+    ProcessTracks();
 
     // if (fIsMC) {
     // ProcessFindableV0s();
@@ -405,15 +415,11 @@ void AliAnalysisTaskLambda1520Lpipi::UserExec(Option_t*) {
 
     /* Lambda -> pi-,P */
 
-    // KalmanV0Finder(3122, -211, 2212);
+    KalmanV0Finder(3122, -211, 2212);
 
     /* AntiLambda -> AntiP,pi+ */
 
-    // KalmanV0Finder(-3122, -2212, 211);
-
-    /* Lambda(1520) -> X,pi-,pi+ */
-
-    // KalmanV0Finder(0, -211, 211);
+    KalmanV0Finder(-3122, -2212, 211);
 
     /* Lambda(1520) -> Lambda,pi-,pi+ */
 
@@ -493,6 +499,8 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
         }
 
         /** Determine if they're signal or not **/
+        // NOTE: this is an issue, because then, I would tag (anti)protons that corresponds to another reaction channel as signal
+        // PENDING: study further!
 
         isMcIdxSignal[mcIdx] = TMath::Abs(pdg_mc) == 3124;
         if (isMcIdxSignal[mcIdx]) getLStarIdx_fromMcIdx[mcIdx] = mcIdx;
@@ -536,6 +544,15 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
 
             if (isMcIdxSignal[mcIdx]) fHist_V0s_Bookkeep[pdg_mc]->Fill(1);
 
+            if (n_daughters && mcIdxNegDaughter && mcIdxPosDaughter) {
+                isMcIdxDaughterOfTrueV0[mcIdxNegDaughter] = kTRUE;
+                isMcIdxDaughterOfTrueV0[mcIdxPosDaughter] = kTRUE;
+                getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxNegDaughter] = mcIdx;
+                getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxPosDaughter] = mcIdx;
+                getMcIdxOfNegDau_fromMcIdxOfTrueV0[mcIdx] = mcIdxNegDaughter;
+                getMcIdxOfPosDau_fromMcIdxOfTrueV0[mcIdx] = mcIdxPosDaughter;
+            }
+
             if (isMcIdxSignal[mcIdx] && n_daughters && mcIdxNegDaughter && mcIdxPosDaughter) {
                 fHist_V0s_Bookkeep[pdg_mc]->Fill(2);
                 fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Mass")]->Fill(mcPart->M());
@@ -548,12 +565,12 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
                 fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pt")]->Fill(mcPart->Pt());
                 fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pz")]->Fill(mcPart->Pz());
                 // PENDING!
-                // fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmQt")]->Fill(  //
-                // Calculate_ArmPt(mcPart->Px(), mcPart->Py(), mcPart->Pz(),          //
+                // fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmQt")]->Fill(
+                // ArmenterosQt(mcPart->Px(), mcPart->Py(), mcPart->Pz(),
                 // mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz()));
-                // fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmAlpha")]->Fill(  //
-                // Calculate_ArmAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(),          //
-                //    mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),    //
+                // fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmAlpha")]->Fill(
+                // ArmenterosAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(),
+                //    mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),
                 //    mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz()));
             }
         }  // end of (Anti)Lambda condition
@@ -625,23 +642,141 @@ void AliAnalysisTaskLambda1520Lpipi::GetDaughtersInfo(AliMCParticle* mcPart, Int
 
 /*
  Loop over the reconstructed tracks in a single event.
- IMPORTANT: don't trust track->GetID()
- - uses: fESD, fMC
- - input: Indices_MCGen_FS_Signal (pending)
- - output: idxPiPlusTracks,idxPiMinusTracks,idxKaonPlusTracks,idxKaonMinusTracks,idxProtonTracks,idxAntiProtonTracks
 */
 void AliAnalysisTaskLambda1520Lpipi::ProcessTracks() {
 
     AliESDtrack* track;
 
-    // loop over MC rec. tracks in a single event
-    for (Int_t idx_track = 0; idx_track < fESD->GetNumberOfTracks(); idx_track++) {
+    Int_t mcIdx;
+    Int_t mcPdgCode;
+    Int_t mcIdxOfTrueV0;
 
-        track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_track));
+    Float_t pt, pz, eta;
+    Float_t impar_pv[2], dca_wrt_pv;
+    Float_t n_tpc_clusters;
+    Float_t chi2_over_nclusters;
+    Float_t n_sigma_proton;
+    Float_t n_sigma_pion;
+    Float_t golden_chi2;
 
-        /* Apply track selection cuts */
+    /* Loop over tracks in a single event */
+
+    for (Int_t esdIdxTrack = 0; esdIdxTrack < fESD->GetNumberOfTracks(); esdIdxTrack++) {
+
+        /* Get track */
+
+        track = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxTrack));
+
+        /* Get MC info */
+
+        mcIdx = TMath::Abs(track->GetLabel());
+        mcPdgCode = getPdgCode_fromMcIdx[mcIdx];
+
+        /* Fill containers */
+
+        getMcIdx_fromEsdIdx[esdIdxTrack] = mcIdx;
+
+        isEsdIdxSignal[esdIdxTrack] = isMcIdxSignal[mcIdx];
+        isEsdIdxDaughterOfTrueV0[esdIdxTrack] = isMcIdxDaughterOfTrueV0[mcIdx];
+
+        /* Fill histograms before track selection */
+
+        f2DHist_Tracks_TPCsignal["All"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
+
+        /* Apply track selection */
 
         if (!PassesTrackSelection(track)) continue;
+
+        /* Fill containers -- related to findable (anti)lambda1520 */
+
+        if (isMcIdxSignal[mcIdx]) {
+            getLStarIdx_fromEsdIdx[esdIdxTrack] = getLStarIdx_fromMcIdx[mcIdx];
+            getEsdIdx_fromLStarIdx[getLStarIdx_fromEsdIdx[esdIdxTrack]].push_back(esdIdxTrack);
+        }
+
+        /* Get track properties */
+
+        pt = track->Pt();
+        pz = track->Pz();
+        eta = track->Eta();
+
+        Float_t xy_impar_wrt_pv, z_impar_wrt_pv;
+        track->GetImpactParameters(xy_impar_wrt_pv, z_impar_wrt_pv);  // pre-calculated DCA w.r.t. PV
+        dca_wrt_pv = TMath::Sqrt(xy_impar_wrt_pv * xy_impar_wrt_pv + z_impar_wrt_pv * z_impar_wrt_pv);
+
+        n_tpc_clusters = track->GetTPCNcls();  // note: capital N
+        chi2_over_nclusters = n_tpc_clusters ? track->GetTPCchi2() / (Double_t)n_tpc_clusters : 999.;
+        n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
+        n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
+        golden_chi2 = track->GetChi2TPCConstrainedVsGlobal(fPrimaryVertex);
+
+        /* Fill histograms */
+
+        f2DHist_Tracks_TPCsignal["Selected"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
+
+        std::vector<Int_t> possiblePID;
+        if (TMath::Abs(n_sigma_proton) < kMax_NSigma_Proton && track->Charge() < 0.) possiblePID.push_back(-2212);
+        if (TMath::Abs(n_sigma_proton) < kMax_NSigma_Proton && track->Charge() > 0.) possiblePID.push_back(2212);
+        if (TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion && track->Charge() < 0.) possiblePID.push_back(-211);
+        if (TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion && track->Charge() > 0.) possiblePID.push_back(211);
+
+        for (Int_t& esdPdgCode : possiblePID) {
+
+            if (esdPdgCode == 2212) esdIndicesOfProtonTracks.push_back(esdIdxTrack);
+            if (esdPdgCode == -2212) esdIndicesOfAntiProtonTracks.push_back(esdIdxTrack);
+            if (esdPdgCode == -211) esdIndicesOfPiMinusTracks.push_back(esdIdxTrack);
+            if (esdPdgCode == 211) esdIndicesOfPiPlusTracks.push_back(esdIdxTrack);
+
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pt")]->Fill(pt);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pz")]->Fill(pz);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Eta")]->Fill(eta);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
+            PlotStatus(track, "All", esdPdgCode);
+
+            if (mcPdgCode == esdPdgCode) {
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pt")]->Fill(pt);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pz")]->Fill(pz);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Eta")]->Fill(eta);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
+                PlotStatus(track, "True", esdPdgCode);
+                f2DHist_Tracks_TPCsignal["True"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
+            }
+
+            if (mcPdgCode == esdPdgCode && isEsdIdxSignal[esdIdxTrack]) {
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pt")]->Fill(pt);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pz")]->Fill(pz);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Eta")]->Fill(eta);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
+                PlotStatus(track, "Signal", esdPdgCode);
+                f2DHist_Tracks_TPCsignal["Signal"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
+            }
+        }
+
+        /* Fill vectors */
+
+        mcIdxOfTrueV0 = getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdx];
+        getMcIdxOfTrueV0_fromEsdIdx[esdIdxTrack] = mcIdxOfTrueV0;
+
+        if (track->Charge() < 0.) {
+            getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0] = esdIdxTrack;
+        } else {
+            getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0] = esdIdxTrack;
+        }
 
     }  // end of loop over tracks
 }
@@ -651,7 +786,6 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessTracks() {
  - Input: `track`, `stage`, `esdPdgCode`
 */
 void AliAnalysisTaskLambda1520Lpipi::PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode) {
-#ifdef PENDING
     ULong64_t StatusCollection[16] = {AliESDtrack::kITSin,   AliESDtrack::kITSout,     AliESDtrack::kITSrefit,    AliESDtrack::kITSpid,
                                       AliESDtrack::kTPCin,   AliESDtrack::kTPCout,     AliESDtrack::kTPCrefit,    AliESDtrack::kTPCpid,
                                       AliESDtrack::kITSupg,  AliESDtrack::kSkipFriend, AliESDtrack::kGlobalMerge, AliESDtrack::kMultInV0,
@@ -660,7 +794,6 @@ void AliAnalysisTaskLambda1520Lpipi::PlotStatus(AliESDtrack* track, TString set,
     for (Int_t i = 0; i < 16; i++) {
         if ((track->GetStatus() & StatusCollection[i])) fHist_Tracks[std::make_tuple("Found", set, esdPdgCode, "Status")]->Fill(i);
     }
-#endif
 }
 
 /*
@@ -672,31 +805,30 @@ void AliAnalysisTaskLambda1520Lpipi::PlotStatus(AliESDtrack* track, TString set,
 Bool_t AliAnalysisTaskLambda1520Lpipi::PassesTrackSelection(AliESDtrack* track) {
 
     Float_t n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
-    Float_t n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
     Float_t n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
 
     // >> particle identification
     std::vector<Int_t> possiblePID;
-    if (TMath::Abs(n_sigma_proton) < kMax_NSigma_Proton) possiblePID.push_back(2212);
-    if (TMath::Abs(n_sigma_kaon) < kMax_NSigma_Kaon) possiblePID.push_back(321);
-    if (TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion) possiblePID.push_back(211);
-    if (!possiblePID.size()) return kFALSE;
+    if (kMax_NSigma_Proton && TMath::Abs(n_sigma_proton) < kMax_NSigma_Proton) possiblePID.push_back(2212);
+    if (kMax_NSigma_Pion && TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion) possiblePID.push_back(211);
+    if ((kMax_NSigma_Proton || kMax_NSigma_Pion) && !possiblePID.size()) return kFALSE;
 
     // >> eta
-    if (TMath::Abs(track->Eta()) > kMax_Track_Eta) return kFALSE;
+    if (kMax_Track_Eta && TMath::Abs(track->Eta()) > kMax_Track_Eta) return kFALSE;
 
     // >> TPC clusters
-    if (track->GetTPCNcls() < kMin_Track_NTPCClusters) return kFALSE;
+    if (kMin_Track_NTPCClusters && track->GetTPCNcls() < kMin_Track_NTPCClusters) return kFALSE;
 
     // >> chi2 per TPC cluster
-    if (track->GetTPCchi2() / (Double_t)track->GetTPCNcls() > kMax_Track_Chi2PerNTPCClusters) return kFALSE;
+    Double_t chi2_per_ntpc_clusters = track->GetTPCchi2() / (Double_t)track->GetTPCNcls();
+    if (kMax_Track_Chi2PerNTPCClusters && chi2_per_ntpc_clusters > kMax_Track_Chi2PerNTPCClusters) return kFALSE;
 
     // >> TPC and ITS status
     Bool_t tpc_status =
         (track->GetStatus() & AliESDtrack::kTPCin) && (track->GetStatus() & AliESDtrack::kTPCout) && (track->GetStatus() & AliESDtrack::kTPCrefit);
     Bool_t its_status =
-        !(track->GetStatus() & AliESDtrack::kITSin) && !(track->GetStatus() & AliESDtrack::kITSout) && !(track->GetStatus() & AliESDtrack::kITSrefit);
-    if (kTurnedOn_Track_StatusCuts && (!tpc_status || !its_status)) return kFALSE;
+        (track->GetStatus() & AliESDtrack::kITSin) && (track->GetStatus() & AliESDtrack::kITSout) && (track->GetStatus() & AliESDtrack::kITSrefit);
+    if (kTurnedOn_Track_StatusCuts && (!tpc_status || !its_status)) return kFALSE;  // NOTE: here, we want ITS tracks!
 
     // >> reject kinks
     if (kTurnedOn_Track_RejectKinks && track->GetKinkIndex(0) != 0) return kFALSE;
@@ -705,13 +837,13 @@ Bool_t AliAnalysisTaskLambda1520Lpipi::PassesTrackSelection(AliESDtrack* track) 
     Float_t xy_impar, z_impar;
     track->GetImpactParameters(xy_impar, z_impar);
     Float_t dca_wrt_pv = TMath::Sqrt(xy_impar * xy_impar + z_impar * z_impar);
-    if (dca_wrt_pv < kMin_Track_DCAwrtPV) return kFALSE;
+    if (kMin_Track_DCAwrtPV && dca_wrt_pv < kMin_Track_DCAwrtPV) return kFALSE;
 
     // >> reject low-pT pions
     // -- PENDING: this will also affect tracks with multiple PID hypotheses:
     // -- if a track both id as pion and proton, it will be cut by the highest pT cut
     for (Int_t& esdPdgCode : possiblePID) {
-        if (track->Pt() < kMin_Track_Pt[esdPdgCode]) return kFALSE;
+        if (kMin_Track_Pt[esdPdgCode] && track->Pt() < kMin_Track_Pt[esdPdgCode]) return kFALSE;
     }
 
     return kTRUE;
@@ -812,17 +944,15 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessFindableLambdas1520() {
 /*** === ***/
 
 /*
- Find all true V0s which had both of their daughters reconstructed.
- - uses: fESD, fMC, fMagneticField
- - input: idxNegativeTracks, idxPositiveTracks, pdgTrackNeg, pdgTrackPos
- - output: kfV0s, idxDaughters
+ Find all V0s via Kalman Filter.
+ - Uses: `fESD`, `fMC`, `fMagneticField`
+ - Input: `pdgV0`, `pdgTrackNeg`, `pdgTrackPos`
+ - Output: `kfV0s`, `idxDaughters`
 */
 void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos) {
-#ifdef PENDING
+
     AliESDtrack* esdTrackNeg;
     AliESDtrack* esdTrackPos;
-
-    Bool_t successful_daughters_check;  // PENDING: I still don't understand this...
 
     Double_t impar_neg[2], impar_pos[2];
 
@@ -843,7 +973,7 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackN
     TLorentzVector lvTrackPos;
     TLorentzVector lvV0;
 
-    /*  Choose between anti-lambda and K0S */
+    /* Choose between lambdas and anti-lambdas */
 
     std::vector<Int_t> esdIndicesNegTracks;
     std::vector<Int_t> esdIndicesPosTracks;
@@ -853,7 +983,15 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackN
     std::vector<Bool_t>* isFoundV0IdxATrueV0;
     std::unordered_map<Int_t, Int_t>* getMcIdx_fromFoundV0Idx;
 
-    if (pdgV0 == -3122) {
+    if (pdgV0 == 3122) {
+        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
+        esdIndicesPosTracks = esdIndicesOfProtonTracks;
+        kfFoundV0s = &kfLambdas;
+        getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromLambdaIdx;
+        getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromLambdaIdx;
+        isFoundV0IdxATrueV0 = &isLambdaIdxATrueV0;
+        getMcIdx_fromFoundV0Idx = &getMcIdx_fromLambdaIdx;
+    } else if (pdgV0 == -3122) {
         esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
         esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
         kfFoundV0s = &kfAntiLambdas;
@@ -861,14 +999,6 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackN
         getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromAntiLambdaIdx;
         isFoundV0IdxATrueV0 = &isAntiLambdaIdxATrueV0;
         getMcIdx_fromFoundV0Idx = &getMcIdx_fromAntiLambdaIdx;
-    } else if (pdgV0 == 310) {
-        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
-        esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
-        kfFoundV0s = &kfKaonsZeroShort;
-        getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromKaonZeroShortIdx;
-        getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromKaonZeroShortIdx;
-        isFoundV0IdxATrueV0 = &isKaonZeroShortIdxATrueV0;
-        getMcIdx_fromFoundV0Idx = &getMcIdx_fromKaonZeroShortIdx;
     }
 
     /* Loop over all possible pairs of tracks */
@@ -919,9 +1049,9 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackN
             decay_length = TMath::Sqrt((kfV0.GetX() - fPrimaryVertex->GetX()) * (kfV0.GetX() - fPrimaryVertex->GetX()) +
                                        (kfV0.GetY() - fPrimaryVertex->GetY()) * (kfV0.GetY() - fPrimaryVertex->GetY()) +
                                        (kfV0.GetZ() - fPrimaryVertex->GetZ()) * (kfV0.GetZ() - fPrimaryVertex->GetZ()));
-            arm_qt = Calculate_ArmPt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
-            arm_alpha = Calculate_ArmAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz(), lvTrackPos.Px(),
-                                           lvTrackPos.Py(), lvTrackPos.Pz());
+            arm_qt = ArmenterosQt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
+            arm_alpha = ArmenterosAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz(), lvTrackPos.Px(),
+                                        lvTrackPos.Py(), lvTrackPos.Pz());
             opening_angle = lvTrackNeg.Angle(lvTrackPos.Vect());
 
             /* Store V0 */
@@ -952,7 +1082,6 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackN
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "ArmQt")]->Fill(arm_qt);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "ArmAlpha")]->Fill(arm_alpha);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "OpeningAngle")]->Fill(opening_angle);
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Chi2")]->Fill(kfV0.GetChi2());
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Chi2ndf")]->Fill((Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF());
             f2DHist_V0s_ArmenterosPodolanski["All"]->Fill(arm_alpha, arm_qt);
 
@@ -978,7 +1107,6 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackN
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "ArmQt")]->Fill(arm_qt);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "ArmAlpha")]->Fill(arm_alpha);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "OpeningAngle")]->Fill(opening_angle);
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Chi2")]->Fill(kfV0.GetChi2());
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Chi2ndf")]->Fill((Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF());
             f2DHist_V0s_ArmenterosPodolanski["True"]->Fill(arm_alpha, arm_qt);
 
@@ -1000,13 +1128,11 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackN
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "ArmQt")]->Fill(arm_qt);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "ArmAlpha")]->Fill(arm_alpha);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "OpeningAngle")]->Fill(opening_angle);
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Chi2")]->Fill(kfV0.GetChi2());
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Chi2ndf")]->Fill((Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF());
             f2DHist_V0s_ArmenterosPodolanski["Signal"]->Fill(arm_alpha, arm_qt);
 
         }  // end of loop over pos. tracks
     }      // end of loop over neg. tracks
-#endif
 }
 
 /*
@@ -1017,7 +1143,7 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackN
 */
 Bool_t AliAnalysisTaskLambda1520Lpipi::PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,
                                                     TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos) {
-#ifdef PENDING
+
     Double_t Radius = TMath::Sqrt(kfV0.GetX() * kfV0.GetX() + kfV0.GetY() * kfV0.GetY());
     if (kMin_V0_Radius[pdgV0] && Radius < kMin_V0_Radius[pdgV0]) return kFALSE;
 
@@ -1054,15 +1180,15 @@ Bool_t AliAnalysisTaskLambda1520Lpipi::PassesV0Cuts(Int_t pdgV0, KFParticleMothe
     Double_t DCAposV0 = TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfV0));
     if (kMax_V0_DCAposV0[pdgV0] && DCAposV0 > kMax_V0_DCAposV0[pdgV0]) return kFALSE;
 
-    Double_t ArmPt = Calculate_ArmPt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
-    Double_t ArmAlpha = Calculate_ArmAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz(), lvTrackPos.Px(),
-                                           lvTrackPos.Py(), lvTrackPos.Pz());
+    Double_t ArmPt = ArmenterosQt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
+    Double_t ArmAlpha = ArmenterosAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz(), lvTrackPos.Px(),
+                                        lvTrackPos.Py(), lvTrackPos.Pz());
     Double_t ArmPtOverAlpha = TMath::Abs(ArmPt / ArmAlpha);
     if (kMax_V0_ArmPtOverAlpha[pdgV0] && ArmPtOverAlpha > kMax_V0_ArmPtOverAlpha[pdgV0]) return kFALSE;
 
     Double_t Chi2ndf = (Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF();
     if (kMax_V0_Chi2ndf[pdgV0] && Chi2ndf > kMax_V0_Chi2ndf[pdgV0]) return kFALSE;
-#endif
+
     return kTRUE;
 }
 
@@ -1091,8 +1217,6 @@ void AliAnalysisTaskLambda1520Lpipi::KalmanLambda1520Finder() {
     TLorentzVector lvTrack0, lvTrack1, lvTrack2, lvTrack3;
     TLorentzVector lvLambda, lvPionPair;
     TLorentzVector lvLambda1520;
-
-    Bool_t successful_daughters_check;
 
     Double_t dca_sv_pv, cpa_sv_pv, dca_v0a_sv, cpa_v0a_sv, dca_t2_sv, dca_t3_sv, dca_v0a_v0b;
 
@@ -1419,13 +1543,49 @@ KFParticle AliAnalysisTaskLambda1520Lpipi::TransportKFParticle(KFParticle kfThis
 }
 
 /*
-
+ Clear containers.
 */
 void AliAnalysisTaskLambda1520Lpipi::ClearContainers() {
     getPdgCode_fromMcIdx.clear();
 
     isMcIdxSignal.clear();
+    isMcIdxDaughterOfTrueV0.clear();
 
     getLStarIdx_fromMcIdx.clear();
     getMcIdx_fromLStarIdx.clear();
+
+    getMcIdxOfTrueV0_fromMcIdxOfDau.clear();
+    getMcIdxOfNegDau_fromMcIdxOfTrueV0.clear();
+    getMcIdxOfPosDau_fromMcIdxOfTrueV0.clear();
+
+    getMcIdx_fromEsdIdx.clear();
+
+    isEsdIdxSignal.clear();
+    isEsdIdxDaughterOfTrueV0.clear();
+
+    getLStarIdx_fromEsdIdx.clear();
+    getEsdIdx_fromLStarIdx.clear();
+
+    esdIndicesOfProtonTracks.clear();
+    esdIndicesOfAntiProtonTracks.clear();
+    esdIndicesOfPiMinusTracks.clear();
+    esdIndicesOfPiPlusTracks.clear();
+
+    getMcIdxOfTrueV0_fromEsdIdx.clear();
+    getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0.clear();
+    getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0.clear();
+
+    getEsdIdxOfNegDau_fromLambdaIdx.clear();
+    getEsdIdxOfPosDau_fromLambdaIdx.clear();
+    getEsdIdxOfNegDau_fromAntiLambdaIdx.clear();
+    getEsdIdxOfPosDau_fromAntiLambdaIdx.clear();
+
+    isLambdaIdxATrueV0.clear();
+    isAntiLambdaIdxATrueV0.clear();
+
+    getMcIdx_fromLambdaIdx.clear();
+    getMcIdx_fromAntiLambdaIdx.clear();
+
+    kfLambdas.clear();
+    kfAntiLambdas.clear();
 }
