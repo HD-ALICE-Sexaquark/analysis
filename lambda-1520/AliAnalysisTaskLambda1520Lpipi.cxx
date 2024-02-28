@@ -24,6 +24,7 @@ AliAnalysisTaskLambda1520Lpipi::AliAnalysisTaskLambda1520Lpipi()
       kTurnedOn_Track_StatusCuts(0.),
       kTurnedOn_Track_RejectKinks(0.),
       kMin_Track_DCAwrtPV(0.),
+      kMax_Track_DCAwrtPV(0.),
       kMin_LStar_Mass(0.),
       kMax_LStar_Mass(0.),
       kMin_LStar_Pt(0.),
@@ -66,6 +67,7 @@ AliAnalysisTaskLambda1520Lpipi::AliAnalysisTaskLambda1520Lpipi(const char* name,
       kTurnedOn_Track_StatusCuts(0.),
       kTurnedOn_Track_RejectKinks(0.),
       kMin_Track_DCAwrtPV(0.),
+      kMax_Track_DCAwrtPV(0.),
       kMin_LStar_Mass(0.),
       kMax_LStar_Mass(0.),
       kMin_LStar_Pt(0.),
@@ -329,18 +331,19 @@ void AliAnalysisTaskLambda1520Lpipi::PrepareLambda1520Histograms() {
 */
 void AliAnalysisTaskLambda1520Lpipi::DefineTracksCuts(TString cuts_option) {
 
-    kMax_NSigma_Pion = 3.;
-    kMax_NSigma_Proton = 3.;
+    kMax_NSigma_Pion = 2.5;
+    kMax_NSigma_Proton = 2.5;
 
-    kMax_Track_Eta = 0;                    // 1.;
-    kMin_Track_NTPCClusters = 0;           // 50;
-    kMax_Track_Chi2PerNTPCClusters = 0;    // 7.;
-    kTurnedOn_Track_StatusCuts = kFALSE;   // kTRUE;
-    kTurnedOn_Track_RejectKinks = kFALSE;  // kFALSE;  // PENDING: need to study further
-    kMin_Track_DCAwrtPV = 0;               // 2.;
+    kMax_Track_Eta = 1.;
+    kMin_Track_NTPCClusters = 50.;
+    kMax_Track_Chi2PerNTPCClusters = 7.;
+    kTurnedOn_Track_StatusCuts = kFALSE;
+    kTurnedOn_Track_RejectKinks = kFALSE;  // PENDING: need to study further
+    kMin_Track_DCAwrtPV = 0.;
+    kMax_Track_DCAwrtPV = 4.;
 
-    kMin_Track_Pt[2212] = 0;  // 0.4;
-    kMin_Track_Pt[211] = 0;   // 0.2;
+    kMin_Track_Pt[2212] = 0.3;
+    kMin_Track_Pt[211] = 0.1;
 }
 
 /*
@@ -350,26 +353,35 @@ void AliAnalysisTaskLambda1520Lpipi::DefineV0Cuts(TString cuts_option) {
 
     /* Pions Pairs */
 
-    kMin_V0_Mass[422] = 0.;
-    kMax_V0_Mass[422] = 10.;
+    kMin_V0_Mass[422] = 0.2;
+    kMax_V0_Mass[422] = 0.4;
+    kMin_V0_Pt[422] = 0.1;
+    kMax_V0_Eta[422] = 0.9;
+    kMax_V0_Radius[422] = 10.;
+    kMax_V0_DecayLength[422] = 10.;
+    kMin_V0_CPAwrtPV[422] = 0.99;
+    kMax_V0_DCAwrtPV[422] = 2.;
+    kMax_V0_DCAbtwDau[422] = 0.5;
+    kMax_V0_DCAnegV0[422] = 1.;
+    kMax_V0_DCAposV0[422] = 0.5;
+    kMax_V0_Chi2ndf[422] = 0.2;
 
     /* Lambdas and Anti-Lambdas */
 
     for (const Int_t& pdgV0 : {-3122, 3122}) {
         kMin_V0_Mass[pdgV0] = 1.08;
         kMax_V0_Mass[pdgV0] = 1.16;
-        kMin_V0_Pt[pdgV0] = 0;              // 1.0;
-        kMax_V0_Eta[pdgV0] = 0;             // 0.9;
-        kMin_V0_Radius[pdgV0] = 0;          // 20.;
-        kMin_V0_DecayLength[pdgV0] = 0;     // 40.;
-        kMin_V0_CPAwrtPV[pdgV0] = 0;        // 0.1;
-        kMax_V0_CPAwrtPV[pdgV0] = 0;        // 0.99;
-        kMin_V0_DCAwrtPV[pdgV0] = 0;        // 4.;
-        kMax_V0_DCAbtwDau[pdgV0] = 0;       // 2.;
-        kMax_V0_DCAnegV0[pdgV0] = 0;        // 2.;
-        kMax_V0_DCAposV0[pdgV0] = 0;        // 2.;
-        kMax_V0_ArmPtOverAlpha[pdgV0] = 0;  // 0.2;
-        kMax_V0_Chi2ndf[pdgV0] = 0;         // 0.4;
+        kMin_V0_Pt[pdgV0] = 0.5;
+        kMax_V0_Eta[pdgV0] = 0.9;
+        kMax_V0_Radius[pdgV0] = 10.;
+        kMax_V0_DecayLength[pdgV0] = 15.;
+        kMin_V0_CPAwrtPV[pdgV0] = 0.99;
+        kMax_V0_DCAwrtPV[pdgV0] = 2.;
+        kMax_V0_DCAbtwDau[pdgV0] = 0.5;
+        kMax_V0_DCAnegV0[pdgV0] = 1.;
+        kMax_V0_DCAposV0[pdgV0] = 0.5;
+        kMax_V0_ArmPtOverAlpha[pdgV0] = 0.2;
+        kMax_V0_Chi2ndf[pdgV0] = 0.2;
     }
 }
 
@@ -443,6 +455,8 @@ void AliAnalysisTaskLambda1520Lpipi::UserExec(Option_t*) {
 
     KalmanLambda1520Finder(-3124);
 
+    /* End of event */
+
     ClearContainers();
 
     // stream the results the analysis of this event to the output manager
@@ -462,6 +476,9 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
 
     AliMCParticle* mcPart;
     Int_t pdg_mc;
+
+    AliMCParticle* mcNegDau;
+    AliMCParticle* mcPosDau;
 
     Int_t n_daughters;
     Int_t mcIdxNeutralDaughter;
@@ -509,11 +526,7 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
         }
 
         /** Determine if they're signal or not **/
-        // NOTE: this is an issue, because then, I would tag (anti)protons that corresponds to another reaction channel as signal
-        // PENDING: study further!
 
-        isMcIdxSignal[mcIdx] = TMath::Abs(pdg_mc) == 3124;
-        if (isMcIdxSignal[mcIdx]) getLStarIdx_fromMcIdx[mcIdx] = mcIdx;
         if (mcPart->GetMother() >= 0) {
             isMcIdxSignal[mcIdx] = isMcIdxSignal[mcPart->GetMother()];
             if (isMcIdxSignal[mcIdx]) {
@@ -532,6 +545,11 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
 
             if (n_daughters && mcIdxNeutralDaughter && mcIdxNegDaughter && mcIdxPosDaughter) {
 
+                /* Only (Anti)Lambda1520 -> Lambda pi+- pi+- are considered signal */
+
+                isMcIdxSignal[mcIdx] = TMath::Abs(pdg_mc) == 3124;
+                if (isMcIdxSignal[mcIdx]) getLStarIdx_fromMcIdx[mcIdx] = mcIdx;
+
                 isMcIdxDaughterOfTrueV0[mcIdxNegDaughter] = kTRUE;
                 isMcIdxDaughterOfTrueV0[mcIdxPosDaughter] = kTRUE;
                 getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxNegDaughter] = mcIdx;
@@ -546,7 +564,7 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
                 fHist_Lambdas1520[std::make_tuple("MCGen", "All", pdg_mc, "Radius")]->Fill(decayVertex.Perp());
                 fHist_Lambdas1520[std::make_tuple("MCGen", "All", pdg_mc, "Zv")]->Fill(decayVertex.Z());
                 fHist_Lambdas1520[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
-                // fHist_Lambdas1520[std::make_tuple("MCGen", "All", pdg_mc, "Rapidity")]->Fill(mcPart->Rapidity()); // PENDING
+                fHist_Lambdas1520[std::make_tuple("MCGen", "All", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
                 fHist_Lambdas1520[std::make_tuple("MCGen", "All", pdg_mc, "DecayLength")]->Fill((originVertex - decayVertex).Mag());
                 fHist_Lambdas1520[std::make_tuple("MCGen", "All", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
                 fHist_Lambdas1520[std::make_tuple("MCGen", "All", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
@@ -556,6 +574,9 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
         /* (Anti)Lambda */
 
         if (TMath::Abs(pdg_mc) == 3122) {
+
+            mcNegDau = (AliMCParticle*)fMC->GetTrack(mcIdxNegDaughter);
+            mcPosDau = (AliMCParticle*)fMC->GetTrack(mcIdxPosDaughter);
 
             fHist_V0s_Bookkeep[pdg_mc]->Fill(0);
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Mass")]->Fill(mcPart->M());
@@ -567,14 +588,11 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Pt")]->Fill(mcPart->Pt());
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Pz")]->Fill(mcPart->Pz());
-            // PENDING!
-            // fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmQt")]->Fill(
-            // ArmenterosQt(mcPart->Px(), mcPart->Py(), mcPart->Pz(),
-            // mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz()));
-            // fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmAlpha")]->Fill(
-            // ArmenterosAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(),
-            //    mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),
-            //    mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz()));
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmQt")]->Fill(  //
+                ArmenterosQt(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz()));
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmAlpha")]->Fill(  //
+                ArmenterosAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(), mcPosDau->Px(),
+                                mcPosDau->Py(), mcPosDau->Pz()));
 
             if (isMcIdxSignal[mcIdx]) fHist_V0s_Bookkeep[pdg_mc]->Fill(1);
 
@@ -598,14 +616,11 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessMCGen() {
                 fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Eta")]->Fill(mcPart->Eta());
                 fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pt")]->Fill(mcPart->Pt());
                 fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pz")]->Fill(mcPart->Pz());
-                // PENDING!
-                // fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmQt")]->Fill(
-                // ArmenterosQt(mcPart->Px(), mcPart->Py(), mcPart->Pz(),
-                // mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz()));
-                // fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmAlpha")]->Fill(
-                // ArmenterosAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(),
-                //    mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),
-                //    mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz()));
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmQt")]->Fill(  //
+                    ArmenterosQt(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz()));
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmAlpha")]->Fill(  //
+                    ArmenterosAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(), mcPosDau->Px(),
+                                    mcPosDau->Py(), mcPosDau->Pz()));
             }
         }  // end of (Anti)Lambda condition
 
@@ -812,11 +827,6 @@ void AliAnalysisTaskLambda1520Lpipi::ProcessTracks() {
             getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0] = esdIdxTrack;
         }
 
-        if (isMcIdxDaughterOfTrueV0[mcIdx] && TMath::Abs(getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdx]]) == 3124) {
-            AliInfoF("esdIdxTrack: %i, mcIdx: %i, mcPdgCode: %i, isMcIdxSignal: %i, isMcIdxDaughterOfTrueV0: %i, getMcIdxOfTrueV0_fromMcIdxOfDau: %i",
-                     esdIdxTrack, mcIdx, mcPdgCode, isMcIdxSignal[mcIdx], isMcIdxDaughterOfTrueV0[mcIdx], getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdx]);
-        }
-
     }  // end of loop over tracks
 }
 
@@ -877,6 +887,7 @@ Bool_t AliAnalysisTaskLambda1520Lpipi::PassesTrackSelection(AliESDtrack* track) 
     track->GetImpactParameters(xy_impar, z_impar);
     Float_t dca_wrt_pv = TMath::Sqrt(xy_impar * xy_impar + z_impar * z_impar);
     if (kMin_Track_DCAwrtPV && dca_wrt_pv < kMin_Track_DCAwrtPV) return kFALSE;
+    if (kMax_Track_DCAwrtPV && dca_wrt_pv > kMax_Track_DCAwrtPV) return kFALSE;
 
     // >> reject low-pT pions
     // -- PENDING: this will also affect tracks with multiple PID hypotheses:
@@ -1195,7 +1206,7 @@ Bool_t AliAnalysisTaskLambda1520Lpipi::PassesV0Cuts(Int_t pdgV0, KFParticleMothe
                                                     TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos) {
 
     Double_t Radius = TMath::Sqrt(kfV0.GetX() * kfV0.GetX() + kfV0.GetY() * kfV0.GetY());
-    if (kMin_V0_Radius[pdgV0] && Radius < kMin_V0_Radius[pdgV0]) return kFALSE;
+    if (kMax_V0_Radius[pdgV0] && Radius > kMax_V0_Radius[pdgV0]) return kFALSE;
 
     Double_t Mass = lvV0.M();
     if (kMin_V0_Mass[pdgV0] && Mass < kMin_V0_Mass[pdgV0]) return kFALSE;
@@ -1209,17 +1220,15 @@ Bool_t AliAnalysisTaskLambda1520Lpipi::PassesV0Cuts(Int_t pdgV0, KFParticleMothe
 
     Double_t DecayLength = TMath::Sqrt(TMath::Power(kfV0.GetX() - fPrimaryVertex->GetX(), 2) + TMath::Power(kfV0.GetY() - fPrimaryVertex->GetY(), 2) +
                                        TMath::Power(kfV0.GetZ() - fPrimaryVertex->GetZ(), 2));
-    if (kMin_V0_DecayLength[pdgV0] && DecayLength < kMin_V0_DecayLength[pdgV0]) return kFALSE;
     if (kMax_V0_DecayLength[pdgV0] && DecayLength > kMax_V0_DecayLength[pdgV0]) return kFALSE;
 
     Double_t CPAwrtPV =
         CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_V0_CPAwrtPV[pdgV0] && CPAwrtPV < kMin_V0_CPAwrtPV[pdgV0]) return kFALSE;
-    if (kMax_V0_CPAwrtPV[pdgV0] && CPAwrtPV > kMax_V0_CPAwrtPV[pdgV0]) return kFALSE;
 
     Double_t DCAwrtPV = LinePointDCA(lvV0.Px(), lvV0.Py(), lvV0.Pz(), kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(),
                                      fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
-    if (kMin_V0_DCAwrtPV[pdgV0] && DCAwrtPV < kMin_V0_DCAwrtPV[pdgV0]) return kFALSE;
+    if (kMax_V0_DCAwrtPV[pdgV0] && DCAwrtPV > kMax_V0_DCAwrtPV[pdgV0]) return kFALSE;
 
     Double_t DCAbtwDau = TMath::Abs(kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos));
     if (kMax_V0_DCAbtwDau[pdgV0] && DCAbtwDau > kMax_V0_DCAbtwDau[pdgV0]) return kFALSE;
