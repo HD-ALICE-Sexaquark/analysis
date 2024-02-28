@@ -323,8 +323,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliMCEvent* fMC;                // MC event
     AliVVertex* fMC_PrimaryVertex;  // MC gen. (or true) primary vertex
     AliESDEvent* fESD;              // reconstructed event
-    AliPIDResponse* fPIDResponse;   // pid response object
     AliESDVertex* fPrimaryVertex;   // primary vertex
+    AliPIDResponse* fPIDResponse;   // pid response object
     Double_t fMagneticField;        // magnetic field
     std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;
     std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;

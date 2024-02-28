@@ -341,10 +341,10 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
                 if (stage == "Findable" && set == "Signal") continue;
                 if (stage == "MCGen" && set == "Signal") continue;
 
-                if ((stage == "MCGen" || stage == "Findable") && (AS_props[prop_idx] == "DCAbtwV0s" && AS_props[prop_idx] == "DCAv0aSV" &&       //
-                                                                  AS_props[prop_idx] == "DCAv0bSV" && AS_props[prop_idx] == "DCAv0anegSV" &&     //
-                                                                  AS_props[prop_idx] == "DCAv0aposSV" && AS_props[prop_idx] == "DCAv0bnegSV" &&  //
-                                                                  AS_props[prop_idx] == "DCAv0bposSV" && AS_props[prop_idx] == "Chi2ndf")) {
+                if ((stage == "MCGen" || stage == "Findable") && (AS_props[prop_idx] == "DCAbtwV0s" || AS_props[prop_idx] == "DCAv0aSV" ||       //
+                                                                  AS_props[prop_idx] == "DCAv0bSV" || AS_props[prop_idx] == "DCAv0anegSV" ||     //
+                                                                  AS_props[prop_idx] == "DCAv0aposSV" || AS_props[prop_idx] == "DCAv0bnegSV" ||  //
+                                                                  AS_props[prop_idx] == "DCAv0bposSV" || AS_props[prop_idx] == "Chi2ndf")) {
                     continue;
                 }
 
@@ -674,13 +674,10 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
     AliMCParticle* mcPart;
     Int_t pdg_mc;
 
-    AliMCParticle* mcMother;
-
     AliMCParticle* mcNegDau;
     AliMCParticle* mcPosDau;
 
     Int_t n_daughters = 0;
-
     Int_t mcIdxNegDaughter = 0;
     Int_t mcIdxPosDaughter = 0;
 
@@ -688,7 +685,6 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
     TVector3 decayVertex;
 
     Float_t pt;
-    Float_t radius;
     Float_t dca_wrt_pv;
     Float_t cpa_wrt_pv;
 
@@ -702,11 +698,11 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
         mcPart = (AliMCParticle*)fMC->GetTrack(mcIdx);
         pdg_mc = mcPart->PdgCode();
-        n_daughters = mcPart->GetNDaughters();
+        getPdgCode_fromMcIdx[mcIdx] = pdg_mc;
 
+        n_daughters = mcPart->GetNDaughters();
         mcIdxNegDaughter = 0;
         mcIdxPosDaughter = 0;
-        decayVertex.SetXYZ(0., 0., 0.);
 
         /* Protection in case of a particle with no momentum */
 
@@ -716,12 +712,10 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
         /* Get particle's properties */
 
-        pt = mcPart->Pt();
         originVertex.SetXYZ(mcPart->Xv(), mcPart->Yv(), mcPart->Zv());
-        radius = originVertex.Perp();
+        decayVertex.SetXYZ(0., 0., 0.);
 
-        getPdgCode_fromMcIdx[mcIdx] = pdg_mc;
-
+        pt = mcPart->Pt();
         if (n_daughters) {
             GetDaughtersInfo(mcPart, mcIdxNegDaughter, mcIdxPosDaughter, decayVertex);
             cpa_wrt_pv = CosinePointingAngle(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decayVertex.X(), decayVertex.Y(), decayVertex.Z(),
@@ -730,43 +724,51 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
                                       fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
         }
 
-        // If they're signal, their MC status number should be among 600 and 619.
-        // This is done exclusively for the sexaquark MC productions.
-        // This was done to recognize each interaction, assigning a different number to each of
-        // the 20 antisexaquark-nucleon reactions that were injected in a single event.
-        is_signal = mcPart->MCStatusCode() >= 600 && mcPart->MCStatusCode() < 620;
-        if (is_signal) status_code = mcPart->MCStatusCode();
+        /* Determine if daughters of reaction products are signal */
 
         if (mcPart->GetMother() >= 0) {
-            mcMother = (AliMCParticle*)fMC->GetTrack(mcPart->GetMother());
-            is_signal = is_signal || (mcMother->MCStatusCode() >= 600 && mcMother->MCStatusCode() < 620);
-            if (is_signal) status_code = mcMother->MCStatusCode();
+            isMcIdxSignal[mcIdx] = isMcIdxSignal[mcPart->GetMother()];
+            if (isMcIdxSignal[mcIdx]) {
+                getReactionIdx_fromMcIdx[mcIdx] = getReactionIdx_fromMcIdx[mcPart->GetMother()];
+                getMcIdx_fromReactionIdx[getReactionIdx_fromMcIdx[mcPart->GetMother()]].push_back(mcIdx);
+            }
         }
 
-        /* Include signal particles, as well, because they were injected as primaries, and we intend that they are not */
-
-        is_secondary = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || is_signal;
-
-        /** Fill histograms, indices vector and maps **/
-
-        /* Charged particles: anti-protons, kaons, pions */
+        /** Charged particles: anti-protons, kaons, pions **/
 
         if (pdg_mc == -2212 || pdg_mc == 321 || pdg_mc == 211 || pdg_mc == -211) {
+
+            /* Determine if reaction products are signal */
+            /* NOTE:
+             * If they're signal, their MC status number should be among 600 and 619.
+             * This is done exclusively for the MC productions to the sexaquark analysis.
+             * This was done to recognize each interaction, assigning a different number to each of
+             * the 20 antisexaquark-nucleon reactions that were injected in a single event.
+             */
+
+            if (!isMcIdxSignal[mcIdx]) isMcIdxSignal[mcIdx] = mcPart->MCStatusCode() >= 600 && mcPart->MCStatusCode() < 620;
 
             fHist_Tracks_Bookkeep[pdg_mc]->Fill(0);
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Pt")]->Fill(mcPart->Pt());
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Pz")]->Fill(mcPart->Pz());
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
 
-            if (is_secondary) {
+            /* Determine if they're a secondary particle */
+            /* NOTE:
+             * Include signal particles, as well, because despite they were injected as primaries,
+             * in reality, they are not
+             */
+
+            isMcIdxSecondary[mcIdx] = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || isMcIdxSignal[mcIdx];
+
+            if (isMcIdxSecondary[mcIdx]) {
                 fHist_Tracks_Bookkeep[pdg_mc]->Fill(1);
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pt")]->Fill(mcPart->Pt());
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pz")]->Fill(mcPart->Pz());
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Eta")]->Fill(mcPart->Eta());
             }
 
-            if (is_signal) {
-                isMcIdxSignal[mcIdx] = kTRUE;
+            if (isMcIdxSignal[mcIdx]) {
                 getReactionIdx_fromMcIdx[mcIdx] = status_code;
                 getMcIdx_fromReactionIdx[status_code].push_back(mcIdx);
 
@@ -777,7 +779,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             }
         }
 
-        /* Neutral particles: anti-lambdas and K0S */
+        /** Neutral particles: anti-lambdas and K0S **/
 
         if (pdg_mc == -3122 || pdg_mc == 310) {
 
@@ -897,10 +899,14 @@ void AliAnalysisTaskSexaquark::GetDaughtersInfo(AliMCParticle* mcPart, Int_t& mc
         mcDaughter = (AliMCParticle*)fMC->GetTrack(mcIdxDaughter);
         pdg_dau = mcDaughter->PdgCode();
 
-        if ((pdg_mc == -3122 && pdg_dau == -2212) || (pdg_mc == 310 && pdg_dau == -211)) {
-            mcIdxNegDaughter = mcIdxDaughter;
-        } else if ((pdg_mc == -3122 || pdg_mc == 310) && pdg_dau == 211) {
-            mcIdxPosDaughter = mcIdxDaughter;
+        if (pdg_mc == -3122) {
+            if (pdg_dau == -2212) mcIdxNegDaughter = mcIdxDaughter;
+            if (pdg_dau == 211) mcIdxPosDaughter = mcIdxDaughter;
+        }
+
+        if (pdg_mc == 310) {
+            if (pdg_dau == 211) mcIdxNegDaughter = mcIdxDaughter;
+            if (pdg_dau == 211) mcIdxPosDaughter = mcIdxDaughter;
         }
 
         /* In any case, get the decay vertex of the V0 */
@@ -1155,25 +1161,26 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 */
 Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track) {
 
+    /* Particle ID */
+
     Float_t n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
     Float_t n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
     Float_t n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
 
-    // >> particle identification
     std::vector<Int_t> possiblePID;
     if (TMath::Abs(n_sigma_proton) < kMax_NSigma_Proton) possiblePID.push_back(2212);
     if (TMath::Abs(n_sigma_kaon) < kMax_NSigma_Kaon) possiblePID.push_back(321);
     if (TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion) possiblePID.push_back(211);
-    if (!possiblePID.size()) return kFALSE;
+    if ((kMax_NSigma_Proton || kMax_NSigma_Kaon || kMax_NSigma_Pion) && !possiblePID.size()) return kFALSE;
 
-    // >> eta
-    if (TMath::Abs(track->Eta()) > kMax_Track_Eta) return kFALSE;
+    Double_t Eta = TMath::Abs(track->Eta());
+    if (kMax_Track_Eta && Eta > kMax_Track_Eta) return kFALSE;
 
-    // >> TPC clusters
-    if (track->GetTPCNcls() < kMin_Track_NTPCClusters) return kFALSE;
+    Double_t NTPCClusters = track->GetTPCNcls();
+    if (kMin_Track_NTPCClusters && NTPCClusters < kMin_Track_NTPCClusters) return kFALSE;
 
-    // >> chi2 per TPC cluster
-    if (track->GetTPCchi2() / (Double_t)track->GetTPCNcls() > kMax_Track_Chi2PerNTPCClusters) return kFALSE;
+    Double_t Chi2PerNTPCClusters = track->GetTPCchi2() / (Double_t)track->GetTPCNcls();
+    if (kMax_Track_Chi2PerNTPCClusters && Chi2PerNTPCClusters > kMax_Track_Chi2PerNTPCClusters) return kFALSE;
 
     // >> TPC and ITS status
     Bool_t tpc_status =
@@ -1188,14 +1195,14 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track) {
     // >> DCA w.r.t Primary Vertex
     Float_t xy_impar, z_impar;
     track->GetImpactParameters(xy_impar, z_impar);
-    Float_t dca_wrt_pv = TMath::Sqrt(xy_impar * xy_impar + z_impar * z_impar);
-    if (dca_wrt_pv < kMin_Track_DCAwrtPV) return kFALSE;
+    Float_t DCAwrtPV = TMath::Sqrt(xy_impar * xy_impar + z_impar * z_impar);
+    if (kMin_Track_DCAwrtPV && DCAwrtPV < kMin_Track_DCAwrtPV) return kFALSE;
 
     // >> reject low-pT pions
     // -- PENDING: this will also affect tracks with multiple PID hypotheses:
     // -- if a track both id as pion and proton, it will be cut by the highest pT cut
     for (Int_t& esdPdgCode : possiblePID) {
-        if (track->Pt() < kMin_Track_Pt[esdPdgCode]) return kFALSE;
+        if (kMin_Track_Pt[esdPdgCode] && track->Pt() < kMin_Track_Pt[esdPdgCode]) return kFALSE;
     }
 
     return kTRUE;
@@ -2330,7 +2337,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(TVector3 Secondary
 /*** ==================== ***/
 
 /*
- Find all true V0s which had both of their daughters reconstructed.
+ Find all V0s via Kalman Filter.
  - Uses: `fESD`, `fMC`, `fMagneticField`
  - Input: `pdgV0`, `pdgTrackNeg`, `pdgTrackPos`
  - Output: `kfV0s`, `idxDaughters`
@@ -2361,7 +2368,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     TLorentzVector lvTrackPos;
     TLorentzVector lvV0;
 
-    /*  Choose between anti-lambda and K0S */
+    /* Choose between anti-lambda and K0S */
 
     std::vector<Int_t> esdIndicesNegTracks;
     std::vector<Int_t> esdIndicesPosTracks;
@@ -2848,7 +2855,7 @@ Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(TLorentzVector lvParticle
 }
 
 /*
- Overloaded version of `CosinePointingAngle(...)`, using Px, Py, Pz instead of the particle's TLorentzVector.
+ Overload of `CosinePointingAngle(...)`, using Px, Py, Pz instead of the particle's TLorentzVector.
 */
 Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(Double_t Px, Double_t Py, Double_t Pz, Double_t X, Double_t Y, Double_t Z,  //
                                                        Double_t refPointX, Double_t refPointY, Double_t refPointZ) {
