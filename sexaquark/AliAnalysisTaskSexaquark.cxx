@@ -257,7 +257,7 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
     Double_t V0_max[N_V0_props] = {10., 250., 1., 200., 2., 2., 2., 500., 50., 4., 10., 20., 0.3, 1., 0.5 * TMath::Pi(), 1., 2., 0.5};
 
     for (Int_t& species : V0_species) {
-        fHist_V0s_Bookkeep[species] = new TH1F(Form("%s_Bookkeep", V0_name[species].Data()), "", 15, 0., 15.);
+        fHist_V0s_Bookkeep[species] = new TH1F(Form("%s_Bookkeep", V0_name[species].Data()), "", 50, 0., 50.);
         fOutputListOfHists->Add(fHist_V0s_Bookkeep[species]);
     }
 
@@ -326,6 +326,9 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
     Double_t AS_max[N_AS_props] = {10., 10.,  50., 200., 50., 2.,  //
                                    5.,  500., 1.,  10.,  2.,  2.,  //
                                    2.,  10.,  10., 10.,  10., 1.};
+
+    fHist_AntiSexaquarks_Bookkeep = new TH1F("AntiSexaquarks_Bookkeep", "", 25, 0., 25.);
+    fOutputListOfHists->Add(fHist_AntiSexaquarks_Bookkeep);
 
     for (TString& stage : AS_stages) {
         for (TString& set : AS_sets) {
@@ -964,6 +967,7 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
         /* Fill histograms */
 
+        fHist_AntiSexaquarks_Bookkeep->Fill(0);
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Mass")]->Fill(lvAntiSexaquark.M());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
@@ -1273,7 +1277,6 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
         if (pdg_code == -3122 || pdg_code == 310) {
 
             fHist_V0s_Bookkeep[pdg_code]->Fill(6);
-
             fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "DCAwrtPV")]->Fill(dca_wrt_pv);
@@ -1288,7 +1291,6 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
             if (!is_secondary) continue;
 
             fHist_V0s_Bookkeep[pdg_code]->Fill(7);
-
             fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "DCAwrtPV")]->Fill(dca_wrt_pv);
@@ -1303,7 +1305,6 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
             if (!is_signal) continue;
 
             fHist_V0s_Bookkeep[pdg_code]->Fill(8);
-
             fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "DCAwrtPV")]->Fill(dca_wrt_pv);
@@ -1411,6 +1412,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
         /* Fill histograms  */
 
+        fHist_AntiSexaquarks_Bookkeep->Fill(1);
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Mass")]->Fill(lvAntiSexaquark.M());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
@@ -1577,7 +1579,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
             /* Fill histograms */
 
-            fHist_V0s_Bookkeep[v0PdgCode]->Fill(9);
+            fHist_V0s_Bookkeep[v0PdgCode]->Fill(30);
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1599,7 +1601,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
             if (!is_true_v0) continue;
 
-            fHist_V0s_Bookkeep[v0PdgCode]->Fill(10);
+            fHist_V0s_Bookkeep[v0PdgCode]->Fill(31);
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1621,7 +1623,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
             if (!isMcIdxSecondary[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
-            fHist_V0s_Bookkeep[v0PdgCode]->Fill(11);
+            fHist_V0s_Bookkeep[v0PdgCode]->Fill(32);
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1643,7 +1645,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
             if (!isMcIdxSignal[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
-            fHist_V0s_Bookkeep[v0PdgCode]->Fill(12);
+            fHist_V0s_Bookkeep[v0PdgCode]->Fill(33);
             fHist_V0s[std::make_tuple("Found", "Signal", v0PdgCode, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "Signal", v0PdgCode, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Signal", v0PdgCode, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1830,7 +1832,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
             /* Fill histograms */
 
-            fHist_V0s_Bookkeep[pdgV0]->Fill(9);
+            fHist_V0s_Bookkeep[pdgV0]->Fill(30);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1852,7 +1854,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
             if (!is_true_v0) continue;
 
-            fHist_V0s_Bookkeep[pdgV0]->Fill(10);
+            fHist_V0s_Bookkeep[pdgV0]->Fill(31);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1874,7 +1876,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
             if (!isMcIdxSecondary[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
-            fHist_V0s_Bookkeep[pdgV0]->Fill(11);
+            fHist_V0s_Bookkeep[pdgV0]->Fill(32);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1896,7 +1898,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
             if (!isMcIdxSignal[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
-            fHist_V0s_Bookkeep[pdgV0]->Fill(12);
+            fHist_V0s_Bookkeep[pdgV0]->Fill(33);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -1927,6 +1929,8 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 */
 Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track) {
 
+    fHist_V0s_Bookkeep[pdgV0]->Fill(10);
+
     Double_t V0_X, V0_Y, V0_Z;
     v0->GetXYZ(V0_X, V0_Y, V0_Z);
 
@@ -1941,52 +1945,64 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDt
 
     Double_t Radius = TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y);
     if (kMin_V0_Radius[pdgV0] && Radius < kMin_V0_Radius[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(11);
 
     Double_t Mass = lvV0.M();
     if (kMin_V0_Mass[pdgV0] && Mass < kMin_V0_Mass[pdgV0]) return kFALSE;
     if (kMax_V0_Mass[pdgV0] && Mass > kMax_V0_Mass[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(12);
 
     Double_t Pt = lvV0.Pt();
     if (kMin_V0_Pt[pdgV0] && Pt < kMin_V0_Pt[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(13);
 
     Double_t Eta = TMath::Abs(lvV0.Eta());
     if (kMax_V0_Eta[pdgV0] && Eta > kMax_V0_Eta[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(14);
 
     Double_t DecayLength = TMath::Sqrt(TMath::Power(v0->Xv() - fPrimaryVertex->GetX(), 2) + TMath::Power(v0->Yv() - fPrimaryVertex->GetY(), 2) +
                                        TMath::Power(v0->Zv() - fPrimaryVertex->GetZ(), 2));
     if (kMin_V0_DecayLength[pdgV0] && DecayLength < kMin_V0_DecayLength[pdgV0]) return kFALSE;
     if (kMax_V0_DecayLength[pdgV0] && DecayLength > kMax_V0_DecayLength[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(15);
 
     Double_t CPAwrtPV = v0->GetV0CosineOfPointingAngle(fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_V0_CPAwrtPV[pdgV0] && CPAwrtPV < kMin_V0_CPAwrtPV[pdgV0]) return kFALSE;
     if (kMax_V0_CPAwrtPV[pdgV0] && CPAwrtPV > kMax_V0_CPAwrtPV[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(16);
 
     Double_t DCAwrtPV = LinePointDCA(v0->Px(), v0->Py(), v0->Pz(), v0->Xv(), v0->Yv(), v0->Zv(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(),
                                      fPrimaryVertex->GetZ());
     if (kMin_V0_DCAwrtPV[pdgV0] && DCAwrtPV < kMin_V0_DCAwrtPV[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(17);
 
     Float_t impar_neg_v0[2];
     neg_track->GetDZ(v0->Xv(), v0->Yv(), v0->Zv(), fMagneticField, impar_neg_v0);
     Double_t DCAnegV0 = TMath::Sqrt(impar_neg_v0[0] * impar_neg_v0[0] + impar_neg_v0[1] * impar_neg_v0[1]);
     if (kMax_V0_DCAnegV0[pdgV0] && DCAnegV0 > kMax_V0_DCAnegV0[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(18);
 
     Float_t impar_pos_v0[2];
     pos_track->GetDZ(v0->Xv(), v0->Yv(), v0->Zv(), fMagneticField, impar_pos_v0);
     Double_t DCAposV0 = TMath::Sqrt(impar_pos_v0[0] * impar_pos_v0[0] + impar_pos_v0[1] * impar_pos_v0[1]);
     if (kMax_V0_DCAposV0[pdgV0] && DCAposV0 > kMax_V0_DCAposV0[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(19);
 
     Double_t ArmPt = ArmenterosQt(v0->Px(), v0->Py(), v0->Pz(), N_Px, N_Py, N_Pz);
     Double_t ArmAlpha = ArmenterosAlpha(v0->Px(), v0->Py(), v0->Pz(), N_Px, N_Py, N_Pz, P_Px, P_Py, P_Pz);
     Double_t ArmPtOverAlpha = ArmPt / TMath::Abs(ArmAlpha);
     if (kMax_V0_ArmPtOverAlpha[pdgV0] && ArmPtOverAlpha > kMax_V0_ArmPtOverAlpha[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(20);
 
     /* Exclusive for Offline, Online, and Custom V0 Finders */
 
     Double_t Chi2 = v0->GetChi2V0();
     if (kMax_V0_Chi2[pdgV0] && Chi2 > kMax_V0_Chi2[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(21);
 
     Double_t ImprvDCAbtwDau = v0->GetDcaV0Daughters();
     if (kMax_V0_ImprvDCAbtwDau[pdgV0] && ImprvDCAbtwDau > kMax_V0_ImprvDCAbtwDau[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(22);
 
     return kTRUE;
 }
@@ -2000,50 +2016,65 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDt
 Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos,
                                               TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos) {
 
+    fHist_V0s_Bookkeep[pdgV0]->Fill(10);
     Double_t Radius = TMath::Sqrt(kfV0.GetX() * kfV0.GetX() + kfV0.GetY() * kfV0.GetY());
     if (kMin_V0_Radius[pdgV0] && Radius < kMin_V0_Radius[pdgV0]) return kFALSE;
 
     Double_t Mass = lvV0.M();
     if (kMin_V0_Mass[pdgV0] && Mass < kMin_V0_Mass[pdgV0]) return kFALSE;
     if (kMax_V0_Mass[pdgV0] && Mass > kMax_V0_Mass[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(11);
 
     Double_t Pt = lvV0.Pt();
     if (kMin_V0_Pt[pdgV0] && Pt < kMin_V0_Pt[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(12);
 
     Double_t Eta = TMath::Abs(lvV0.Eta());
     if (kMax_V0_Eta[pdgV0] && Eta > kMax_V0_Eta[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(13);
 
     Double_t DecayLength = TMath::Sqrt(TMath::Power(kfV0.GetX() - fPrimaryVertex->GetX(), 2) + TMath::Power(kfV0.GetY() - fPrimaryVertex->GetY(), 2) +
                                        TMath::Power(kfV0.GetZ() - fPrimaryVertex->GetZ(), 2));
     if (kMin_V0_DecayLength[pdgV0] && DecayLength < kMin_V0_DecayLength[pdgV0]) return kFALSE;
     if (kMax_V0_DecayLength[pdgV0] && DecayLength > kMax_V0_DecayLength[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(14);
 
     Double_t CPAwrtPV =
         CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_V0_CPAwrtPV[pdgV0] && CPAwrtPV < kMin_V0_CPAwrtPV[pdgV0]) return kFALSE;
     if (kMax_V0_CPAwrtPV[pdgV0] && CPAwrtPV > kMax_V0_CPAwrtPV[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(15);
 
     Double_t DCAwrtPV = LinePointDCA(lvV0.Px(), lvV0.Py(), lvV0.Pz(), kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(),
                                      fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_V0_DCAwrtPV[pdgV0] && DCAwrtPV < kMin_V0_DCAwrtPV[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(16);
 
     Double_t DCAbtwDau = TMath::Abs(kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos));
     if (kMax_V0_DCAbtwDau[pdgV0] && DCAbtwDau > kMax_V0_DCAbtwDau[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(17);
 
     Double_t DCAnegV0 = TMath::Abs(kfDaughterNeg.GetDistanceFromVertex(kfV0));
     if (kMax_V0_DCAnegV0[pdgV0] && DCAnegV0 > kMax_V0_DCAnegV0[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(18);
 
     Double_t DCAposV0 = TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfV0));
     if (kMax_V0_DCAposV0[pdgV0] && DCAposV0 > kMax_V0_DCAposV0[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(19);
 
     Double_t ArmPt = ArmenterosQt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
     Double_t ArmAlpha = ArmenterosAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz(), lvTrackPos.Px(),
                                         lvTrackPos.Py(), lvTrackPos.Pz());
     Double_t ArmPtOverAlpha = TMath::Abs(ArmPt / ArmAlpha);
     if (kMax_V0_ArmPtOverAlpha[pdgV0] && ArmPtOverAlpha > kMax_V0_ArmPtOverAlpha[pdgV0]) return kFALSE;
+    fHist_V0s_Bookkeep[pdgV0]->Fill(20);
 
     Double_t Chi2ndf = (Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF();
     if (kMax_V0_Chi2ndf[pdgV0] && Chi2ndf > kMax_V0_Chi2ndf[pdgV0]) return kFALSE;  // exclusive for KF method
+    fHist_V0s_Bookkeep[pdgV0]->Fill(21);
+
+    // there's no improved DCA btw daughters cut
+    fHist_V0s_Bookkeep[pdgV0]->Fill(22);
 
     return kTRUE;
 }
@@ -2199,6 +2230,7 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
 
             /* Fill histograms */
 
+            fHist_AntiSexaquarks_Bookkeep->Fill(19);
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass")]->Fill(lvAntiSexaquark.M());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
@@ -2219,6 +2251,7 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
 
             if (!is_signal) continue;
 
+            fHist_AntiSexaquarks_Bookkeep->Fill(20);
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvAntiSexaquark.M());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
@@ -2254,36 +2287,46 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(TVector3 Secondary
                                                               AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos,
                                                               AliESDtrack* esdKaonZeroShortNeg, AliESDtrack* esdKaonZeroShortPos) {
 
+    fHist_AntiSexaquarks_Bookkeep->Fill(2);
+
     Double_t mass = lvAntiSexaquark.M();
     if (kMin_Sexa_Mass && mass < kMin_Sexa_Mass) return kFALSE;
     if (kMax_Sexa_Mass && mass > kMax_Sexa_Mass) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(3);
 
     Double_t pt = lvAntiSexaquark.Pt();
     if (kMin_Sexa_Pt && pt < kMin_Sexa_Pt) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(4);
 
     Double_t eta = TMath::Abs(lvAntiSexaquark.Eta());
     if (kMax_Sexa_Eta && eta > kMax_Sexa_Eta) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(5);
 
     Double_t rapidity = TMath::Abs(lvAntiSexaquark.Rapidity());
     if (kMax_Sexa_Rapidity && rapidity > kMax_Sexa_Rapidity) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(6);
 
     Double_t radius = TMath::Sqrt(SecondaryVertex.X() * SecondaryVertex.X() + SecondaryVertex.Y() * SecondaryVertex.Y());
     if (kMin_Sexa_Radius && radius < kMin_Sexa_Radius) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(7);
 
     Double_t decay_length = TMath::Sqrt((SecondaryVertex.X() - fPrimaryVertex->GetX()) * (SecondaryVertex.X() - fPrimaryVertex->GetX()) +
                                         (SecondaryVertex.Y() - fPrimaryVertex->GetY()) * (SecondaryVertex.Y() - fPrimaryVertex->GetY()) +
                                         (SecondaryVertex.Z() - fPrimaryVertex->GetZ()) * (SecondaryVertex.Z() - fPrimaryVertex->GetZ()));
     if (kMin_Sexa_DecayLength && decay_length < kMin_Sexa_DecayLength) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(8);
 
     Double_t cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fPrimaryVertex->GetX(),
                                               fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_Sexa_CPAwrtPV && cpa_wrt_pv < kMin_Sexa_CPAwrtPV) return kFALSE;
     if (kMax_Sexa_CPAwrtPV && cpa_wrt_pv > kMax_Sexa_CPAwrtPV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(9);
 
     Double_t dca_wrt_pv = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), SecondaryVertex.X(), SecondaryVertex.Y(),
                                        SecondaryVertex.Z(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_Sexa_DCAwrtPV && dca_wrt_pv < kMin_Sexa_DCAwrtPV) return kFALSE;
     if (kMax_Sexa_DCAwrtPV && dca_wrt_pv > kMax_Sexa_DCAwrtPV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(10);
 
     TVector3 AntiLambda_vertex(esdAntiLambda.Xv(), esdAntiLambda.Yv(), esdAntiLambda.Zv());
     TVector3 AntiLambda_momentum(esdAntiLambda.Px(), esdAntiLambda.Py(), esdAntiLambda.Pz());
@@ -2292,34 +2335,44 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(TVector3 Secondary
     TVector3 pca1, pca2;
     Double_t dca_btw_v0s = Calculate_TwoLinesDCA_v2(AntiLambda_vertex, AntiLambda_momentum, KaonZeroShort_vertex, KaonZeroShort_momentum, pca1, pca2);
     if (kMax_Sexa_DCAbtwV0s && dca_btw_v0s > kMax_Sexa_DCAbtwV0s) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(11);
 
     Double_t dca_v0a_sv = LinePointDCA(esdAntiLambda.Px(), esdAntiLambda.Py(), esdAntiLambda.Pz(), esdAntiLambda.Xv(), esdAntiLambda.Yv(),
                                        esdAntiLambda.Zv(), SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z());
     if (kMax_Sexa_DCAv0aSV && dca_v0a_sv > kMax_Sexa_DCAv0aSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(12);
 
     Double_t dca_v0b_sv = LinePointDCA(esdKaonZeroShort.Px(), esdKaonZeroShort.Py(), esdKaonZeroShort.Pz(), esdKaonZeroShort.Xv(),
                                        esdKaonZeroShort.Yv(), esdKaonZeroShort.Zv(), SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z());
     if (kMax_Sexa_DCAv0bSV && dca_v0b_sv > kMax_Sexa_DCAv0bSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(13);
 
     Float_t impar_v0a_neg_sv[2];
     esdAntiLambdaNeg->GetDZ(SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMagneticField, impar_v0a_neg_sv);
     Double_t dca_v0a_neg_sv = TMath::Sqrt(impar_v0a_neg_sv[0] * impar_v0a_neg_sv[0] + impar_v0a_neg_sv[1] * impar_v0a_neg_sv[1]);
     if (kMax_Sexa_DCAv0anegSV && dca_v0a_neg_sv > kMax_Sexa_DCAv0anegSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(14);
 
     Float_t impar_v0a_pos_sv[2];
     esdAntiLambdaPos->GetDZ(SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMagneticField, impar_v0a_pos_sv);
     Double_t dca_v0a_pos_sv = TMath::Sqrt(impar_v0a_pos_sv[0] * impar_v0a_pos_sv[0] + impar_v0a_pos_sv[1] * impar_v0a_pos_sv[1]);
     if (kMax_Sexa_DCAv0aposSV && dca_v0a_pos_sv > kMax_Sexa_DCAv0aposSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(15);
 
     Float_t impar_v0b_neg_sv[2];
     esdKaonZeroShortNeg->GetDZ(SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMagneticField, impar_v0b_neg_sv);
     Double_t dca_v0b_neg_sv = TMath::Sqrt(impar_v0b_neg_sv[0] * impar_v0b_neg_sv[0] + impar_v0b_neg_sv[1] * impar_v0b_neg_sv[1]);
     if (kMax_Sexa_DCAv0bnegSV && dca_v0b_neg_sv > kMax_Sexa_DCAv0bnegSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(16);
 
     Float_t impar_v0b_pos_sv[2];
     esdKaonZeroShortPos->GetDZ(SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMagneticField, impar_v0b_pos_sv);
     Double_t dca_v0b_pos_sv = TMath::Sqrt(impar_v0b_pos_sv[0] * impar_v0b_pos_sv[0] + impar_v0b_pos_sv[1] * impar_v0b_pos_sv[1]);
     if (kMax_Sexa_DCAv0bposSV && dca_v0b_pos_sv > kMax_Sexa_DCAv0bposSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(17);
+
+    // since there's no Chi2/ndf cut
+    fHist_AntiSexaquarks_Bookkeep->Fill(18);
 
     return kTRUE;
 }
@@ -2460,7 +2513,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             /* Fill histograms */
 
-            fHist_V0s_Bookkeep[pdgV0]->Fill(9);
+            fHist_V0s_Bookkeep[pdgV0]->Fill(30);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2482,7 +2535,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             if (!is_true_v0) continue;
 
-            fHist_V0s_Bookkeep[pdgV0]->Fill(10);
+            fHist_V0s_Bookkeep[pdgV0]->Fill(31);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2504,7 +2557,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             if (!isMcIdxSecondary[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
-            fHist_V0s_Bookkeep[pdgV0]->Fill(11);
+            fHist_V0s_Bookkeep[pdgV0]->Fill(32);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2526,7 +2579,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             if (!isMcIdxSignal[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
-            fHist_V0s_Bookkeep[pdgV0]->Fill(12);
+            fHist_V0s_Bookkeep[pdgV0]->Fill(33);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2714,6 +2767,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
 
             /* Fill histograms */
 
+            fHist_AntiSexaquarks_Bookkeep->Fill(19);
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass")]->Fill(lvAntiSexaquark.M());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
@@ -2736,6 +2790,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
 
             if (!is_signal) continue;
 
+            fHist_AntiSexaquarks_Bookkeep->Fill(20);
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvAntiSexaquark.M());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
@@ -2771,60 +2826,78 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(KFParticleMother k
                                                               KFParticle kfAntiLambdaPos, KFParticle kfKaonZeroShortNeg,
                                                               KFParticle kfKaonZeroShortPos) {
 
+    fHist_AntiSexaquarks_Bookkeep->Fill(2);
+
     Double_t mass = lvAntiSexaquark.M();
     if (kMin_Sexa_Mass && mass < kMin_Sexa_Mass) return kFALSE;
     if (kMax_Sexa_Mass && mass > kMax_Sexa_Mass) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(3);
 
     Double_t pt = lvAntiSexaquark.Pt();
     if (kMin_Sexa_Pt && pt < kMin_Sexa_Pt) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(4);
 
     Double_t eta = TMath::Abs(lvAntiSexaquark.Eta());
     if (kMax_Sexa_Eta && eta > kMax_Sexa_Eta) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(5);
 
     Double_t rapidity = TMath::Abs(lvAntiSexaquark.Rapidity());
     if (kMax_Sexa_Rapidity && rapidity > kMax_Sexa_Rapidity) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(6);
 
     Double_t radius = TMath::Sqrt(kfAntiSexaquark.GetX() * kfAntiSexaquark.GetX() + kfAntiSexaquark.GetY() * kfAntiSexaquark.GetY());
     if (kMin_Sexa_Radius && radius < kMin_Sexa_Radius) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(7);
 
     Double_t decay_length = TMath::Sqrt((kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) * (kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) +
                                         (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) * (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) +
                                         (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()) * (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()));
     if (kMin_Sexa_DecayLength && decay_length < kMin_Sexa_DecayLength) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(8);
 
     Double_t cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(), kfAntiSexaquark.GetZ(),
                                               fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_Sexa_CPAwrtPV && cpa_wrt_pv < kMin_Sexa_CPAwrtPV) return kFALSE;
     if (kMax_Sexa_CPAwrtPV && cpa_wrt_pv > kMax_Sexa_CPAwrtPV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(9);
 
     KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
     Double_t dca_wrt_pv = TMath::Abs(kfAntiSexaquark.GetDistanceFromVertex(kfPrimaryVertex));
     if (kMin_Sexa_DCAwrtPV && dca_wrt_pv < kMin_Sexa_DCAwrtPV) return kFALSE;
     if (kMax_Sexa_DCAwrtPV && dca_wrt_pv > kMax_Sexa_DCAwrtPV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(10);
 
     Double_t dca_btw_v0s = TMath::Abs(kfAntiLambda.GetDistanceFromParticle(kfKaonZeroShort));
     if (kMax_Sexa_DCAbtwV0s && dca_btw_v0s > kMax_Sexa_DCAbtwV0s) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(11);
 
     Double_t dca_v0a_sv = TMath::Abs(kfAntiLambda.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0aSV && dca_v0a_sv > kMax_Sexa_DCAv0aSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(12);
 
     Double_t dca_v0b_sv = TMath::Abs(kfKaonZeroShort.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0bSV && dca_v0b_sv > kMax_Sexa_DCAv0bSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(13);
 
     Double_t dca_v0a_neg_sv = TMath::Abs(kfAntiLambdaNeg.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0anegSV && dca_v0a_neg_sv > kMax_Sexa_DCAv0anegSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(14);
 
     Double_t dca_v0a_pos_sv = TMath::Abs(kfAntiLambdaPos.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0aposSV && dca_v0a_pos_sv > kMax_Sexa_DCAv0aposSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(15);
 
     Double_t dca_v0b_neg_sv = TMath::Abs(kfKaonZeroShortNeg.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0bnegSV && dca_v0b_neg_sv > kMax_Sexa_DCAv0bnegSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(16);
 
     Double_t dca_v0b_pos_sv = TMath::Abs(kfKaonZeroShortPos.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0bposSV && dca_v0b_pos_sv > kMax_Sexa_DCAv0bposSV) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(17);
 
     Double_t chi2ndf = (Double_t)kfAntiSexaquark.GetChi2() / (Double_t)kfAntiSexaquark.GetNDF();
     if (kMax_Sexa_Chi2ndf && chi2ndf > kMax_Sexa_Chi2ndf) return kFALSE;
+    fHist_AntiSexaquarks_Bookkeep->Fill(18);
 
     return kTRUE;
 }
