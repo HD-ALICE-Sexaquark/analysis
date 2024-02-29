@@ -364,57 +364,48 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /** Containers -- vectors and hash tables **/
 
     /* filled at `ProcessMCGen()` */
-    std::vector<Int_t> mcIndicesOfTrueV0s;  //
+    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;  //
 
-    std::unordered_map<Int_t, Bool_t> isMcIdxSecondary;         //
-    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;            //
-    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfTrueV0;  //
+    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;     //
+    std::unordered_map<Int_t, Bool_t> isMcIdxSecondary;  //
 
-    std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromMcIdxOfDau;     //
-    std::unordered_map<Int_t, Int_t> getMcIdxOfNegDau_fromMcIdxOfTrueV0;  //
-    std::unordered_map<Int_t, Int_t> getMcIdxOfPosDau_fromMcIdxOfTrueV0;  //
-
-    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;                    //
     std::unordered_map<Int_t, UInt_t> getReactionIdx_fromMcIdx;               //
     std::unordered_map<UInt_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;  //
 
+    std::unordered_map<Int_t, Bool_t> doesMcIdxHaveMother;      //
+    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromMcIdx;  //
+    std::unordered_map<Int_t, Int_t> getNegDauMcIdx_fromMcIdx;  //
+    std::unordered_map<Int_t, Int_t> getPosDauMcIdx_fromMcIdx;  //
+
+    std::vector<Int_t> mcIndicesOfTrueV0s;  //
+
     /* filled at `ProcessTracks()` */
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;            //
+    std::unordered_map<Int_t, Bool_t> doesEsdIdxPassTrackSelection;  //
+    std::unordered_map<Int_t, Int_t> getEsdIdx_fromMcIdx;            //
+
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;                          //
     std::unordered_map<Int_t, UInt_t> getReactionIdx_fromEsdIdx;               //
     std::unordered_map<UInt_t, std::vector<Int_t>> getEsdIdx_fromReactionIdx;  //
 
-    std::unordered_map<Int_t, Bool_t> doesEsdIdxPassTrackSelection;  //
+    std::unordered_map<Int_t, Bool_t> doesEsdIdxHaveMother;      //
+    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromEsdIdx;  //
+    std::unordered_map<Int_t, Int_t> getNegDauEsdIdx_fromMcIdx;  //
+    std::unordered_map<Int_t, Int_t> getPosDauEsdIdx_fromMcIdx;  //
 
     std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //
     std::vector<Int_t> esdIndicesOfPosKaonTracks;     //
     std::vector<Int_t> esdIndicesOfPiMinusTracks;     //
     std::vector<Int_t> esdIndicesOfPiPlusTracks;      //
 
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;  //
-
-    std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;                 //
-    std::unordered_map<Int_t, Bool_t> isEsdIdxDaughterOfSecondaryV0;  //
-    std::unordered_map<Int_t, Bool_t> isEsdIdxDaughterOfTrueV0;       //
-
-    std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromEsdIdx;  // must protect first with `isEsdIdxSignal` `isEsdIdxDaughterOfSecondaryV0`
-                                                                   // `isEsdIdxDaughterOfTrueV0`
-
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0;  //
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0;  //
-
     /* filled at `[Official|Custom|Kalman]V0Finder()` */
-    std::vector<AliESDv0> esdAntiLambdas;     //
-    std::vector<AliESDv0> esdKaonsZeroShort;  //
-
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;     //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;     //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;  //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromKaonZeroShortIdx;  //
 
-    std::vector<Bool_t> isAntiLambdaIdxATrueV0;     //
-    std::vector<Bool_t> isKaonZeroShortIdxATrueV0;  //
-
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromAntiLambdaIdx;     // must protect first with `isAntiLambdaIdxTrueV0`
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromKaonZeroShortIdx;  // must protect first with `isKaonZeroShortIdxTrueV0`
+    std::vector<AliESDv0> esdAntiLambdas;     //
+    std::vector<AliESDv0> esdKaonsZeroShort;  //
 
     std::vector<KFParticleMother> kfAntiLambdas;     //
     std::vector<KFParticleMother> kfKaonsZeroShort;  //

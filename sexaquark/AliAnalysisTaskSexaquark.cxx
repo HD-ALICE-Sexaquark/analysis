@@ -27,10 +27,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fEvent(),
       mcIndicesOfTrueV0s(),
       isMcIdxSignal(),
-      isMcIdxDaughterOfTrueV0(),
-      getMcIdxOfTrueV0_fromMcIdxOfDau(),
-      getMcIdxOfNegDau_fromMcIdxOfTrueV0(),
-      getMcIdxOfPosDau_fromMcIdxOfTrueV0(),
       kMax_NSigma_Pion(0.),
       kMax_NSigma_Kaon(0.),
       kMax_NSigma_Proton(0.),
@@ -85,10 +81,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       fEvent(),
       mcIndicesOfTrueV0s(),
       isMcIdxSignal(),
-      isMcIdxDaughterOfTrueV0(),
-      getMcIdxOfTrueV0_fromMcIdxOfDau(),
-      getMcIdxOfNegDau_fromMcIdxOfTrueV0(),
-      getMcIdxOfPosDau_fromMcIdxOfTrueV0(),
       kMax_NSigma_Pion(0.),
       kMax_NSigma_Kaon(0.),
       kMax_NSigma_Proton(0.),
@@ -396,7 +388,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         ProcessSignalInteractions();
     }
 
-    /*
     ProcessTracks();
 
     if (fIsMC) {
@@ -432,7 +423,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
             KalmanSexaquarkFinder_ChannelA();
         }
     }
-    */
 
     /*
         if (fReactionChannel == "AntiSexaquark,P->AntiLambda,K+") {
@@ -721,51 +711,33 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
                                       fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
         }
 
-        /* Determine if particle is signal -- by inheriting if mother is signal */
+        /* Determine if particle is signal -- by checking if it's a reaction product */
+        // NOTE:
+        // If they're signal, their MC status number should be among 600 and 619.
+        // This is done exclusively for the MC productions to the sexaquark analysis.
+        // This was done to recognize each interaction, assigning a different number to each of
+        // the 20 antisexaquark-nucleon reactions that were injected in a single event.
+        //
 
-        if (mcPart->GetMother() >= 0) {
-            isMcIdxSignal[mcIdx] = isMcIdxSignal[mcPart->GetMother()];
+        if (!isMcIdxSignal[mcIdx]) {  // prevent overwriting the previously assigned signal status
+            isMcIdxSignal[mcIdx] = mcPart->MCStatusCode() >= 600 && mcPart->MCStatusCode() < 620;
             if (isMcIdxSignal[mcIdx]) {
-                getReactionIdx_fromMcIdx[mcIdx] = getReactionIdx_fromMcIdx[mcPart->GetMother()];
-                getMcIdx_fromReactionIdx[getReactionIdx_fromMcIdx[mcPart->GetMother()]].push_back(mcIdx);
+                getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
+                getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
             }
         }
 
-        /* Determine if particle is secondary -- by inheriting if mother is secondary */
+        /* Determine if it's a secondary particle */
+        // NOTE:
+        // Include signal particles, as well, because despite they were injected as primaries,
+        // in reality, they are not
+        //
 
-        if (mcPart->GetMother() >= 0) {
-            isMcIdxSecondary[mcIdx] = isMcIdxSecondary[mcPart->GetMother()];
-        }
+        isMcIdxSecondary[mcIdx] = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || isMcIdxSignal[mcIdx];
 
         /** Charged particles: anti-protons, kaons, pions **/
 
         if (pdg_mc == -2212 || pdg_mc == 321 || pdg_mc == 211 || pdg_mc == -211) {
-
-            /* Determine if particle is signal -- by checking if it's a reaction product */
-            /* NOTE:
-             * If they're signal, their MC status number should be among 600 and 619.
-             * This is done exclusively for the MC productions to the sexaquark analysis.
-             * This was done to recognize each interaction, assigning a different number to each of
-             * the 20 antisexaquark-nucleon reactions that were injected in a single event.
-             */
-
-            if (!isMcIdxSignal[mcIdx]) {
-                isMcIdxSignal[mcIdx] = mcPart->MCStatusCode() >= 600 && mcPart->MCStatusCode() < 620;
-                if (isMcIdxSignal[mcIdx]) {
-                    getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
-                    getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
-                }
-            }
-
-            /* Determine if it's a secondary particle */
-            /* NOTE:
-             * Include signal particles, as well, because despite they were injected as primaries,
-             * in reality, they are not
-             */
-
-            if (!isMcIdxSecondary[mcIdx]) {
-                isMcIdxSecondary[mcIdx] = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || isMcIdxSignal[mcIdx];
-            }
 
             /* Fill histograms */
 
@@ -793,22 +765,6 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
         if (pdg_mc == -3122 || pdg_mc == 310) {
 
-            /* Determine if reaction products are signal -- by checking if it's a reaction product*/
-
-            if (!isMcIdxSignal[mcIdx]) {
-                isMcIdxSignal[mcIdx] = mcPart->MCStatusCode() >= 600 && mcPart->MCStatusCode() < 620;
-                if (isMcIdxSignal[mcIdx]) {
-                    getReactionIdx_fromMcIdx[mcIdx] = mcPart->MCStatusCode();
-                    getMcIdx_fromReactionIdx[mcPart->MCStatusCode()].push_back(mcIdx);
-                }
-            }
-
-            /* Determine if it's a secondary particle */
-
-            if (!isMcIdxSecondary[mcIdx]) {
-                isMcIdxSecondary[mcIdx] = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || isMcIdxSignal[mcIdx];
-            }
-
             /* Fill histograms */
 
             fHist_V0s_Bookkeep[pdg_mc]->Fill(0);
@@ -817,18 +773,35 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
             if (isMcIdxSignal[mcIdx]) fHist_V0s_Bookkeep[pdg_mc]->Fill(4);
 
-            /* Check if this V0 had the daughters we're interested in */
+            /* Check if this V0 can be reconstructed */
+            // via its decay channel containing two oppositely charged particles
+            // -- anti-lambdas -> anti-proton piplus
+            // -- K0S -> piplus piminus
+            // (these conditions are defined in `GetDaughtersInfo()`)
 
             if (!n_daughters || !mcIdxNegDaughter || !mcIdxPosDaughter) continue;
 
             mcIndicesOfTrueV0s.push_back(mcIdx);
 
-            isMcIdxDaughterOfTrueV0[mcIdxNegDaughter] = kTRUE;
-            isMcIdxDaughterOfTrueV0[mcIdxPosDaughter] = kTRUE;
-            getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxNegDaughter] = mcIdx;
-            getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxPosDaughter] = mcIdx;
-            getMcIdxOfNegDau_fromMcIdxOfTrueV0[mcIdx] = mcIdxNegDaughter;
-            getMcIdxOfPosDau_fromMcIdxOfTrueV0[mcIdx] = mcIdxPosDaughter;
+            /* Store mother-daughter info */
+
+            doesMcIdxHaveMother[mcIdxNegDaughter] = kTRUE;
+            getMotherMcIdx_fromMcIdx[mcIdxNegDaughter] = mcIdx;
+            getNegDauMcIdx_fromMcIdx[mcIdx] = mcIdxNegDaughter;
+            isMcIdxSignal[mcIdxNegDaughter] = isMcIdxSignal[mcIdx];
+            if (isMcIdxSignal[mcIdxNegDaughter]) {
+                getReactionIdx_fromMcIdx[mcIdxNegDaughter] = getReactionIdx_fromMcIdx[mcIdx];
+                getMcIdx_fromReactionIdx[getReactionIdx_fromMcIdx[mcIdxNegDaughter]].push_back(mcIdxNegDaughter);
+            }
+
+            doesMcIdxHaveMother[mcIdxPosDaughter] = kTRUE;
+            getMotherMcIdx_fromMcIdx[mcIdxPosDaughter] = mcIdx;
+            getPosDauMcIdx_fromMcIdx[mcIdx] = mcIdxPosDaughter;
+            isMcIdxSignal[mcIdxPosDaughter] = isMcIdxSignal[mcIdx];
+            if (isMcIdxSignal[mcIdxPosDaughter]) {
+                getReactionIdx_fromMcIdx[mcIdxPosDaughter] = getReactionIdx_fromMcIdx[mcIdx];
+                getMcIdx_fromReactionIdx[getReactionIdx_fromMcIdx[mcIdxPosDaughter]].push_back(mcIdxPosDaughter);
+            }
 
             /* Fill histograms */
 
@@ -967,9 +940,12 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
             if (mcProduct->MCStatusCode() != reactionIdx) continue;
 
             lvProduct.SetPxPyPzE(mcProduct->Px(), mcProduct->Py(), mcProduct->Pz(), mcProduct->E());
-            secondary_vertex.SetXYZ(mcProduct->Xv(), mcProduct->Yv(), mcProduct->Zv());
 
             lvAntiSexaquark = lvAntiSexaquark + lvProduct;
+
+            /* Get sec. vertex */
+
+            if (secondary_vertex.Mag() < 1E-6) secondary_vertex.SetXYZ(mcProduct->Xv(), mcProduct->Yv(), mcProduct->Zv());
         }
 
         lvStruckNucleon.SetPxPyPzE(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());  // assume struck nucleon at rest
@@ -1014,7 +990,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
     Int_t mcIdx;
     Int_t mcPdgCode;
-    Int_t mcIdxOfTrueV0;
+    Int_t motherMcIdx;
 
     Float_t pt, pz, eta;
     Float_t impar_pv[2], dca_wrt_pv;
@@ -1036,14 +1012,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         /* Get MC info */
 
         mcIdx = TMath::Abs(track->GetLabel());
-        mcPdgCode = getPdgCode_fromMcIdx[mcIdx];
-
-        /* Fill containers */
-
         getMcIdx_fromEsdIdx[esdIdxTrack] = mcIdx;
-
-        isEsdIdxSignal[esdIdxTrack] = isMcIdxSignal[mcIdx];
-        isEsdIdxDaughterOfTrueV0[esdIdxTrack] = isMcIdxDaughterOfTrueV0[mcIdx];
+        mcPdgCode = getPdgCode_fromMcIdx[mcIdx];
 
         /* Fill histograms before track selection */
 
@@ -1051,28 +1021,26 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
         /* Apply track selection */
 
-        if (!PassesTrackSelection(track)) continue;
+        doesEsdIdxPassTrackSelection[esdIdxTrack] = PassesTrackSelection(track);
 
-        doesEsdIdxPassTrackSelection[esdIdxTrack] = kTRUE;
+        if (!doesEsdIdxPassTrackSelection[esdIdxTrack]) continue;
 
-        /* Fill containers -- related to findable anti-sexaquarks */
+        getEsdIdx_fromMcIdx[mcIdx] = esdIdxTrack;  // purposefully done after `PassesTrackSelection()`
 
-        // PENDING!
-        // if (isMcIdxSignal[mcIdx]) {
-        // getReactionIdx_fromEsdIdx[esdIdxTrack] =
-        // isMcIdxDaughterOfSignalV0[mcIdx] ? getReactionIdx_fromMcIdx[getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdx]] : getReactionIdx_fromMcIdx[mcIdx];
-        // getEsdIdx_fromReactionIdx[getReactionIdx_fromEsdIdx[esdIdxTrack]].push_back(esdIdxTrack);
-        // }
+        /* Fill containers */
 
-        /* Fill vectors */
+        isEsdIdxSignal[esdIdxTrack] = isMcIdxSignal[mcIdx];
+        if (isEsdIdxSignal[esdIdxTrack]) {
+            getReactionIdx_fromEsdIdx[esdIdxTrack] = getReactionIdx_fromMcIdx[mcIdx];
+            getEsdIdx_fromReactionIdx[getReactionIdx_fromEsdIdx[esdIdxTrack]].push_back(esdIdxTrack);
+        }
 
-        mcIdxOfTrueV0 = getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdx];
-        getMcIdxOfTrueV0_fromEsdIdx[esdIdxTrack] = mcIdxOfTrueV0;
-
-        if (track->Charge() < 0.) {
-            getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0] = esdIdxTrack;
-        } else {
-            getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0] = esdIdxTrack;
+        doesEsdIdxHaveMother[esdIdxTrack] = doesMcIdxHaveMother[mcIdx];
+        if (doesEsdIdxHaveMother[esdIdxTrack]) {
+            motherMcIdx = getMotherMcIdx_fromMcIdx[mcIdx];
+            getMotherMcIdx_fromEsdIdx[esdIdxTrack] = motherMcIdx;
+            if (getNegDauMcIdx_fromMcIdx[motherMcIdx] == mcIdx) getNegDauEsdIdx_fromMcIdx[motherMcIdx] = esdIdxTrack;
+            if (getPosDauMcIdx_fromMcIdx[motherMcIdx] == mcIdx) getPosDauEsdIdx_fromMcIdx[motherMcIdx] = esdIdxTrack;
         }
 
         /* Get track properties */
@@ -1085,7 +1053,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         track->GetImpactParameters(xy_impar_wrt_pv, z_impar_wrt_pv);  // pre-calculated DCA w.r.t. PV
         dca_wrt_pv = TMath::Sqrt(xy_impar_wrt_pv * xy_impar_wrt_pv + z_impar_wrt_pv * z_impar_wrt_pv);
 
-        n_tpc_clusters = track->GetTPCNcls();  // note: capital N
+        n_tpc_clusters = track->GetTPCNcls();  // NOTE: capital N
         chi2_over_nclusters = n_tpc_clusters ? track->GetTPCchi2() / (Double_t)n_tpc_clusters : 999.;
         n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
         n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
@@ -1109,8 +1077,6 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             if (esdPdgCode == -211) esdIndicesOfPiMinusTracks.push_back(esdIdxTrack);
             if (esdPdgCode == 211) esdIndicesOfPiPlusTracks.push_back(esdIdxTrack);
 
-            /* Fill histograms */
-
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pt")]->Fill(pt);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pz")]->Fill(pz);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Eta")]->Fill(eta);
@@ -1123,54 +1089,52 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
             PlotStatus(track, "All", esdPdgCode);
 
-            if (mcPdgCode == esdPdgCode) {
-                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pt")]->Fill(pt);
-                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pz")]->Fill(pz);
-                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Eta")]->Fill(eta);
-                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
-                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
-                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
-                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
-                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
-                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
-                fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
-                PlotStatus(track, "True", esdPdgCode);
-                f2DHist_Tracks_TPCsignal["True"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
-            }
+            if (mcPdgCode != esdPdgCode) continue;
 
-            if (mcPdgCode == esdPdgCode &&             // (isEsdIdxDaughterOfSecondaryV0[esdIdxTrack] ||
-                isEsdIdxDaughterOfTrueV0[esdIdxTrack]  //)
-            ) {                                        // PENDING: this def. can be refined
-                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pt")]->Fill(pt);
-                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pz")]->Fill(pz);
-                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Eta")]->Fill(eta);
-                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
-                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
-                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
-                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
-                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
-                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
-                fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
-                PlotStatus(track, "Secondary", esdPdgCode);
-                f2DHist_Tracks_TPCsignal["Secondary"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
-            }
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pt")]->Fill(pt);
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pz")]->Fill(pz);
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Eta")]->Fill(eta);
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
+            PlotStatus(track, "True", esdPdgCode);
+            f2DHist_Tracks_TPCsignal["True"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
 
-            if (mcPdgCode == esdPdgCode && isEsdIdxSignal[esdIdxTrack]) {
-                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pt")]->Fill(pt);
-                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pz")]->Fill(pz);
-                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Eta")]->Fill(eta);
-                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
-                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
-                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
-                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
-                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
-                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
-                fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
-                PlotStatus(track, "Signal", esdPdgCode);
-                f2DHist_Tracks_TPCsignal["Signal"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
-            }
-        }
-    }  // end of loop over tracks
+            if (!isMcIdxSecondary[mcIdx]) continue;
+
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pt")]->Fill(pt);
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pz")]->Fill(pz);
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Eta")]->Fill(eta);
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
+            PlotStatus(track, "Secondary", esdPdgCode);
+            f2DHist_Tracks_TPCsignal["Secondary"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
+
+            if (!isEsdIdxSignal[esdIdxTrack]) continue;
+
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pt")]->Fill(pt);
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pz")]->Fill(pz);
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Eta")]->Fill(eta);
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaProton")]->Fill(n_sigma_proton);
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "GoldenChi2")]->Fill(golden_chi2);
+            PlotStatus(track, "Signal", esdPdgCode);
+            f2DHist_Tracks_TPCsignal["Signal"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
+        }  // end of loop over PID hypotheses
+    }      // end of loop over tracks
 }
 
 /*
@@ -1278,7 +1242,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
         /* Check if both daughters were reconstructed */
 
-        if (!getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0] || !getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0]) {
+        if (!getNegDauEsdIdx_fromMcIdx[mcIdxOfTrueV0] || !getPosDauEsdIdx_fromMcIdx[mcIdxOfTrueV0]) {
             continue;
         }
 
@@ -1287,8 +1251,8 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
         /* Get the V0 decay vertex from one of the true daughters */
 
-        mcNegDaughter = (AliMCParticle*)fMC->GetTrack(getMcIdxOfNegDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0]);
-        mcPosDaughter = (AliMCParticle*)fMC->GetTrack(getMcIdxOfPosDau_fromMcIdxOfTrueV0[mcIdxOfTrueV0]);
+        mcNegDaughter = (AliMCParticle*)fMC->GetTrack(getNegDauMcIdx_fromMcIdx[mcIdxOfTrueV0]);
+        mcPosDaughter = (AliMCParticle*)fMC->GetTrack(getPosDauMcIdx_fromMcIdx[mcIdxOfTrueV0]);
 
         /* Get V0 properties */
 
@@ -1360,83 +1324,103 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
     -- Reaction Channel A: 1 anti-proton, 2 pi+, 1 pi-
     -- Reaction Channel D: 1 anti-proton, 1 pi+, 1 K+
     -- Reaction Channel E: 1 anti-proton, 2 pi+, 1 pi-, 1 K+
-    -- Reaction Channel H: PENDING
-  PENDING: still need to decide on the best way to do this.
-  - should I contrast with the rec. PID?
-  - should this happend after or before track selection?
-  - should I count the exact number of particles and species?
 */
 void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
-    Int_t esdIdxFS;
-
-    AliMCParticle* mcFinalStateParticle;
-    Int_t mcIdxFS;
-
-    // called product, because it's a first-generation daughter of the reaction
-    AliMCParticle* mcProduct;
-    Int_t mcIdxProduct;
+    AliMCParticle* mcFSPart;  // FS: final-state
+    Int_t mcIdx;
+    AliMCParticle* mcFGPart;  // FG: first gen.
+    Int_t motherMcIdx;
 
     /* Declare TLorentzVectors */
 
     TLorentzVector lvFinalStateParticle;
-
-    TLorentzVector lvStruckNucleon(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());  // assume struck nucleon at rest
-
+    TLorentzVector lvStruckNucleon;
     TLorentzVector lvAntiSexaquark;
+
+    /* Declare variables */
+
+    TVector3 secondary_vertex(0., 0., 0.);
+    Float_t radius;
+    Float_t decay_length;
+    Float_t cpa_wrt_pv;
+    Float_t dca_wrt_pv;
 
     /* Loop over interactions */
 
-    for (Int_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
+    for (UInt_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
 
-        /* Reset anti-sexaquark TLorentzVector */
+        /* Protection in case of general-purpose simulations */
 
+        if (!getEsdIdx_fromReactionIdx[reactionIdx].size()) continue;
+
+        /* Findable condition */
+        // All final state products should have been reconstructed and passed track selection
+
+        std::unordered_multiset<Int_t> pdg_reconstructed_particles;
+        for (Int_t& esdIdx : getEsdIdx_fromReactionIdx[reactionIdx]) {
+            pdg_reconstructed_particles.insert(getPdgCode_fromMcIdx[getMcIdx_fromEsdIdx[esdIdx]]);
+        }
+
+        std::unordered_multiset<Int_t> expected_pdg_fs_particles(fFinalStateProductsPDG.begin(), fFinalStateProductsPDG.end());
+
+        if (expected_pdg_fs_particles != pdg_reconstructed_particles) continue;
+
+        /* Reset vectors */
+
+        secondary_vertex.SetXYZ(0., 0., 0.);
         lvAntiSexaquark.SetPxPyPzE(0., 0., 0., 0.);
-
-        if (getEsdIdx_fromReactionIdx[reactionIdx].size() < fFinalStateProductsPDG.size()) continue;
 
         /* Loop, to get the reconstructed final-state particles info */
 
-        for (Int_t finalStateIdx = 0; finalStateIdx < (Int_t)getEsdIdx_fromReactionIdx[reactionIdx].size(); finalStateIdx++) {
+        for (Int_t& esdIdx : getEsdIdx_fromReactionIdx[reactionIdx]) {
 
-            esdIdxFS = getEsdIdx_fromReactionIdx[reactionIdx][finalStateIdx];
-            mcIdxFS = getMcIdx_fromEsdIdx[esdIdxFS];
-            mcFinalStateParticle = (AliMCParticle*)fMC->GetTrack(mcIdxFS);
+            mcIdx = getMcIdx_fromEsdIdx[esdIdx];
+            mcFSPart = (AliMCParticle*)fMC->GetTrack(mcIdx);
 
-            mcIdxProduct = getMcIdxOfTrueV0_fromMcIdxOfDau[mcIdxFS];
-            mcProduct = (AliMCParticle*)fMC->GetTrack(mcIdxProduct);
-
-            lvFinalStateParticle.SetPxPyPzE(mcFinalStateParticle->Px(), mcFinalStateParticle->Py(), mcFinalStateParticle->Pz(),
-                                            mcFinalStateParticle->E());
+            lvFinalStateParticle.SetPxPyPzE(mcFSPart->Px(), mcFSPart->Py(), mcFSPart->Pz(), mcFSPart->E());
 
             lvAntiSexaquark = lvAntiSexaquark + lvFinalStateParticle;
+
+            /* Get sec. vertex from the origin of the first-generation products of the reaction */
+
+            if (secondary_vertex.Mag() < 1E-6) {
+                if (mcFSPart->MCStatusCode() == reactionIdx) {
+                    secondary_vertex.SetXYZ(mcFSPart->Xv(), mcFSPart->Yv(), mcFSPart->Zv());
+                } else if (doesMcIdxHaveMother[mcIdx]) {
+                    motherMcIdx = getMotherMcIdx_fromMcIdx[mcIdx];
+                    mcFGPart = (AliMCParticle*)fMC->GetTrack(motherMcIdx);
+                    if (mcFGPart->MCStatusCode() == reactionIdx) secondary_vertex.SetXYZ(mcFGPart->Xv(), mcFGPart->Yv(), mcFGPart->Zv());
+                }
+            }
         }
 
+        lvStruckNucleon.SetPxPyPzE(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());  // assume struck nucleon at rest
         lvAntiSexaquark = lvAntiSexaquark - lvStruckNucleon;
 
-        /* Fill histograms  */
+        /* Get properties */
 
-        // PENDING - BUG: for the moment, using last mcProduct found
+        radius = TMath::Sqrt(TMath::Power(secondary_vertex.X(), 2) + TMath::Power(secondary_vertex.Y(), 2));
+        decay_length = TMath::Sqrt(TMath::Power(secondary_vertex.X() - fMC_PrimaryVertex->GetX(), 2) +
+                                   TMath::Power(secondary_vertex.Y() - fMC_PrimaryVertex->GetY(), 2) +
+                                   TMath::Power(secondary_vertex.Z() - fMC_PrimaryVertex->GetZ(), 2));
+        cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, secondary_vertex.X(), secondary_vertex.Y(), secondary_vertex.Z(), fMC_PrimaryVertex->GetX(),
+                                         fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+        dca_wrt_pv = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), secondary_vertex.X(), secondary_vertex.Y(),
+                                  secondary_vertex.Z(), fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+
+        /* Fill histograms  */
 
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Mass")]->Fill(lvAntiSexaquark.M());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Radius")]->Fill(  //
-            TMath::Sqrt(TMath::Power(mcProduct->Xv(), 2) + TMath::Power(mcProduct->Yv(), 2)));
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Zv")]->Fill(mcProduct->Zv());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Eta")]->Fill(mcProduct->Eta());
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Radius")]->Fill(radius);
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Zv")]->Fill(secondary_vertex.Z());
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "DecayLength")]->Fill(  //
-            TMath::Sqrt(TMath::Power(mcProduct->Xv() - fMC_PrimaryVertex->GetX(), 2) +  //
-                        TMath::Power(mcProduct->Zv() - fMC_PrimaryVertex->GetZ(), 2) +  //
-                        TMath::Power(mcProduct->Yv() - fMC_PrimaryVertex->GetY(), 2)));
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "CPAwrtPV")]->Fill(                  //
-            CosinePointingAngle(lvAntiSexaquark, mcProduct->Xv(), mcProduct->Yv(), mcProduct->Zv(),  //
-                                fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "DCAwrtPV")]->Fill(         //
-            LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(),  //
-                         mcProduct->Xv(), mcProduct->Yv(), mcProduct->Zv(),                 //
-                         fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ()));
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "DecayLength")]->Fill(decay_length);
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
     }
 }
 
@@ -1486,11 +1470,10 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
     /* Auxiliary containers */
 
+    Bool_t is_true_v0;
     std::vector<AliESDv0>* esdFoundV0s;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfNegDau_fromFoundV0Idx;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfPosDau_fromFoundV0Idx;
-    std::vector<Bool_t>* isFoundV0IdxATrueV0;
-    std::unordered_map<Int_t, Int_t>* getMcIdx_fromFoundV0Idx;
 
     /* Loop over V0s that are stored in the ESD */
 
@@ -1573,26 +1556,26 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
                 esdFoundV0s = &esdAntiLambdas;
                 getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromAntiLambdaIdx;
                 getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromAntiLambdaIdx;
-                isFoundV0IdxATrueV0 = &isAntiLambdaIdxATrueV0;
-                getMcIdx_fromFoundV0Idx = &getMcIdx_fromAntiLambdaIdx;
             } else if (v0PdgCode == 310) {
                 esdFoundV0s = &esdKaonsZeroShort;
                 getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromKaonZeroShortIdx;
                 getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromKaonZeroShortIdx;
-                isFoundV0IdxATrueV0 = &isKaonZeroShortIdxATrueV0;
-                getMcIdx_fromFoundV0Idx = &getMcIdx_fromKaonZeroShortIdx;
             }
 
             /* Store V0 */
 
             outputV0 = *V0;
+
             esdFoundV0s->push_back(outputV0);
 
             (*getEsdIdxOfNegDau_fromFoundV0Idx)[esdFoundV0s->size() - 1] = esdIdxNeg;
             (*getEsdIdxOfPosDau_fromFoundV0Idx)[esdFoundV0s->size() - 1] = esdIdxPos;
 
-            isFoundV0IdxATrueV0->push_back(isEsdIdxDaughterOfTrueV0[esdIdxNeg] && isEsdIdxDaughterOfTrueV0[esdIdxPos] &&
-                                           getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg] == getMcIdxOfTrueV0_fromEsdIdx[esdIdxPos]);
+            is_true_v0 = doesEsdIdxHaveMother[esdIdxNeg] && doesEsdIdxHaveMother[esdIdxPos] &&
+                         getMotherMcIdx_fromEsdIdx[esdIdxNeg] == getMotherMcIdx_fromEsdIdx[esdIdxPos] &&
+                         getPdgCode_fromMcIdx[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] == v0PdgCode;
+
+            /* Fill histograms */
 
             fHist_V0s_Bookkeep[v0PdgCode]->Fill(9);
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "Mass")]->Fill(lvV0.M());
@@ -1614,11 +1597,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
             f2DHist_V0s_ArmenterosPodolanski["All"]->Fill(arm_alpha, arm_qt);
 
-            if (!isFoundV0IdxATrueV0->back()) continue;
-
-            (*getMcIdx_fromFoundV0Idx)[esdFoundV0s->size() - 1] = getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg];
-
-            if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] != v0PdgCode) continue;
+            if (!is_true_v0) continue;
 
             fHist_V0s_Bookkeep[v0PdgCode]->Fill(10);
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "Mass")]->Fill(lvV0.M());
@@ -1640,7 +1619,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
             f2DHist_V0s_ArmenterosPodolanski["True"]->Fill(arm_alpha, arm_qt);
 
-            if (!isMcIdxSecondary[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
+            if (!isMcIdxSecondary[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
             fHist_V0s_Bookkeep[v0PdgCode]->Fill(11);
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "Mass")]->Fill(lvV0.M());
@@ -1662,7 +1641,7 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
             f2DHist_V0s_ArmenterosPodolanski["Secondary"]->Fill(arm_alpha, arm_qt);
 
-            if (!isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
+            if (!isMcIdxSignal[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
             fHist_V0s_Bookkeep[v0PdgCode]->Fill(12);
             fHist_V0s[std::make_tuple("Found", "Signal", v0PdgCode, "Mass")]->Fill(lvV0.M());
@@ -1733,11 +1712,11 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
     std::vector<Int_t> esdIndicesNegTracks;
     std::vector<Int_t> esdIndicesPosTracks;
+
+    Bool_t is_true_v0;
     std::vector<AliESDv0>* esdFoundV0s;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfNegDau_fromFoundV0Idx;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfPosDau_fromFoundV0Idx;
-    std::vector<Bool_t>* isFoundV0IdxATrueV0;
-    std::unordered_map<Int_t, Int_t>* getMcIdx_fromFoundV0Idx;
 
     if (pdgV0 == -3122) {
         esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
@@ -1745,16 +1724,12 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
         esdFoundV0s = &esdAntiLambdas;
         getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromAntiLambdaIdx;
         getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromAntiLambdaIdx;
-        isFoundV0IdxATrueV0 = &isAntiLambdaIdxATrueV0;
-        getMcIdx_fromFoundV0Idx = &getMcIdx_fromAntiLambdaIdx;
     } else if (pdgV0 == 310) {
         esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
         esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
         esdFoundV0s = &esdKaonsZeroShort;
         getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromKaonZeroShortIdx;
         getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromKaonZeroShortIdx;
-        isFoundV0IdxATrueV0 = &isKaonZeroShortIdxATrueV0;
-        getMcIdx_fromFoundV0Idx = &getMcIdx_fromKaonZeroShortIdx;
     }
 
     /* Loop over all possible pairs of selected tracks */
@@ -1849,8 +1824,9 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             (*getEsdIdxOfNegDau_fromFoundV0Idx)[esdFoundV0s->size() - 1] = esdIdxNeg;
             (*getEsdIdxOfPosDau_fromFoundV0Idx)[esdFoundV0s->size() - 1] = esdIdxPos;
 
-            isFoundV0IdxATrueV0->push_back(isEsdIdxDaughterOfTrueV0[esdIdxNeg] && isEsdIdxDaughterOfTrueV0[esdIdxPos] &&
-                                           getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg] == getMcIdxOfTrueV0_fromEsdIdx[esdIdxPos]);
+            is_true_v0 = doesEsdIdxHaveMother[esdIdxNeg] && doesEsdIdxHaveMother[esdIdxPos] &&
+                         getMotherMcIdx_fromEsdIdx[esdIdxNeg] == getMotherMcIdx_fromEsdIdx[esdIdxPos] &&
+                         getPdgCode_fromMcIdx[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] == pdgV0;
 
             /* Fill histograms */
 
@@ -1874,11 +1850,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
             f2DHist_V0s_ArmenterosPodolanski["All"]->Fill(arm_alpha, arm_qt);
 
-            if (!isFoundV0IdxATrueV0->back()) continue;
-
-            (*getMcIdx_fromFoundV0Idx)[esdFoundV0s->size() - 1] = getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg];
-
-            if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] != pdgV0) continue;
+            if (!is_true_v0) continue;
 
             fHist_V0s_Bookkeep[pdgV0]->Fill(10);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Mass")]->Fill(lvV0.M());
@@ -1900,7 +1872,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
             f2DHist_V0s_ArmenterosPodolanski["True"]->Fill(arm_alpha, arm_qt);
 
-            if (!isMcIdxSecondary[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
+            if (!isMcIdxSecondary[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
             fHist_V0s_Bookkeep[pdgV0]->Fill(11);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Mass")]->Fill(lvV0.M());
@@ -1922,7 +1894,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
             f2DHist_V0s_ArmenterosPodolanski["Secondary"]->Fill(arm_alpha, arm_qt);
 
-            if (!isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
+            if (!isMcIdxSignal[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
             fHist_V0s_Bookkeep[pdgV0]->Fill(12);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Mass")]->Fill(lvV0.M());
@@ -2374,6 +2346,10 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     Double_t radius;
     Double_t cpa_wrt_pv;
     Double_t decay_length;
+    Double_t dca_wrt_pv;
+    Double_t dca_btw_dau;
+    Double_t dca_neg_v0;
+    Double_t dca_pos_v0;
     Double_t arm_qt;
     Double_t arm_alpha;
     Double_t opening_angle;
@@ -2392,28 +2368,26 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
     std::vector<Int_t> esdIndicesNegTracks;
     std::vector<Int_t> esdIndicesPosTracks;
+
+    Bool_t is_true_v0;
     std::vector<KFParticleMother>* kfFoundV0s;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfNegDau_fromFoundV0Idx;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfPosDau_fromFoundV0Idx;
-    std::vector<Bool_t>* isFoundV0IdxATrueV0;
-    std::unordered_map<Int_t, Int_t>* getMcIdx_fromFoundV0Idx;
 
     if (pdgV0 == -3122) {
         esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
         esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
+
         kfFoundV0s = &kfAntiLambdas;
         getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromAntiLambdaIdx;
         getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromAntiLambdaIdx;
-        isFoundV0IdxATrueV0 = &isAntiLambdaIdxATrueV0;
-        getMcIdx_fromFoundV0Idx = &getMcIdx_fromAntiLambdaIdx;
     } else if (pdgV0 == 310) {
         esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
         esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
+
         kfFoundV0s = &kfKaonsZeroShort;
         getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromKaonZeroShortIdx;
         getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromKaonZeroShortIdx;
-        isFoundV0IdxATrueV0 = &isKaonZeroShortIdxATrueV0;
-        getMcIdx_fromFoundV0Idx = &getMcIdx_fromKaonZeroShortIdx;
     }
 
     /* Loop over all possible pairs of tracks */
@@ -2461,6 +2435,10 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             radius = TMath::Sqrt(kfV0.GetX() * kfV0.GetX() + kfV0.GetY() * kfV0.GetY());
             cpa_wrt_pv = CosinePointingAngle(lvV0, kfV0.GetX(), kfV0.GetY(), kfV0.GetZ(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(),
                                              fPrimaryVertex->GetZ());
+            dca_wrt_pv = TMath::Abs(kfV0.GetDistanceFromVertex(kfPrimaryVertex));
+            dca_btw_dau = TMath::Abs(kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos));
+            dca_neg_v0 = TMath::Abs(kfDaughterNeg.GetDistanceFromVertex(kfV0));
+            dca_pos_v0 = TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfV0));
             decay_length = TMath::Sqrt((kfV0.GetX() - fPrimaryVertex->GetX()) * (kfV0.GetX() - fPrimaryVertex->GetX()) +
                                        (kfV0.GetY() - fPrimaryVertex->GetY()) * (kfV0.GetY() - fPrimaryVertex->GetY()) +
                                        (kfV0.GetZ() - fPrimaryVertex->GetZ()) * (kfV0.GetZ() - fPrimaryVertex->GetZ()));
@@ -2476,8 +2454,9 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             (*getEsdIdxOfNegDau_fromFoundV0Idx)[kfFoundV0s->size() - 1] = esdIdxNeg;
             (*getEsdIdxOfPosDau_fromFoundV0Idx)[kfFoundV0s->size() - 1] = esdIdxPos;
 
-            isFoundV0IdxATrueV0->push_back(isEsdIdxDaughterOfTrueV0[esdIdxNeg] && isEsdIdxDaughterOfTrueV0[esdIdxPos] &&
-                                           getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg] == getMcIdxOfTrueV0_fromEsdIdx[esdIdxPos]);
+            is_true_v0 = doesEsdIdxHaveMother[esdIdxNeg] && doesEsdIdxHaveMother[esdIdxPos] &&
+                         getMotherMcIdx_fromEsdIdx[esdIdxNeg] == getMotherMcIdx_fromEsdIdx[esdIdxPos] &&
+                         getPdgCode_fromMcIdx[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] == pdgV0;
 
             /* Fill histograms */
 
@@ -2485,10 +2464,10 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAwrtPV")]->Fill(TMath::Abs(kfV0.GetDistanceFromVertex(kfPrimaryVertex)));
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAbtwDau")]->Fill(TMath::Abs(kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos)));
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAnegV0")]->Fill(TMath::Abs(kfDaughterNeg.GetDistanceFromVertex(kfV0)));
-            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAposV0")]->Fill(TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfV0)));
+            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAbtwDau")]->Fill(dca_btw_dau);
+            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
+            fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DecayLength")]->Fill(decay_length);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Zv")]->Fill(kfV0.GetZ());
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Eta")]->Fill(lvV0.Eta());
@@ -2501,20 +2480,16 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Chi2ndf")]->Fill((Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF());
             f2DHist_V0s_ArmenterosPodolanski["All"]->Fill(arm_alpha, arm_qt);
 
-            if (!isFoundV0IdxATrueV0->back()) continue;
-
-            (*getMcIdx_fromFoundV0Idx)[kfFoundV0s->size() - 1] = getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg];
-
-            if (getPdgCode_fromMcIdx[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]] != pdgV0) continue;
+            if (!is_true_v0) continue;
 
             fHist_V0s_Bookkeep[pdgV0]->Fill(10);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAwrtPV")]->Fill(TMath::Abs(kfV0.GetDistanceFromVertex(kfPrimaryVertex)));
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAbtwDau")]->Fill(TMath::Abs(kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos)));
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAnegV0")]->Fill(TMath::Abs(kfDaughterNeg.GetDistanceFromVertex(kfV0)));
-            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAposV0")]->Fill(TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfV0)));
+            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAbtwDau")]->Fill(dca_btw_dau);
+            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
+            fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DecayLength")]->Fill(decay_length);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Zv")]->Fill(kfV0.GetZ());
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Eta")]->Fill(lvV0.Eta());
@@ -2527,20 +2502,16 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Chi2ndf")]->Fill((Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF());
             f2DHist_V0s_ArmenterosPodolanski["True"]->Fill(arm_alpha, arm_qt);
 
-            if (!isMcIdxSecondary[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
+            if (!isMcIdxSecondary[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
             fHist_V0s_Bookkeep[pdgV0]->Fill(11);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAwrtPV")]->Fill(  //
-                TMath::Abs(kfV0.GetDistanceFromVertex(kfPrimaryVertex)));
-            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAbtwDau")]->Fill(  //
-                TMath::Abs(kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos)));
-            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegV0")]->Fill(  //
-                TMath::Abs(kfDaughterNeg.GetDistanceFromVertex(kfV0)));
-            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposV0")]->Fill(  //
-                TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfV0)));
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAbtwDau")]->Fill(dca_btw_dau);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
+            fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DecayLength")]->Fill(decay_length);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Zv")]->Fill(kfV0.GetZ());
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Eta")]->Fill(lvV0.Eta());
@@ -2553,16 +2524,16 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Chi2ndf")]->Fill((Double_t)kfV0.GetChi2() / (Double_t)kfV0.GetNDF());
             f2DHist_V0s_ArmenterosPodolanski["Secondary"]->Fill(arm_alpha, arm_qt);
 
-            if (!isMcIdxSignal[getMcIdxOfTrueV0_fromEsdIdx[esdIdxNeg]]) continue;
+            if (!isMcIdxSignal[getMotherMcIdx_fromEsdIdx[esdIdxNeg]]) continue;
 
             fHist_V0s_Bookkeep[pdgV0]->Fill(12);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Mass")]->Fill(lvV0.M());
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Radius")]->Fill(radius);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAwrtPV")]->Fill(TMath::Abs(kfV0.GetDistanceFromVertex(kfPrimaryVertex)));
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAbtwDau")]->Fill(TMath::Abs(kfDaughterNeg.GetDistanceFromParticle(kfDaughterPos)));
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAnegV0")]->Fill(TMath::Abs(kfDaughterNeg.GetDistanceFromVertex(kfV0)));
-            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAposV0")]->Fill(TMath::Abs(kfDaughterPos.GetDistanceFromVertex(kfV0)));
+            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAbtwDau")]->Fill(dca_btw_dau);
+            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
+            fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DecayLength")]->Fill(decay_length);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Zv")]->Fill(kfV0.GetZ());
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Eta")]->Fill(lvV0.Eta());
@@ -3806,53 +3777,49 @@ KFParticle AliAnalysisTaskSexaquark::TransportKFParticle(KFParticle kfThis, KFPa
 */
 void AliAnalysisTaskSexaquark::ClearContainers() {
 
-    mcIndicesOfTrueV0s.clear();
+    /*  */
+    getPdgCode_fromMcIdx.clear();
 
     isMcIdxSecondary.clear();
     isMcIdxSignal.clear();
-    isMcIdxDaughterOfTrueV0.clear();
 
-    getMcIdxOfTrueV0_fromMcIdxOfDau.clear();
-    getMcIdxOfNegDau_fromMcIdxOfTrueV0.clear();
-    getMcIdxOfPosDau_fromMcIdxOfTrueV0.clear();
-
-    getPdgCode_fromMcIdx.clear();
     getReactionIdx_fromMcIdx.clear();
     getMcIdx_fromReactionIdx.clear();
 
+    doesMcIdxHaveMother.clear();
+    getMotherMcIdx_fromMcIdx.clear();
+    getNegDauMcIdx_fromMcIdx.clear();
+    getPosDauMcIdx_fromMcIdx.clear();
+
+    mcIndicesOfTrueV0s.clear();
+
+    /*  */
+    getMcIdx_fromEsdIdx.clear();
+    doesEsdIdxPassTrackSelection.clear();
+    getEsdIdx_fromMcIdx.clear();
+
+    isEsdIdxSignal.clear();
     getReactionIdx_fromEsdIdx.clear();
     getEsdIdx_fromReactionIdx.clear();
 
-    doesEsdIdxPassTrackSelection.clear();
+    doesEsdIdxHaveMother.clear();
+    getMotherMcIdx_fromEsdIdx.clear();
+    getNegDauEsdIdx_fromMcIdx.clear();
+    getPosDauEsdIdx_fromMcIdx.clear();
 
     esdIndicesOfAntiProtonTracks.clear();
     esdIndicesOfPosKaonTracks.clear();
     esdIndicesOfPiPlusTracks.clear();
     esdIndicesOfPiMinusTracks.clear();
 
-    getMcIdx_fromEsdIdx.clear();
-
-    isEsdIdxSignal.clear();
-    isEsdIdxDaughterOfTrueV0.clear();
-
-    getMcIdxOfTrueV0_fromEsdIdx.clear();
-
-    getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0.clear();
-    getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0.clear();
-
-    esdAntiLambdas.clear();
-    esdKaonsZeroShort.clear();
-
+    /*  */
     getEsdIdxOfNegDau_fromAntiLambdaIdx.clear();
     getEsdIdxOfPosDau_fromAntiLambdaIdx.clear();
     getEsdIdxOfNegDau_fromKaonZeroShortIdx.clear();
     getEsdIdxOfPosDau_fromKaonZeroShortIdx.clear();
 
-    isAntiLambdaIdxATrueV0.clear();
-    isKaonZeroShortIdxATrueV0.clear();
-
-    getMcIdx_fromAntiLambdaIdx.clear();
-    getMcIdx_fromKaonZeroShortIdx.clear();
+    esdAntiLambdas.clear();
+    esdKaonsZeroShort.clear();
 
     kfAntiLambdas.clear();
     kfKaonsZeroShort.clear();
