@@ -191,78 +191,64 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliAnalysisTaskSexaquark();
     AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet);
     virtual ~AliAnalysisTaskSexaquark();
+    virtual void Terminate(Option_t* option) { return; }
 
-   public:
+    /* Initialization */
     virtual void UserCreateOutputObjects();
+    void CheckForInputErrors();
+    void Initialize();
     void PrepareTracksHistograms();
     void PrepareV0Histograms();
     void PrepareAntiSexaquarkHistograms();
+
+    /* Main */
     virtual void UserExec(Option_t* option);
-    virtual void Terminate(Option_t* option) { return; }
 
-   public:
-    /* Initialization */
-    void CheckForInputErrors();
-    void Initialize();
+    /* Cuts */
+    void DefineTracksCuts(TString cuts_option);
+    void DefineV0Cuts(TString cuts_option);
+    void DefineSexaquarkCuts(TString cuts_option);
 
-   public:
     /* MC Generated */
     void ProcessMCGen();
     void GetDaughtersInfo(AliMCParticle* mcPart, Int_t& mcIdxNegDaughter, Int_t& mcIdxPosDaughter, TVector3& decay_vertex);
     void ProcessSignalInteractions();
 
-   public:
-    /* Cuts */
-    void DefineTracksCuts(TString cuts_option);
-    void DefineV0Cuts(TString cuts_option);
-    void DefineSexaquarkCuts(TString cuts_option);
-    /*  */
+    /* Tracks */
+    void ProcessTracks();
+    Bool_t PassesTrackSelection(AliESDtrack* track);
+    void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
+
+    /* V0s and Anti-Sexaquarks -- That Require True Info */
+    void ProcessFindableV0s();
+    void ProcessFindableSexaquarks();
+
+    /* V0s */
+    void OfficialV0Finder(Bool_t online);
+    void CustomV0Finder(Int_t pdgV0);
+    void KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
     Bool_t PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
     Bool_t PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
                         TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
-    /*  */
+
+    /* Sexaquark */
+    void GeoSexaquarkFinder_ChannelA();
+    // void GeoSexaquarkFinder_ChannelD();
+    // void GeoSexaquarkFinder_ChannelE();
+    void KalmanSexaquarkFinder_ChannelA();
+    // void KalmanSexaquarkFinder_ChannelD();
+    // void KalmanSexaquarkFinder_ChannelE();
     Bool_t PassesSexaquarkCuts_ChannelA(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDv0 esdKaonZeroShort,
                                         AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos, AliESDtrack* esdKaonZeroShortNeg,
                                         AliESDtrack* esdKaonZeroShortPos);
     Bool_t PassesSexaquarkCuts_ChannelA(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
                                         KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos,
                                         KFParticle kfKaonZeroShortNeg, KFParticle kfKaonZeroShortPos);
-    // Bool_t PassesSexaquarkCuts_ChannelD_KF();
-    // Bool_t PassesSexaquarkCuts_ChannelE_KF();
+    // Bool_t PassesSexaquarkCuts_ChannelD();
+    // Bool_t PassesSexaquarkCuts_ChannelD();
+    // Bool_t PassesSexaquarkCuts_ChannelE();
+    // Bool_t PassesSexaquarkCuts_ChannelE();
 
-   public:
-    /* Tracks */
-    void ProcessTracks();
-    Bool_t PassesTrackSelection(AliESDtrack* track);
-    void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
-
-   public:
-    /* V0s and Anti-Sexaquarks -- That Require True Info */
-    void ProcessFindableV0s();
-    void ProcessFindableSexaquarks();
-
-   public:
-    /* V0s -- ALICE V0 Finders */
-    void OfficialV0Finder(Bool_t online);
-    void CustomV0Finder(Int_t pdgV0);
-
-   public:
-    /* Sexaquark -- Geometrical Finder */
-    void GeoSexaquarkFinder_ChannelA();
-    // void GeoSexaquarkFinder_ChannelD();
-    // void GeoSexaquarkFinder_ChannelE();
-
-   public:
-    /* V0s -- Kalman Filter */
-    void KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
-
-   public:
-    /* Sexaquark -- Kalman Filter */
-    void KalmanSexaquarkFinder_ChannelA();
-    // void KalmanSexaquarkFinder_ChannelD();
-    // void KalmanSexaquarkFinder_ChannelE();
-
-   public:
     /* Utilities */
     Bool_t Preoptimize(const AliExternalTrackParam* nt, AliExternalTrackParam* pt, Double_t* lPreprocessxn, Double_t* lPreprocessxp,
                        const Double_t b);
@@ -273,9 +259,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                  Double_t refPointZ);
     Double_t CosinePointingAngle(Double_t Px, Double_t Py, Double_t Pz, Double_t X, Double_t Y, Double_t Z, Double_t refPointX, Double_t refPointY,
                                  Double_t refPointZ);
-    Double_t Calculate_ArmAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz, Double_t Pos_Px,
-                                Double_t Pos_Py, Double_t Pos_Pz);
-    Double_t Calculate_ArmPt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz);
+    Double_t ArmenterosAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz, Double_t Pos_Px,
+                             Double_t Pos_Py, Double_t Pos_Pz);
+    Double_t ArmenterosQt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz);
     Double_t LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t V0_X, Double_t V0_Y, Double_t V0_Z, Double_t refPointX,
                           Double_t refPointY, Double_t refPointZ);
     Double_t SquaredDistancePointToLine(const Double_t* t, Double_t point[], Double_t linePoint[], Double_t lineDir[]);
@@ -283,8 +269,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Double_t Calculate_TwoLinesDCA_v1(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
     Double_t Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
 
-   public:
     /* Tree Operations */
+    Event_tt fEvent;
     void SetBranches();
     void MCGen_PushBack(Int_t evt_mc);
     void MCRec_PushBack(Int_t evt_track);
@@ -292,14 +278,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void FillTree();
     void ClearEvent();
 
-   public:
     /* Kalman Filter Utilities */
     KFParticle CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge);
     KFVertex CreateKFVertex(const AliVVertex& vertex);
     KFParticle TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis);
-
-   private:
-    Event_tt fEvent;
 
    private:
     /* Input options */
@@ -318,7 +300,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::vector<Int_t> fFinalStateProductsPDG;  //
     Int_t fStruckNucleonPDG;                    // PDG Code of the struck nucleon, could ber: 2112 o 2212
 
-   private:
     /* AliRoot objects */
     AliMCEvent* fMC;                // MC event
     AliVVertex* fMC_PrimaryVertex;  // MC gen. (or true) primary vertex
@@ -329,15 +310,14 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;
     std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;
 
-   private:
     /* ROOT objects */
     TDatabasePDG fPDG;
     TList* fOutputListOfTrees;
     TTree* fTree;
     TList* fOutputListOfHists;
 
-   private:
-    /* Tracks Histograms */
+    /** Tracks Histograms **/
+
     /*
      key: `pdg code`
      - `0` : MC tracks
@@ -348,15 +328,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      -- Note: should I only, besides if they're signal or not, use their true id? I think so, because it's a bookkeeping of TRUE particles
     */
     std::unordered_map<Int_t, TH1F*> fHist_Tracks_Bookkeep;
-
     // key: `stage, set, pdg, property`, value: histogram
     std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;
-
     // key: `set`, value: histogram
     std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;
 
-   private:
-    /* V0s Histograms */
+    /** V0s Histograms **/
+
     /*
      key: `V0 pdg code`
      - `0` : MC V0s
@@ -374,27 +352,23 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      - `12` : found true signal V0s
     */
     std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;
-
     // key: `stage, set, pdg, property`, value: histogram
     std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;
-
     // key: `set`, value: histogram
     std::map<TString, TH2F*> f2DHist_V0s_ArmenterosPodolanski;
 
-   private:
-    /* Anti-Sexaquark Histograms */
+    /** Anti-Sexaquark Histograms **/
     // key: `stage, set, property`, value: histogram
     std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_AntiSexaquarks;
 
-   private:
-    /* Containers -- vectors and hash tables */
+    /** Containers -- vectors and hash tables **/
+
+    /* filled at `ProcessMCGen()` */
     std::vector<Int_t> mcIndicesOfTrueV0s;  //
 
-    std::unordered_map<Int_t, Bool_t> isMcIdxSecondary;              //
-    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;                 //
-    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSecondaryV0;  //
-    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfTrueV0;       //
-    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfSignalV0;     //
+    std::unordered_map<Int_t, Bool_t> isMcIdxSecondary;         //
+    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;            //
+    std::unordered_map<Int_t, Bool_t> isMcIdxDaughterOfTrueV0;  //
 
     std::unordered_map<Int_t, Int_t> getMcIdxOfTrueV0_fromMcIdxOfDau;     //
     std::unordered_map<Int_t, Int_t> getMcIdxOfNegDau_fromMcIdxOfTrueV0;  //
@@ -404,6 +378,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, UInt_t> getReactionIdx_fromMcIdx;               //
     std::unordered_map<UInt_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;  //
 
+    /* filled at `ProcessTracks()` */
     std::unordered_map<Int_t, UInt_t> getReactionIdx_fromEsdIdx;               //
     std::unordered_map<UInt_t, std::vector<Int_t>> getEsdIdx_fromReactionIdx;  //
 
@@ -426,6 +401,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getEsdIdxOfRecNegDau_fromMcIdxOfTrueV0;  //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfRecPosDau_fromMcIdxOfTrueV0;  //
 
+    /* filled at `[Official|Custom|Kalman]V0Finder()` */
     std::vector<AliESDv0> esdAntiLambdas;     //
     std::vector<AliESDv0> esdKaonsZeroShort;  //
 
@@ -445,7 +421,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     void ClearContainers();
 
-   private:
     /*** Cuts ***/
 
     /* Track selection */
