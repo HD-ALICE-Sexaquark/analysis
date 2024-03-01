@@ -210,6 +210,8 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
             for (Int_t& species : tracks_species) {
                 for (Int_t prop_idx = 0; prop_idx < N_tracks_props; prop_idx++) {
 
+                    if (!fIsMC && (stage == "MCGen" || set == "True" || set == "Secondary" || set == "Signal")) continue;
+
                     if (set == "Selected") continue;  // set name reserved for 2D histograms
 
                     if (stage == "MCGen" && set == "True") continue;
@@ -265,6 +267,8 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
         for (TString& set : V0_sets) {
             for (Int_t& species : V0_species) {
                 for (Int_t prop_idx = 0; prop_idx < N_V0_props; prop_idx++) {
+
+                    if (!fIsMC && (stage == "MCGen" || stage == "Findable" || set == "True" || set == "Secondary" || set == "Signal")) continue;
 
                     if (fSourceOfV0s == "kalman" && V0_props[prop_idx] == "ImprvDCAbtwDau") continue;
                     if ((fSourceOfV0s == "offline" || fSourceOfV0s == "online" || fSourceOfV0s == "custom") && V0_props[prop_idx] == "Chi2ndf") {
@@ -334,6 +338,8 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
         for (TString& set : AS_sets) {
             for (Int_t prop_idx = 0; prop_idx < N_AS_props; prop_idx++) {
 
+                if (!fIsMC && (stage == "MCGen" || stage == "Findable" || set == "Signal")) continue;
+
                 if (stage == "Findable" && set == "Signal") continue;
                 if (stage == "MCGen" && set == "Signal") continue;
 
@@ -360,31 +366,23 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
 */
 void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
-    // load MC generated event
-    fMC = MCEvent();
+    /* Load MC Gen. Event and PV */
 
-    if (!fMC) {
-        AliFatal("ERROR: AliMCEvent couldn't be found.");
+    if (fIsMC) {
+        fMC = MCEvent();
+        if (!fMC) AliFatal("ERROR: AliMCEvent couldn't be found.");
+        fMC_PrimaryVertex = const_cast<AliVVertex*>(fMC->GetPrimaryVertex());
     }
 
-    fMC_PrimaryVertex = const_cast<AliVVertex*>(fMC->GetPrimaryVertex());
+    /* Load Reconstructed Event, PV and Magnetic Field */
 
-    // load reconstructed event
     fESD = dynamic_cast<AliESDEvent*>(InputEvent());
-
-    if (!fESD) {
-        AliFatal("ERROR: AliESDEvent couldn't be found.");
-    }
-
-    // load magnetic field
+    if (!fESD) AliFatal("ERROR: AliESDEvent couldn't be found.");
+    fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
     fMagneticField = fESD->GetMagneticField();
 
     // init KFparticle
     KFParticle::SetField(fMagneticField);
-
-    // load primary vertex
-    // [note: const_cast removes the const qualifier from the pointer]
-    fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
 
     if (fIsMC) {
         ProcessMCGen();
@@ -647,9 +645,6 @@ void AliAnalysisTaskSexaquark::CheckForInputErrors() {
     std::array<std::string, 4> validSources = {"offline", "online", "custom", "kalman"};
     if (std::find(validSources.begin(), validSources.end(), fSourceOfV0s) == validSources.end()) {
         AliFatal("ERROR: source of V0s must be \"offline\", \"online\", \"custom\" or \"kalman\".");
-    }
-    if (!fIsMC) {
-        AliFatal("ERROR: data cannot have access to true MC information.");
     }
 }
 
