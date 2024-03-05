@@ -271,7 +271,7 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
                     if (!fIsMC && (stage == "MCGen" || stage == "Findable" || set == "True" || set == "Secondary" || set == "Signal")) continue;
 
                     if (fSourceOfV0s == "kalman" && V0_props[prop_idx] == "ImprvDCAbtwDau") continue;
-                    if ((fSourceOfV0s == "offline" || fSourceOfV0s == "online" || fSourceOfV0s == "custom") && V0_props[prop_idx] == "Chi2ndf") {
+                    if ((fSourceOfV0s == "offline" || fSourceOfV0s == "on-the-fly" || fSourceOfV0s == "custom") && V0_props[prop_idx] == "Chi2ndf") {
                         continue;
                     }
 
@@ -397,11 +397,11 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     }
 
     if (fSourceOfV0s == "offline") {
-        OfficialV0Finder(kFALSE);
+        GetV0sFromESD(kFALSE);
     }
 
-    if (fSourceOfV0s == "online") {
-        OfficialV0Finder(kTRUE);
+    if (fSourceOfV0s == "on-the-fly") {
+        GetV0sFromESD(kTRUE);
     }
 
     if (fSourceOfV0s == "custom") {
@@ -411,7 +411,7 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         }
     }
 
-    if (fSourceOfV0s == "offline" || fSourceOfV0s == "online" || fSourceOfV0s == "custom") {
+    if (fSourceOfV0s == "offline" || fSourceOfV0s == "on-the-fly" || fSourceOfV0s == "custom") {
         if (fReactionID == 'A') {
             GeoSexaquarkFinder_ChannelA();
         }
@@ -543,7 +543,7 @@ void AliAnalysisTaskSexaquark::DefineV0Cuts(TString cuts_option) {
         // none so far
     }
 
-    if (fSourceOfV0s == "online") {
+    if (fSourceOfV0s == "on-the-fly") {
 
         kMax_V0_ImprvDCAbtwDau[-3122] = 0.6;
 
@@ -608,7 +608,7 @@ void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
         // none so far
     }
 
-    if (fSourceOfV0s == "online") {
+    if (fSourceOfV0s == "on-the-fly") {
 
         // none so far
     }
@@ -642,9 +642,9 @@ void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
  Search for possible contradictions in the input options
 */
 void AliAnalysisTaskSexaquark::CheckForInputErrors() {
-    std::array<std::string, 4> validSources = {"offline", "online", "custom", "kalman"};
+    std::array<std::string, 4> validSources = {"offline", "on-the-fly", "custom", "kalman"};
     if (std::find(validSources.begin(), validSources.end(), fSourceOfV0s) == validSources.end()) {
-        AliFatal("ERROR: source of V0s must be \"offline\", \"online\", \"custom\" or \"kalman\".");
+        AliFatal("ERROR: source of V0s must be \"offline\", \"on-the-fly\", \"custom\" or \"kalman\".");
     }
 }
 
@@ -1426,13 +1426,13 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 /*** ======================= ***/
 
 /*
- Loop over all the V0s that were stored in the ESD file by the Official V0 Finders.
+ Loop over all the V0s that were found and stored in the ESD file by the Official V0 Finders.
  - Uses: `fESD`, `fMC`, `fPDG`, `fPrimaryVertex`
  - Containers: `esdAntiLambdas`, `getEsdIdxOfNegDau_fromAntiLambdaIdx`, `getEsdIdxOfPosDau_fromAntiLambdaIdx`, `isAntiLambdaIdxATrueV0`,
  `isEsdIdxDaughterOfTrueV0`, `getMcIdxOfTrueV0_fromEsdIdx`, `isMcIdxSignal`, `esdKaonsZeroShort`, `getEsdIdxOfNegDau_fromKaonZeroShortIdx`,
  `getEsdIdxOfPosDau_fromKaonZeroShortIdx`, `isKaonZeroShortIdxATrueV0`
 */
-void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
+void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 
     AliESDv0* V0;
 
@@ -1478,13 +1478,13 @@ void AliAnalysisTaskSexaquark::OfficialV0Finder(Bool_t online) {
 
         V0 = fESD->GetV0(esdIdxV0);
 
-        /* Choose between offline and online (on-the-fly) V0s */
+        /* Choose between offline and on-the-fly V0s */
 
-        if (!online && V0->GetOnFlyStatus()) {
+        if (!onTheFly && V0->GetOnFlyStatus()) {
             continue;
         }
 
-        if (online && !V0->GetOnFlyStatus()) {
+        if (onTheFly && !V0->GetOnFlyStatus()) {
             continue;
         }
 
@@ -1989,7 +1989,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDt
     if (kMax_V0_ArmPtOverAlpha[pdgV0] && ArmPtOverAlpha > kMax_V0_ArmPtOverAlpha[pdgV0]) return kFALSE;
     fHist_V0s_Bookkeep[pdgV0]->Fill(20);
 
-    /* Exclusive for Offline, Online, and Custom V0 Finders */
+    /* Exclusive for Offline, On-The-Fly, and Custom V0 Finders */
 
     Double_t Chi2 = v0->GetChi2V0();
     if (kMax_V0_Chi2[pdgV0] && Chi2 > kMax_V0_Chi2[pdgV0]) return kFALSE;

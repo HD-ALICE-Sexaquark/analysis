@@ -224,7 +224,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void ProcessFindableSexaquarks();
 
     /* V0s */
-    void OfficialV0Finder(Bool_t online);
+    void GetV0sFromESD(Bool_t onTheFly);
     void CustomV0Finder(Int_t pdgV0);
     void KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
     Bool_t PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
@@ -286,7 +286,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    private:
     /* Input options */
     Bool_t fIsMC;                    //
-    TString fSourceOfV0s;            // choose V0 finder: "online", "offline", "custom", "kalman"
+    TString fSourceOfV0s;            // choose V0 finder: "offline", "on-the-fly", "custom", "kalman"
     TString fSimulationSet;          // <ReactionID><InjectedSexaquarkMass>
     Char_t fReactionID;              // could be: 'A', 'D', 'E', 'H'
     Float_t fInjectedSexaquarkMass;  // (in GeV/c^2), could be: 1.73, 1.8, 1.87, 1.94, 2.01
@@ -406,7 +406,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::vector<Int_t> esdIndicesOfPiMinusTracks;     //
     std::vector<Int_t> esdIndicesOfPiPlusTracks;      //
 
-    /* filled at `[Official|Custom|Kalman]V0Finder()` */
+    /* filled at `GetV0sFromESD() and [Custom|Kalman]V0Finder()` */
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;     //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;     //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;  //
