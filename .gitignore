@@ -11,3 +11,4 @@
 **/backup/
 **/.vscode/
 **/test/
+*.svg
