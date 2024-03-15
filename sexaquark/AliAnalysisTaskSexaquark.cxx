@@ -216,6 +216,8 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
 
                     if (stage == "MCGen" && set == "True") continue;
 
+                    if (fReactionChannel == "AntiSexaquark,N->AntiLambda,K0S" && species == 321 && set == "Signal") continue;
+
                     if (stage == "MCGen" && (tracks_props[prop_idx] == "DCAwrtPV" || tracks_props[prop_idx] == "NTPCClusters" ||
                                              tracks_props[prop_idx] == "Chi2/NClusters" || tracks_props[prop_idx] == "NSigmaProton" ||
                                              tracks_props[prop_idx] == "NSigmaKaon" || tracks_props[prop_idx] == "NSigmaPion" ||
@@ -342,6 +344,8 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
 
                 if (stage == "Findable" && set == "Signal") continue;
                 if (stage == "MCGen" && set == "Signal") continue;
+
+                if (fSourceOfV0s != "kalman" && AS_props[prop_idx] == "Chi2ndf") continue;
 
                 if ((stage == "MCGen" || stage == "Findable") && (AS_props[prop_idx] == "DCAbtwV0s" || AS_props[prop_idx] == "DCAv0aSV" ||       //
                                                                   AS_props[prop_idx] == "DCAv0bSV" || AS_props[prop_idx] == "DCAv0anegSV" ||     //
@@ -676,6 +680,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
     Float_t cpa_wrt_pv;
     Float_t armenteros_alpha;
     Float_t armenteros_qt;
+    Float_t opening_angle;
 
     /* Loop over MC gen. particles in a single event */
 
@@ -809,6 +814,9 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             armenteros_qt = ArmenterosQt(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz());
             armenteros_alpha = ArmenterosAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),
                                                mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz());
+            TVector3 neg(mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz());
+            TVector3 pos(mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz());
+            opening_angle = neg.Angle(pos);
 
             fHist_V0s_Bookkeep[pdg_mc]->Fill(1);
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Mass")]->Fill(mcPart->M());
@@ -822,6 +830,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Pz")]->Fill(mcPart->Pz());
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "OpeningAngle")]->Fill(opening_angle);
 
             if (isMcIdxSecondary[mcIdx]) {
                 fHist_V0s_Bookkeep[pdg_mc]->Fill(3);
@@ -836,6 +845,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
                 fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pz")]->Fill(mcPart->Pz());
                 fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
                 fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
+                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OpeningAngle")]->Fill(opening_angle);
             }
 
             if (isMcIdxSignal[mcIdx]) {
@@ -851,6 +861,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
                 fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pz")]->Fill(mcPart->Pz());
                 fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
                 fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
+                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OpeningAngle")]->Fill(opening_angle);
             }
         }  // end of anti-lambda && K0s condition
     }      // end of loop over MC particles
@@ -1232,6 +1243,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
     Float_t decay_length;
     Float_t arm_qt;
     Float_t arm_alpha;
+    Float_t opening_angle;
 
     /* Loop over true V0s */
 
@@ -1266,6 +1278,9 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
         arm_qt = ArmenterosQt(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz());
         arm_alpha = ArmenterosAlpha(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz(),
                                     mcPosDaughter->Px(), mcPosDaughter->Py(), mcPosDaughter->Pz());
+        TVector3 neg(mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz());
+        TVector3 pos(mcPosDaughter->Px(), mcPosDaughter->Py(), mcPosDaughter->Pz());
+        opening_angle = neg.Angle(pos);
 
         /* Fill bookkeeping histograms */
 
@@ -1282,6 +1297,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
             fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Pz")]->Fill(mcV0->Pz());
             fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "ArmQt")]->Fill(arm_qt);
             fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
+            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "OpeningAngle")]->Fill(opening_angle);
 
             if (!is_secondary) continue;
 
@@ -1296,6 +1312,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
             fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Pz")]->Fill(mcV0->Pz());
             fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "ArmQt")]->Fill(arm_qt);
             fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
+            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "OpeningAngle")]->Fill(opening_angle);
 
             if (!is_signal) continue;
 
@@ -1310,6 +1327,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
             fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Pz")]->Fill(mcV0->Pz());
             fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "ArmQt")]->Fill(arm_qt);
             fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
+            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "OpeningAngle")]->Fill(opening_angle);
         }
     }  // end of loop over true V0s
 }
