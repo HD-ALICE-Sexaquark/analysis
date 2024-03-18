@@ -2,150 +2,131 @@
 
 /*
  Read the `sim.log` files, extract initial anti-sexaquark and nucleon kinematics, prior to their reaction, and put it into a simple tree
- */
-void SimLogs_MakeSimpleTrees() {
+*/
+void SimLogs_MakeSimpleTrees(TString DataSet = "LHC23l1a2",  // could also be "LHC23l1b"
+                             TString SimulationSet = "A1.8") {
 
     /* Hard-coded parameters */
 
-    TString pathToSimDir = "/home/ceres/borquez/work/simulations/samples/";
+    TString pathToSimDir = "/home/ceres/borquez/some/sims/" + DataSet + "/" + SimulationSet;
     TSystemDirectory SimDir("SimDir", pathToSimDir);
 
     /* Define output file */
 
-    TFile *SimpleFile = new TFile("test.root", "RECREATE");
+    TFile *SimpleFile = new TFile(DataSet + ".root", "RECREATE");
 
     /* Define tree structure */
 
     TTree *SimpleTree = new TTree("IC", "IC");
 
-    Int_t eventID;
-    Int_t runNumber;
     Char_t reactionChannel;
-    std::vector<Int_t> reactionID;
-    std::vector<Double_t> SM;
-    std::vector<Double_t> SPx, SPy, SPz;
-    std::vector<Int_t> NPDGCode;
-    std::vector<Double_t> NPx, NPy, NPz;
+    Double_t SM;
+    Int_t runNumber;
+    Int_t subDirNumber;
+    Int_t eventID = -1;
+    Int_t reactionID;
+    Int_t NPDGCode;
+    Double_t SPx, SPy, SPz;
+    Double_t NPx, NPy, NPz;
 
-    SimpleTree->Branch("eventID", &eventID);
-    SimpleTree->Branch("runNumber", &runNumber);
     SimpleTree->Branch("reactionChannel", &reactionChannel);
+    SimpleTree->Branch("SM", &SM);
+    SimpleTree->Branch("runNumber", &runNumber);
+    SimpleTree->Branch("subDirNumber", &subDirNumber);
+    SimpleTree->Branch("eventID", &eventID);
     SimpleTree->Branch("reactionID", &reactionID);
-    // SimpleTree->Branch("SM", &SM);
+    SimpleTree->Branch("NPDGCode", &NPDGCode);
     SimpleTree->Branch("SPx", &SPx);
     SimpleTree->Branch("SPy", &SPy);
     SimpleTree->Branch("SPz", &SPz);
-    SimpleTree->Branch("NPDGCode", &NPDGCode);
     SimpleTree->Branch("NPx", &NPx);
     SimpleTree->Branch("NPy", &NPy);
     SimpleTree->Branch("NPz", &NPz);
 
-    /* Loop over directories and files */
-
-    // RCMS = <ReactionChannel><Mass>_<Server>
-
-    TList *listOfRcmsDir = SimDir.GetListOfFiles();
-    if (!listOfRcmsDir) return;
-
-    TIter nextRcmsDir(listOfRcmsDir);
-    TObject *currentRcsmDir = nullptr;
-
     // auxiliary variables
     std::string str_line;
-    Int_t current_eventID = -1;
     TString csv;
     TObjArray *csv_arr = nullptr;
 
-    while ((currentRcsmDir = nextRcmsDir())) {
+    /* Loop over run numbers */
 
-        // protection, TString::CompareTo() returns zero when two strings are identical
-        if (!static_cast<TString>(currentRcsmDir->GetName()).CompareTo(".") ||
-            !static_cast<TString>(currentRcsmDir->GetName()).CompareTo("..")) {
-            continue;
-        }
+    TList *listOfRunDirs = SimDir.GetListOfFiles();
+    if (!listOfRunDirs) return;
 
-        TString pathToRcmsDir = pathToSimDir + currentRcsmDir->GetName() + "/";
-        TSystemDirectory RcmsDir("RcmsDir", pathToRcmsDir);
+    TIter next(listOfRunDirs);
+    while (TSystemDirectory *currentRunDir = (TSystemDirectory *)next()) {
 
-        TList *listOfRunDir = RcmsDir.GetListOfFiles();
-        if (!listOfRunDir) return;
+        TString runDir = currentRunDir->GetName();
+        if (!runDir.CompareTo(".") || !runDir.CompareTo("..")) continue;
 
-        TIter nextRunDir(listOfRunDir);
-        TObject *currentRunDir = nullptr;
+        TSystemDirectory RunDir("RunDir", currentRunDir->GetTitle());
 
-        while ((currentRunDir = nextRunDir())) {
+        TList *listOfSubDirs = RunDir.GetListOfFiles();
+        if (!listOfSubDirs) return;
 
-            if (!static_cast<TString>(currentRunDir->GetName()).CompareTo(".") ||
-                !static_cast<TString>(currentRunDir->GetName()).CompareTo("..")) {
-                continue;
-            }
+        /* Loop over sub directories */
 
-            TString pathToRunDir = pathToRcmsDir + currentRunDir->GetName();
-            TString pathToSimLog = pathToRunDir + "/sim.log";
+        TIter nextt(listOfSubDirs);
+        while (TSystemDirectory *currentSubDir = (TSystemDirectory *)nextt()) {
 
-            std::ifstream SimLog(pathToSimLog);
+            TString subDir = currentSubDir->GetName();
+            if (!subDir.CompareTo(".") || !subDir.CompareTo("..")) continue;
+
+            TString subDirPath = currentSubDir->GetTitle();
+
+            /* Open file */
+
+            std::ifstream SimLog(subDirPath + "/sim.log");
             if (!SimLog.is_open()) {
-                std::cerr << "Unable to open file: " << pathToSimLog << std::endl;
+                std::cerr << "Unable to open file: " << subDirPath + "/sim.log" << std::endl;
                 continue;
             }
+
+            /* Updated file and path-related variables */
+
+            reactionChannel = SimulationSet(0);
+            SM = ((TString)SimulationSet(1, SimulationSet.Length())).Atof();
+            runNumber = runDir.Atoi();
+            subDirNumber = subDir.Atoi();
+
+            /* Read lines */
 
             while (std::getline(SimLog, str_line)) {
 
                 TString tstr_line = str_line;
 
                 // a new event has appeared
-                if (tstr_line.Contains("I-AliGenCocktail::Generate: Generator 1: AliGenHijing")) {
-
-                    // fill variables
-                    eventID = current_eventID;
-                    runNumber = static_cast<TString>(currentRunDir->GetName()).Atoi();
-                    reactionChannel = static_cast<TString>(currentRcsmDir->GetName())(0);
-                    SimpleTree->Fill();
-
-                    // clear vectors
-                    reactionID.clear();
-                    // SM.clear();
-                    SPx.clear();
-                    SPy.clear();
-                    SPz.clear();
-                    NPDGCode.clear();
-                    NPx.clear();
-                    NPy.clear();
-                    NPz.clear();
-
-                    // start new event
-                    current_eventID++;
-                }
+                if (tstr_line.Contains("I-AliGenCocktail::Generate: Generator 1: AliGenHijing")) eventID++;
 
                 if (!tstr_line.Contains("I-AliGenSexaquarkReaction::GenerateN: 6")) continue;
-
-                std::cout << tstr_line << std::endl;  // debug
 
                 csv = static_cast<TString>(tstr_line(38, tstr_line.Length() - 1));
                 csv_arr = csv.Tokenize(",");
 
-                reactionID.push_back(dynamic_cast<TObjString *>(csv_arr->At(0))->String().Atoi());
-                // SM.push_back();
-                SPx.push_back(dynamic_cast<TObjString *>(csv_arr->At(1))->String().Atof());
-                SPy.push_back(dynamic_cast<TObjString *>(csv_arr->At(2))->String().Atof());
-                SPz.push_back(dynamic_cast<TObjString *>(csv_arr->At(3))->String().Atof());
-                NPDGCode.push_back(reactionChannel == 'A' ? 2112
-                                                          : 2212);  // considering only ADEH // BUG it's using the prev. reac. channel
-                NPx.push_back(dynamic_cast<TObjString *>(csv_arr->At(4))->String().Atof());
-                NPy.push_back(dynamic_cast<TObjString *>(csv_arr->At(5))->String().Atof());
-                NPz.push_back(dynamic_cast<TObjString *>(csv_arr->At(6))->String().Atof());
+                reactionID = dynamic_cast<TObjString *>(csv_arr->At(0))->String().Atoi();
+                NPDGCode = reactionChannel == 'A' ? 2112 : 2212;  // considering only ADEH
+                SPx = dynamic_cast<TObjString *>(csv_arr->At(1))->String().Atof();
+                SPy = dynamic_cast<TObjString *>(csv_arr->At(2))->String().Atof();
+                SPz = dynamic_cast<TObjString *>(csv_arr->At(3))->String().Atof();
+                NPx = dynamic_cast<TObjString *>(csv_arr->At(4))->String().Atof();
+                NPy = dynamic_cast<TObjString *>(csv_arr->At(5))->String().Atof();
+                NPz = dynamic_cast<TObjString *>(csv_arr->At(6))->String().Atof();
 
+                std::cout << reactionChannel << " " << SM << " " << runNumber << " " << subDirNumber << " " << eventID << " " << reactionID << " "
+                          << NPDGCode << " " << SPx << " " << SPy << " " << SPz << " " << NPx << " " << NPy << " " << NPz << std::endl;  // debug
+
+                SimpleTree->Fill();
             }  // end of loop over lines
 
             SimLog.close();
         }  // end of loop over run dirs
 
-    }  // end of loop over RCMS dirs
+    }  // end of loop over run dirs
+
+    /* Write tree onto file, then save, then close */
 
     SimpleTree->Write();
 
     SimpleFile->Save();
     SimpleFile->Close();
-
-    std::cout << " " << std::endl;
 }
