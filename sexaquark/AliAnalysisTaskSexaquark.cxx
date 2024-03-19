@@ -319,19 +319,22 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
     TString AS_stages[3] = {"MCGen", "Findable", "Found"};
     TString AS_sets[2] = {"All", "Signal"};
 
-    const Int_t N_AS_props = 18;
-    TString AS_props[N_AS_props] = {"Mass",     "Pt",          "Pz",          "Radius",      "Zv",          "Eta",       //
-                                    "Rapidity", "DecayLength", "CPAwrtPV",    "DCAwrtPV",    "DCAbtwV0s",   "DCAv0aSV",  //
-                                    "DCAv0bSV", "DCAv0anegSV", "DCAv0aposSV", "DCAv0bnegSV", "DCAv0bposSV", "Chi2ndf"};
-    Int_t AS_nbins[N_AS_props] = {100, 100, 100, 100, 100, 100,  //
-                                  100, 100, 100, 100, 100, 100,  //
-                                  100, 100, 100, 100, 100, 100};
-    Double_t AS_min[N_AS_props] = {-10., -10., -50., 0., -50., -2.,  //
-                                   -5.,  0.,   0.,   0., 0.,   0.,   //
-                                   0.,   0.,   0.,   0., 0.,   0.};
-    Double_t AS_max[N_AS_props] = {10., 10.,  50., 200., 50., 2.,  //
-                                   5.,  500., 1.,  10.,  2.,  2.,  //
-                                   2.,  10.,  10., 10.,  10., 1.};
+    const Int_t N_AS_props = 21;
+    TString AS_props[N_AS_props] = {"Mass",     "Pt",       "Px",          "Py",          "Pz",          "Phi",         "Radius",     //
+                                    "Zv",       "Eta",      "Rapidity",    "DecayLength", "CPAwrtPV",    "DCAwrtPV",    "DCAbtwV0s",  //
+                                    "DCAv0aSV", "DCAv0bSV", "DCAv0anegSV", "DCAv0aposSV", "DCAv0bnegSV", "DCAv0bposSV", "Chi2ndf"};
+    Int_t AS_nbins[N_AS_props] = {100, 100, 100, 100, 100, 100, 100,  //
+                                  100, 100, 100, 100, 100, 100, 100,  //
+                                  100, 100, 100, 100, 100, 100, 100};
+    Double_t AS_min[N_AS_props] = {-10., -10., -10., -10., -50., 0., 0.,  //
+                                   -50., -2.,  -5.,  0.,   0.,   0., 0.,  //
+                                   0.,   0.,   0.,   0.,   0.,   0., 0.};
+    Double_t AS_max[N_AS_props] = {10.,  10., 10., 10.,  50., 2 * TMath::Pi(),
+                                   200.,  //
+                                   50.,  2.,  5.,  500., 1.,  10.,
+                                   2.,  //
+                                   2.,   2.,  10., 10.,  10., 10.,
+                                   1.};
 
     fHist_AntiSexaquarks_Bookkeep = new TH1F("AntiSexaquarks_Bookkeep", "", 25, 0., 25.);
     fOutputListOfHists->Add(fHist_AntiSexaquarks_Bookkeep);
@@ -976,7 +979,10 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
         fHist_AntiSexaquarks_Bookkeep->Fill(0);
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Mass")]->Fill(lvAntiSexaquark.M());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
+        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Px")]->Fill(lvAntiSexaquark.Px());
+        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Py")]->Fill(lvAntiSexaquark.Py());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
+        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Radius")]->Fill(radius);
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Zv")]->Fill(mcProduct->Zv());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
@@ -1428,7 +1434,10 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
         fHist_AntiSexaquarks_Bookkeep->Fill(1);
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Mass")]->Fill(lvAntiSexaquark.M());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Px")]->Fill(lvAntiSexaquark.Px());
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Py")]->Fill(lvAntiSexaquark.Py());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Radius")]->Fill(radius);
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Zv")]->Fill(secondary_vertex.Z());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
@@ -2246,7 +2255,10 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
             fHist_AntiSexaquarks_Bookkeep->Fill(19);
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass")]->Fill(lvAntiSexaquark.M());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Radius")]->Fill(radius);
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Zv")]->Fill(SecondaryVertex.Z());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
@@ -2267,7 +2279,10 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
             fHist_AntiSexaquarks_Bookkeep->Fill(20);
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvAntiSexaquark.M());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Phi")]->Fill(lvAntiSexaquark.Phi());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Radius")]->Fill(radius);
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Zv")]->Fill(SecondaryVertex.Z());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Eta")]->Fill(lvAntiSexaquark.Eta());
@@ -2783,7 +2798,10 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             fHist_AntiSexaquarks_Bookkeep->Fill(19);
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass")]->Fill(lvAntiSexaquark.M());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Radius")]->Fill(radius);
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Zv")]->Fill(kfAntiSexaquark.GetZ());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
@@ -2806,7 +2824,10 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             fHist_AntiSexaquarks_Bookkeep->Fill(20);
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvAntiSexaquark.M());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Phi")]->Fill(lvAntiSexaquark.Phi());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Radius")]->Fill(radius);
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Zv")]->Fill(kfAntiSexaquark.GetZ());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Eta")]->Fill(lvAntiSexaquark.Eta());
