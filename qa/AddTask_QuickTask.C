@@ -12,8 +12,12 @@ AliAnalysisQuickTask* AddTask_QuickTask(TString name = "name", Bool_t IsMC = kTR
         return 0x0;
     }
 
+    // mgr->AddStatisticsTask(AliVEvent::kAnyINT);
+
     // by default, a file is open for writing. here, we get the filename
     TString fileName = AliAnalysisManager::GetCommonFileName();
+
+    AliPhysicsSelectionTask* physSelTask = AddTaskPhysicsSelection(kTRUE);
 
     // now we create an instance of your task
     AliAnalysisQuickTask* task = new AliAnalysisQuickTask(name, IsMC);

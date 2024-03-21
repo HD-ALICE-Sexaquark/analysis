@@ -17,7 +17,12 @@ AliAnalysisQuickTask::AliAnalysisQuickTask()
  Constructor, called locally.
 */
 AliAnalysisQuickTask::AliAnalysisQuickTask(const char *name, Bool_t IsMC)
-    : AliAnalysisTaskSE(name), fIsMC(IsMC), fOutputListOfHists(0), fMC(0), fESD(0), fPIDResponse(0) {
+    : AliAnalysisTaskSE(name),  //
+      fIsMC(IsMC),
+      fOutputListOfHists(0),
+      fMC(0),
+      fESD(0),
+      fPIDResponse(0) {
     DefineInput(0, TChain::Class());
     DefineOutput(1, TList::Class());
 }
@@ -43,23 +48,19 @@ void AliAnalysisQuickTask::UserCreateOutputObjects() {
         AliFatal("ERROR: AliAnalysisManager couldn't be found.");
     }
 
-    AliESDInputHandler *inputHandler = (AliESDInputHandler *)(man->GetInputEventHandler());
-    if (!inputHandler) {
+    // fInputHandler = (AliESDInputHandler *)(man->GetInputEventHandler());
+    fInputHandler = dynamic_cast<AliInputEventHandler *>(man->GetInputEventHandler());
+
+    if (!fInputHandler) {
         AliFatal("ERROR: AliESDInputHandler couldn't be found.");
     }
 
-    fPIDResponse = inputHandler->GetPIDResponse();
+    fPIDResponse = fInputHandler->GetPIDResponse();
 
     /** Prepare output histograms */
 
     fOutputListOfHists = new TList();
     fOutputListOfHists->SetOwner(kTRUE);
-
-    fHist_Tracks_Eta = new TH1F("Eta", "", 100, -0.8, 0.8);
-    fOutputListOfHists->Add(fHist_Tracks_Eta);
-
-    fHist_Tracks_Status = new TH1F("Status", "", 20, 0., 20);
-    fOutputListOfHists->Add(fHist_Tracks_Status);
 
     /* From SPD */
 
@@ -122,7 +123,7 @@ void AliAnalysisQuickTask::UserCreateOutputObjects() {
     hPt = new TH1F("hPt", "", 2000, 0., 200);
     fOutputListOfHists->Add(hPt);
 
-    hNTracksPerSelectedEvent = new TH1F("hNTracks", "Number of tracks in selected events", 2000, 0., 20000);
+    hNTracksPerSelectedEvent = new TH1F("hNTracksSelected", "Number of tracks in selected events", 2000, 0., 20000);
     fOutputListOfHists->Add(hNTracksPerSelectedEvent);
     /* */
     hITSLayerVsPhi = new TH2F("hITSLayerVsPhi", "Hit in the ITS Layer vs #phi", 300, 0., 2 * TMath::Pi(), 6, 0., 6.);
@@ -166,20 +167,44 @@ void AliAnalysisQuickTask::UserCreateOutputObjects() {
 */
 void AliAnalysisQuickTask::UserExec(Option_t *) {
 
+    AliInfo("hola");
+
     fESD = dynamic_cast<AliESDEvent *>(InputEvent());
 
     if (!fESD) {
         AliFatal("ERROR: AliESDEvent couldn't be found.");
     }
 
-    /*  */
-
     Int_t ntracks = fESD->GetNumberOfTracks();
     hNTracks->Fill(ntracks);
 
-    Bool_t isPhysSel =
-        (((AliInputEventHandler *)(AliAnalysisManager::GetAnalysisManager()->GetInputEventHandler()))->IsEventSelected() & AliVEvent::kAnyINT);
-    if (isPhysSel) hNTracksPerSelectedEvent->Fill(ntracks);  // TEMPORARY
+    // AliInputEventHandler *fInputHandler = dynamic_cast<AliInputEventHandler *>(AliAnalysisManager::GetAnalysisManager()->GetInputEventHandler());
+    AliInfoF("!! Event? %u !!", ((AliInputEventHandler *)(AliAnalysisManager::GetAnalysisManager()->GetInputEventHandler()))->IsEventSelected());
+    AliInfoF("!! -> %u !!", fInputHandler->IsEventSelected() & AliVEvent::kAnyINT);
+    AliInfoF("!! -> %u !!", fInputHandler->IsEventSelected() & AliVEvent::kHighMultV0);
+    AliInfoF("!! -> %u !!", fInputHandler->IsEventSelected() & AliVEvent::kHighMultSPD);
+    AliInfoF("!! -> %u !!", fInputHandler->IsEventSelected() & AliVEvent::kCentral);
+    AliInfoF("!! -> %u !!", fInputHandler->IsEventSelected() & AliVEvent::kSemiCentral);
+    Bool_t MB = (fInputHandler->IsEventSelected() & AliVEvent::kAnyINT);
+    Bool_t HMV0 = (fInputHandler->IsEventSelected() & AliVEvent::kHighMultV0);
+    Bool_t HMSPD = (fInputHandler->IsEventSelected() & AliVEvent::kHighMultSPD);
+    Bool_t Central = (fInputHandler->IsEventSelected() & AliVEvent::kCentral);
+    Bool_t SemiCentral = (fInputHandler->IsEventSelected() & AliVEvent::kSemiCentral);
+    if (MB || HMV0 || HMSPD || Central || SemiCentral) {
+        hNTracksPerSelectedEvent->Fill(ntracks);
+    } else {
+        TRandom3 r(0);
+        AliInfoF("!! Event Rejected !! %.4f", r.Rndm());
+    }
+
+    /*
+        Bool_t MB = (fInputHandler->IsEventSelected() & AliVEvent::kAnyINT);
+        Bool_t HMV0 = (fInputHandler->IsEventSelected() & AliVEvent::kHighMultV0);
+        Bool_t HMSPD = (fInputHandler->IsEventSelected() & AliVEvent::kHighMultSPD);
+        Bool_t Central = (fInputHandler->IsEventSelected() & AliVEvent::kCentral);
+        Bool_t SemiCentral = (fInputHandler->IsEventSelected() & AliVEvent::kSemiCentral);
+        if (MB || HMV0 || HMSPD || Central || SemiCentral) hNTracksPerSelectedEvent->Fill(ntracks);  // TEMPORARY
+     */
 
     hTPCoutTracks->Fill(fESD->GetNumberOfTPCTracks());
     hTPCclusters->Fill(fESD->GetNumberOfTPCClusters());

@@ -20,12 +20,14 @@
 #include "TList.h"
 #include "TLorentzVector.h"
 #include "TROOT.h"
+#include "TRandom3.h"
 #include "TString.h"
 #include "TTree.h"
 #include "TVector3.h"
 
 #include "AliAnalysisManager.h"
 #include "AliAnalysisTask.h"
+#include "AliEventCuts.h"
 #include "AliExternalTrackParam.h"
 #include "AliHelix.h"
 #include "AliInputEventHandler.h"
@@ -56,7 +58,6 @@ class AliAnalysisQuickTask : public AliAnalysisTaskSE {
     virtual ~AliAnalysisQuickTask();
 
     virtual void UserCreateOutputObjects();
-    void PrepareTracksHistograms();
     virtual void UserExec(Option_t *option);
     virtual void Terminate(Option_t *option) { return; }
 
@@ -74,15 +75,15 @@ class AliAnalysisQuickTask : public AliAnalysisTaskSE {
     AliMCEvent *fMC;                // MC event
     AliVVertex *fMC_PrimaryVertex;  // MC gen. (or true) primary vertex
     AliESDEvent *fESD;              // reconstructed event
-    AliPIDResponse *fPIDResponse;   // pid response object
-    AliESDVertex *fPrimaryVertex;   // primary vertex
+    // AliESDInputHandler *fInputHandler;
+    AliInputEventHandler *fInputHandler;
+    AliPIDResponse *fPIDResponse;  // pid response object
+    AliESDVertex *fPrimaryVertex;  // primary vertex
 
     /* ROOT objects */
     TList *fOutputListOfHists;
 
-    /* Tracks Histograms */
-    TH1F *fHist_Tracks_Eta;
-    TH1F *fHist_Tracks_Status;
+    /* Histograms */
 
     TH1I *hTracklets;
     TH2F *hSPDphivsSPDeta;

@@ -6,6 +6,7 @@
 #include "AliAnalysisTaskPIDResponse.h"
 #include "AliESDInputHandler.h"
 #include "AliMCEventHandler.h"
+#include "AliPhysicsSelectionTask.h"
 
 #include "AliAnalysisQuickTask.h"
 
@@ -46,15 +47,19 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, Int_t ChooseNEvents = 0) {
     taskCDB->SetFallBackToRaw(kTRUE);
     */
 
+    gROOT->LoadMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C");
+
     // load PID task
     TString pid_response_path = gSystem->ExpandPathName("${ALICE_ROOT}/ANALYSIS/macros/AddTaskPIDResponse.C");
     AliAnalysisTaskPIDResponse *PIDresponseTask = reinterpret_cast<AliAnalysisTaskPIDResponse *>(
         gInterpreter->ExecuteMacro(Form("%s(%i, 1, 1, \"%i\")", pid_response_path.Data(), (Int_t)IsMC, n_pass)));
+    PIDresponseTask->SelectCollisionCandidates(AliVEvent::kINT7);
 
     // load task
     gInterpreter->LoadMacro("AliAnalysisQuickTask.cxx++g");
     AliAnalysisQuickTask *task =
-        reinterpret_cast<AliAnalysisQuickTask *>(gInterpreter->ExecuteMacro(Form("AddTask_QuickTask.C(\"name\", %i)", (Int_t)IsMC)));
+        reinterpret_cast<AliAnalysisQuickTask *>(gInterpreter->ExecuteMacro(Form("AddTask_QuickTask.C(\"QuickTask\", %i)", (Int_t)IsMC)));
+    task->SelectCollisionCandidates(AliVEvent::kINT7);
 
     if (!mgr->InitAnalysis()) {
         return;
