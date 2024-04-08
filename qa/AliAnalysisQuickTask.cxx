@@ -44,16 +44,10 @@ void AliAnalysisQuickTask::UserCreateOutputObjects() {
     /** Add mandatory routines **/
 
     AliAnalysisManager *man = AliAnalysisManager::GetAnalysisManager();
-    if (!man) {
-        AliFatal("ERROR: AliAnalysisManager couldn't be found.");
-    }
+    if (!man) AliFatal("ERROR: AnalysisManager couldn't be found.");
 
-    // fInputHandler = (AliESDInputHandler *)(man->GetInputEventHandler());
-    fInputHandler = dynamic_cast<AliInputEventHandler *>(man->GetInputEventHandler());
-
-    if (!fInputHandler) {
-        AliFatal("ERROR: AliESDInputHandler couldn't be found.");
-    }
+    fInputHandler = (AliESDInputHandler *)(man->GetInputEventHandler());
+    if (!fInputHandler) AliFatal("ERROR: InputEventHandler couldn't be found.");
 
     fPIDResponse = fInputHandler->GetPIDResponse();
 
@@ -62,212 +56,177 @@ void AliAnalysisQuickTask::UserCreateOutputObjects() {
     fOutputListOfHists = new TList();
     fOutputListOfHists->SetOwner(kTRUE);
 
-    /* From SPD */
-
-    hTracklets = new TH1I("hNtracklets", "Tracklet distribution", 800, 0, 8000);
-    hTracklets->SetXTitle("# Tracklets");
-    fOutputListOfHists->Add(hTracklets);
-
-    hSPDphivsSPDeta = new TH2F("hSPDphivsSPDeta", "Tracklets - #varphi vs #eta", 120, -3., 3, 360, 0., 2 * TMath::Pi());
-    hSPDphivsSPDeta->GetXaxis()->SetTitle("Pseudorapidity #eta");
-    hSPDphivsSPDeta->GetYaxis()->SetTitle("#varphi [rad]");
-    fOutputListOfHists->Add(hSPDphivsSPDeta);
-
-    hVertexZ = new TH1F("hVertexZ", "Vertex Z distribution", 300, -15, 15);
-    hVertexZ->SetXTitle("Z Vertex [cm]");
-    fOutputListOfHists->Add(hVertexZ);
-
-    hClu0VsTracklet = new TH2F("hClu0VsTracklet", "Clusters Layer 0 Vs Tracklets", 400, 0, 8000, 400, 0, 1.5 * 8000);
-    hClu0VsTracklet->SetYTitle("clusters SPD Layer 0");
-    hClu0VsTracklet->SetXTitle("tracklets");
-    fOutputListOfHists->Add(hClu0VsTracklet);
-
-    hClu1VsTracklet = new TH2F("hClu1VsTracklet", "Clusters Layer 1 Vs Tracklets", 400, 0, 8000, 400, 0, 1.5 * 8000);
-    hClu1VsTracklet->SetYTitle("clusters SPD Layer 1");
-    hClu1VsTracklet->SetXTitle("tracklets");
-    fOutputListOfHists->Add(hClu1VsTracklet);
-
-    hEventsProcessed = new TH1I("hEventsProcessed", "Number of processed events", 1, 0, 1);
-    fOutputListOfHists->Add(hEventsProcessed);
-
-    hSPDmultiplicityVsVertexZ = new TH2F("hSPDmultiplicityVsVertexZ", "SPD Trackles vs zvertex", 300, -15, 15, 800, 0, 8000);
-    hSPDmultiplicityVsVertexZ->GetYaxis()->SetTitle("SPD multiplicity");
-    hSPDmultiplicityVsVertexZ->GetXaxis()->SetTitle("zvertex position");
-    fOutputListOfHists->Add(hSPDmultiplicityVsVertexZ);
-
-    /* From CheckESDTracks */
-
-    fHistNEvents = new TH1F("hNEvents", "Number of processed events", 15, -0.5, 14.5);
-    fHistNEvents->SetMinimum(0);
-    fHistNEvents->GetXaxis()->SetBinLabel(1, "All events");
-    fHistNEvents->GetXaxis()->SetBinLabel(2, "PhysSel");
-    fHistNEvents->GetXaxis()->SetBinLabel(3, "InCentralityClass");
-    fHistNEvents->GetXaxis()->SetBinLabel(4, "Good vertex");
-    fHistNEvents->GetXaxis()->SetBinLabel(5, "Pass zSPD-zTrk vert sel");
-    fHistNEvents->GetXaxis()->SetBinLabel(6, "|zvert|<10");
-    fHistNEvents->GetXaxis()->SetBinLabel(7, "Pileup cut");
-    fHistNEvents->GetXaxis()->SetBinLabel(8, "Generated pileup");
-    fOutputListOfHists->Add(fHistNEvents);
-    /*  */
-    hDCAxy = new TH1F("DCAxy", "", 100, -5, 5);
-    hDCAxy->SetXTitle("DCAxy (cm)");
-    fOutputListOfHists->Add(hDCAxy);
-
-    hDCAz = new TH1F("DCAz", "", 100, -5, 5);
-    hDCAz->SetXTitle("DCAz (cm)");
-    fOutputListOfHists->Add(hDCAz);
-    /*  */
-    hNTracks = new TH1F("hNTracks", "Number of tracks in ESD events", 2000, 0., 20000);
-    fOutputListOfHists->Add(hNTracks);
-
-    hPt = new TH1F("hPt", "", 2000, 0., 200);
-    fOutputListOfHists->Add(hPt);
-
-    hNTracksPerSelectedEvent = new TH1F("hNTracksSelected", "Number of tracks in selected events", 2000, 0., 20000);
-    fOutputListOfHists->Add(hNTracksPerSelectedEvent);
-    /* */
-    hITSLayerVsPhi = new TH2F("hITSLayerVsPhi", "Hit in the ITS Layer vs #phi", 300, 0., 2 * TMath::Pi(), 6, 0., 6.);
-    fOutputListOfHists->Add(hITSLayerVsPhi);
-
-    hITSLayerVsEta = new TH2F("hITSLayerVsEta", "Hit in the ITS Layer vs #eta", 40, -1., 1., 6, 0., 6.);
-    fOutputListOfHists->Add(hITSLayerVsEta);
-    /*  */
-    hTPCNSigmaProtonVsInnerParamP =
-        new TH2F("hTPCNSigmaProtonVsInnerParamP", "TPC N_{#sigma} Proton vs p^{in} (GeV/c)", 200, 0., 10., 200, -10., 10.);
-    fOutputListOfHists->Add(hTPCNSigmaProtonVsInnerParamP);
-
-    hTPCNSigmaKaonVsInnerParamP = new TH2F("hTPCNSigmaKaonVsInnerParamP", "TPC N_{#sigma} Kaon vs p^{in} (GeV/c)", 200, 0., 10., 200, -10., 10.);
-    fOutputListOfHists->Add(hTPCNSigmaKaonVsInnerParamP);
-
-    hTPCNSigmaPionVsInnerParamP = new TH2F("hTPCNSigmaPionVsInnerParamP", "TPC N_{#sigma} Pion vs p^{in} (GeV/c)", 200, 0., 10., 200, -10., 10.);
-    fOutputListOfHists->Add(hTPCNSigmaPionVsInnerParamP);
-    /*  */
-    hTPCNSigmaProtonVsEta = new TH2F("hTPCNSigmaProtonVsEta", "TPC N_{#sigma} Proton vs #eta", 40, -1., 1., 200, -10., 10.);
-    fOutputListOfHists->Add(hTPCNSigmaProtonVsEta);
-
-    hTPCNSigmaKaonVsEta = new TH2F("hTPCNSigmaKaonVsEta", "TPC N_{#sigma} Kaon vs #eta", 40, -1., 1., 200, -10., 10.);
-    fOutputListOfHists->Add(hTPCNSigmaKaonVsEta);
-
-    hTPCNSigmaPionVsEta = new TH2F("hTPCNSigmaPionVsEta", "TPC N_{#sigma} Pion vs #eta", 40, -1., 1., 200, -10., 10.);
-    fOutputListOfHists->Add(hTPCNSigmaPionVsEta);
-    /*  */
-    hTPCoutTracks = new TH1F("hTPCoutTracks", "Number of TPCout tracks in ESD events", 2000, 0., 20000);
-    fOutputListOfHists->Add(hTPCoutTracks);
-
-    hTPCclusters = new TH1F("hTPCclusters", "Number of TPC clusters in ESD events", 2000, 0., 5000000);
-    fOutputListOfHists->Add(hTPCclusters);
+    PrepareHistograms();
 
     PostData(1, fOutputListOfHists);
+}
+
+/*
+ */
+void AliAnalysisQuickTask::PrepareHistograms() {
+
+    /* MC Gen. Event */
+
+    hMCGen_VertexZ = new TH1F("hMCGen_VertexZ", "", 200, -15., 15.);
+    fOutputListOfHists->Add(hMCGen_VertexZ);
+
+    /* Event */
+
+    hEvents_Bookkeep = new TH1I("hEvents_Bookkeep", "Number of processed events", 3, 0., 3.);
+    fOutputListOfHists->Add(hEvents_Bookkeep);
+
+    hVertexZ = new TH1F("hVertexZ", "", 200, -15., 15.);
+    fOutputListOfHists->Add(hVertexZ);
+
+    hNTracks = new TH1F("hNTracks", "", 200, 0., 20000.);
+    fOutputListOfHists->Add(hNTracks);
+
+    hNSelectedTracks = new TH1F("hNSelectedTracks", "", 2000, 0., 20000.);
+    fOutputListOfHists->Add(hNSelectedTracks);
+
+    /* Tracks */
+
+    hTracks_DCAxy = new TH1F("hTracks_DCAxy", "", 100, -5., 5.);
+    fOutputListOfHists->Add(hTracks_DCAxy);
+
+    hTracks_DCAz = new TH1F("hTracks_DCAz", "", 100, -5., 5.);
+    fOutputListOfHists->Add(hTracks_DCAz);
+
+    hTracks_Pt = new TH1F("hTracks_Pt", "", 200, 0., 100.);
+    fOutputListOfHists->Add(hTracks_Pt);
+
+    hTracks_PhiVsEta = new TH2F("hTracks_PhiVsEta", "", 100, -1., 1., 200, 0., 2. * TMath::Pi());
+    fOutputListOfHists->Add(hTracks_PhiVsEta);
+
+    /* SPD */
+
+    hSPD_MultiplicityVsVertexZ = new TH2F("hSPD_MultiplicityVsVertexZ", "", 10, -10., 10., 30, 0, 6000.);
+    fOutputListOfHists->Add(hSPD_MultiplicityVsVertexZ);
+
+    hSPD_NTracklets = new TH1I("hSPD_NTracklets", "Tracklet distribution", 60, 0, 6000.);
+    fOutputListOfHists->Add(hSPD_NTracklets);
+
+    hSPD_NTrackletsClu0VsNTracklets = new TH2F("hSPD_NTrackletsClu0VsNTracklets", "", 200, 0, 3000., 200, 0, 6000.);
+    fOutputListOfHists->Add(hSPD_NTrackletsClu0VsNTracklets);
+
+    hSPD_NTrackletsClu1VsNTracklets = new TH2F("hSPD_NTrackletsClu1VsNTracklets", "", 200, 0, 3000., 200, 0, 6000.);
+    fOutputListOfHists->Add(hSPD_NTrackletsClu1VsNTracklets);
+
+    hSPD_PhiVsEta = new TH2F("hSPD_PhiVsEta", "", 400, -1., 1., 400, 0., 2 * TMath::Pi());
+    fOutputListOfHists->Add(hSPD_PhiVsEta);
+
+    /* ITS */
+
+    hITS_LayerNoVsPhi = new TH2F("hITS_LayerNoVsPhi", "", 200, 0., 2 * TMath::Pi(), 6, 0., 6.);
+    fOutputListOfHists->Add(hITS_LayerNoVsPhi);
+
+    hITS_LayerNoVsEta = new TH2F("hITS_LayerNoVsEta", "", 40, -1., 1., 6, 0., 6.);
+    fOutputListOfHists->Add(hITS_LayerNoVsEta);
+
+    /* TPC */
+
+    hTPC_NClusters = new TH1F("hTPC_NClusters", "", 200, 0., 5000000.);
+    fOutputListOfHists->Add(hTPC_NClusters);
+
+    hTPC_NSigmaProtonVsInnerParamP = new TH2F("hTPC_NSigmaProtonVsInnerParamP", "", 200, 0., 10., 200, -5., 5.);
+    fOutputListOfHists->Add(hTPC_NSigmaProtonVsInnerParamP);
+
+    hTPC_NSigmaKaonVsInnerParamP = new TH2F("hTPC_NSigmaKaonVsInnerParamP", "", 200, 0., 10., 200, -5., 5.);
+    fOutputListOfHists->Add(hTPC_NSigmaKaonVsInnerParamP);
+
+    hTPC_NSigmaPionVsInnerParamP = new TH2F("hTPC_NSigmaPionVsInnerParamP", "", 200, 0., 10., 200, -5., 5.);
+    fOutputListOfHists->Add(hTPC_NSigmaPionVsInnerParamP);
+
+    hTPC_NSigmaProtonVsEta = new TH2F("hTPC_NSigmaProtonVsEta", "", 200, -1., 1., 200, -5., 5.);
+    fOutputListOfHists->Add(hTPC_NSigmaProtonVsEta);
+
+    hTPC_NSigmaKaonVsEta = new TH2F("hTPC_NSigmaKaonVsEta", "", 200, -1., 1., 200, -5., 5.);
+    fOutputListOfHists->Add(hTPC_NSigmaKaonVsEta);
+
+    hTPC_NSigmaPionVsEta = new TH2F("hTPC_NSigmaPionVsEta", "", 200, -1., 1., 200, -5., 5.);
+    fOutputListOfHists->Add(hTPC_NSigmaPionVsEta);
 }
 
 /*
  Main function, called per each event at RUNTIME ~ execution on Grid
- - Uses: `fIsMC`, `fMC_PrimaryVertex`, `fESD`, `fMagneticField`, `fPrimaryVertex`, `fSourceOfV0s`, `fReactionChannel`, `fOutputListOfTrees`,
- `fOutputListOfHists`
 */
 void AliAnalysisQuickTask::UserExec(Option_t *) {
 
-    AliInfo("hola");
+    AliInfo("-- new event --");
+
+    /* MC Generated */
+
+    if (fIsMC) {
+        fMC = MCEvent();
+        if (!fMC) AliFatal("ERROR: AliMCEvent couldn't be found.");
+        fMC_PrimaryVertex = const_cast<AliVVertex *>(fMC->GetPrimaryVertex());
+    }
+
+    ProcessMCEvent();
+
+    /* ESD */
 
     fESD = dynamic_cast<AliESDEvent *>(InputEvent());
+    if (!fESD) AliFatal("ERROR: AliESDEvent couldn't be found.");
+    fPrimaryVertex = const_cast<AliESDVertex *>(fESD->GetPrimaryVertex());
 
-    if (!fESD) {
-        AliFatal("ERROR: AliESDEvent couldn't be found.");
-    }
-
-    Int_t ntracks = fESD->GetNumberOfTracks();
-    hNTracks->Fill(ntracks);
-
-    // AliInputEventHandler *fInputHandler = dynamic_cast<AliInputEventHandler *>(AliAnalysisManager::GetAnalysisManager()->GetInputEventHandler());
-    AliInfoF("!! Event? %u !!", ((AliInputEventHandler *)(AliAnalysisManager::GetAnalysisManager()->GetInputEventHandler()))->IsEventSelected());
-    AliInfoF("!! -> %u !!", fInputHandler->IsEventSelected() & AliVEvent::kAnyINT);
-    AliInfoF("!! -> %u !!", fInputHandler->IsEventSelected() & AliVEvent::kHighMultV0);
-    AliInfoF("!! -> %u !!", fInputHandler->IsEventSelected() & AliVEvent::kHighMultSPD);
-    AliInfoF("!! -> %u !!", fInputHandler->IsEventSelected() & AliVEvent::kCentral);
-    AliInfoF("!! -> %u !!", fInputHandler->IsEventSelected() & AliVEvent::kSemiCentral);
-    Bool_t MB = (fInputHandler->IsEventSelected() & AliVEvent::kAnyINT);
-    Bool_t HMV0 = (fInputHandler->IsEventSelected() & AliVEvent::kHighMultV0);
-    Bool_t HMSPD = (fInputHandler->IsEventSelected() & AliVEvent::kHighMultSPD);
-    Bool_t Central = (fInputHandler->IsEventSelected() & AliVEvent::kCentral);
-    Bool_t SemiCentral = (fInputHandler->IsEventSelected() & AliVEvent::kSemiCentral);
-    if (MB || HMV0 || HMSPD || Central || SemiCentral) {
-        hNTracksPerSelectedEvent->Fill(ntracks);
-    } else {
-        TRandom3 r(0);
-        AliInfoF("!! Event Rejected !! %.4f", r.Rndm());
-    }
-
-    /*
-        Bool_t MB = (fInputHandler->IsEventSelected() & AliVEvent::kAnyINT);
-        Bool_t HMV0 = (fInputHandler->IsEventSelected() & AliVEvent::kHighMultV0);
-        Bool_t HMSPD = (fInputHandler->IsEventSelected() & AliVEvent::kHighMultSPD);
-        Bool_t Central = (fInputHandler->IsEventSelected() & AliVEvent::kCentral);
-        Bool_t SemiCentral = (fInputHandler->IsEventSelected() & AliVEvent::kSemiCentral);
-        if (MB || HMV0 || HMSPD || Central || SemiCentral) hNTracksPerSelectedEvent->Fill(ntracks);  // TEMPORARY
-     */
-
-    hTPCoutTracks->Fill(fESD->GetNumberOfTPCTracks());
-    hTPCclusters->Fill(fESD->GetNumberOfTPCClusters());
-
-    const AliESDVertex *vertex = fESD->GetPrimaryVertexSPD();
-    const AliMultiplicity *mult = fESD->GetMultiplicity();
-
-    if (!vertex) return;
-    if (!vertex->GetStatus()) return;
-    if (vertex->GetNContributors() < 1) return;
-
-    hEventsProcessed->Fill(0);
-
-    hTracklets->Fill(mult->GetNumberOfTracklets());
-
-    Double_t vtxPos[3] = {999, 999, 999};
-    vertex->GetXYZ(vtxPos);
-    hVertexZ->Fill(vtxPos[2]);
-
-    hSPDmultiplicityVsVertexZ->Fill(vtxPos[2], mult->GetNumberOfTracklets());
-    hClu0VsTracklet->Fill(mult->GetNumberOfTracklets(), mult->GetNumberOfITSClusters(0));
-    hClu1VsTracklet->Fill(mult->GetNumberOfTracklets(), mult->GetNumberOfITSClusters(1));
-
-    for (Int_t iTracklet = 0; iTracklet < mult->GetNumberOfTracklets(); iTracklet++) {
-        Float_t phiTr = mult->GetPhi(iTracklet);
-        Float_t etaTr = mult->GetEta(iTracklet);
-        hSPDphivsSPDeta->Fill(etaTr, phiTr);
-    }
-
+    ProcessEvent();
     ProcessTracks();
 
-    // fMC = MCEvent();
-    // if (!fMC) {
-    // AliFatal("ERROR: AliMCEvent couldn't be found.");
-    // }
-    // fMC_PrimaryVertex = const_cast<AliVVertex*>(fMC->GetPrimaryVertex());
-    // fMagneticField = fESD->GetMagneticField();
-    // fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
-    // DefineTracksCuts("");
-    // if (fIsMC) ProcessMCGen();
-    // getPdgCode_fromMcIdx.clear();
-
-    // stream the results the analysis of this event to the output manager
     PostData(1, fOutputListOfHists);
 }
 
 /*
- Loop over MC particles in a single event. Store the indices of the signal particles.
- - Uses: `fMC`, `fPDG`, `fMC_PrimaryVertex`
-*/
-void AliAnalysisQuickTask::ProcessMCGen() {
+ */
+void AliAnalysisQuickTask::ProcessMCEvent() {
+    fMC_PrimaryVertex = const_cast<AliVVertex *>(fMC->GetPrimaryVertex());
+    hMCGen_VertexZ->Fill(fMC_PrimaryVertex->GetZ());
+}
 
-    AliMCParticle *mcPart;
-    Int_t pdg_mc;
+/*
+ */
+void AliAnalysisQuickTask::ProcessEvent() {
 
-    for (Int_t mcIdx = 0; mcIdx < fMC->GetNumberOfTracks(); mcIdx++) {
+    hEvents_Bookkeep->Fill(0);
 
-        mcPart = (AliMCParticle *)fMC->GetTrack(mcIdx);
-        pdg_mc = mcPart->PdgCode();
-
-        if (pdg_mc != 2212) continue;
-        if (!mcPart->IsPhysicalPrimary()) continue;
+    Bool_t MB = (fInputHandler->IsEventSelected() & AliVEvent::kINT7);
+    if (!MB) {
+        AliInfoF("!! Event Rejected -- %u & %u = %u !!", fInputHandler->IsEventSelected(), AliVEvent::kINT7, MB);
+        return;
     }
+    AliInfoF("!! Event Selected -- %u & %u = %u !!", fInputHandler->IsEventSelected(), AliVEvent::kINT7, MB);
+
+    hEvents_Bookkeep->Fill(1);
+
+    if (TMath::Abs(fPrimaryVertex->GetZ()) > 10.) return;
+
+    hEvents_Bookkeep->Fill(2);
+
+    hVertexZ->Fill(fPrimaryVertex->GetZ());
+
+    Int_t ntracks = fESD->GetNumberOfTracks();
+    hNTracks->Fill(ntracks);
+
+    /* SPD */
+
+    const AliESDVertex *spd_vertex = fESD->GetPrimaryVertexSPD();
+    const AliMultiplicity *mult = fESD->GetMultiplicity();
+
+    hSPD_NTracklets->Fill(mult->GetNumberOfTracklets());
+
+    hSPD_MultiplicityVsVertexZ->Fill(spd_vertex->GetZ(), mult->GetNumberOfTracklets());
+    hSPD_NTrackletsClu0VsNTracklets->Fill(mult->GetNumberOfTracklets(), mult->GetNumberOfITSClusters(0));
+    hSPD_NTrackletsClu1VsNTracklets->Fill(mult->GetNumberOfTracklets(), mult->GetNumberOfITSClusters(1));
+
+    for (Int_t iTracklet = 0; iTracklet < mult->GetNumberOfTracklets(); iTracklet++) {
+        Float_t phiTr = mult->GetPhi(iTracklet);
+        Float_t etaTr = mult->GetEta(iTracklet);
+        hSPD_PhiVsEta->Fill(etaTr, phiTr);
+    }
+
+    /* TPC */
+
+    hTPC_NClusters->Fill(fESD->GetNumberOfTPCClusters());
 }
 
 /*
@@ -277,68 +236,51 @@ void AliAnalysisQuickTask::ProcessTracks() {
 
     AliESDtrack *track;
 
-    Int_t mcIdx;
-    Int_t mcPdgCode;
-    Int_t mcIdxOfTrueV0;
-
-    Float_t pt, pz, eta;
-    Float_t impar_pv[2], dca_wrt_pv;
-    Float_t n_tpc_clusters;
-    Float_t chi2_over_nclusters;
-    Float_t n_sigma_proton;
-    Float_t n_sigma_kaon;
-    Float_t n_sigma_pion;
-    Float_t golden_chi2;
-
-    /* Loop over tracks in a single event */
+    Int_t nSelectedTracks = 0;
 
     for (Int_t esdIdx = 0; esdIdx < fESD->GetNumberOfTracks(); esdIdx++) {
 
-        /* Get track */
-
         track = fESD->GetTrack(esdIdx);
 
-        hPt->Fill(track->Pt());
+        for (Int_t iLayer = 0; iLayer < 6; iLayer++) {
+            if (track->HasPointOnITSLayer(iLayer)) {
+                hITS_LayerNoVsPhi->Fill(track->Phi(), iLayer);
+                hITS_LayerNoVsEta->Fill(track->Eta(), iLayer);
+            }
+        }
+
+        if (TMath::Abs(track->Eta()) > 0.9) continue;
 
         Float_t xy_impar_wrt_pv, z_impar_wrt_pv;
         track->GetImpactParameters(xy_impar_wrt_pv, z_impar_wrt_pv);  // pre-calculated DCA w.r.t. PV
-        hDCAxy->Fill(xy_impar_wrt_pv);
-        hDCAz->Fill(z_impar_wrt_pv);
+        hTracks_DCAxy->Fill(xy_impar_wrt_pv);
+        hTracks_DCAz->Fill(z_impar_wrt_pv);
 
-        // loop over the ITS hits of a track
-        for (Int_t iLayer = 0; iLayer < 6; iLayer++) {
-            if (track->HasPointOnITSLayer(iLayer)) {
-                hITSLayerVsPhi->Fill(track->Phi(), iLayer);
-                hITSLayerVsEta->Fill(track->Eta(), iLayer);
-            }
-        }
+        hTracks_Pt->Fill(track->Pt());
+
+        hTracks_PhiVsEta->Fill(track->Eta(), track->Phi());
 
         Float_t n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
         Float_t n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
         Float_t n_sigma_pion = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
 
-        if (TMath::Abs(n_sigma_proton) < 3.) {
-            hTPCNSigmaProtonVsInnerParamP->Fill(track->GetInnerParam()->P(), n_sigma_proton);
-            hTPCNSigmaProtonVsEta->Fill(track->Eta(), n_sigma_proton);
+        if (TMath::Abs(n_sigma_pion) > 3. && TMath::Abs(n_sigma_kaon) > 3. && TMath::Abs(n_sigma_proton) > 3.) continue;
+
+        nSelectedTracks++;
+
+        if (TMath::Abs(n_sigma_pion) < 3.) {
+            hTPC_NSigmaPionVsInnerParamP->Fill(track->GetInnerParam()->P(), n_sigma_pion);
+            hTPC_NSigmaPionVsEta->Fill(track->GetInnerParam()->Eta(), n_sigma_pion);
         }
         if (TMath::Abs(n_sigma_kaon) < 3.) {
-            hTPCNSigmaKaonVsInnerParamP->Fill(track->GetInnerParam()->P(), n_sigma_kaon);
-            hTPCNSigmaKaonVsEta->Fill(track->Eta(), n_sigma_kaon);
+            hTPC_NSigmaKaonVsInnerParamP->Fill(track->GetInnerParam()->P(), n_sigma_kaon);
+            hTPC_NSigmaKaonVsEta->Fill(track->GetInnerParam()->Eta(), n_sigma_kaon);
         }
-        if (TMath::Abs(n_sigma_pion) < 3.) {
-            hTPCNSigmaPionVsInnerParamP->Fill(track->GetInnerParam()->P(), n_sigma_pion);
-            hTPCNSigmaPionVsEta->Fill(track->Eta(), n_sigma_pion);
+        if (TMath::Abs(n_sigma_proton) < 3.) {
+            hTPC_NSigmaProtonVsInnerParamP->Fill(track->GetInnerParam()->P(), n_sigma_proton);
+            hTPC_NSigmaProtonVsEta->Fill(track->GetInnerParam()->Eta(), n_sigma_proton);
         }
-
-        /* Previously */
-        /*
-        mcIdx = TMath::Abs(track->GetLabel());
-        mcPdgCode = getPdgCode_fromMcIdx[mcIdx];
-        if (!PassesTrackSelection(track)) continue;
-        if (mcPdgCode != 2212) continue;
-        fHist_Tracks_Eta->Fill(track->Eta());
-        PlotStatus(track);
-        */
-
     }  // end of loop over tracks
+
+    hNSelectedTracks->Fill(nSelectedTracks);
 }

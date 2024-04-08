@@ -54,17 +54,19 @@ class AliPIDResponse;
 class AliAnalysisQuickTask : public AliAnalysisTaskSE {
    public:
     AliAnalysisQuickTask();
-    AliAnalysisQuickTask(const char *name, Bool_t IsMC);
+    AliAnalysisQuickTask(const char* name, Bool_t IsMC);
     virtual ~AliAnalysisQuickTask();
 
     virtual void UserCreateOutputObjects();
-    virtual void UserExec(Option_t *option);
-    virtual void Terminate(Option_t *option) { return; }
+    void PrepareHistograms();
+    virtual void UserExec(Option_t* option);
+    virtual void Terminate(Option_t* option) { return; }
 
     /* MC Generated */
-    void ProcessMCGen();
+    void ProcessMCEvent();
 
     /* Tracks */
+    void ProcessEvent();
     void ProcessTracks();
 
    private:
@@ -72,51 +74,49 @@ class AliAnalysisQuickTask : public AliAnalysisTaskSE {
     Bool_t fIsMC;  //
 
     /* AliRoot objects */
-    AliMCEvent *fMC;                // MC event
-    AliVVertex *fMC_PrimaryVertex;  // MC gen. (or true) primary vertex
-    AliESDEvent *fESD;              // reconstructed event
-    // AliESDInputHandler *fInputHandler;
-    AliInputEventHandler *fInputHandler;
-    AliPIDResponse *fPIDResponse;  // pid response object
-    AliESDVertex *fPrimaryVertex;  // primary vertex
+    AliMCEvent* fMC;                // MC event
+    AliVVertex* fMC_PrimaryVertex;  // MC gen. (or true) primary vertex
+    AliESDEvent* fESD;              // reconstructed event
+    AliESDInputHandler* fInputHandler;
+    AliPIDResponse* fPIDResponse;  // pid response object
+    AliESDVertex* fPrimaryVertex;  // primary vertex
 
     /* ROOT objects */
-    TList *fOutputListOfHists;
+    TList* fOutputListOfHists;
 
-    /* Histograms */
+    /** Histograms **/
+    /* MC Gen. Event */
+    TH1F* hMCGen_VertexZ;
+    /* Event */
+    TH1I* hEvents_Bookkeep;
+    TH1F* hVertexZ;
+    TH1F* hNTracks;
+    TH1F* hNSelectedTracks;
+    /* Tracks */
+    TH1F* hTracks_DCAxy;
+    TH1F* hTracks_DCAz;
+    TH1F* hTracks_Pt;
+    TH2F* hTracks_PhiVsEta;
+    /* SPD */
+    TH2F* hSPD_MultiplicityVsVertexZ;
+    TH1I* hSPD_NTracklets;
+    TH2F* hSPD_NTrackletsClu0VsNTracklets;
+    TH2F* hSPD_NTrackletsClu1VsNTracklets;
+    TH2F* hSPD_PhiVsEta;
+    /* ITS */
+    TH2F* hITS_LayerNoVsPhi;
+    TH2F* hITS_LayerNoVsEta;
+    /* TPC */
+    TH1F* hTPC_NClusters;
+    TH2F* hTPC_NSigmaProtonVsInnerParamP;
+    TH2F* hTPC_NSigmaKaonVsInnerParamP;
+    TH2F* hTPC_NSigmaPionVsInnerParamP;
+    TH2F* hTPC_NSigmaProtonVsEta;
+    TH2F* hTPC_NSigmaKaonVsEta;
+    TH2F* hTPC_NSigmaPionVsEta;
 
-    TH1I *hTracklets;
-    TH2F *hSPDphivsSPDeta;
-    TH1F *hVertexZ;
-    TH2F *hClu0VsTracklet;
-    TH2F *hClu1VsTracklet;
-    TH1I *hEventsProcessed;
-    TH2F *hSPDmultiplicityVsVertexZ;
-
-    TH1F *fHistNEvents;
-
-    TH1F *hDCAxy;
-    TH1F *hDCAz;
-
-    TH1F *hNTracks;
-    TH1F *hPt;
-    TH1F *hNTracksPerSelectedEvent;
-
-    TH2F *hITSLayerVsPhi;
-    TH2F *hITSLayerVsEta;
-
-    TH2F *hTPCNSigmaProtonVsInnerParamP;
-    TH2F *hTPCNSigmaKaonVsInnerParamP;
-    TH2F *hTPCNSigmaPionVsInnerParamP;
-    TH2F *hTPCNSigmaProtonVsEta;
-    TH2F *hTPCNSigmaKaonVsEta;
-    TH2F *hTPCNSigmaPionVsEta;
-
-    TH1F *hTPCoutTracks;
-    TH1F *hTPCclusters;
-
-    AliAnalysisQuickTask(const AliAnalysisQuickTask &);             // not implemented
-    AliAnalysisQuickTask &operator=(const AliAnalysisQuickTask &);  // not implemented
+    AliAnalysisQuickTask(const AliAnalysisQuickTask&);             // not implemented
+    AliAnalysisQuickTask& operator=(const AliAnalysisQuickTask&);  // not implemented
 
     ClassDef(AliAnalysisQuickTask, 1);
 };
