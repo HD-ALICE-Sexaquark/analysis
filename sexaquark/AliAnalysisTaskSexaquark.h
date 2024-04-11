@@ -197,6 +197,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     virtual void UserCreateOutputObjects();
     void CheckForInputErrors();
     void Initialize();
+    void PrepareQAHistograms();
     void PrepareTracksHistograms();
     void PrepareV0Histograms();
     void PrepareAntiSexaquarkHistograms();
@@ -236,7 +237,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // void GeoSexaquarkFinder_ChannelD();
     // void GeoSexaquarkFinder_ChannelE();
     void KalmanSexaquarkFinder_ChannelA();
-    // void KalmanSexaquarkFinder_ChannelD();
+    void KalmanSexaquarkFinder_ChannelD();
     // void KalmanSexaquarkFinder_ChannelE();
     Bool_t PassesSexaquarkCuts_ChannelA(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDv0 esdKaonZeroShort,
                                         AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos, AliESDtrack* esdKaonZeroShortNeg,
@@ -244,8 +245,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t PassesSexaquarkCuts_ChannelA(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
                                         KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos,
                                         KFParticle kfKaonZeroShortNeg, KFParticle kfKaonZeroShortPos);
-    // Bool_t PassesSexaquarkCuts_ChannelD();
-    // Bool_t PassesSexaquarkCuts_ChannelD();
+    // Bool_t PassesSexaquarkCuts_ChannelD(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack* esdPosKaon,
+    // AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
+    Bool_t PassesSexaquarkCuts_ChannelD(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
+                                        KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
     // Bool_t PassesSexaquarkCuts_ChannelE();
     // Bool_t PassesSexaquarkCuts_ChannelE();
 
@@ -315,6 +318,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TList* fOutputListOfTrees;
     TTree* fTree;
     TList* fOutputListOfHists;
+
+    /** QA Histograms **/
+
+    std::unordered_map<TString, TH1F*> fHist_QA;
+    std::unordered_map<TString, TH2F*> f2DHist_QA;
 
     /** Tracks Histograms **/
 
