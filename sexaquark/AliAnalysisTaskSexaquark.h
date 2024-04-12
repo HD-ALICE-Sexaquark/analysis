@@ -58,7 +58,7 @@
 class AliPIDResponse;
 class KFParticle;
 class KFVertex;
-
+/*
 struct V0_tt {
     //
     // Default common structure for the V0s
@@ -98,7 +98,7 @@ struct Event_tt {
     // This is the structure of the output TTree
     //
 
-    /* MC particles */
+    // MC particles
 
     Int_t N_MCGen;                          // number of MC particles
     std::vector<Float_t> MC_Px;             // x-component of true momentum
@@ -120,7 +120,7 @@ struct Event_tt {
     std::vector<Int_t> MC_Status;           // MC status code
     std::vector<Bool_t> MC_isSignal;        // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
 
-    /* MC Rec. Tracks */
+    // MC Rec. Tracks
 
     Int_t N_MCRec;                          // number of MC reconstructed tracks
     std::vector<Int_t> Idx_True;            // index of true MC particle
@@ -142,8 +142,7 @@ struct Event_tt {
     std::vector<Float_t> Rec_HelixParam4;   // helix param. 4
     std::vector<Float_t> Rec_HelixParam5;   // helix param. 5
 
-    /* V0s */
-
+    //  V0s
     Int_t N_V0s;                            // number of formed V0s
     std::vector<Int_t> Idx_Pos;             // index of positive daughter
     std::vector<Int_t> Idx_Neg;             // index of negative daughter
@@ -173,6 +172,7 @@ struct Event_tt {
     std::vector<Float_t> V0_DecayLength;    // distance between PV and V0
     std::vector<Float_t> V0_DCA_wrtPV;      // distance of closest approach to Primary Vertex
 };
+ */
 
 /*
  Auxiliary class to make use of protected function KFParticleBase::GetMeasurement()
@@ -273,7 +273,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Double_t Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
 
     /* Tree Operations */
-    Event_tt fEvent;
+    // Event_tt fEvent;
     void SetBranches();
     void MCGen_PushBack(Int_t evt_mc);
     void MCRec_PushBack(Int_t evt_track);
@@ -321,8 +321,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /** QA Histograms **/
 
-    std::unordered_map<TString, TH1F*> fHist_QA;
-    std::unordered_map<TString, TH2F*> f2DHist_QA;
+    // std::unordered_map<TString, TH1F*> fHist_QA;
+    // std::unordered_map<TString, TH2F*> f2DHist_QA;
 
     /** Tracks Histograms **/
 
