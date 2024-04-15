@@ -58,6 +58,7 @@
 class AliPIDResponse;
 class KFParticle;
 class KFVertex;
+
 /*
 struct V0_tt {
     //
@@ -177,7 +178,7 @@ struct Event_tt {
 /*
  Auxiliary class to make use of protected function KFParticleBase::GetMeasurement()
  (Copied from `/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.h`)
- */
+*/
 class KFParticleMother : public KFParticle {
    public:
     Bool_t CheckDaughter(KFParticle daughter) {
@@ -201,6 +202,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void PrepareTracksHistograms();
     void PrepareV0Histograms();
     void PrepareAntiSexaquarkHistograms();
+    void PreparePosKaonPairHistograms();
 
     /* Main */
     virtual void UserExec(Option_t* option);
@@ -209,6 +211,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void DefineTracksCuts(TString cuts_option);
     void DefineV0Cuts(TString cuts_option);
     void DefineSexaquarkCuts(TString cuts_option);
+    void DefinePosKaonPairCuts(TString cuts_option);
 
     /* MC Generated */
     void ProcessMCGen();
@@ -249,8 +252,15 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
     Bool_t PassesSexaquarkCuts_ChannelD(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
                                         KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
-    // Bool_t PassesSexaquarkCuts_ChannelE();
-    // Bool_t PassesSexaquarkCuts_ChannelE();
+    // Bool_t PassesSexaquarkCuts_ChannelD(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack* esdPosKaon,
+    // AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
+    // Bool_t PassesSexaquarkCuts_ChannelE(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
+    // KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
+
+    /* Channel H */
+    void KalmanPosKaonPairFinder();
+    Bool_t PassesPosKaonPairCuts(KFParticleMother kfPosKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB, TLorentzVector lvPosKaonPair,
+                                 TLorentzVector lvPosKaonA, TLorentzVector lvPosKaonB);
 
     /* Utilities */
     Bool_t Preoptimize(const AliExternalTrackParam* nt, AliExternalTrackParam* pt, Double_t* lPreprocessxn, Double_t* lPreprocessxp,
@@ -366,6 +376,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::map<TString, TH2F*> f2DHist_V0s_ArmenterosPodolanski;
 
     /** Anti-Sexaquark Histograms **/
+
     /*
      - `0`    : MC Gen.
      - `1`    : Findable
@@ -376,6 +387,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TH1F* fHist_AntiSexaquarks_Bookkeep;
     // key: `stage, set, property`, value: histogram
     std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_AntiSexaquarks;
+
+    /** Channel H / Pos. Kaon Pairs Histograms **/
+
+    // key: `stage, set, property`, value: histogram
+    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_PosKaonPairs;
 
     /** Containers -- vectors and hash tables **/
 
@@ -478,6 +494,21 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMax_Sexa_DCAv0bnegSV;
     Float_t kMax_Sexa_DCAv0bposSV;
     Float_t kMax_Sexa_Chi2ndf;
+
+    /* K+K+ pairs */
+    Float_t kMin_PosKaonPair_Mass;
+    Float_t kMax_PosKaonPair_Mass;
+    Float_t kMax_PosKaonPair_Eta;
+    Float_t kMin_PosKaonPair_Pt;
+    Float_t kMin_PosKaonPair_Radius;
+    Float_t kMin_PosKaonPair_DecayLength;
+    Float_t kMax_PosKaonPair_DecayLength;
+    Float_t kMin_PosKaonPair_DCAwrtPV;
+    Float_t kMax_PosKaonPair_DCAbtwDau;
+    Float_t kMax_PosKaonPair_DCApkaSV;
+    Float_t kMax_PosKaonPair_DCApkbSV;
+    Float_t kMax_PosKaonPair_Chi2;
+    Float_t kMax_PosKaonPair_Chi2ndf;
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented

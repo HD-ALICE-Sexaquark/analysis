@@ -412,6 +412,52 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
 }
 
 /*
+ Define and add histograms for the K+K+ pairs to the histograms output list.
+ - Uses: `fSourceOfV0s`, `fOutputListOfHists`
+*/
+void AliAnalysisTaskSexaquark::PreparePosKaonPairHistograms() {
+
+    TString stages[3] = {"MCGen", "Findable", "Found"};
+    TString sets[2] = {"All", "Signal"};
+
+    const Int_t N_props = 14;
+    TString props[N_props] = {"Mass", "Radius", "DCAwrtPV", "DCAbtwDau", "DCApkaSV",     "DCApkbSV", "DecayLength",
+                              "Zv",   "Eta",    "Pt",       "Pz",        "OpeningAngle", "Chi2",     "Chi2ndf"};
+    Int_t nbins[N_props] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
+    Double_t min[N_props] = {-10., 0., 0., 0., 0., 0., 0., -50., -4., 0., -20., -0.5 * TMath::Pi(), 0., 0.};
+    Double_t max[N_props] = {10., 250., 200., 2., 2., 2., 500., 50., 4., 10., 20., 0.5 * TMath::Pi(), 2., 2.};
+
+    for (TString& stage : stages) {
+        for (TString& set : sets) {
+            for (Int_t prop_idx = 0; prop_idx < N_props; prop_idx++) {
+
+                if (!fIsMC && (stage == "MCGen" || stage == "Findable" || set == "Signal")) continue;
+
+                if (stage == "Findable" && set == "All") continue;
+
+                if (stage == "Findable" && (props[prop_idx] == "Mass" || props[prop_idx] == "DCAbtwDau" ||       //
+                                            props[prop_idx] == "DCApkaSV" || props[prop_idx] == "DCApkbSV" ||    //
+                                            props[prop_idx] == "ImprvDCAbtwDau" || props[prop_idx] == "Chi2" ||  //
+                                            props[prop_idx] == "Chi2ndf")) {
+                    continue;
+                }
+
+                if (stage == "MCGen" && (props[prop_idx] == "DCAbtwDau" || props[prop_idx] == "DCApkaSV" ||       //
+                                         props[prop_idx] == "DCApkbSV" || props[prop_idx] == "ImprvDCAbtwDau" ||  //
+                                         props[prop_idx] == "Chi2" || props[prop_idx] == "Chi2ndf")) {
+                    continue;
+                }
+
+                TString histName = Form("%s_%s_PosKaonPair_%s", stage.Data(), set.Data(), props[prop_idx].Data());
+                std::tuple<TString, TString, TString> histKey = std::make_tuple(stage, set, props[prop_idx]);
+                fHist_PosKaonPairs[histKey] = new TH1F(histName, "", nbins[prop_idx], min[prop_idx], max[prop_idx]);
+                fOutputListOfHists->Add(fHist_PosKaonPairs[histKey]);
+            }
+        }
+    }
+}
+
+/*
  Main function, called per each event at RUNTIME ~ execution on Grid
  - Uses: `fIsMC`, `fMC_PrimaryVertex`, `fESD`, `fMagneticField`, `fPrimaryVertex`, `fSourceOfV0s`, `fReactionChannel`, `fOutputListOfTrees`,
  `fOutputListOfHists`
@@ -470,6 +516,11 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         } else if (fReactionChannel == "AntiSexaquark,P->AntiLambda,K+") {
             KalmanV0Finder(-3122, -2212, 211);
             KalmanSexaquarkFinder_ChannelD();
+        } else if (fReactionChannel == "AntiSexaquark,P->AntiLambda,K+,pi-,pi+") {
+            KalmanV0Finder(-3122, -2212, 211);
+            KalmanSexaquarkFinder_ChannelD();
+        } else if (fReactionChannel == "AntiSexaquark,P->AntiProton,K+,K+,pi0") {
+            KalmanPosKaonPairFinder();
         }
     }
 
@@ -670,6 +721,15 @@ void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
         kMax_Sexa_DCAv0bposSV = 10.;
         kMax_Sexa_Chi2ndf = 0.5;
     }
+}
+
+/*
+ Define K+K+ pair selection cuts.
+ - Uses: `fSourceOfV0s`
+ - Input: `cuts_option`
+*/
+void AliAnalysisTaskSexaquark::DefinePosKaonPairCuts(TString cuts_option) {
+    // none so far
 }
 
 /*
@@ -2658,6 +2718,53 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     }      // end of loop over neg. tracks
 }
 
+/*
+ Apply cuts to a K+K+ pair
+ - Input: `kfPosKaonPair`, `kfPosKaonA`, `kfPosKaonB`, `lvPosKaonPair`, `lvPosKaonA`, `lvPosKaonB`
+ - Uses: `fPrimaryVertex`
+ - Return: `kTRUE` if the V0 candidate passes the cuts, `kFALSE` otherwise
+*/
+Bool_t AliAnalysisTaskSexaquark::PassesPosKaonPairCuts(KFParticleMother kfPosKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB,
+                                                       TLorentzVector lvPosKaonPair, TLorentzVector lvPosKaonA, TLorentzVector lvPosKaonB) {
+
+    Double_t Radius = TMath::Sqrt(kfPosKaonPair.GetX() * kfPosKaonPair.GetX() + kfPosKaonPair.GetY() * kfPosKaonPair.GetY());
+    if (kMin_PosKaonPair_Radius && Radius < kMin_PosKaonPair_Radius) return kFALSE;
+
+    Double_t Mass = lvPosKaonPair.M();
+    if (kMin_PosKaonPair_Mass && Mass < kMin_PosKaonPair_Mass) return kFALSE;
+    if (kMax_PosKaonPair_Mass && Mass > kMax_PosKaonPair_Mass) return kFALSE;
+
+    Double_t Pt = lvPosKaonPair.Pt();
+    if (kMin_PosKaonPair_Pt && Pt < kMin_PosKaonPair_Pt) return kFALSE;
+
+    Double_t Eta = TMath::Abs(lvPosKaonPair.Eta());
+    if (kMax_PosKaonPair_Eta && Eta > kMax_PosKaonPair_Eta) return kFALSE;
+
+    Double_t DecayLength =
+        TMath::Sqrt(TMath::Power(kfPosKaonPair.GetX() - fPrimaryVertex->GetX(), 2) + TMath::Power(kfPosKaonPair.GetY() - fPrimaryVertex->GetY(), 2) +
+                    TMath::Power(kfPosKaonPair.GetZ() - fPrimaryVertex->GetZ(), 2));
+    if (kMin_PosKaonPair_DecayLength && DecayLength < kMin_PosKaonPair_DecayLength) return kFALSE;
+    if (kMax_PosKaonPair_DecayLength && DecayLength > kMax_PosKaonPair_DecayLength) return kFALSE;
+
+    Double_t DCAwrtPV = LinePointDCA(lvPosKaonPair.Px(), lvPosKaonPair.Py(), lvPosKaonPair.Pz(), kfPosKaonPair.GetX(), kfPosKaonPair.GetY(),
+                                     kfPosKaonPair.GetZ(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
+    if (kMin_PosKaonPair_DCAwrtPV && DCAwrtPV < kMin_PosKaonPair_DCAwrtPV) return kFALSE;
+
+    Double_t DCAbtwDau = TMath::Abs(kfPosKaonA.GetDistanceFromParticle(kfPosKaonB));
+    if (kMax_PosKaonPair_DCAbtwDau && DCAbtwDau > kMax_PosKaonPair_DCAbtwDau) return kFALSE;
+
+    Double_t DCApkaSV = TMath::Abs(kfPosKaonA.GetDistanceFromVertex(kfPosKaonPair));
+    if (kMax_PosKaonPair_DCApkaSV && DCApkaSV > kMax_PosKaonPair_DCApkaSV) return kFALSE;
+
+    Double_t DCApkbSV = TMath::Abs(kfPosKaonB.GetDistanceFromVertex(kfPosKaonPair));
+    if (kMax_PosKaonPair_DCApkbSV && DCApkbSV > kMax_PosKaonPair_DCApkbSV) return kFALSE;
+
+    Double_t Chi2ndf = (Double_t)kfPosKaonPair.GetChi2() / (Double_t)kfPosKaonPair.GetNDF();
+    if (kMax_PosKaonPair_Chi2ndf && Chi2ndf > kMax_PosKaonPair_Chi2ndf) return kFALSE;  // exclusive for KF method
+
+    return kTRUE;
+}
+
 /*                                */
 /**  Sexaquark -- Kalman Filter  **/
 /*** ========================== ***/
@@ -3147,7 +3254,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Chi2ndf")]->Fill((Double_t)kfAntiSexaquark.GetChi2() /
                                                                                       (Double_t)kfAntiSexaquark.GetNDF());  // exclusive
 
-        }  // end of loop over K0S
+        }  // end of loop over pos. kaons
     }      // end of loop over anti-lambdas
 }
 
@@ -3237,6 +3344,142 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelD(KFParticleMother k
     */
 
     return kTRUE;
+}
+
+/*                                */
+/**  Channel H -- Kalman Filter  **/
+/*** ========================== ***/
+
+/*
+ Find all K+K+ pairs via Kalman Filter.
+ - Uses: `fESD`, `esdIndicesOfPosKaonTracks`, `fHist_PosKaonPairs`
+*/
+void AliAnalysisTaskSexaquark::KalmanPosKaonPairFinder() {
+
+    const Int_t kKaonPDGCode = 321;
+    const Float_t kKaonMass = fPDG.GetParticle(kKaonPDGCode)->Mass();
+    const Int_t kPosKaonPairCode = 642;  // 2 * 321, just an arbitrary number
+
+    AliESDtrack* esdPosKaonA;
+    AliESDtrack* esdPosKaonB;
+
+    Int_t esdIdxPosKaonA, esdIdxPosKaonB;
+
+    Double_t impar_a[2], impar_b[2];
+
+    Double_t radius;
+    Double_t decay_length;
+    Double_t dca_wrt_pv;
+    Double_t dca_btw_dau;
+    Double_t dca_pka_sv, dca_pkb_sv;
+    Double_t opening_angle;
+
+    /* Define primary vertex as a KFVertex */
+
+    KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
+
+    /* Declare TLorentzVectors */
+
+    TLorentzVector lvPosKaonA, lvPosKaonB;
+    TLorentzVector lvPosKaonPair;
+
+    /* Loop over all possible pairs of tracks */
+
+    for (Int_t i = 0; i < (Int_t)esdIndicesOfPosKaonTracks.size() - 1; i++) {
+        for (Int_t j = i + 1; j < (Int_t)esdIndicesOfPosKaonTracks.size(); j++) {
+
+            esdIdxPosKaonA = esdIndicesOfPosKaonTracks[i];
+            esdIdxPosKaonB = esdIndicesOfPosKaonTracks[j];
+
+            /* Sanity check */
+            // (shouldn't be necessary)
+
+            if (esdIdxPosKaonA == esdIdxPosKaonB) continue;
+
+            /* Get tracks */
+
+            esdPosKaonA = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPosKaonA));
+            esdPosKaonB = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPosKaonB));
+
+            /* Kalman Filter */
+
+            KFParticle kfPosKaonA = CreateKFParticle(*esdPosKaonA, kKaonMass, (Int_t)esdPosKaonA->Charge());
+            KFParticle kfPosKaonB = CreateKFParticle(*esdPosKaonB, kKaonMass, (Int_t)esdPosKaonB->Charge());
+
+            KFParticleMother kfPosKaonPair;
+            kfPosKaonPair.AddDaughter(kfPosKaonA);
+            kfPosKaonPair.AddDaughter(kfPosKaonB);
+
+            /* Transport V0 and daughters */
+
+            kfPosKaonPair.TransportToDecayVertex();
+
+            KFParticle kfTransportedPosKaonA = TransportKFParticle(kfPosKaonA, kfPosKaonB, kKaonPDGCode, (Int_t)esdPosKaonA->Charge());
+            KFParticle kfTransportedPosKaonB = TransportKFParticle(kfPosKaonB, kfPosKaonA, kKaonPDGCode, (Int_t)esdPosKaonB->Charge());
+
+            /* Reconstruct V0 */
+
+            lvPosKaonA.SetXYZM(kfTransportedPosKaonA.Px(), kfTransportedPosKaonA.Py(), kfTransportedPosKaonA.Pz(), kKaonMass);
+            lvPosKaonB.SetXYZM(kfTransportedPosKaonB.Px(), kfTransportedPosKaonB.Py(), kfTransportedPosKaonB.Pz(), kKaonMass);
+            lvPosKaonPair = lvPosKaonA + lvPosKaonB;
+
+            /* Apply cuts */
+
+            // if (!PassesV0Cuts(pdgV0, kfPosKaonPair, kfPosKaonA, kfPosKaonB, kfPosKaonPair, lvTrackNeg, lvTrackPos)) continue;
+
+            /* Calculate variables */
+
+            radius = TMath::Sqrt(kfPosKaonPair.GetX() * kfPosKaonPair.GetX() + kfPosKaonPair.GetY() * kfPosKaonPair.GetY());
+            dca_wrt_pv = TMath::Abs(kfPosKaonPair.GetDistanceFromVertex(kfPrimaryVertex));
+            dca_btw_dau = TMath::Abs(kfPosKaonA.GetDistanceFromParticle(kfPosKaonB));
+            dca_pka_sv = TMath::Abs(kfPosKaonA.GetDistanceFromVertex(kfPosKaonPair));
+            dca_pkb_sv = TMath::Abs(kfPosKaonB.GetDistanceFromVertex(kfPosKaonPair));
+            decay_length = TMath::Sqrt((kfPosKaonPair.GetX() - fPrimaryVertex->GetX()) * (kfPosKaonPair.GetX() - fPrimaryVertex->GetX()) +
+                                       (kfPosKaonPair.GetY() - fPrimaryVertex->GetY()) * (kfPosKaonPair.GetY() - fPrimaryVertex->GetY()) +
+                                       (kfPosKaonPair.GetZ() - fPrimaryVertex->GetZ()) * (kfPosKaonPair.GetZ() - fPrimaryVertex->GetZ()));
+            opening_angle = lvPosKaonA.Angle(lvPosKaonB.Vect());
+
+            /* Fill histograms */
+
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Mass")]->Fill(lvPosKaonPair.M());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Radius")]->Fill(radius);
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCAbtwDau")]->Fill(dca_btw_dau);
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCApkaSV")]->Fill(dca_pka_sv);
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCApkbSV")]->Fill(dca_pkb_sv);
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "DecayLength")]->Fill(decay_length);
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Zv")]->Fill(kfPosKaonPair.GetZ());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Eta")]->Fill(lvPosKaonPair.Eta());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Pt")]->Fill(lvPosKaonPair.Pt());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Pz")]->Fill(lvPosKaonPair.Pz());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "OpeningAngle")]->Fill(opening_angle);
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Chi2")]->Fill(kfPosKaonPair.GetChi2());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Chi2ndf")]->Fill((Double_t)kfPosKaonPair.GetChi2() /
+                                                                                 (Double_t)kfPosKaonPair.GetNDF());
+
+            if (!isEsdIdxSignal[esdIdxPosKaonA] || !isEsdIdxSignal[esdIdxPosKaonB] ||
+                getReactionIdx_fromEsdIdx[esdIdxPosKaonA] != getReactionIdx_fromEsdIdx[esdIdxPosKaonB]) {
+                continue;
+            }
+
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvPosKaonPair.M());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Radius")]->Fill(radius);
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCAbtwDau")]->Fill(dca_btw_dau);
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCApkaSV")]->Fill(dca_pka_sv);
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCApkbSV")]->Fill(dca_pkb_sv);
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DecayLength")]->Fill(decay_length);
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Zv")]->Fill(kfPosKaonPair.GetZ());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Eta")]->Fill(lvPosKaonPair.Eta());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvPosKaonPair.Pt());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvPosKaonPair.Pz());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "OpeningAngle")]->Fill(opening_angle);
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Chi2")]->Fill(kfPosKaonPair.GetChi2());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Chi2ndf")]->Fill((Double_t)kfPosKaonPair.GetChi2() /
+                                                                                    (Double_t)kfPosKaonPair.GetNDF());
+
+        }  // end of loop over pos. tracks
+    }      // end of loop over neg. tracks
 }
 
 /*                            */
