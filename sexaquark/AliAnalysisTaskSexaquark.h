@@ -223,9 +223,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t PassesTrackSelection(AliESDtrack* track);
     void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
 
-    /* V0s and Anti-Sexaquarks -- That Require True Info */
+    /* V0s, Anti-Sexaquarks, K+K+ pairs -- That Require True Info */
     void ProcessFindableV0s();
     void ProcessFindableSexaquarks();
+    void ProcessFindablePosKaonPairs();
 
     /* V0s */
     void GetV0sFromESD(Bool_t onTheFly);
@@ -504,7 +505,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMin_PosKaonPair_DecayLength;
     Float_t kMax_PosKaonPair_DecayLength;
     Float_t kMin_PosKaonPair_DCAwrtPV;
-    Float_t kMax_PosKaonPair_DCAbtwDau;
+    Float_t kMax_PosKaonPair_DCAbtwKaons;
     Float_t kMax_PosKaonPair_DCApkaSV;
     Float_t kMax_PosKaonPair_DCApkbSV;
     Float_t kMax_PosKaonPair_Chi2;
