@@ -426,30 +426,29 @@ void AliAnalysisTaskSexaquark::PreparePosKaonPairHistograms() {
     TString stages[3] = {"MCGen", "Findable", "Found"};
     TString sets[2] = {"All", "Signal"};
 
-    const Int_t N_props = 14;
-    TString props[N_props] = {"Mass", "Radius", "DCAwrtPV", "DCAbtwKaons", "DCApkaSV",     "DCApkbSV", "DecayLength",
-                              "Zv",   "Eta",    "Pt",       "Pz",          "OpeningAngle", "Chi2",     "Chi2ndf"};
-    Int_t nbins[N_props] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
-    Double_t min[N_props] = {-10., 0., 0., 0., 0., 0., 0., -50., -4., 0., -20., -0.5 * TMath::Pi(), 0., 0.};
-    Double_t max[N_props] = {10., 250., 200., 2., 2., 2., 500., 50., 4., 10., 20., 0.5 * TMath::Pi(), 2., 2.};
+    std::vector<TString> props = {// true + rec. vars.
+                                  "Mass", "Radius", "DecayLength", "Xv", "Yv", "Zv", "Eta", "Rapidity", "Px", "Py", "Pz", "Pt", "OpeningAngle",
+                                  // rec. vars.
+                                  "DCAwrtPV", "DCAbtwKaons", "DCApkaSV", "DCApkbSV", "Chi2ndf"};
+    std::vector<Int_t> nbins = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
+    std::vector<Double_t> min = {// true + rec. vars
+                                 0., 0., 0., -50., -300., -300., -4., -1., -10., -10., -10., 0., -2 * TMath::Pi(),
+                                 // rec. vars.
+                                 0., 0., 0., 0., 0.};
+    std::vector<Double_t> max = {// true + rec. vars
+                                 10., 250., 500., 50., 300., 300., 4., 1., 10., 10., 10., 15., 2 * TMath::Pi(),
+                                 // rec. vars.
+                                 200., 20., 20., 20., 10.};
 
     for (TString& stage : stages) {
         for (TString& set : sets) {
-            for (Int_t prop_idx = 0; prop_idx < N_props; prop_idx++) {
+            for (Int_t prop_idx = 0; prop_idx < (Int_t)props.size(); prop_idx++) {
 
                 if (!fIsMC && (stage == "MCGen" || stage == "Findable" || set == "Signal")) continue;
 
                 if (stage == "Findable" && set == "Signal") continue;
 
-                if (stage == "Findable" && (props[prop_idx] == "Mass" || props[prop_idx] == "DCAbtwKaons" || props[prop_idx] == "DCApkaSV" ||
-                                            props[prop_idx] == "DCApkbSV" || props[prop_idx] == "Chi2ndf")) {
-                    continue;
-                }
-
-                if (stage == "MCGen" && (props[prop_idx] == "DCAbtwKaons" || props[prop_idx] == "DCApkaSV" || props[prop_idx] == "DCApkbSV" ||
-                                         props[prop_idx] == "Chi2ndf")) {
-                    continue;
-                }
+                if ((stage == "Findable" || stage == "MCGen") && prop_idx > 12) continue;
 
                 TString histName = Form("%s_%s_PosKaonPair_%s", stage.Data(), set.Data(), props[prop_idx].Data());
                 std::tuple<TString, TString, TString> histKey = std::make_tuple(stage, set, props[prop_idx]);
@@ -1551,18 +1550,21 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 */
 void AliAnalysisTaskSexaquark::ProcessFindablePosKaonPairs() {
 
-    AliMCParticle* mcFSPart;  // FS: final-state
-    Int_t mcIdx;
-    AliMCParticle* mcFGPart;  // FG: first gen.
+    Int_t pdgCode;
+    Int_t mcIdxPosKaonA = -1;
+    Int_t mcIdxPosKaonB = -1;
+    AliMCParticle* mcPosKaonA;
+    AliMCParticle* mcPosKaonB;
     Int_t motherMcIdx;
 
     /* Declare TLorentzVectors */
 
-    TLorentzVector lvPosKaon;
+    TLorentzVector lvPosKaonA, lvPosKaonB;
     TLorentzVector lvPosKaonPair;
 
-    /* Declare variables */
+    /* Declare vertices */
 
+    TVector3 primary_vertex(fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
     TVector3 secondary_vertex(0., 0., 0.);
 
     /* Loop over interactions */
@@ -1573,59 +1575,57 @@ void AliAnalysisTaskSexaquark::ProcessFindablePosKaonPairs() {
 
         if (!getEsdIdx_fromReactionIdx[reactionIdx].size()) continue;
 
+        /* Collect true info from rec. signal tracks */
+
+        for (Int_t& esdIdx : getEsdIdx_fromReactionIdx[reactionIdx]) {
+
+            pdgCode = getPdgCode_fromMcIdx[getMcIdx_fromEsdIdx[esdIdx]];
+
+            if (pdgCode != 321) continue;
+
+            if (mcIdxPosKaonA == -1)
+                mcIdxPosKaonA = getMcIdx_fromEsdIdx[esdIdx];
+            else if (mcIdxPosKaonB == -1)
+                mcIdxPosKaonB = getMcIdx_fromEsdIdx[esdIdx];
+        }
+
         /* Findable condition */
         // Two positive kaons should have been reconstructed and passed track selection
 
-        std::unordered_multiset<Int_t> pdg_reconstructed_particles;
-        for (Int_t& esdIdx : getEsdIdx_fromReactionIdx[reactionIdx]) {
-            pdg_reconstructed_particles.insert(getPdgCode_fromMcIdx[getMcIdx_fromEsdIdx[esdIdx]]);
-        }
+        if (mcIdxPosKaonA < 0 || mcIdxPosKaonB < 0) continue;
 
-        if (pdg_reconstructed_particles.count(321) != 2) continue;
+        /* Get MC particles */
 
-        /* Reset vectors */
+        mcPosKaonA = (AliMCParticle*)fMC->GetTrack(mcIdxPosKaonA);
+        mcPosKaonB = (AliMCParticle*)fMC->GetTrack(mcIdxPosKaonB);
 
-        secondary_vertex.SetXYZ(0., 0., 0.);
+        /* Get true momentum */
 
-        /* Loop, to get the reconstructed final-state particles info */
+        lvPosKaonA.SetXYZM(mcPosKaonA->Px(), mcPosKaonA->Py(), mcPosKaonA->Pz(), fPDG.GetParticle(321)->Mass());
+        lvPosKaonB.SetXYZM(mcPosKaonB->Px(), mcPosKaonB->Py(), mcPosKaonB->Pz(), fPDG.GetParticle(321)->Mass());
 
-        for (Int_t& esdIdx : getEsdIdx_fromReactionIdx[reactionIdx]) {
+        lvPosKaonPair = lvPosKaonA + lvPosKaonB;
 
-            mcIdx = getMcIdx_fromEsdIdx[esdIdx];
+        /* Get sec. vertex */
 
-            if (getPdgCode_fromMcIdx[mcIdx] != 321) continue;
-
-            mcFSPart = (AliMCParticle*)fMC->GetTrack(mcIdx);
-
-            lvPosKaon.SetPxPyPzE(mcFSPart->Px(), mcFSPart->Py(), mcFSPart->Pz(), mcFSPart->E());
-            lvPosKaonPair += lvPosKaon;
-
-            /* Get sec. vertex from the origin of the first-generation products of the reaction */
-
-            if (secondary_vertex.Mag() < 1E-6) {
-                if (mcFSPart->MCStatusCode() == reactionIdx) {
-                    secondary_vertex.SetXYZ(mcFSPart->Xv(), mcFSPart->Yv(), mcFSPart->Zv());
-                } else if (doesMcIdxHaveMother[mcIdx]) {
-                    motherMcIdx = getMotherMcIdx_fromMcIdx[mcIdx];
-                    mcFGPart = (AliMCParticle*)fMC->GetTrack(motherMcIdx);
-                    if (mcFGPart->MCStatusCode() == reactionIdx) secondary_vertex.SetXYZ(mcFGPart->Xv(), mcFGPart->Yv(), mcFGPart->Zv());
-                }
-            }
-        }
-
-        /* Fill histograms  */
-
-        fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Mass")]->Fill(lvPosKaonPair.M());
-        fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Pt")]->Fill(lvPosKaonPair.Pt());
-        fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Px")]->Fill(lvPosKaonPair.Px());
-        fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Py")]->Fill(lvPosKaonPair.Py());
-        fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Pz")]->Fill(lvPosKaonPair.Pz());
-        fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Phi")]->Fill(lvPosKaonPair.Phi());
-        fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Radius")]->Fill(secondary_vertex.Perp());
-        fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Zv")]->Fill(secondary_vertex.Z());
-        fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Eta")]->Fill(lvPosKaonPair.Eta());
-        fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Rapidity")]->Fill(lvPosKaonPair.Rapidity());
+        secondary_vertex.SetXYZ(mcPosKaonA->Xv(), mcPosKaonA->Yv(), mcPosKaonA->Zv());
     }
+
+    /* Fill histograms  */
+
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Mass")]->Fill(lvPosKaonPair.M());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Radius")]->Fill(secondary_vertex.Perp());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "DecayLength")]->Fill((secondary_vertex - primary_vertex).Mag());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Xv")]->Fill(secondary_vertex.X());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Yv")]->Fill(secondary_vertex.Y());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Zv")]->Fill(secondary_vertex.Z());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Eta")]->Fill(lvPosKaonPair.Eta());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Rapidity")]->Fill(lvPosKaonPair.Rapidity());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Px")]->Fill(lvPosKaonPair.Px());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Py")]->Fill(lvPosKaonPair.Py());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Pz")]->Fill(lvPosKaonPair.Pz());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "Pt")]->Fill(lvPosKaonPair.Pt());
+    fHist_PosKaonPairs[std::make_tuple("Findable", "All", "OpeningAngle")]->Fill(lvPosKaonA.Vect().Angle(lvPosKaonB.Vect()));
 }
 
 /*                             */
