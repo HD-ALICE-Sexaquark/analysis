@@ -3489,17 +3489,22 @@ void AliAnalysisTaskSexaquark::KalmanPosKaonPairFinder() {
 
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "Mass")]->Fill(lvPosKaonPair.M());
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "Radius")]->Fill(radius);
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "DecayLength")]->Fill(decay_length);
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Xv")]->Fill(kfPosKaonPair.GetX());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Yv")]->Fill(kfPosKaonPair.GetY());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Zv")]->Fill(kfPosKaonPair.GetZ());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Eta")]->Fill(lvPosKaonPair.Eta());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Rapidity")]->Fill(lvPosKaonPair.Rapidity());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Px")]->Fill(lvPosKaonPair.Px());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Py")]->Fill(lvPosKaonPair.Py());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Pz")]->Fill(lvPosKaonPair.Pz());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Pt")]->Fill(lvPosKaonPair.Pt());
+            fHist_PosKaonPairs[std::make_tuple("Found", "All", "OpeningAngle")]->Fill(opening_angle);
+
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCAbtwKaons")]->Fill(dca_btw_kaons);
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCApkaSV")]->Fill(dca_pka_sv);
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCApkbSV")]->Fill(dca_pkb_sv);
-            fHist_PosKaonPairs[std::make_tuple("Found", "All", "DecayLength")]->Fill(decay_length);
-            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Zv")]->Fill(kfPosKaonPair.GetZ());
-            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Eta")]->Fill(lvPosKaonPair.Eta());
-            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Pt")]->Fill(lvPosKaonPair.Pt());
-            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Pz")]->Fill(lvPosKaonPair.Pz());
-            fHist_PosKaonPairs[std::make_tuple("Found", "All", "OpeningAngle")]->Fill(opening_angle);
-            fHist_PosKaonPairs[std::make_tuple("Found", "All", "Chi2")]->Fill(kfPosKaonPair.GetChi2());
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "Chi2ndf")]->Fill((Double_t)kfPosKaonPair.GetChi2() /
                                                                                  (Double_t)kfPosKaonPair.GetNDF());
 
@@ -3510,17 +3515,22 @@ void AliAnalysisTaskSexaquark::KalmanPosKaonPairFinder() {
 
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvPosKaonPair.M());
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Radius")]->Fill(radius);
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DecayLength")]->Fill(decay_length);
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Xv")]->Fill(kfPosKaonPair.GetX());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Yv")]->Fill(kfPosKaonPair.GetY());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Zv")]->Fill(kfPosKaonPair.GetZ());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Eta")]->Fill(lvPosKaonPair.Eta());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Rapidity")]->Fill(lvPosKaonPair.Rapidity());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Px")]->Fill(lvPosKaonPair.Px());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Py")]->Fill(lvPosKaonPair.Py());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvPosKaonPair.Pz());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvPosKaonPair.Pt());
+            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "OpeningAngle")]->Fill(opening_angle);
+
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCAbtwKaons")]->Fill(dca_btw_kaons);
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCApkaSV")]->Fill(dca_pka_sv);
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCApkbSV")]->Fill(dca_pkb_sv);
-            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DecayLength")]->Fill(decay_length);
-            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Zv")]->Fill(kfPosKaonPair.GetZ());
-            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Eta")]->Fill(lvPosKaonPair.Eta());
-            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvPosKaonPair.Pt());
-            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvPosKaonPair.Pz());
-            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "OpeningAngle")]->Fill(opening_angle);
-            fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Chi2")]->Fill(kfPosKaonPair.GetChi2());
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Chi2ndf")]->Fill((Double_t)kfPosKaonPair.GetChi2() /
                                                                                     (Double_t)kfPosKaonPair.GetNDF());
 
