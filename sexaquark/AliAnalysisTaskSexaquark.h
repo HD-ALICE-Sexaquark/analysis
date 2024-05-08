@@ -242,7 +242,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // void GeoSexaquarkFinder_ChannelE();
     void KalmanSexaquarkFinder_ChannelA();
     void KalmanSexaquarkFinder_ChannelD();
-    // void KalmanSexaquarkFinder_ChannelE();
+    void KalmanSexaquarkFinder_ChannelE();
     Bool_t PassesSexaquarkCuts_ChannelA(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDv0 esdKaonZeroShort,
                                         AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos, AliESDtrack* esdKaonZeroShortNeg,
                                         AliESDtrack* esdKaonZeroShortPos);
@@ -253,10 +253,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
     Bool_t PassesSexaquarkCuts_ChannelD(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
                                         KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
-    // Bool_t PassesSexaquarkCuts_ChannelD(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack* esdPosKaon,
+    // Bool_t PassesSexaquarkCuts_ChannelE(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack* esdPosKaon,
     // AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
-    // Bool_t PassesSexaquarkCuts_ChannelE(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
-    // KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
+    Bool_t PassesSexaquarkCuts_ChannelE(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
+                                        KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
 
     /* Channel H */
     void KalmanPosKaonPairFinder();
@@ -436,12 +436,15 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;     //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;  //
     std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromKaonZeroShortIdx;  //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromPionPairIdx;       //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromPionPairIdx;       //
 
     std::vector<AliESDv0> esdAntiLambdas;     //
     std::vector<AliESDv0> esdKaonsZeroShort;  //
 
     std::vector<KFParticleMother> kfAntiLambdas;     //
     std::vector<KFParticleMother> kfKaonsZeroShort;  //
+    std::vector<KFParticleMother> kfPionPairs;       //
 
     void ClearContainers();
 
