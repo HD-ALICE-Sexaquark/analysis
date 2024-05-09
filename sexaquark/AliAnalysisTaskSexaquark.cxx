@@ -4968,18 +4968,21 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
 
     esdIndicesOfAntiProtonTracks.clear();
     esdIndicesOfPosKaonTracks.clear();
-    esdIndicesOfPiPlusTracks.clear();
     esdIndicesOfPiMinusTracks.clear();
+    esdIndicesOfPiPlusTracks.clear();
 
     /*  */
     getEsdIdxOfNegDau_fromAntiLambdaIdx.clear();
     getEsdIdxOfPosDau_fromAntiLambdaIdx.clear();
     getEsdIdxOfNegDau_fromKaonZeroShortIdx.clear();
     getEsdIdxOfPosDau_fromKaonZeroShortIdx.clear();
+    getEsdIdxOfNegDau_fromPionPairIdx.clear();
+    getEsdIdxOfPosDau_fromPionPairIdx.clear();
 
     esdAntiLambdas.clear();
     esdKaonsZeroShort.clear();
 
     kfAntiLambdas.clear();
     kfKaonsZeroShort.clear();
+    kfPionPairs.clear();
 }

@@ -9,6 +9,7 @@
 #include <array>
 #include <iostream>
 #include <map>
+#include <set>
 #include <tuple>
 #include <vector>
 
@@ -395,6 +396,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_PosKaonPairs;
 
     /** Containers -- vectors and hash tables **/
+    // NOTE: when adding a new one, don't forget to clear it on ClearContainers() //
 
     /* filled at `ProcessMCGen()` */
     std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;  //
