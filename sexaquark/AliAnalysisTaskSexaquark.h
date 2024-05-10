@@ -257,7 +257,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     // Bool_t PassesSexaquarkCuts_ChannelE(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack* esdPosKaon,
     // AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
     Bool_t PassesSexaquarkCuts_ChannelE(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
-                                        KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
+                                        KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfPosKaon, KFParticle kfPiMinus,
+                                        KFParticle kfPiPlus);
 
     /* Channel H */
     void KalmanPosKaonPairFinder();
@@ -297,6 +298,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     KFParticle CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge);
     KFVertex CreateKFVertex(const AliVVertex& vertex);
     KFParticle TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis);
+    void GetDStoParticleBz(float Bz, const KFParticleBase& p, const KFParticleBase& q, float dS[2], float dsdr[4][6], const float* param1 = 0,
+                           const float* param2 = 0) const;
 
    private:
     /* Input options */
@@ -492,6 +495,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMin_Sexa_Radius;
     Float_t kMin_Sexa_CPAwrtPV, kMax_Sexa_CPAwrtPV;
     Float_t kMin_Sexa_DCAwrtPV, kMax_Sexa_DCAwrtPV;
+    Float_t kMax_Sexa_Chi2ndf;
+    // channel A
     Float_t kMax_Sexa_DCAbtwV0s;
     Float_t kMax_Sexa_DCAv0aSV;
     Float_t kMax_Sexa_DCAv0bSV;
@@ -499,7 +504,23 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMax_Sexa_DCAv0aposSV;
     Float_t kMax_Sexa_DCAv0bnegSV;
     Float_t kMax_Sexa_DCAv0bposSV;
-    Float_t kMax_Sexa_Chi2ndf;
+    // channel D
+    Float_t kMax_Sexa_DCAbaSV;
+    Float_t kMax_Sexa_DCAv0ba;
+    Float_t kMax_Sexa_DCAv0negba;
+    Float_t kMax_Sexa_DCAv0posba;
+    // channel E
+    Float_t kMax_Sexa_DCAv0SV;
+    Float_t kMax_Sexa_DCAv0negSV;
+    Float_t kMax_Sexa_DCAv0posSV;
+    Float_t kMax_Sexa_DCApkSV;
+    Float_t kMax_Sexa_DCApmSV;
+    Float_t kMax_Sexa_DCAppSV;
+    Float_t kMax_Sexa_DCAv0pk;
+    Float_t kMax_Sexa_DCAv0pm;
+    Float_t kMax_Sexa_DCAv0pp;
+    Float_t kMax_Sexa_DCApkpm;
+    Float_t kMax_Sexa_DCApkpp;
 
     /* K+K+ pairs */
     Float_t kMin_PosKaonPair_Mass;
