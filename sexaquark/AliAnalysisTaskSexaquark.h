@@ -395,6 +395,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /** Channel H / Pos. Kaon Pairs Histograms **/
 
+    TH1F* fHist_PosKaonPairs_Bookkeep;
     // key: `stage, set, property`, value: histogram
     std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_PosKaonPairs;
 
@@ -523,18 +524,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMax_Sexa_DCApkpp;
 
     /* K+K+ pairs */
-    Float_t kMin_PosKaonPair_Mass;
-    Float_t kMax_PosKaonPair_Mass;
-    Float_t kMax_PosKaonPair_Eta;
-    Float_t kMin_PosKaonPair_Pt;
     Float_t kMin_PosKaonPair_Radius;
-    Float_t kMin_PosKaonPair_DecayLength;
-    Float_t kMax_PosKaonPair_DecayLength;
+    Float_t kMin_PosKaonPair_Pt;
     Float_t kMin_PosKaonPair_DCAwrtPV;
     Float_t kMax_PosKaonPair_DCAbtwKaons;
     Float_t kMax_PosKaonPair_DCApkaSV;
     Float_t kMax_PosKaonPair_DCApkbSV;
-    Float_t kMax_PosKaonPair_Chi2;
     Float_t kMax_PosKaonPair_Chi2ndf;
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
