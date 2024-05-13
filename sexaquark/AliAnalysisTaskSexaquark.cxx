@@ -3830,7 +3830,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
 
                 /* Fill histograms */
 
-                fHist_AntiSexaquarks_Bookkeep->Fill(19);
+                fHist_AntiSexaquarks_Bookkeep->Fill(23);
                 fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass")]->Fill(lvAntiSexaquark.M());
                 fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
                 fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
@@ -3864,7 +3864,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
 
                 if (!is_signal) continue;
 
-                fHist_AntiSexaquarks_Bookkeep->Fill(20);
+                fHist_AntiSexaquarks_Bookkeep->Fill(24);
                 fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvAntiSexaquark.M());
                 fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
                 fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
@@ -3997,7 +3997,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelE(KFParticleMother k
 
     Double_t chi2ndf = (Double_t)kfAntiSexaquark.GetChi2() / (Double_t)kfAntiSexaquark.GetNDF();
     if (kMax_Sexa_Chi2ndf && chi2ndf > kMax_Sexa_Chi2ndf) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(18);
+    fHist_AntiSexaquarks_Bookkeep->Fill(22);
 
     return kTRUE;
 }
