@@ -191,7 +191,7 @@ class KFParticleMother : public KFParticle {
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    public:
     AliAnalysisTaskSexaquark();
-    AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet);
+    AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet, Bool_t DoQA);
     virtual ~AliAnalysisTaskSexaquark();
     virtual void Terminate(Option_t* option) { return; }
 
@@ -308,6 +308,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TString fSimulationSet;          // <ReactionID><InjectedSexaquarkMass>
     Char_t fReactionID;              // could be: 'A', 'D', 'E', 'H'
     Float_t fInjectedSexaquarkMass;  // (in GeV/c^2), could be: 1.73, 1.8, 1.87, 1.94, 2.01
+    Bool_t fDoQA;                    //
     // reaction channel, could be:
     // - 'A' = "AntiSexaquark,N->AntiLambda,K0S"
     // - 'D' = "AntiSexaquark,P->AntiLambda,K+"
@@ -336,8 +337,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /** QA Histograms **/
 
-    // std::unordered_map<TString, TH1F*> fHist_QA;
-    // std::unordered_map<TString, TH2F*> f2DHist_QA;
+    std::unordered_map<TString, TH1F*> fHist_QA;
+    std::unordered_map<TString, TH2F*> f2DHist_QA;
 
     /** Tracks Histograms **/
 

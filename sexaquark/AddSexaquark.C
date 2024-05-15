@@ -1,4 +1,5 @@
-AliAnalysisTaskSexaquark* AddSexaquark(TString name = "name", Bool_t IsMC = kTRUE, TString SourceOfV0s = "offline", TString SimulationSet = "A1.8") {
+AliAnalysisTaskSexaquark* AddSexaquark(TString name = "name", Bool_t IsMC = kTRUE, TString SourceOfV0s = "offline", TString SimulationSet = "A1.8",
+                                       Bool_t DoQA = kFALSE) {
     // get the manager via the static access member. since it's static, you don't need
     // to create an instance of the class here to call the function
     AliAnalysisManager* mgr = AliAnalysisManager::GetAnalysisManager();
@@ -16,8 +17,10 @@ AliAnalysisTaskSexaquark* AddSexaquark(TString name = "name", Bool_t IsMC = kTRU
     TString fileName = AliAnalysisManager::GetCommonFileName();
     // fileName += ":Sexaquark";  // create a subfolder in the file
 
+    AliPhysicsSelectionTask* physSelTask = AddTaskPhysicsSelection(kTRUE);
+
     // now we create an instance of your task
-    AliAnalysisTaskSexaquark* task = new AliAnalysisTaskSexaquark(name, IsMC, SourceOfV0s, SimulationSet);
+    AliAnalysisTaskSexaquark* task = new AliAnalysisTaskSexaquark(name, IsMC, SourceOfV0s, SimulationSet, DoQA);
 
     if (!task) {
         return 0x0;

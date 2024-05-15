@@ -6,10 +6,11 @@
 #include "AliAnalysisTaskPIDResponse.h"
 #include "AliESDInputHandler.h"
 #include "AliMCEventHandler.h"
+#include "AliPhysicsSelectionTask.h"
 
 #include "AliAnalysisTaskSexaquark.h"
 
-void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Int_t ChooseNEvents = 0) {
+void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Bool_t DoQA, Int_t ChooseNEvents = 0) {
 
     // tell root where to look for headers
     gInterpreter->ProcessLine(".include ${ROOTSYS}/include");
@@ -47,15 +48,20 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
     taskCDB->SetFallBackToRaw(kTRUE);
     */
 
+    // load event selection task
+    gROOT->LoadMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C");
+
     // load PID task
     TString pid_response_path = gSystem->ExpandPathName("${ALICE_ROOT}/ANALYSIS/macros/AddTaskPIDResponse.C");
     AliAnalysisTaskPIDResponse *PIDresponseTask = reinterpret_cast<AliAnalysisTaskPIDResponse *>(
         gInterpreter->ExecuteMacro(Form("%s(%i, 1, 1, \"%i\")", pid_response_path.Data(), (Int_t)IsMC, n_pass)));
+    PIDresponseTask->SelectCollisionCandidates(AliVEvent::kINT7);
 
     // load sexaquark task
     gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
-    AliAnalysisTaskSexaquark *task = reinterpret_cast<AliAnalysisTaskSexaquark *>(
-        gInterpreter->ExecuteMacro(Form("AddSexaquark.C(\"name\", %i, \"%s\", \"%s\")", (Int_t)IsMC, SourceOfV0s.Data(), SimulationSet.Data())));
+    AliAnalysisTaskSexaquark *task = reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro(
+        Form("AddSexaquark.C(\"name\", %i, \"%s\", \"%s\", %i)", (Int_t)IsMC, SourceOfV0s.Data(), SimulationSet.Data(), (Int_t)DoQA)));
+    task->SelectCollisionCandidates(AliVEvent::kINT7);
 
     if (!mgr->InitAnalysis()) {
         return;

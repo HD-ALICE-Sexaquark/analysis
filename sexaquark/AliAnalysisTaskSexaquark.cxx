@@ -10,6 +10,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fIsMC(0),
       fSourceOfV0s(),
       fSimulationSet(""),
+      fDoQA(0),
       fReactionID(0),
       fInjectedSexaquarkMass(0),
       fReactionChannel(""),
@@ -81,11 +82,12 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
 /*
  Constructor, called locally.
 */
-AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet)
+AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet, Bool_t DoQA)
     : AliAnalysisTaskSE(name),
       fIsMC(IsMC),
       fSourceOfV0s(SourceOfV0s),
       fSimulationSet(SimulationSet),
+      fDoQA(DoQA),
       fReactionID(0),
       fInjectedSexaquarkMass(0),
       fReactionChannel(""),
@@ -215,7 +217,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists = new TList();
     fOutputListOfHists->SetOwner(kTRUE);
 
-    PrepareQAHistograms();
+    if (fDoQA) PrepareQAHistograms();
     PrepareTracksHistograms();
     if (fReactionID == 'H')
         PreparePosKaonPairHistograms();
@@ -227,35 +229,96 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 }
 
 /*
- Define and add tracks' histograms to the histograms output list.
- - Uses: `fHist_Tracks_Bookkeep`, `fHist_Tracks`, `fOutputListOfHists`
+ Define and add QA histograms to the histograms output list.
+ - Uses: `fHist_QA`, `f2DHist_QA`
 */
 void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
-    /*
-    const Int_t N_QA_props = 14;
-    TString QA_props[N_QA_props] = {"MCGen_PV_Xv", "MCGen_PV_Xv", "MCGen_PV_Xv",   "PV_Xv",           "PV_Xv",
-                                    "PV_Xv",       "DCAxy",       "DCAz",          "NTracksPerEvent", "NSelectedTracksPerEvent",
-                                    "TracksPt",    "PhiVsEta",    "ITSLayerVsPhi", "ITSLayerVsEta"};
-    Int_t QA_nbins[N_QA_props] = {100, 100, 100, 100, 100, 100,  //
-                                  100, 100, 100, 16,  100};
-    Double_t QA_min[N_QA_props] = {0.,   -20., -4.,  0., 0., 0.,  //
-                                   -7.5, -7.5, -7.5, 0,  -10};
-    Double_t QA_max[N_QA_props] = {10., 20., 4.,  200., 1000., 50.,  //
-                                   7.5, 7.5, 7.5, 16,   40};
+
+    /* 1D Hists */
+
+    // clang-format off
+    std::vector<TString> QA_props = {// MC. Gen. Event
+                                     "MCGen_VertexX", "MCGen_VertexY", "MCGen_VertexZ",
+                                     // Event
+                                     "Events_Bookkeep", "VertexX", "VertexY", "VertexZ",
+                                     "NTracks", "NSelectedTracks",
+                                     // Tracks
+                                     "Tracks_DCAxy", "Tracks_DCAz", "Tracks_Pt",
+                                     // SPD
+                                     "SPD_NTracklets",
+                                     // TPC
+                                     "TPC_NClusters"};
+    std::vector<Int_t> QA_nbins = {200, 200, 200,
+                                   3, 200, 200, 200,
+                                   2000, 2000,
+                                   100, 100, 200,
+                                   60,
+                                   200};
+    std::vector<Float_t> QA_min = {-50, -50, -50,
+                                   0., -50, -50, -50,
+                                   0., 0.,
+                                   -5., -5., 0.,
+                                   0.,
+                                   0.};
+    std::vector<Float_t> QA_max = {50, 50, 50,
+                                   3., 50, 50, 50,
+                                   20000., 20000.,
+                                   5., 5., 100.,
+                                   6000,
+                                   5000000.};
+    // clang-format on
 
     TString histKey;
-    for (Int_t prop_idx = 0; prop_idx < N_QA_props; prop_idx++) {
-
+    for (Int_t prop_idx = 0; prop_idx < (Int_t)QA_props.size(); prop_idx++) {
         histKey = QA_props[prop_idx];
-        if (histKey != "ITSLayerVsPhi" && histKey != "ITSLayerVsEta") {
-            fHist_QA[histKey] = new TH1F("QA_" + histKey, "", QA_nbins[prop_idx], QA_min[prop_idx], QA_max[prop_idx]);
-            fOutputListOfHists->Add(fHist_QA[histKey]);
-        } else {
-            f2DHist_QA[histKey] = new TH1F("QA_" + histKey, "", QA_nbins[prop_idx], QA_min[prop_idx], QA_max[prop_idx]);
-            fOutputListOfHists->Add(fHist_QA[histKey]);
-        }
+        fHist_QA[histKey] = new TH1F("QA_" + histKey, "", QA_nbins[prop_idx], QA_min[prop_idx], QA_max[prop_idx]);
+        fOutputListOfHists->Add(fHist_QA[histKey]);
     }
-    */
+
+    /* 2D Hists */
+
+    // clang-format off
+    QA_props = {// Tracks
+                "Tracks_PhiVsEta",
+                // SPD
+                "SPD_MultiplicityVsVertexZ", "SPD_NTrackletsClu0VsNTracklets", "SPD_NTrackletsClu1VsNTracklets", "SPD_PhiVsEta",
+                // ITS
+                "hITS_LayerNoVsPhi", "hITS_LayerNoVsEta"
+                // TPC
+                "TPC_NSigmaProtonVsInnerParamP", "TPC_NSigmaKaonVsInnerParamP", "TPC_NSigmaPionVsInnerParamP",
+                "TPC_NSigmaProtonVsEta", "TPC_NSigmaKaonVsEta", "TPC_NSigmaPionVsEta"};
+    std::vector<Int_t> QA_nbinsx = {100,
+                                   10, 200, 200, 400,
+                                   200, 40,
+                                   200, 200, 200, 200, 200, 200};
+    std::vector<Float_t> QA_xlow = {-1.,
+                                   -10., 0., 0., -1.,
+                                   0., -1.,
+                                   0., 0., 0., -1., -1., -1.};
+    std::vector<Float_t> QA_xup = {1.,
+                                   10., 3000., 3000., 1.,
+                                   2 * TMath::Pi(), 1.,
+                                   10., 10., 10., 1., 1., 1.};
+    std::vector<Int_t> QA_nbinsy = {200,
+                                   30, 200, 200, 400,
+                                   6, 6,
+                                   200, 200, 200, 200, 200, 200};
+    std::vector<Float_t> QA_ylow = {0.,
+                                    0., 0., 0., 0.,
+                                    0., 0.,
+                                    -5., -5., -5., -5., -5., -5.};
+    std::vector<Float_t> QA_yup = {2 * TMath::Pi(),
+                                   6000., 6000., 6000., 2 * TMath::Pi(),
+                                   6., 6.,
+                                   5., 5., 5., 5., 5., 5.};
+    // clang-format on
+
+    for (Int_t prop_idx = 0; prop_idx < (Int_t)QA_props.size(); prop_idx++) {
+        histKey = QA_props[prop_idx];
+        f2DHist_QA[histKey] = new TH2F("QA_" + histKey, "", QA_nbinsx[prop_idx], QA_xlow[prop_idx], QA_xup[prop_idx], QA_nbinsy[prop_idx],
+                                       QA_ylow[prop_idx], QA_yup[prop_idx]);
+        fOutputListOfHists->Add(f2DHist_QA[histKey]);
+    }
 }
 
 /*
@@ -673,6 +736,7 @@ void AliAnalysisTaskSexaquark::Initialize() {
     AliInfoF(">> Reaction ID         = %c", fReactionID);
     AliInfoF(">> Reaction Channel    = %s", fReactionChannel.Data());
     AliInfoF(">> Inj. Sexaquark Mass = %.2f", fInjectedSexaquarkMass);
+    AliInfoF(">> DoQA                = %i", (Int_t)fDoQA);
 }
 
 /*
@@ -920,6 +984,12 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
     Float_t opening_angle;
     Float_t dca_wrt_pv, cpa_wrt_pv;
     Float_t armenteros_alpha, armenteros_qt;
+
+    if (fDoQA) {
+        fHist_QA["MCGen_VertexX"]->Fill(fMC_PrimaryVertex->GetX());
+        fHist_QA["MCGen_VertexY"]->Fill(fMC_PrimaryVertex->GetY());
+        fHist_QA["MCGen_VertexZ"]->Fill(fMC_PrimaryVertex->GetZ());
+    }
 
     /* Loop over MC gen. particles in a single event */
 
@@ -1252,6 +1322,55 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 */
 void AliAnalysisTaskSexaquark::ProcessTracks() {
 
+    /** QA: Event **/
+
+    if (fDoQA) {
+
+        fHist_QA["Events_Bookkeep"]->Fill(0);
+
+        // PENDING !! event selection to be added in case of !fDoQA !!
+        Bool_t MB = (fInputHandler->IsEventSelected() & AliVEvent::kINT7);
+        if (!MB) {
+            AliInfoF("!! Event Rejected -- %u & %u = %u !!", fInputHandler->IsEventSelected(), AliVEvent::kINT7, MB);
+            return;
+        }
+        AliInfoF("!! Event Selected -- %u & %u = %u !!", fInputHandler->IsEventSelected(), AliVEvent::kINT7, MB);
+
+        fHist_QA["Events_Bookkeep"]->Fill(1);
+
+        if (TMath::Abs(fPrimaryVertex->GetZ()) > 10.) return;
+
+        fHist_QA["Events_Bookkeep"]->Fill(2);
+
+        fHist_QA["VertexX"]->Fill(fPrimaryVertex->GetX());
+        fHist_QA["VertexY"]->Fill(fPrimaryVertex->GetY());
+        fHist_QA["VertexZ"]->Fill(fPrimaryVertex->GetZ());
+
+        Int_t ntracks = fESD->GetNumberOfTracks();
+        fHist_QA["NTracks"]->Fill(ntracks);
+
+        /* SPD */
+
+        const AliESDVertex* spd_vertex = fESD->GetPrimaryVertexSPD();
+        const AliMultiplicity* mult = fESD->GetMultiplicity();
+
+        fHist_QA["SPD_NTracklets"]->Fill(mult->GetNumberOfTracklets());
+
+        f2DHist_QA["SPD_MultiplicityVsVertexZ"]->Fill(spd_vertex->GetZ(), mult->GetNumberOfTracklets());
+        f2DHist_QA["SPD_NTrackletsClu0VsNTracklets"]->Fill(mult->GetNumberOfTracklets(), mult->GetNumberOfITSClusters(0));
+        f2DHist_QA["SPD_NTrackletsClu1VsNTracklets"]->Fill(mult->GetNumberOfTracklets(), mult->GetNumberOfITSClusters(1));
+
+        for (Int_t iTracklet = 0; iTracklet < mult->GetNumberOfTracklets(); iTracklet++) {
+            Float_t phiTr = mult->GetPhi(iTracklet);
+            Float_t etaTr = mult->GetEta(iTracklet);
+            f2DHist_QA["SPD_PhiVsEta"]->Fill(etaTr, phiTr);
+        }
+
+        /* TPC */
+
+        fHist_QA["TPC_NClusters"]->Fill(fESD->GetNumberOfTPCClusters());
+    }
+
     AliESDtrack* track;
 
     Int_t mcIdx;
@@ -1259,6 +1378,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
     Int_t motherMcIdx;
 
     Float_t pt, pz, eta;
+    Float_t xy_impar_wrt_pv, z_impar_wrt_pv;
     Float_t impar_pv[2], dca_wrt_pv;
     Float_t n_tpc_clusters;
     Float_t chi2_over_nclusters;
@@ -1267,13 +1387,15 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
     Float_t n_sigma_pion;
     Float_t golden_chi2;
 
-    /* Loop over tracks in a single event */
+    Int_t nSelectedTracks = 0;
+
+    /** Loop over tracks in a single event **/
 
     for (Int_t esdIdxTrack = 0; esdIdxTrack < fESD->GetNumberOfTracks(); esdIdxTrack++) {
 
         /* Get track */
 
-        track = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxTrack));
+        track = fESD->GetTrack(esdIdxTrack);
 
         /* Get MC info */
 
@@ -1285,11 +1407,34 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
         f2DHist_Tracks_TPCsignal["All"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
 
+        /* QA : Tracks */
+
+        if (fDoQA) {
+
+            for (Int_t iLayer = 0; iLayer < 6; iLayer++) {
+                if (track->HasPointOnITSLayer(iLayer)) {
+                    f2DHist_QA["ITS_LayerNoVsPhi"]->Fill(track->Phi(), iLayer);
+                    f2DHist_QA["ITS_LayerNoVsEta"]->Fill(track->Eta(), iLayer);
+                }
+            }
+
+            if (TMath::Abs(track->Eta()) < kMax_Track_Eta) {
+
+                track->GetImpactParameters(xy_impar_wrt_pv, z_impar_wrt_pv);  // pre-calculated DCA w.r.t. PV
+                fHist_QA["Tracks_DCAxy"]->Fill(xy_impar_wrt_pv);
+                fHist_QA["Tracks_DCAz"]->Fill(z_impar_wrt_pv);
+
+                fHist_QA["Tracks_Pt"]->Fill(track->Pt());
+
+                f2DHist_QA["Tracks_PhiVsEta"]->Fill(track->Eta(), track->Phi());
+            }
+        }  // end of QA
+
         /* Apply track selection */
 
         doesEsdIdxPassTrackSelection[esdIdxTrack] = PassesTrackSelection(track);
-
         if (!doesEsdIdxPassTrackSelection[esdIdxTrack]) continue;
+        nSelectedTracks++;
 
         getEsdIdx_fromMcIdx[mcIdx] = esdIdxTrack;  // purposefully done after `PassesTrackSelection()`
 
@@ -1315,7 +1460,6 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         pz = track->Pz();
         eta = track->Eta();
 
-        Float_t xy_impar_wrt_pv, z_impar_wrt_pv;
         track->GetImpactParameters(xy_impar_wrt_pv, z_impar_wrt_pv);  // pre-calculated DCA w.r.t. PV
         dca_wrt_pv = TMath::Sqrt(xy_impar_wrt_pv * xy_impar_wrt_pv + z_impar_wrt_pv * z_impar_wrt_pv);
 
@@ -1337,6 +1481,21 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         if (TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion && track->Charge() > 0.) possiblePID.push_back(211);
 
         for (Int_t& esdPdgCode : possiblePID) {
+
+            if (fDoQA) {
+                if (esdPdgCode == -2212) {
+                    f2DHist_QA["TPC_NSigmaProtonVsInnerParamP"]->Fill(track->GetInnerParam()->P(), n_sigma_proton);
+                    f2DHist_QA["TPC_NSigmaProtonVsEta"]->Fill(track->GetInnerParam()->Eta(), n_sigma_proton);
+                }
+                if (esdPdgCode == 321) {
+                    f2DHist_QA["TPC_NSigmaKaonVsInnerParamP"]->Fill(track->GetInnerParam()->P(), n_sigma_kaon);
+                    f2DHist_QA["TPC_NSigmaKaonVsEta"]->Fill(track->GetInnerParam()->Eta(), n_sigma_kaon);
+                }
+                if (TMath::Abs(esdPdgCode) == 211) {
+                    f2DHist_QA["TPC_NSigmaPionVsInnerParamP"]->Fill(track->GetInnerParam()->P(), n_sigma_pion);
+                    f2DHist_QA["TPC_NSigmaPionVsEta"]->Fill(track->GetInnerParam()->Eta(), n_sigma_pion);
+                }
+            }
 
             if (esdPdgCode == -2212) esdIndicesOfAntiProtonTracks.push_back(esdIdxTrack);
             if (esdPdgCode == 321) esdIndicesOfPosKaonTracks.push_back(esdIdxTrack);
@@ -1401,6 +1560,10 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             f2DHist_Tracks_TPCsignal["Signal"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
         }  // end of loop over PID hypotheses
     }      // end of loop over tracks
+
+    /* QA : Selected Tracks */
+
+    if (fDoQA) fHist_QA["NSelectedTracks"]->Fill(nSelectedTracks);
 }
 
 /*
