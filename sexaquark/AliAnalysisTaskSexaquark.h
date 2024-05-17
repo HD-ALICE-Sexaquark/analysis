@@ -216,10 +216,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* MC Generated */
     void ProcessMCGen();
-    void GetDaughtersInfo(AliMCParticle* mcPart, Int_t& mcIdxNegDaughter, Int_t& mcIdxPosDaughter, TVector3& decay_vertex);
     void ProcessSignalInteractions();
 
     /* Tracks */
+    Bool_t PassesEventSelection();
     void ProcessTracks();
     Bool_t PassesTrackSelection(AliESDtrack* track);
     void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
@@ -337,8 +337,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /** QA Histograms **/
 
-    std::unordered_map<TString, TH1F*> fHist_QA;
-    std::unordered_map<TString, TH2F*> f2DHist_QA;
+    std::map<TString, TH1F*> fHist_QA;
+    std::map<TString, TH2F*> f2DHist_QA;
 
     /** Tracks Histograms **/
 
