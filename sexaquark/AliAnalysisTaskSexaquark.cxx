@@ -333,11 +333,18 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
     std::map<Int_t, TString> tracks_name = {{-2212, "AntiProton"}, {321, "PosKaon"}, {211, "PiPlus"}, {-211, "PiMinus"}};
 
     // clang-format off
-    const Int_t N_tracks_props = 11;
-    TString tracks_props[N_tracks_props] = {"Pt", "Pz", "Eta", "DCAwrtPV", "NTPCClusters", "Chi2/NClusters", "NSigmaProton", "NSigmaKaon", "NSigmaPion", "Status", "GoldenChi2"};
-    Int_t tracks_nbins[N_tracks_props] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 16, 100};
-    Double_t tracks_min[N_tracks_props] = {0., -20., -4.,  0., 0., 0., -7.5, -7.5, -7.5, 0, -10};
-    Double_t tracks_max[N_tracks_props] = {10., 20., 4., 200., 1000., 50., 7.5, 7.5, 7.5, 16, 40};
+    std::vector<TString> tracks_props = {"Px",         "Py",           "Pt",             "Pz",           "Eta",
+                                         "DCAwrtPV",   "NTPCClusters", "Chi2/NClusters", "NSigmaProton", "NSigmaKaon",
+                                         "NSigmaPion", "Status",       "GoldenChi2"};
+    std::vector<Int_t> tracks_nbins = {100, 100, 100, 100, 100,
+                                       100, 100, 100, 100, 100,
+                                       100, 16,  100};
+    std::vector<Double_t> tracks_min = {-20., -20., 0., -20., -4.,
+                                        0.,   0.,   0., -7.5, -7.5,
+                                        -7.5, 0,    -10};
+    std::vector<Double_t> tracks_max = {-20., -20.,  10., 20., 4.,
+                                        200., 1000., 50., 7.5, 7.5,
+                                        7.5,  16,    40};
     // clang-format on
 
     for (Int_t& species : tracks_species) {
@@ -348,7 +355,7 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
     for (TString& stage : tracks_stages) {
         for (TString& set : tracks_sets) {
             for (Int_t& species : tracks_species) {
-                for (Int_t prop_idx = 0; prop_idx < N_tracks_props; prop_idx++) {
+                for (Int_t prop_idx = 0; prop_idx < (Int_t)tracks_props.size(); prop_idx++) {
 
                     if (!fIsMC && (stage == "MCGen" || set == "True" || set == "Secondary" || set == "Signal")) continue;
 
@@ -413,6 +420,7 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
     // clang-format on
 
     for (Int_t sp = 0; sp < (Int_t)V0_species.size(); sp++) {
+        if (fReactionID != 'E' && V0_species[sp] == 422) continue;
         fHist_V0s_Bookkeep[V0_species[sp]] = new TH1F(Form("%s_Bookkeep", V0_name[sp].Data()), "", 50, 0., 50.);
         fOutputListOfHists->Add(fHist_V0s_Bookkeep[V0_species[sp]]);
     }
@@ -1056,12 +1064,16 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             /* Fill histograms */
 
             fHist_Tracks_Bookkeep[pdg_mc]->Fill(0);
+            fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Px")]->Fill(mcPart->Px());
+            fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Py")]->Fill(mcPart->Py());
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Pt")]->Fill(mcPart->Pt());
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Pz")]->Fill(mcPart->Pz());
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
 
             if (isMcIdxSecondary[mcIdx]) {
                 fHist_Tracks_Bookkeep[pdg_mc]->Fill(1);
+                fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Px")]->Fill(mcPart->Px());
+                fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Py")]->Fill(mcPart->Py());
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pt")]->Fill(mcPart->Pt());
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pz")]->Fill(mcPart->Pz());
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Eta")]->Fill(mcPart->Eta());
@@ -1069,6 +1081,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
             if (isMcIdxSignal[mcIdx]) {
                 fHist_Tracks_Bookkeep[pdg_mc]->Fill(2);
+                fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Px")]->Fill(mcPart->Px());
+                fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Py")]->Fill(mcPart->Py());
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Pt")]->Fill(mcPart->Pt());
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Pz")]->Fill(mcPart->Pz());
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Eta")]->Fill(mcPart->Eta());
@@ -1380,7 +1394,6 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
     Int_t mcPdgCode;
     Int_t motherMcIdx;
 
-    Float_t pt, pz, eta;
     Float_t xy_impar_wrt_pv, z_impar_wrt_pv;
     Float_t impar_pv[2], dca_wrt_pv;
     Float_t n_tpc_clusters;
@@ -1460,10 +1473,6 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
         /* Get track properties */
 
-        pt = track->Pt();
-        pz = track->Pz();
-        eta = track->Eta();
-
         track->GetImpactParameters(xy_impar_wrt_pv, z_impar_wrt_pv);  // pre-calculated DCA w.r.t. PV
         dca_wrt_pv = TMath::Sqrt(xy_impar_wrt_pv * xy_impar_wrt_pv + z_impar_wrt_pv * z_impar_wrt_pv);
 
@@ -1506,9 +1515,11 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             if (esdPdgCode == -211) esdIndicesOfPiMinusTracks.push_back(esdIdxTrack);
             if (esdPdgCode == 211) esdIndicesOfPiPlusTracks.push_back(esdIdxTrack);
 
-            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pt")]->Fill(pt);
-            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pz")]->Fill(pz);
-            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Eta")]->Fill(eta);
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Px")]->Fill(track->Px());
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Py")]->Fill(track->Py());
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pt")]->Fill(track->Pt());
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pz")]->Fill(track->Pz());
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Eta")]->Fill(track->Eta());
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
@@ -1520,9 +1531,11 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
             if (mcPdgCode != esdPdgCode) continue;
 
-            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pt")]->Fill(pt);
-            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pz")]->Fill(pz);
-            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Eta")]->Fill(eta);
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Px")]->Fill(track->Px());
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Py")]->Fill(track->Py());
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pt")]->Fill(track->Pt());
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pz")]->Fill(track->Pz());
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Eta")]->Fill(track->Eta());
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
@@ -1535,9 +1548,11 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
             if (!isMcIdxSecondary[mcIdx]) continue;
 
-            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pt")]->Fill(pt);
-            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pz")]->Fill(pz);
-            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Eta")]->Fill(eta);
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Px")]->Fill(track->Px());
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Py")]->Fill(track->Py());
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pt")]->Fill(track->Pt());
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pz")]->Fill(track->Pz());
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Eta")]->Fill(track->Eta());
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
@@ -1550,9 +1565,11 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
             if (!isEsdIdxSignal[esdIdxTrack]) continue;
 
-            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pt")]->Fill(pt);
-            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pz")]->Fill(pz);
-            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Eta")]->Fill(eta);
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Px")]->Fill(track->Px());
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Py")]->Fill(track->Py());
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pt")]->Fill(track->Pt());
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pz")]->Fill(track->Pz());
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Eta")]->Fill(track->Eta());
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "DCAwrtPV")]->Fill(dca_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NTPCClusters")]->Fill(n_tpc_clusters);
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Chi2/NClusters")]->Fill(chi2_over_nclusters);
