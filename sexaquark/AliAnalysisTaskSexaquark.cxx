@@ -248,20 +248,20 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
                                      "SPD_NTracklets",
                                      // TPC
                                      "TPC_NClusters"};
-    std::vector<Int_t> QA_nbins = {200, 200, 200,
-                                   3, 200, 200, 200,
+    std::vector<Int_t> QA_nbins = {100, 100, 200,
+                                   3, 100, 100, 200,
                                    2000, 2000,
                                    100, 100, 200,
                                    60,
                                    200};
-    std::vector<Float_t> QA_min = {-50, -50, -50,
-                                   0., -50, -50, -50,
+    std::vector<Float_t> QA_min = {-1, -1, -50,
+                                   0., -1, -1, -50,
                                    0., 0.,
                                    -5., -5., 0.,
                                    0.,
                                    0.};
-    std::vector<Float_t> QA_max = {50, 50, 50,
-                                   3., 50, 50, 50,
+    std::vector<Float_t> QA_max = {1, 1, 50,
+                                   3., 1, 1, 50,
                                    20000., 20000.,
                                    5., 5., 100.,
                                    6000,
@@ -342,7 +342,7 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
     std::vector<Double_t> tracks_min = {-20., -20., 0., -20., -4.,
                                         0.,   0.,   0., -7.5, -7.5,
                                         -7.5, 0,    -10};
-    std::vector<Double_t> tracks_max = {-20., -20.,  10., 20., 4.,
+    std::vector<Double_t> tracks_max = {20., 20.,  10., 20., 4.,
                                         200., 1000., 50., 7.5, 7.5,
                                         7.5,  16,    40};
     // clang-format on
@@ -638,12 +638,13 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     // init KFparticle
     KFParticle::SetField(fMagneticField);
 
+    if (!PassesEventSelection()) return;
+
     if (fIsMC) {
         ProcessMCGen();
         ProcessSignalInteractions();
     }
 
-    if (!PassesEventSelection()) return;
     ProcessTracks();
 
     if (fIsMC) {
@@ -691,7 +692,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     ClearContainers();
 
-    // stream the results the analysis of this event to the output manager
     PostData(1, fOutputListOfTrees);
     PostData(2, fOutputListOfHists);
 }
@@ -1284,7 +1284,7 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
             lvAntiSexaquark = lvAntiSexaquark + lvProduct;
 
-            /* Get sec. vertex */
+            /* Get sec. vertex (if it hasn't been defined yet)*/
 
             if (secondary_vertex.Mag() < 1E-6) secondary_vertex.SetXYZ(mcProduct->Xv(), mcProduct->Yv(), mcProduct->Zv());
         }
@@ -1294,14 +1294,14 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
         /* Get properties */
 
-        radius = TMath::Sqrt(TMath::Power(mcProduct->Xv(), 2) + TMath::Power(mcProduct->Yv(), 2));
-        decay_length =
-            TMath::Sqrt(TMath::Power(mcProduct->Xv() - fMC_PrimaryVertex->GetX(), 2) + TMath::Power(mcProduct->Yv() - fMC_PrimaryVertex->GetY(), 2) +
-                        TMath::Power(mcProduct->Zv() - fMC_PrimaryVertex->GetZ(), 2));
-        cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, mcProduct->Xv(), mcProduct->Yv(), mcProduct->Zv(), fMC_PrimaryVertex->GetX(),
+        radius = secondary_vertex.Perp();
+        decay_length = TMath::Sqrt(TMath::Power(secondary_vertex.X() - fMC_PrimaryVertex->GetX(), 2) +
+                                   TMath::Power(secondary_vertex.Y() - fMC_PrimaryVertex->GetY(), 2) +
+                                   TMath::Power(secondary_vertex.Z() - fMC_PrimaryVertex->GetZ(), 2));
+        cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, secondary_vertex.X(), secondary_vertex.Y(), secondary_vertex.Z(), fMC_PrimaryVertex->GetX(),
                                          fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
-        dca_wrt_pv = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), mcProduct->Xv(), mcProduct->Yv(), mcProduct->Zv(),
-                                  fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+        dca_wrt_pv = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), secondary_vertex.X(), secondary_vertex.Y(),
+                                  secondary_vertex.Z(), fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
 
         /* Fill histograms */
 
@@ -1334,7 +1334,17 @@ Bool_t AliAnalysisTaskSexaquark::PassesEventSelection() {
 
     if (fDoQA) fHist_QA["Events_Bookkeep"]->Fill(0);
 
-    // PENDING !! event selection to be added in case of !fDoQA !!
+    /* MC PV z-vertex range */
+
+    if (fIsMC) {
+        if (TMath::Abs(fMC_PrimaryVertex->GetZ()) > 10.) return kFALSE;
+    }
+    AliInfo("!! MC Event Passed z-vertex range on PV !!");  // DEBUG
+
+    if (fDoQA) fHist_QA["Events_Bookkeep"]->Fill(1);
+
+    /* trigger */
+
     Bool_t MB = (fInputHandler->IsEventSelected() & AliVEvent::kINT7);  // kAnyINT
     if (!MB) {
         AliInfoF("!! Event Rejected -- %u & %u = %u !!", fInputHandler->IsEventSelected(), AliVEvent::kINT7, MB);  // DEBUG
@@ -1342,18 +1352,23 @@ Bool_t AliAnalysisTaskSexaquark::PassesEventSelection() {
     }
     AliInfoF("!! Event Selected -- %u & %u = %u !!", fInputHandler->IsEventSelected(), AliVEvent::kINT7, MB);  // DEBUG
 
-    if (fDoQA) fHist_QA["Events_Bookkeep"]->Fill(1);
+    if (fDoQA) fHist_QA["Events_Bookkeep"]->Fill(2);
+
+    /* rec. PV z-vertex range */
 
     if (TMath::Abs(fPrimaryVertex->GetZ()) > 10.) return kFALSE;
-
     AliInfo("!! Event Passed z-vertex range on PV !!");  // DEBUG
 
     if (fDoQA) {
-        fHist_QA["Events_Bookkeep"]->Fill(2);
+        fHist_QA["Events_Bookkeep"]->Fill(3);
+
+        /* Vertex */
 
         fHist_QA["VertexX"]->Fill(fPrimaryVertex->GetX());
         fHist_QA["VertexY"]->Fill(fPrimaryVertex->GetY());
         fHist_QA["VertexZ"]->Fill(fPrimaryVertex->GetZ());
+
+        /* N Tracks */
 
         Int_t ntracks = fESD->GetNumberOfTracks();
         fHist_QA["NTracks"]->Fill(ntracks);
@@ -5922,8 +5937,8 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
     /*  */
     getPdgCode_fromMcIdx.clear();
 
-    isMcIdxSecondary.clear();
     isMcIdxSignal.clear();
+    isMcIdxSecondary.clear();
 
     getReactionIdx_fromMcIdx.clear();
     getMcIdx_fromReactionIdx.clear();
