@@ -12,3 +12,6 @@
 **/.vscode/
 **/test/
 *.svg
+**/output*/
+**/test*/
+**/__pycache__/
