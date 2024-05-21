@@ -1,10 +1,13 @@
 #include "include/Headers.hxx"
 
 /*
- Read the `sim.log` files, extract initial anti-sexaquark and nucleon kinematics, prior to their reaction, and put it into a simple tree
+ Read the `sim.log` files, to extract:
+ - the injected anti-sexaquark properties
+ - and the struck nucleon kinematics
+ prior to their reaction, and store them into a simple tree
 */
-void SimLogs_MakeSimpleTrees(TString DataSet = "LHC23l1a2",  // could also be "LHC23l1b"
-                             TString SimulationSet = "A1.8") {
+void LogParser(TString DataSet = "LHC23l1a3",  // could also be "LHC23l1b"
+               TString SimulationSet = "A1.8") {
 
     /* Hard-coded parameters */
 
