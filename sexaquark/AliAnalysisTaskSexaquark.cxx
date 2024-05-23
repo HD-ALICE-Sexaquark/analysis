@@ -249,7 +249,7 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
                                      // TPC
                                      "TPC_NClusters"};
     std::vector<Int_t> QA_nbins = {100, 100, 200,
-                                   3, 100, 100, 200,
+                                   5, 100, 100, 200,
                                    2000, 2000,
                                    100, 100, 200,
                                    60,
@@ -261,7 +261,7 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
                                    0.,
                                    0.};
     std::vector<Float_t> QA_max = {1, 1, 50,
-                                   3., 1, 1, 50,
+                                   5., 1, 1, 50,
                                    20000., 20000.,
                                    5., 5., 100.,
                                    6000,
@@ -337,13 +337,13 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
                                          "DCAwrtPV",   "NTPCClusters", "Chi2/NClusters", "NSigmaProton", "NSigmaKaon",
                                          "NSigmaPion", "Status",       "GoldenChi2"};
     std::vector<Int_t> tracks_nbins = {100, 100, 100, 100, 100,
-                                       100, 100, 100, 100, 100,
+                                       100, 100, 70, 100, 100,
                                        100, 16,  100};
     std::vector<Double_t> tracks_min = {-20., -20., 0., -20., -4.,
                                         0.,   0.,   0., -7.5, -7.5,
                                         -7.5, 0,    -10};
     std::vector<Double_t> tracks_max = {20., 20.,  10., 20., 4.,
-                                        200., 1000., 50., 7.5, 7.5,
+                                        200., 1000., 7., 7.5, 7.5,
                                         7.5,  16,    40};
     // clang-format on
 
@@ -630,13 +630,19 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     /* Load Reconstructed Event, PV and Magnetic Field */
 
+    // AliInfoF("(before) KFParticle::GetFieldAlice() = %f", KFParticle::GetFieldAlice());  // DEBUG
+
     fESD = dynamic_cast<AliESDEvent*>(InputEvent());
     if (!fESD) AliFatal("ERROR: AliESDEvent couldn't be found.");
     fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
     fMagneticField = fESD->GetMagneticField();
 
+    AliInfoF("fMagneticField = %f", fMagneticField);  // DEBUG
+
     // init KFparticle
     KFParticle::SetField(fMagneticField);
+
+    // AliInfoF("(after) KFParticle::GetFieldAlice() = %f", KFParticle::GetFieldAlice());  // DEBUG
 
     if (!PassesEventSelection()) return;
 
@@ -1469,6 +1475,31 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         nSelectedTracks++;
 
         getEsdIdx_fromMcIdx[mcIdx] = esdIdxTrack;  // purposefully done after `PassesTrackSelection()`
+
+        /* -- DEBUG -- */
+
+        if (track->P() > 1E3) {
+            Float_t xy_impar, z_impar;
+            // clang-format off
+            track->GetImpactParameters(xy_impar, z_impar);
+            AliInfoF("idx px py pz true pdg = %d, %f, %f, %f, %d, %d", esdIdxTrack, track->Px(), track->Py(), track->Pz(), mcIdx, mcPdgCode);
+            AliInfo("nsigmapro, nsigmak, nsigmapi, eta, nclusters, chi2/nclusters, kink, dcaxy, dcaz, ncrossedrows, sharedcl, sharedcl/cRows, sharedcl/ncl =");
+            AliInfoF(" %f, %f, %f, %f, %i, %f, %i, %f, %f, %f, %i, %f, %f",
+                     fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton),
+                     fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon),
+                     fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion),
+                     track->Eta(),
+                     (Int_t)track->GetTPCNcls(),
+                     track->GetTPCchi2() / (Double_t)track->GetTPCNcls(),
+                     (Int_t)track->GetKinkIndex(0),
+                     xy_impar,
+                     z_impar,
+                     track->GetTPCCrossedRows(),
+                     (Int_t)track->GetTPCnclsS(),
+                     (Float_t)track->GetTPCnclsS() / track->GetTPCCrossedRows(),
+                     (Float_t)track->GetTPCnclsS() / (Float_t)track->GetTPCNcls());
+            // clang-format on
+        }
 
         /* Fill containers */
 
@@ -5880,6 +5911,8 @@ void AliAnalysisTaskSexaquark::GetDStoParticleBz( float Bz, const KFParticleBase
     const float a1_ds1 = ldrp2_ds1*lp1p2 + ldrp2*lp1p2_ds1 - ldrp1_ds1*p22;
     const float a2_ds0 = ldrp2_ds0*p12 - ldrp1_ds0*lp1p2 - ldrp1*lp1p2_ds0;
     const float a2_ds1 = ldrp2_ds1*p12 - ldrp1_ds1*lp1p2 - ldrp1*lp1p2_ds1;
+
+    // AliInfoF("a1_ds0 a1 detp_ds0 detp a1_ds1 detp_ds1 a2_ds0 a2 a2_ds1 = %f %f %f %f %f %f %f %f %f", a1_ds0, a1, detp_ds0, detp, a1_ds1, detp_ds1, a2_ds0, a2, a2_ds1);
 
     const float dsl1ds0 = a1_ds0/detp - a1*detp_ds0/(detp*detp);
     const float dsl1ds1 = a1_ds1/detp - a1*detp_ds1/(detp*detp);
