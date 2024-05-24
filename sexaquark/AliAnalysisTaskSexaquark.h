@@ -223,6 +223,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void ProcessTracks();
     Bool_t PassesTrackSelection(AliESDtrack* track);
     void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
+    void GetTracksHits(AliESDtrack* track, Int_t& firstHit, Int_t& lastHit);
 
     /* V0s, Anti-Sexaquarks, K+K+ pairs -- That Require True Info */
     void ProcessFindableV0s();
@@ -466,7 +467,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMax_Track_Chi2PerNTPCClusters;
     Bool_t kTurnedOn_Track_StatusCuts;
     Bool_t kTurnedOn_Track_RejectKinks;
-    Float_t kMin_Track_DCAwrtPV;
+    Float_t kMin_Track_DCAxy_wrtPV;
+    Float_t kMin_Track_DCAz_wrtPV;
     std::unordered_map<Int_t, Float_t> kMin_Track_Pt;
 
     /* V0s */
