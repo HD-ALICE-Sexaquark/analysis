@@ -41,7 +41,6 @@ AliQuickTaskTPCProperties::AliQuickTaskTPCProperties(const char* name, Bool_t Is
       fPrimaryVertex(0),
       fMagneticField(0.),
       fPDG(),
-      mcIndicesOfTrueV0s(),
       kMax_NSigma_Pion(0.),
       kMax_NSigma_Kaon(0.),
       kMax_NSigma_Proton(0.),
@@ -139,8 +138,6 @@ void AliQuickTaskTPCProperties::PrepareTracksHistograms() {
         for (Int_t sp = 0; sp < (Int_t)species_codes.size(); sp++) {
             for (Int_t prop_idx = 0; prop_idx < (Int_t)tracks_props.size(); prop_idx++) {
 
-                if (set == "Selected") continue;  // set name reserved for 2D histograms
-
                 TString histName = Form("%s_%s_%s", set.Data(), species_names[sp].Data(), tracks_props[prop_idx].Data());
                 std::tuple<TString, Int_t, TString> histKey = std::make_tuple(set, species_codes[sp], tracks_props[prop_idx]);
                 fHist_Tracks[histKey] = new TH1F(histName, "", tracks_nbins[prop_idx], tracks_min[prop_idx], tracks_max[prop_idx]);
@@ -173,8 +170,6 @@ void AliQuickTaskTPCProperties::UserExec(Option_t*) {
 
     /* Load Reconstructed Event, PV and Magnetic Field */
 
-    // AliInfoF("(before) KFParticle::GetFieldAlice() = %f", KFParticle::GetFieldAlice());  // DEBUG
-
     fESD = dynamic_cast<AliESDEvent*>(InputEvent());
     if (!fESD) AliFatal("ERROR: AliESDEvent couldn't be found.");
     fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
@@ -182,13 +177,9 @@ void AliQuickTaskTPCProperties::UserExec(Option_t*) {
 
     AliInfoF("fMagneticField = %f", fMagneticField);  // DEBUG
 
-    // AliInfoF("(after) KFParticle::GetFieldAlice() = %f", KFParticle::GetFieldAlice());  // DEBUG
-
     if (!PassesEventSelection()) return;
 
     ProcessTracks();
-
-    ClearContainers();
 
     PostData(1, fOutputListOfHists);
 }
@@ -199,20 +190,20 @@ void AliQuickTaskTPCProperties::UserExec(Option_t*) {
 */
 void AliQuickTaskTPCProperties::DefineTracksCuts(TString cuts_option) {
 
-    kMax_NSigma_Pion = 3.;
-    kMax_NSigma_Kaon = 3.;
-    kMax_NSigma_Proton = 3.;
+    // kMax_NSigma_Pion = 3.;
+    // kMax_NSigma_Kaon = 3.;
+    // kMax_NSigma_Proton = 3.;
 
-    kMax_Track_Eta = 1.;
-    kMin_Track_NTPCClusters = 50;
-    kMax_Track_Chi2PerNTPCClusters = 7.;
+    // kMax_Track_Eta = 1.;
+    // kMin_Track_NTPCClusters = 50;
+    // kMax_Track_Chi2PerNTPCClusters = 7.;
     kTurnedOn_Track_StatusCuts = kTRUE;
-    kTurnedOn_Track_RejectKinks = kFALSE;  // PENDING: need to study further
+    // kTurnedOn_Track_RejectKinks = kFALSE;  // PENDING: need to study further
     // kMin_Track_DCAwrtPV = 2.;
 
-    kMin_Track_Pt[2212] = 0.4;
-    kMin_Track_Pt[321] = 0.0;  // PENDING: to check when analyzing the next reaction channels
-    kMin_Track_Pt[211] = 0.2;
+    // kMin_Track_Pt[2212] = 0.4;
+    // kMin_Track_Pt[321] = 0.0;  // PENDING: to check when analyzing the next reaction channels
+    // kMin_Track_Pt[211] = 0.2;
 }
 
 /*
@@ -220,16 +211,12 @@ void AliQuickTaskTPCProperties::DefineTracksCuts(TString cuts_option) {
 */
 Bool_t AliQuickTaskTPCProperties::PassesEventSelection() {
 
-    if (fDoQA) fHist_QA["Events_Bookkeep"]->Fill(0);
-
     /* MC PV z-vertex range */
 
     if (fIsMC) {
         if (TMath::Abs(fMC_PrimaryVertex->GetZ()) > 10.) return kFALSE;
     }
     AliInfo("!! MC Event Passed z-vertex range on PV !!");  // DEBUG
-
-    if (fDoQA) fHist_QA["Events_Bookkeep"]->Fill(1);
 
     /* trigger */
 
@@ -240,48 +227,10 @@ Bool_t AliQuickTaskTPCProperties::PassesEventSelection() {
     }
     AliInfoF("!! Event Selected -- %u & %u = %u !!", fInputHandler->IsEventSelected(), AliVEvent::kINT7, MB);  // DEBUG
 
-    if (fDoQA) fHist_QA["Events_Bookkeep"]->Fill(2);
-
     /* rec. PV z-vertex range */
 
     if (TMath::Abs(fPrimaryVertex->GetZ()) > 10.) return kFALSE;
     AliInfo("!! Event Passed z-vertex range on PV !!");  // DEBUG
-
-    if (fDoQA) {
-        fHist_QA["Events_Bookkeep"]->Fill(3);
-
-        /* Vertex */
-
-        fHist_QA["VertexX"]->Fill(fPrimaryVertex->GetX());
-        fHist_QA["VertexY"]->Fill(fPrimaryVertex->GetY());
-        fHist_QA["VertexZ"]->Fill(fPrimaryVertex->GetZ());
-
-        /* N Tracks */
-
-        Int_t ntracks = fESD->GetNumberOfTracks();
-        fHist_QA["NTracks"]->Fill(ntracks);
-
-        /* SPD */
-
-        const AliESDVertex* spd_vertex = fESD->GetPrimaryVertexSPD();
-        const AliMultiplicity* mult = fESD->GetMultiplicity();
-
-        fHist_QA["SPD_NTracklets"]->Fill(mult->GetNumberOfTracklets());
-
-        f2DHist_QA["SPD_MultiplicityVsVertexZ"]->Fill(spd_vertex->GetZ(), mult->GetNumberOfTracklets());
-        f2DHist_QA["SPD_NTrackletsClu0VsNTracklets"]->Fill(mult->GetNumberOfTracklets(), mult->GetNumberOfITSClusters(0));
-        f2DHist_QA["SPD_NTrackletsClu1VsNTracklets"]->Fill(mult->GetNumberOfTracklets(), mult->GetNumberOfITSClusters(1));
-
-        for (Int_t iTracklet = 0; iTracklet < mult->GetNumberOfTracklets(); iTracklet++) {
-            Float_t phiTr = mult->GetPhi(iTracklet);
-            Float_t etaTr = mult->GetEta(iTracklet);
-            f2DHist_QA["SPD_PhiVsEta"]->Fill(etaTr, phiTr);
-        }
-
-        /* TPC */
-
-        fHist_QA["TPC_NClusters"]->Fill(fESD->GetNumberOfTPCClusters());
-    }
 
     return kTRUE;
 }
@@ -298,6 +247,7 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
     Int_t mcIdx;
     Int_t mcPdgCode;
     Bool_t mcIsSecondary;
+    Float_t mcOriginRadius;
 
     Float_t dca_xy_wrt_pv, dca_z_wrt_pv;
     Float_t n_tpc_clusters;
@@ -312,6 +262,23 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
     Float_t n_sigma_kaon;
     Float_t n_sigma_pion;
 
+    /* For debugging */
+
+    ULong64_t StatusCollection[16] = {AliESDtrack::kITSin,   AliESDtrack::kITSout,     AliESDtrack::kITSrefit,    AliESDtrack::kITSpid,
+                                      AliESDtrack::kTPCin,   AliESDtrack::kTPCout,     AliESDtrack::kTPCrefit,    AliESDtrack::kTPCpid,
+                                      AliESDtrack::kITSupg,  AliESDtrack::kSkipFriend, AliESDtrack::kGlobalMerge, AliESDtrack::kMultInV0,
+                                      AliESDtrack::kMultSec, AliESDtrack::kEmbedded,   AliESDtrack::kITSpureSA,   AliESDtrack::kESDpid};
+    TString StatusName[16] = {"kITSin",  "kITSout",     "kITSrefit",    "kITSpid",   "kTPCin",   "kTPCout",   "kTPCrefit",  "kTPCpid",
+                              "kITSupg", "kSkipFriend", "kGlobalMerge", "kMultInV0", "kMultSec", "kEmbedded", "kITSpureSA", "kESDpid"};
+
+    Int_t counter_secfrommaterial_fh_nonzero = 0;
+    Int_t counter_printed_tracks = 0;
+    Int_t counter_radiusaboveIB = 0;
+    Int_t counter_radiusaboveIB_fh_nonzero = 0;
+    Int_t counter_radiusbelowIB_fh_nonzero = 0;
+    Int_t counter_rs_sec = 0;
+    Int_t counter_rs_sec_but_no_mc_sec = 0;
+
     /** Loop over tracks in a single event **/
 
     for (Int_t esdIdxTrack = 0; esdIdxTrack < fESD->GetNumberOfTracks(); esdIdxTrack++) {
@@ -325,18 +292,77 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
         mcIdx = TMath::Abs(track->GetLabel());
         mcPart = (AliMCParticle*)fMC->GetTrack(mcIdx);
         mcPdgCode = mcPart->PdgCode();
-        mcIsSecondary = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay();
+        mcIsSecondary = mcPart->IsSecondaryFromMaterial();  //  || mcPart->IsSecondaryFromWeakDecay();
+        mcOriginRadius = TMath::Sqrt(mcPart->Xv() * mcPart->Xv() + mcPart->Yv() * mcPart->Yv());
 
         /* Apply track selection */
 
         if (!PassesTrackSelection(track)) continue;
 
-        /* Get track properties */
+        track->GetImpactParameters(dca_xy_wrt_pv, dca_z_wrt_pv);  // pre-calculated DCA w.r.t. PV
 
-        track->HasPointOnITSLayer(0);
-        track->HasPointOnITSLayer(1);
-        track->GetITSNcls();
-        track->GetITSclusters();
+        if ((TMath::Abs(mcPdgCode) == 2212 || TMath::Abs(mcPdgCode) == 321 || TMath::Abs(mcPdgCode) == 211)) {
+            // } &&  mcIsSecondary && mcOriginRadius > 84.8) {
+            AliInfoF(">> (Selected) Track %i <<", esdIdxTrack);
+            AliInfo("");
+            AliInfo("   MC Information");
+            AliInfo("   ==============");
+            AliInfoF("   MC Index: %i, PDG Code: %i", mcIdx, mcPdgCode);
+            // AliInfoF("   Origin (x, y, z): (%.3f, %.3f, %.3f)", mcPart->Xv(), mcPart->Yv(), mcPart->Zv());
+            AliInfoF("   Origin Radius: %.3f", mcOriginRadius);
+            AliInfoF("   IsSecFromMaterial: %i, IsSecFromWeakDecay: %i", (Int_t)mcPart->IsSecondaryFromMaterial(),
+                     (Int_t)mcPart->IsSecondaryFromWeakDecay());
+            // AliInfoF("   (Apparent) First Row on TPC: %i", GetFirstTPCRow(mcOriginRadius));
+            AliInfo("");
+            AliInfo("   Rec. Information");
+            AliInfo("   ================");
+            AliInfoF("   DCAxy, DCAz = %.3f, %.3f", dca_xy_wrt_pv, dca_z_wrt_pv);
+            AliESDVertex* vtx = (AliESDVertex*)fESD->GetPrimaryVertexTracks();
+            Bool_t rs_sec = IsRubenSecondary(track, vtx);
+            AliInfoF("   Ruben Secondary = %i", (Int_t)rs_sec);
+            AliInfo("");
+            AliInfo("   ITS Information");
+            AliInfo("   ===============");
+            AliInfoF("   Has point on layers (0,1,2,3,4,5): (%i, %i, %i, %i, %i, %i)", (Int_t)track->HasPointOnITSLayer(0),
+                     (Int_t)track->HasPointOnITSLayer(1), (Int_t)track->HasPointOnITSLayer(2), (Int_t)track->HasPointOnITSLayer(3),
+                     (Int_t)track->HasPointOnITSLayer(4), (Int_t)track->HasPointOnITSLayer(5));
+            // AliInfoF("   N Clusters: %c", track->GetITSNcls());
+            // AliInfoF("   ITS Chi2: %f", track->GetITSchi2());
+            // AliInfoF("N Clusters: %c", track->GetITSclusters()); // idk yet
+            AliInfo("");
+            AliInfo("   TPC Information");
+            AliInfo("   ===============");
+            AliInfoF("   N Clusters: %i", (Int_t)track->GetTPCNcls());
+            // AliInfoF("   N Shared Clusters: %i", (Int_t)track->GetTPCnclsS());
+            // AliInfoF("   N Findable Clusters: %i", (Int_t)track->GetTPCNclsF());
+            AliInfoF("   N Crossed Rows: %f", track->GetTPCCrossedRows());
+            AliInfoF("   TPC Chi2 / N Clusters: %f", track->GetTPCchi2() / (Double_t)track->GetTPCNcls());
+            Int_t firstHit, lastHit;
+            GetTracksHits(track, firstHit, lastHit);
+            AliInfoF("   (Apparent) First Hit: %i", firstHit);
+            if (mcOriginRadius > 84.8 && firstHit == 0) AliInfo("   !! Radius above TPC IB, but FH is zero !!");
+            if (mcOriginRadius < 84.8 && firstHit > 0) AliInfo("   !! Radius below TPC IB, but FH is non-zero !!");
+            AliInfoF("   (Apparent) Last Hit: %i", lastHit);
+            AliInfoF("   TPC Points: (%f, %f, %f, %f)", track->GetTPCPoints(0), track->GetTPCPoints(1), track->GetTPCPoints(2),
+                     track->GetTPCPoints(3));
+            AliInfo("");
+            // AliInfo("   Track Status");
+            // AliInfo("   ============");
+            // for (Int_t i = 0; i < 16; i++) {
+            // if ((track->GetStatus() & StatusCollection[i])) AliInfoF("   track->GetStatus() & %s > 0", StatusName[i].Data());
+            // }
+            // AliInfo("");
+            AliInfo("");
+            if (mcPart->IsSecondaryFromMaterial() && firstHit > 0) counter_secfrommaterial_fh_nonzero++;
+            if (mcOriginRadius > 84.8) counter_radiusaboveIB++;
+            if (mcOriginRadius > 84.8 && firstHit > 0) counter_radiusaboveIB_fh_nonzero++;
+            if (mcOriginRadius < 84.8 && firstHit > 0) counter_radiusbelowIB_fh_nonzero++;
+            if (rs_sec) counter_rs_sec++;
+            if (rs_sec && !mcPart->IsSecondaryFromMaterial() && !mcPart->IsSecondaryFromWeakDecay()) counter_rs_sec_but_no_mc_sec++;
+            counter_printed_tracks++;
+        }
+
+        /*
         track->GetTPCClusterMap().CountBits();
         Double_t FoundOverFindable = (nfindableTPC ? static_cast<Float_t>(nclustersTPC) / static_cast<Float_t>(nfindableTPC) : 0);
         // TPC Quality
@@ -360,15 +386,16 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
         // get the first TPC track reference
         AliTrackReference* ref0 = GetFirstTPCTrackRef(mcParticle);
         if (!ref0) return;
+        */
 
-        track->GetImpactParameters(dca_xy_wrt_pv, dca_z_wrt_pv);  // pre-calculated DCA w.r.t. PV
+        /* Get track properties */
 
         n_tpc_clusters = track->GetTPCNcls();  // NOTE: capital N
         n_crossed_rows = track->GetTPCCrossedRows();
         n_findable_clusters = (Int_t)track->GetTPCNclsF();
         n_shared_clusters = (Int_t)track->GetTPCnclsS();
-        ratio_sharedcls_nxrows = (Float_t)track->GetTPCnclsS() / track->GetTPCCrossedRows();
-        ratio_sharedcls_ncls = (Float_t)track->GetTPCnclsS() / (Float_t)track->GetTPCNcls();
+        ratio_sharedcls_nxrows = n_crossed_rows ? (Double_t)n_shared_clusters / n_crossed_rows : 999.;
+        ratio_sharedcls_ncls = n_tpc_clusters ? (Double_t)n_shared_clusters / (Double_t)n_tpc_clusters : 999.;
         chi2_over_ncls = n_tpc_clusters ? track->GetTPCchi2() / (Double_t)n_tpc_clusters : 999.;
         GetTracksHits(track, first_hit, last_hit);
 
@@ -459,6 +486,16 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
             f2DHist_Tracks_TPCsignal["Secondary"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
         }  // end of loop over PID hypotheses
     }      // end of loop over tracks
+
+    AliInfo("## Summary ##");
+    AliInfo("=============");
+    AliInfoF(">> N Selected Tracks: %i", counter_printed_tracks);
+    AliInfoF(">> N Tracks with SecFromMaterial && FirstHit > 0: %i", counter_secfrommaterial_fh_nonzero);
+    AliInfoF(">> N Tracks with OriginRadius > 84.8 cm: %i", counter_radiusaboveIB);
+    AliInfoF(">> N Tracks with OriginRadius > 84.8 cm && FirstHit > 0: %i", counter_radiusaboveIB_fh_nonzero);
+    AliInfoF(">> N Tracks with OriginRadius < 84.8 cm && FirstHit > 0: %i", counter_radiusbelowIB_fh_nonzero);
+    AliInfoF(">> N Tracks with Ruben Secondary: %i", counter_rs_sec);
+    AliInfoF(">> N Tracks with Ruben Secondary but no MC Secondary: %i", counter_rs_sec_but_no_mc_sec);
 }
 
 /*
@@ -481,13 +518,13 @@ Bool_t AliQuickTaskTPCProperties::PassesTrackSelection(AliESDtrack* track) {
     if (TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion) possiblePID.push_back(211);
     if ((kMax_NSigma_Proton || kMax_NSigma_Kaon || kMax_NSigma_Pion) && !possiblePID.size()) return kFALSE;
 
-    Double_t Eta = TMath::Abs(track->Eta());
+    Float_t Eta = TMath::Abs(track->Eta());
     if (kMax_Track_Eta && Eta > kMax_Track_Eta) return kFALSE;
 
-    Double_t NTPCClusters = track->GetTPCNcls();
+    Int_t NTPCClusters = (Int_t)track->GetTPCNcls();
     if (kMin_Track_NTPCClusters && NTPCClusters < kMin_Track_NTPCClusters) return kFALSE;
 
-    Double_t Chi2PerNTPCClusters = track->GetTPCchi2() / (Double_t)track->GetTPCNcls();
+    Float_t Chi2PerNTPCClusters = NTPCClusters > 0 ? track->GetTPCchi2() / (Double_t)NTPCClusters : 999.;
     if (kMax_Track_Chi2PerNTPCClusters && Chi2PerNTPCClusters > kMax_Track_Chi2PerNTPCClusters) return kFALSE;
 
     // >> TPC and ITS status
@@ -496,6 +533,11 @@ Bool_t AliQuickTaskTPCProperties::PassesTrackSelection(AliESDtrack* track) {
     Bool_t its_status =
         !(track->GetStatus() & AliESDtrack::kITSin) && !(track->GetStatus() & AliESDtrack::kITSout) && !(track->GetStatus() & AliESDtrack::kITSrefit);
     if (kTurnedOn_Track_StatusCuts && (!tpc_status || !its_status)) return kFALSE;
+
+    // No hit on ITS
+    Bool_t its_layers = track->HasPointOnITSLayer(0) && track->HasPointOnITSLayer(1) && track->HasPointOnITSLayer(2) &&
+                        track->HasPointOnITSLayer(3) && track->HasPointOnITSLayer(4) && track->HasPointOnITSLayer(5);
+    if (kTurnedOn_Track_StatusCuts && its_layers) return kFALSE;
 
     // >> reject kinks
     if (kTurnedOn_Track_RejectKinks && track->GetKinkIndex(0) != 0) return kFALSE;
@@ -554,4 +596,49 @@ void AliQuickTaskTPCProperties::GetTracksHits(AliESDtrack* track, Int_t& firstHi
             break;
         }
     }
+}
+
+/*
+  (taken from `PWGGA/GammaConvBase/AliConversionPhotonCuts.cxx`)
+*/
+Int_t AliQuickTaskTPCProperties::GetFirstTPCRow(Double_t radius) {
+
+    Int_t firstTPCRow = 0;
+    Double_t radiusI = 84.8;
+    Double_t radiusO = 134.6;
+    Double_t radiusOB = 198.;
+    Double_t rSizeI = 0.75;
+    Double_t rSizeO = 1.;
+    Double_t rSizeOB = 1.5;
+    Int_t nClsI = 63;
+    Int_t nClsIO = 127;
+
+    if (radius > radiusI && radius <= radiusO) return (Int_t)((radius - radiusI) / rSizeI);
+    if (radius > radiusO && radius <= radiusOB) return (Int_t)(nClsI + (radius - radiusO) / rSizeO);
+    if (radius > radiusOB) return (Int_t)(nClsIO + (radius - radiusOB) / rSizeOB);
+
+    return 0;
+}
+
+/*
+Taken from AliTrackletAlg.cxx
+*/
+Bool_t AliQuickTaskTPCProperties::IsRubenSecondary(AliESDtrack* track, const AliVertex* vtx) {
+    // RS: check if the track is primary and set the flag
+    Float_t fCutPxDrSPDin = 0.1;    // max P*DR for primaries involving at least 1 SPD
+    Float_t fCutPxDrSPDout = 0.15;  // max P*DR for primaries not involving any SPD
+    Float_t fCutPxDz = 0.2;         // max P*DZ for primaries
+    Float_t fCutDCArz = 0.5;        // max DR or DZ for primares
+
+    Double_t cut = (track->HasPointOnITSLayer(0) || track->HasPointOnITSLayer(1)) ? fCutPxDrSPDin : fCutPxDrSPDout;
+    Float_t xz[2];
+    track->GetDZ(vtx->GetX(), vtx->GetY(), vtx->GetZ(), fMagneticField, xz);
+    if (TMath::Abs(xz[0] * track->P()) > cut || TMath::Abs(xz[1] * track->P()) > fCutPxDz || TMath::Abs(xz[0]) > fCutDCArz ||
+        TMath::Abs(xz[1]) > fCutDCArz) {
+        // track->SetStatus(AliESDtrack::kMultSec);
+        return kTRUE;
+    }
+    // else
+    // track->ResetStatus(AliESDtrack::kMultSec);
+    return kFALSE;
 }

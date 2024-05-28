@@ -73,6 +73,8 @@ class AliQuickTaskTPCProperties : public AliAnalysisTaskSE {
     Bool_t PassesTrackSelection(AliESDtrack* track);
     void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
     void GetTracksHits(AliESDtrack* track, Int_t& firstHit, Int_t& lastHit);
+    Int_t GetFirstTPCRow(Double_t radius);
+    Bool_t IsRubenSecondary(AliESDtrack* track, const AliVertex* vtx);
 
    private:
     /* Input options */
