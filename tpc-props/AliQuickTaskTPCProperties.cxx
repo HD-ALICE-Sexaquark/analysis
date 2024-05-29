@@ -12,6 +12,7 @@ AliQuickTaskTPCProperties::AliQuickTaskTPCProperties()
       fMC(0),
       fMC_PrimaryVertex(0),
       fESD(0),
+      fESDfriend(0),
       fPIDResponse(0),
       fPrimaryVertex(0),
       fMagneticField(0.),
@@ -37,6 +38,7 @@ AliQuickTaskTPCProperties::AliQuickTaskTPCProperties(const char* name, Bool_t Is
       fMC(0),
       fMC_PrimaryVertex(0),
       fESD(0),
+      fESDfriend(0),
       fPIDResponse(0),
       fPrimaryVertex(0),
       fMagneticField(0.),
@@ -175,7 +177,8 @@ void AliQuickTaskTPCProperties::UserExec(Option_t*) {
     fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
     fMagneticField = fESD->GetMagneticField();
 
-    AliInfoF("fMagneticField = %f", fMagneticField);  // DEBUG
+    fESDfriend = dynamic_cast<AliESDfriend*>(ESDfriend());
+    AliInfoF("N Friend Tracks: %i", fESDfriend->GetNumberOfTracks());
 
     if (!PassesEventSelection()) return;
 
@@ -242,6 +245,10 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
 
     AliESDtrack* track;
 
+    AliESDfriendTrack* friendTrack;
+    const AliTrackPointArray* trackPointArr;
+    AliTPCseed TPCseed;
+
     AliMCParticle* mcPart;
 
     Int_t mcIdx;
@@ -304,6 +311,8 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
         if ((TMath::Abs(mcPdgCode) == 2212 || TMath::Abs(mcPdgCode) == 321 || TMath::Abs(mcPdgCode) == 211)) {
             // } &&  mcIsSecondary && mcOriginRadius > 84.8) {
             AliInfoF(">> (Selected) Track %i <<", esdIdxTrack);
+            AliInfo("   -- Status cuts");
+            AliInfo("   -- No ITS hit restriction");
             AliInfo("");
             AliInfo("   MC Information");
             AliInfo("   ==============");
@@ -317,21 +326,48 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
             AliInfo("   Rec. Information");
             AliInfo("   ================");
             AliInfoF("   DCAxy, DCAz = %.3f, %.3f", dca_xy_wrt_pv, dca_z_wrt_pv);
+            if (dca_xy_wrt_pv > 1.) AliInfo("   !! DCAxy > 1 !!");
+            if (dca_xy_wrt_pv > 1. && mcOriginRadius > 84.8) AliInfo("   !! DCAxy > 1 && Radius above TPC IB !!");
+            if (dca_xy_wrt_pv > 1. && !mcPart->IsSecondaryFromMaterial() && !mcPart->IsSecondaryFromWeakDecay()) {
+                AliInfo("   !! DCAxy > 1 && Not Secondary !!");
+            }
             AliESDVertex* vtx = (AliESDVertex*)fESD->GetPrimaryVertexTracks();
             Bool_t rs_sec = IsRubenSecondary(track, vtx);
             AliInfoF("   Ruben Secondary = %i", (Int_t)rs_sec);
             AliInfo("");
-            AliInfo("   ITS Information");
-            AliInfo("   ===============");
-            AliInfoF("   Has point on layers (0,1,2,3,4,5): (%i, %i, %i, %i, %i, %i)", (Int_t)track->HasPointOnITSLayer(0),
-                     (Int_t)track->HasPointOnITSLayer(1), (Int_t)track->HasPointOnITSLayer(2), (Int_t)track->HasPointOnITSLayer(3),
-                     (Int_t)track->HasPointOnITSLayer(4), (Int_t)track->HasPointOnITSLayer(5));
+            // AliInfo("   ITS Information");
+            // AliInfo("   ===============");
+            // AliInfoF("   Has point on layers (0,1,2,3,4,5): (%i, %i, %i, %i, %i, %i)", (Int_t)track->HasPointOnITSLayer(0),
+            //  (Int_t)track->HasPointOnITSLayer(1), (Int_t)track->HasPointOnITSLayer(2), (Int_t)track->HasPointOnITSLayer(3),
+            //  (Int_t)track->HasPointOnITSLayer(4), (Int_t)track->HasPointOnITSLayer(5));
             // AliInfoF("   N Clusters: %c", track->GetITSNcls());
             // AliInfoF("   ITS Chi2: %f", track->GetITSchi2());
             // AliInfoF("N Clusters: %c", track->GetITSclusters()); // idk yet
-            AliInfo("");
+            // AliInfo("");
             AliInfo("   TPC Information");
             AliInfo("   ===============");
+
+            friendTrack = (AliESDfriendTrack*)track->GetFriendTrack();
+            // print friend track memory address
+            AliInfoF("   Friend Track: %p", friendTrack);
+
+            // get track point array, and cast it to no longer be const
+            trackPointArr = friendTrack->GetTrackPointArray();
+            if (trackPointArr) {
+                AliInfoF("   trackPointArr: %p", trackPointArr);
+                AliInfoF("   trackPointArr->NPoints: %i", trackPointArr->GetNPoints());
+                AliTrackPoint first_point;
+                Bool_t worked = trackPointArr->GetPoint(first_point, 0);
+                if (worked) {
+                    AliInfoF("   trackPointArr->FirstPoint: (%f, %f, %f)", first_point.GetX(), first_point.GetY(), first_point.GetZ());
+                    AliInfoF("   trackPointArr->FirstPointRadius: %f",
+                             TMath::Sqrt(first_point.GetX() * first_point.GetX() + first_point.GetY() * first_point.GetY()));
+                }
+            }
+
+            // // tpcTrack = new AliTPCtrack(track);
+            // AliInfoF("   (TPC track) first point: %i", (Int_t)tpcTrack->GetFirstPoint());
+            // AliInfoF("   (TPC track) last point: %i", (Int_t)tpcTrack->GetLastPoint());
             AliInfoF("   N Clusters: %i", (Int_t)track->GetTPCNcls());
             // AliInfoF("   N Shared Clusters: %i", (Int_t)track->GetTPCnclsS());
             // AliInfoF("   N Findable Clusters: %i", (Int_t)track->GetTPCNclsF());
