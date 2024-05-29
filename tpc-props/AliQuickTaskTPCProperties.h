@@ -40,11 +40,6 @@
 #include "AliESDtrack.h"
 #include "AliESDv0.h"
 
-#include "AliESDfriend.h"
-#include "AliESDfriendTrack.h"
-#include "AliTPCseed.h"
-#include "AliTrackPointArray.h"
-
 #include "AliMCEvent.h"
 #include "AliMCEventHandler.h"
 #include "AliMCParticle.h"
@@ -89,7 +84,6 @@ class AliQuickTaskTPCProperties : public AliAnalysisTaskSE {
     AliMCEvent* fMC;                // MC event
     AliVVertex* fMC_PrimaryVertex;  // MC gen. (or true) primary vertex
     AliESDEvent* fESD;              // reconstructed event
-    AliESDfriend* fESDfriend;       // ESD friend
     AliESDVertex* fPrimaryVertex;   // primary vertex
     AliPIDResponse* fPIDResponse;   // pid response object
     Double_t fMagneticField;        // magnetic field

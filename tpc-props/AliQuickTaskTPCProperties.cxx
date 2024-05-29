@@ -12,7 +12,6 @@ AliQuickTaskTPCProperties::AliQuickTaskTPCProperties()
       fMC(0),
       fMC_PrimaryVertex(0),
       fESD(0),
-      fESDfriend(0),
       fPIDResponse(0),
       fPrimaryVertex(0),
       fMagneticField(0.),
@@ -38,7 +37,6 @@ AliQuickTaskTPCProperties::AliQuickTaskTPCProperties(const char* name, Bool_t Is
       fMC(0),
       fMC_PrimaryVertex(0),
       fESD(0),
-      fESDfriend(0),
       fPIDResponse(0),
       fPrimaryVertex(0),
       fMagneticField(0.),
@@ -177,9 +175,6 @@ void AliQuickTaskTPCProperties::UserExec(Option_t*) {
     fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
     fMagneticField = fESD->GetMagneticField();
 
-    fESDfriend = dynamic_cast<AliESDfriend*>(ESDfriend());
-    AliInfoF("N Friend Tracks: %i", fESDfriend->GetNumberOfTracks());
-
     if (!PassesEventSelection()) return;
 
     ProcessTracks();
@@ -244,11 +239,6 @@ Bool_t AliQuickTaskTPCProperties::PassesEventSelection() {
 void AliQuickTaskTPCProperties::ProcessTracks() {
 
     AliESDtrack* track;
-
-    AliESDfriendTrack* friendTrack;
-    const AliTrackPointArray* trackPointArr;
-    AliTPCseed TPCseed;
-
     AliMCParticle* mcPart;
 
     Int_t mcIdx;
@@ -346,25 +336,6 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
             // AliInfo("");
             AliInfo("   TPC Information");
             AliInfo("   ===============");
-
-            friendTrack = (AliESDfriendTrack*)track->GetFriendTrack();
-            // print friend track memory address
-            AliInfoF("   Friend Track: %p", friendTrack);
-
-            // get track point array, and cast it to no longer be const
-            trackPointArr = friendTrack->GetTrackPointArray();
-            if (trackPointArr) {
-                AliInfoF("   trackPointArr: %p", trackPointArr);
-                AliInfoF("   trackPointArr->NPoints: %i", trackPointArr->GetNPoints());
-                AliTrackPoint first_point;
-                Bool_t worked = trackPointArr->GetPoint(first_point, 0);
-                if (worked) {
-                    AliInfoF("   trackPointArr->FirstPoint: (%f, %f, %f)", first_point.GetX(), first_point.GetY(), first_point.GetZ());
-                    AliInfoF("   trackPointArr->FirstPointRadius: %f",
-                             TMath::Sqrt(first_point.GetX() * first_point.GetX() + first_point.GetY() * first_point.GetY()));
-                }
-            }
-
             // // tpcTrack = new AliTPCtrack(track);
             // AliInfoF("   (TPC track) first point: %i", (Int_t)tpcTrack->GetFirstPoint());
             // AliInfoF("   (TPC track) last point: %i", (Int_t)tpcTrack->GetLastPoint());

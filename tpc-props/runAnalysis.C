@@ -23,9 +23,6 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, Int_t ChooseNEvents = 0) {
 
     AliESDInputHandler *esdH = new AliESDInputHandler();
     esdH->SetNeedField();  // necessary to get GoldenChi2
-    esdH->SetReadFriends(kTRUE);
-    esdH->SetFriendFileName("AliESDfriends.root");
-    esdH->SetActiveBranches("ESDfriend");
     mgr->SetInputEventHandler(esdH);
 
     AliMCEventHandler *mcHand = new AliMCEventHandler();
