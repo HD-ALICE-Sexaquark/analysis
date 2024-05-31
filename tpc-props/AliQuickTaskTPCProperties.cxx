@@ -192,10 +192,10 @@ void AliQuickTaskTPCProperties::DefineTracksCuts(TString cuts_option) {
     // kMax_NSigma_Kaon = 3.;
     // kMax_NSigma_Proton = 3.;
 
-    // kMax_Track_Eta = 1.;
+    kMax_Track_Eta = 0.9;
     // kMin_Track_NTPCClusters = 50;
     // kMax_Track_Chi2PerNTPCClusters = 7.;
-    kTurnedOn_Track_StatusCuts = kTRUE;
+    // kTurnedOn_Track_StatusCuts = kTRUE;
     // kTurnedOn_Track_RejectKinks = kFALSE;  // PENDING: need to study further
     // kMin_Track_DCAwrtPV = 2.;
 
@@ -245,6 +245,7 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
     Int_t mcPdgCode;
     Bool_t mcIsSecondary;
     Float_t mcOriginRadius;
+    Int_t mcApparentPadRow;
 
     Float_t dca_xy_wrt_pv, dca_z_wrt_pv;
     Float_t n_tpc_clusters;
@@ -258,6 +259,10 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
     Float_t n_sigma_proton;
     Float_t n_sigma_kaon;
     Float_t n_sigma_pion;
+
+    KFParticle kfTrack;
+    KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
+    Float_t kfOrigin[3] = {0., 0., 0.};
 
     /* For debugging */
 
@@ -291,6 +296,7 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
         mcPdgCode = mcPart->PdgCode();
         mcIsSecondary = mcPart->IsSecondaryFromMaterial();  //  || mcPart->IsSecondaryFromWeakDecay();
         mcOriginRadius = TMath::Sqrt(mcPart->Xv() * mcPart->Xv() + mcPart->Yv() * mcPart->Yv());
+        mcApparentPadRow = GetFirstTPCRow_v2(mcOriginRadius);
 
         /* Apply track selection */
 
@@ -298,42 +304,54 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
 
         track->GetImpactParameters(dca_xy_wrt_pv, dca_z_wrt_pv);  // pre-calculated DCA w.r.t. PV
 
-        if ((TMath::Abs(mcPdgCode) == 2212 || TMath::Abs(mcPdgCode) == 321 || TMath::Abs(mcPdgCode) == 211)) {
+        if ((TMath::Abs(mcPdgCode) == 2212 || TMath::Abs(mcPdgCode) == 321 || TMath::Abs(mcPdgCode) == 211) &&  //
+            mcOriginRadius < 84.8) {
             // } &&  mcIsSecondary && mcOriginRadius > 84.8) {
             AliInfoF(">> (Selected) Track %i <<", esdIdxTrack);
-            AliInfo("   -- Status cuts");
-            AliInfo("   -- No ITS hit restriction");
+            // AliInfo("   -- Status cuts");
+            // AliInfo("   -- No ITS hit restriction");
             AliInfo("");
             AliInfo("   MC Information");
             AliInfo("   ==============");
-            AliInfoF("   MC Index: %i, PDG Code: %i", mcIdx, mcPdgCode);
-            // AliInfoF("   Origin (x, y, z): (%.3f, %.3f, %.3f)", mcPart->Xv(), mcPart->Yv(), mcPart->Zv());
+            AliInfoF("   Px = %.6f, Py = %.6f, Pz = %.6f", mcPart->Px(), mcPart->Py(), mcPart->Pz());
+            AliInfoF("   MC Index: %i, PDG Code: %i, HasMother: %i", mcIdx, mcPdgCode, mcPart->GetMother());
+            if (mcPart->GetMother() > -1) AliInfoF("   Mother PDG Code: %i", ((AliMCParticle*)fMC->GetTrack(mcPart->GetMother()))->PdgCode());
+            // AliInfoF("   Origin (x, y, z): (%.3f, %.3f, %.3f)", mcPart-  >Xv(), mcPart->Yv(), mcPart->Zv());
             AliInfoF("   Origin Radius: %.3f", mcOriginRadius);
-            AliInfoF("   IsSecFromMaterial: %i, IsSecFromWeakDecay: %i", (Int_t)mcPart->IsSecondaryFromMaterial(),
-                     (Int_t)mcPart->IsSecondaryFromWeakDecay());
-            // AliInfoF("   (Apparent) First Row on TPC: %i", GetFirstTPCRow(mcOriginRadius));
+            AliInfoF("   IsPhysicalPrimary: %i, IsSecFromMaterial: %i, IsSecFromWeakDecay: %i", (Int_t)mcPart->IsPhysicalPrimary(),
+                     (Int_t)mcPart->IsSecondaryFromMaterial(), (Int_t)mcPart->IsSecondaryFromWeakDecay());
+            if (mcApparentPadRow) AliInfoF("   (Apparent) First Row on TPC: %i", mcApparentPadRow);
+            AliInfo("");
+            AliInfo("   Kalman Filter Attempt");
+            AliInfo("   =====================");
+            kfTrack = CreateKFParticle(*track, fPDG.GetParticle(mcPdgCode)->Mass(), (Int_t)track->Charge());
+            dca_xy_wrt_pv = TMath::Abs(kfTrack.GetDistanceFromVertex(kfOrigin));
+            AliInfoF("   DCAxy w.r.t. Origin = %.3f", dca_xy_wrt_pv);
+            dca_xy_wrt_pv = TMath::Abs(kfTrack.GetDistanceFromVertex(kfPrimaryVertex));
+            AliInfoF("   DCAxy w.r.t. PV = %.3f", dca_xy_wrt_pv);
             AliInfo("");
             AliInfo("   Rec. Information");
             AliInfo("   ================");
             AliInfoF("   DCAxy, DCAz = %.3f, %.3f", dca_xy_wrt_pv, dca_z_wrt_pv);
-            if (dca_xy_wrt_pv > 1.) AliInfo("   !! DCAxy > 1 !!");
-            if (dca_xy_wrt_pv > 1. && mcOriginRadius > 84.8) AliInfo("   !! DCAxy > 1 && Radius above TPC IB !!");
-            if (dca_xy_wrt_pv > 1. && !mcPart->IsSecondaryFromMaterial() && !mcPart->IsSecondaryFromWeakDecay()) {
-                AliInfo("   !! DCAxy > 1 && Not Secondary !!");
+            if (TMath::Abs(dca_xy_wrt_pv) > 4.) AliInfo("   !! DCAxy > 4 cm !!");
+            // if (TMath::Abs(dca_xy_wrt_pv) > 1. && mcOriginRadius > 84.8) AliInfo("   !! DCAxy > 1 && Radius above TPC IB !!");
+            if (TMath::Abs(dca_xy_wrt_pv) > 4. && !mcPart->IsSecondaryFromMaterial() && !mcPart->IsSecondaryFromWeakDecay()) {
+                AliInfo("   !! DCAxy > 4 cm && Not Secondary !!");
             }
-            AliESDVertex* vtx = (AliESDVertex*)fESD->GetPrimaryVertexTracks();
-            Bool_t rs_sec = IsRubenSecondary(track, vtx);
-            AliInfoF("   Ruben Secondary = %i", (Int_t)rs_sec);
+            // AliESDVertex* vtx = (AliESDVertex*)fESD->GetPrimaryVertexTracks();
+            // Bool_t rs_sec = IsRubenSecondary(track, vtx);
+            // AliInfoF("   Ruben Secondary = %i", (Int_t)rs_sec);
             AliInfo("");
-            // AliInfo("   ITS Information");
-            // AliInfo("   ===============");
-            // AliInfoF("   Has point on layers (0,1,2,3,4,5): (%i, %i, %i, %i, %i, %i)", (Int_t)track->HasPointOnITSLayer(0),
-            //  (Int_t)track->HasPointOnITSLayer(1), (Int_t)track->HasPointOnITSLayer(2), (Int_t)track->HasPointOnITSLayer(3),
-            //  (Int_t)track->HasPointOnITSLayer(4), (Int_t)track->HasPointOnITSLayer(5));
-            // AliInfoF("   N Clusters: %c", track->GetITSNcls());
-            // AliInfoF("   ITS Chi2: %f", track->GetITSchi2());
+            AliInfo("   ITS Information");
+            AliInfo("   ===============");
+            AliInfoF("   Has point on layers (0,1,2,3,4,5): (%i, %i, %i, %i, %i, %i)", (Int_t)track->HasPointOnITSLayer(0),
+                     (Int_t)track->HasPointOnITSLayer(1), (Int_t)track->HasPointOnITSLayer(2), (Int_t)track->HasPointOnITSLayer(3),
+                     (Int_t)track->HasPointOnITSLayer(4), (Int_t)track->HasPointOnITSLayer(5));
+            AliInfoF("   N Clusters: %i", (Int_t)track->GetITSNcls());
+            AliInfoF("   ITS Chi2: %f", track->GetITSchi2());
+            if ((Int_t)track->GetITSNcls()) AliInfoF("   ITS Chi2 / N Clusters: %f", track->GetITSchi2() / (Double_t)track->GetITSNcls());
             // AliInfoF("N Clusters: %c", track->GetITSclusters()); // idk yet
-            // AliInfo("");
+            AliInfo("");
             AliInfo("   TPC Information");
             AliInfo("   ===============");
             // // tpcTrack = new AliTPCtrack(track);
@@ -343,29 +361,38 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
             // AliInfoF("   N Shared Clusters: %i", (Int_t)track->GetTPCnclsS());
             // AliInfoF("   N Findable Clusters: %i", (Int_t)track->GetTPCNclsF());
             AliInfoF("   N Crossed Rows: %f", track->GetTPCCrossedRows());
-            AliInfoF("   TPC Chi2 / N Clusters: %f", track->GetTPCchi2() / (Double_t)track->GetTPCNcls());
+            // AliInfoF("   TPC Cluster Info (1,type=findable): %f", track->GetTPCClusterInfo(1, 1));
+            // AliInfoF("   TPC Cluster Info (2,type=findable): %f", track->GetTPCClusterInfo(2, 1));
+            // AliInfoF("   TPC Cluster Info (3,type=findable): %f", track->GetTPCClusterInfo(3, 1));
+            // AliInfoF("   TPC Cluster Info (4,type=findable): %f", track->GetTPCClusterInfo(4, 1));
+            // AliInfoF("   TPC Cluster Info (5,type=findable): %f", track->GetTPCClusterInfo(5, 1));
+            // AliInfoF("   TPC Cluster Info (X,type=found): %f", track->GetTPCClusterInfo(1, 2));
+            if (track->GetTPCNcls()) AliInfoF("   TPC Chi2 / N Clusters: %f", track->GetTPCchi2() / (Double_t)track->GetTPCNcls());
             Int_t firstHit, lastHit;
-            GetTracksHits(track, firstHit, lastHit);
-            AliInfoF("   (Apparent) First Hit: %i", firstHit);
+            GetTracksHits(track, firstHit, lastHit, "Cluster");
+            AliInfoF("   (Apparent) First Hit (from Cluster Map): %i", firstHit);
             if (mcOriginRadius > 84.8 && firstHit == 0) AliInfo("   !! Radius above TPC IB, but FH is zero !!");
             if (mcOriginRadius < 84.8 && firstHit > 0) AliInfo("   !! Radius below TPC IB, but FH is non-zero !!");
-            AliInfoF("   (Apparent) Last Hit: %i", lastHit);
-            AliInfoF("   TPC Points: (%f, %f, %f, %f)", track->GetTPCPoints(0), track->GetTPCPoints(1), track->GetTPCPoints(2),
-                     track->GetTPCPoints(3));
+            AliInfoF("   (Apparent) Last Hit (from Cluster Map): %i", lastHit);
+            // GetTracksHits(track, firstHit, lastHit, "Fit");
+            // AliInfoF("   (Apparent) First Hit (from Fit Map): %i", firstHit);
+            // AliInfoF("   (Apparent) Last Hit (from Fit Map): %i", lastHit);
+            // AliInfoF("   TPC Points: (%f, %f, %f, %f)", track->GetTPCPoints(0), track->GetTPCPoints(1), track->GetTPCPoints(2),
+            //  track->GetTPCPoints(3));
             AliInfo("");
-            // AliInfo("   Track Status");
-            // AliInfo("   ============");
-            // for (Int_t i = 0; i < 16; i++) {
-            // if ((track->GetStatus() & StatusCollection[i])) AliInfoF("   track->GetStatus() & %s > 0", StatusName[i].Data());
-            // }
-            // AliInfo("");
+            AliInfo("   Track Status");
+            AliInfo("   ============");
+            for (Int_t i = 0; i < 16; i++) {
+                if ((track->GetStatus() & StatusCollection[i])) AliInfoF("   track->GetStatus() & %s > 0", StatusName[i].Data());
+            }
             AliInfo("");
-            if (mcPart->IsSecondaryFromMaterial() && firstHit > 0) counter_secfrommaterial_fh_nonzero++;
-            if (mcOriginRadius > 84.8) counter_radiusaboveIB++;
-            if (mcOriginRadius > 84.8 && firstHit > 0) counter_radiusaboveIB_fh_nonzero++;
-            if (mcOriginRadius < 84.8 && firstHit > 0) counter_radiusbelowIB_fh_nonzero++;
-            if (rs_sec) counter_rs_sec++;
-            if (rs_sec && !mcPart->IsSecondaryFromMaterial() && !mcPart->IsSecondaryFromWeakDecay()) counter_rs_sec_but_no_mc_sec++;
+            AliInfo("");
+            // if (mcPart->IsSecondaryFromMaterial() && firstHit > 0) counter_secfrommaterial_fh_nonzero++;
+            // if (mcOriginRadius > 84.8) counter_radiusaboveIB++;
+            // if (mcOriginRadius > 84.8 && firstHit > 0) counter_radiusaboveIB_fh_nonzero++;
+            // if (mcOriginRadius < 84.8 && firstHit > 0) counter_radiusbelowIB_fh_nonzero++;
+            // if (rs_sec) counter_rs_sec++;
+            // if (rs_sec && !mcPart->IsSecondaryFromMaterial() && !mcPart->IsSecondaryFromWeakDecay()) counter_rs_sec_but_no_mc_sec++;
             counter_printed_tracks++;
         }
 
@@ -404,7 +431,7 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
         ratio_sharedcls_nxrows = n_crossed_rows ? (Double_t)n_shared_clusters / n_crossed_rows : 999.;
         ratio_sharedcls_ncls = n_tpc_clusters ? (Double_t)n_shared_clusters / (Double_t)n_tpc_clusters : 999.;
         chi2_over_ncls = n_tpc_clusters ? track->GetTPCchi2() / (Double_t)n_tpc_clusters : 999.;
-        GetTracksHits(track, first_hit, last_hit);
+        GetTracksHits(track, first_hit, last_hit, "Cluster");
 
         n_sigma_proton = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton);
         n_sigma_kaon = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kKaon);
@@ -497,12 +524,12 @@ void AliQuickTaskTPCProperties::ProcessTracks() {
     AliInfo("## Summary ##");
     AliInfo("=============");
     AliInfoF(">> N Selected Tracks: %i", counter_printed_tracks);
-    AliInfoF(">> N Tracks with SecFromMaterial && FirstHit > 0: %i", counter_secfrommaterial_fh_nonzero);
-    AliInfoF(">> N Tracks with OriginRadius > 84.8 cm: %i", counter_radiusaboveIB);
-    AliInfoF(">> N Tracks with OriginRadius > 84.8 cm && FirstHit > 0: %i", counter_radiusaboveIB_fh_nonzero);
-    AliInfoF(">> N Tracks with OriginRadius < 84.8 cm && FirstHit > 0: %i", counter_radiusbelowIB_fh_nonzero);
-    AliInfoF(">> N Tracks with Ruben Secondary: %i", counter_rs_sec);
-    AliInfoF(">> N Tracks with Ruben Secondary but no MC Secondary: %i", counter_rs_sec_but_no_mc_sec);
+    // AliInfoF(">> N Tracks with SecFromMaterial && FirstHit > 0: %i", counter_secfrommaterial_fh_nonzero);
+    // AliInfoF(">> N Tracks with OriginRadius > 84.8 cm: %i", counter_radiusaboveIB);
+    // AliInfoF(">> N Tracks with OriginRadius > 84.8 cm && FirstHit > 0: %i", counter_radiusaboveIB_fh_nonzero);
+    // AliInfoF(">> N Tracks with OriginRadius < 84.8 cm && FirstHit > 0: %i", counter_radiusbelowIB_fh_nonzero);
+    // AliInfoF(">> N Tracks with Ruben Secondary: %i", counter_rs_sec);
+    // AliInfoF(">> N Tracks with Ruben Secondary but no MC Secondary: %i", counter_rs_sec_but_no_mc_sec);
 }
 
 /*
@@ -585,20 +612,27 @@ void AliQuickTaskTPCProperties::PlotStatus(AliESDtrack* track, TString set, Int_
 /*
  (taken from: PWGJE/AliPWG4HighPtTrackQA.cxx)
 */
-void AliQuickTaskTPCProperties::GetTracksHits(AliESDtrack* track, Int_t& firstHit, Int_t& lastHit) {
+void AliQuickTaskTPCProperties::GetTracksHits(AliESDtrack* track, Int_t& firstHit, Int_t& lastHit, TString mapKey = "Cluster") {
 
-    TBits fTPCClusterMap = track->GetTPCClusterMap();
+    TBits fTPCMap;
+
+    if (mapKey == "Cluster") {
+        fTPCMap = track->GetTPCClusterMap();
+    } else if (mapKey == "Fit") {
+        fTPCMap = track->GetTPCFitMap();
+    }
+
     firstHit = 0;
     lastHit = 0;
 
     for (Int_t i = 0; i <= 159; i++) {
-        if (fTPCClusterMap[i] > 0) {
+        if (fTPCMap[i] > 0) {
             firstHit = i;
             break;
         }
     }
     for (Int_t i = 159; i >= 0; i--) {
-        if (fTPCClusterMap[i] > 0) {
+        if (fTPCMap[i] > 0) {
             lastHit = i;
             break;
         }
@@ -608,7 +642,7 @@ void AliQuickTaskTPCProperties::GetTracksHits(AliESDtrack* track, Int_t& firstHi
 /*
   (taken from `PWGGA/GammaConvBase/AliConversionPhotonCuts.cxx`)
 */
-Int_t AliQuickTaskTPCProperties::GetFirstTPCRow(Double_t radius) {
+Int_t AliQuickTaskTPCProperties::GetFirstTPCRow_v1(Double_t radius) {
 
     Int_t firstTPCRow = 0;
     Double_t radiusI = 84.8;
@@ -623,6 +657,33 @@ Int_t AliQuickTaskTPCProperties::GetFirstTPCRow(Double_t radius) {
     if (radius > radiusI && radius <= radiusO) return (Int_t)((radius - radiusI) / rSizeI);
     if (radius > radiusO && radius <= radiusOB) return (Int_t)(nClsI + (radius - radiusO) / rSizeO);
     if (radius > radiusOB) return (Int_t)(nClsIO + (radius - radiusOB) / rSizeOB);
+
+    return 0;
+}
+
+/*
+  New corrected version from me.
+  (taken from `PWGGA/GammaConvBase/AliConversionPhotonCuts.cxx`)
+*/
+Int_t AliQuickTaskTPCProperties::GetFirstTPCRow_v2(Double_t mcRadius) {
+
+    Double_t InnerRadiusIRC = 84.8;
+    Double_t OuterRadiusIRC = 132.1;
+
+    Double_t InnerRadiusORC_A = 134.6;
+    Double_t InnerRadiusORC_B = 198.6;
+    Double_t OuterRadiusORC = 246.6;
+
+    Double_t rSizeIRC = 0.75;
+    Double_t rSizeORC_A = 1.;
+    Double_t rSizeORC_B = 1.5;
+
+    Int_t nClsIRC = 63;
+    Int_t nClsORC_A = 64;
+
+    if (mcRadius > InnerRadiusIRC && mcRadius <= OuterRadiusIRC) return Int_t((mcRadius - InnerRadiusIRC) / rSizeIRC + 1);
+    if (mcRadius > InnerRadiusORC_A && mcRadius <= InnerRadiusORC_B) return Int_t(nClsIRC + (mcRadius - InnerRadiusORC_A) / rSizeORC_A + 1);
+    if (mcRadius > InnerRadiusORC_B && mcRadius <= OuterRadiusORC) return Int_t(nClsIRC + nClsORC_A + (mcRadius - InnerRadiusORC_B) / rSizeORC_B + 1);
 
     return 0;
 }
@@ -648,4 +709,118 @@ Bool_t AliQuickTaskTPCProperties::IsRubenSecondary(AliESDtrack* track, const Ali
     // else
     // track->ResetStatus(AliESDtrack::kMultSec);
     return kFALSE;
+}
+
+/*                             */
+/**  Kalman Filter Utilities  **/
+/*** ======================= ***/
+
+/*
+ Correct initialization of a KFParticle.
+ (Copied from `AliPhysics/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.cxx`)
+*/
+KFParticle AliQuickTaskTPCProperties::CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge) {
+
+    Double_t fP[6];
+    track.GetXYZ(fP);
+    track.PxPyPz(fP + 3);
+
+    Int_t fQ = track.Charge() * TMath::Abs(charge);
+    fP[3] *= TMath::Abs(charge);
+    fP[4] *= TMath::Abs(charge);
+    fP[5] *= TMath::Abs(charge);
+
+    Double_t pt = 1. / TMath::Abs(track.GetParameter()[4]) * TMath::Abs(charge);
+    Double_t cs = TMath::Cos(track.GetAlpha());
+    Double_t sn = TMath::Sin(track.GetAlpha());
+    Double_t r = TMath::Sqrt((1. - track.GetParameter()[2]) * (1. + track.GetParameter()[2]));
+
+    Double_t m00 = -sn;
+    Double_t m10 = cs;
+    Double_t m23 = -pt * (sn + track.GetParameter()[2] * cs / r);
+    Double_t m43 = -pt * pt * (r * cs - track.GetParameter()[2] * sn);
+    Double_t m24 = pt * (cs - track.GetParameter()[2] * sn / r);
+    Double_t m44 = -pt * pt * (r * sn + track.GetParameter()[2] * cs);
+    Double_t m35 = pt;
+    Double_t m45 = -pt * pt * track.GetParameter()[3];
+
+    m43 *= track.GetSign();
+    m44 *= track.GetSign();
+    m45 *= track.GetSign();
+
+    const Double_t* cTr = track.GetCovariance();
+    Double_t fC[21];
+    fC[0] = cTr[0] * m00 * m00;
+    fC[1] = cTr[0] * m00 * m10;
+    fC[2] = cTr[0] * m10 * m10;
+    fC[3] = cTr[1] * m00;
+    fC[4] = cTr[1] * m10;
+    fC[5] = cTr[2];
+    fC[6] = m00 * (cTr[3] * m23 + cTr[10] * m43);
+    fC[7] = m10 * (cTr[3] * m23 + cTr[10] * m43);
+    fC[8] = cTr[4] * m23 + cTr[11] * m43;
+    fC[9] = m23 * (cTr[5] * m23 + cTr[12] * m43) + m43 * (cTr[12] * m23 + cTr[14] * m43);
+    fC[10] = m00 * (cTr[3] * m24 + cTr[10] * m44);
+    fC[11] = m10 * (cTr[3] * m24 + cTr[10] * m44);
+    fC[12] = cTr[4] * m24 + cTr[11] * m44;
+    fC[13] = m23 * (cTr[5] * m24 + cTr[12] * m44) + m43 * (cTr[12] * m24 + cTr[14] * m44);
+    fC[14] = m24 * (cTr[5] * m24 + cTr[12] * m44) + m44 * (cTr[12] * m24 + cTr[14] * m44);
+    fC[15] = m00 * (cTr[6] * m35 + cTr[10] * m45);
+    fC[16] = m10 * (cTr[6] * m35 + cTr[10] * m45);
+    fC[17] = cTr[7] * m35 + cTr[11] * m45;
+    fC[18] = m23 * (cTr[8] * m35 + cTr[12] * m45) + m43 * (cTr[13] * m35 + cTr[14] * m45);
+    fC[19] = m24 * (cTr[8] * m35 + cTr[12] * m45) + m44 * (cTr[13] * m35 + cTr[14] * m45);
+    fC[20] = m35 * (cTr[9] * m35 + cTr[13] * m45) + m45 * (cTr[13] * m35 + cTr[14] * m45);
+
+    KFParticle part;
+    part.Create(fP, fC, fQ, mass);
+
+    return part;
+}
+
+/*
+ Correct initialization of a KFVertex.
+ (Copied from `AliPhysics/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.cxx`)
+*/
+KFVertex AliQuickTaskTPCProperties::CreateKFVertex(const AliVVertex& vertex) {
+
+    Double_t param[6];
+    vertex.GetXYZ(param);
+
+    Double_t cov[6];
+    vertex.GetCovarianceMatrix(cov);
+
+    KFPVertex kfpVtx;
+    Float_t paramF[3] = {(Float_t)param[0], (Float_t)param[1], (Float_t)param[2]};
+    kfpVtx.SetXYZ(paramF);
+    Float_t covF[6] = {(Float_t)cov[0], (Float_t)cov[1], (Float_t)cov[2], (Float_t)cov[3], (Float_t)cov[4], (Float_t)cov[5]};
+    kfpVtx.SetCovarianceMatrix(covF);
+
+    KFVertex KFVtx(kfpVtx);
+
+    return KFVtx;
+}
+
+/*
+ Transport a KFParticle to the point of closest approach w.r.t. another KFParticle.
+ - Uses: `fPDG`
+ - Input: `kfThis`, `kfOther`, `pdgThis`, `chargeThis`
+ - Return: `kfTransported`
+*/
+KFParticle AliQuickTaskTPCProperties::TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis) {
+
+    float dS[2];
+    float dsdr[4][6];
+    kfThis.GetDStoParticle(kfOther, dS, dsdr);
+
+    float mP[8], mC[36];
+    kfThis.Transport(dS[0], dsdr[0], mP, mC);
+
+    float mM = fPDG.GetParticle(pdgThis)->Mass();
+    float mQ = chargeThis;  // only valid for charged particles with Q = +/- 1
+
+    KFParticle kfTransported;
+    kfTransported.Create(mP, mC, mQ, mM);
+
+    return kfTransported;
 }

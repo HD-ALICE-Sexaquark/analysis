@@ -45,7 +45,28 @@
 #include "AliMCParticle.h"
 #include "AliVVertex.h"
 
+#define HomogeneousField  // homogeneous field in z direction, required by KFParticle
+#include "KFPTrack.h"
+#include "KFPVertex.h"
+#include "KFParticle.h"
+#include "KFParticleBase.h"
+#include "KFVertex.h"
+
 class AliPIDResponse;
+class KFParticle;
+class KFVertex;
+
+/*
+ Auxiliary class to make use of protected function KFParticleBase::GetMeasurement()
+ (Copied from `/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.h`)
+*/
+class KFParticleMother : public KFParticle {
+   public:
+    Bool_t CheckDaughter(KFParticle daughter) {
+        Float_t m[8], mV[36], D[3][3];
+        return KFParticleBase::GetMeasurement(daughter, m, mV, D);
+    }
+};
 
 class AliQuickTaskTPCProperties : public AliAnalysisTaskSE {
    public:
@@ -72,9 +93,15 @@ class AliQuickTaskTPCProperties : public AliAnalysisTaskSE {
     void ProcessTracks();
     Bool_t PassesTrackSelection(AliESDtrack* track);
     void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
-    void GetTracksHits(AliESDtrack* track, Int_t& firstHit, Int_t& lastHit);
-    Int_t GetFirstTPCRow(Double_t radius);
+    void GetTracksHits(AliESDtrack* track, Int_t& firstHit, Int_t& lastHit, TString map);
+    Int_t GetFirstTPCRow_v1(Double_t radius);
+    Int_t GetFirstTPCRow_v2(Double_t radius);
     Bool_t IsRubenSecondary(AliESDtrack* track, const AliVertex* vtx);
+
+    /* Kalman Filter Utilities */
+    KFParticle CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge);
+    KFVertex CreateKFVertex(const AliVVertex& vertex);
+    KFParticle TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis);
 
    private:
     /* Input options */
