@@ -191,12 +191,13 @@ class KFParticleMother : public KFParticle {
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    public:
     AliAnalysisTaskSexaquark();
-    AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet, Bool_t DoQA);
+    AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet, Bool_t IncludeSignalLog, Bool_t DoQA);
     virtual ~AliAnalysisTaskSexaquark();
     virtual void Terminate(Option_t* option) { return; }
 
     /* Initialization */
     virtual void UserCreateOutputObjects();
+    void AddLogTree(TTree* logTree) { fLogTree = logTree; }
     void CheckForInputErrors();
     void Initialize();
     void PrepareQAHistograms();
@@ -309,6 +310,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TString fSimulationSet;          // <ReactionID><InjectedSexaquarkMass>
     Char_t fReactionID;              // could be: 'A', 'D', 'E', 'H'
     Float_t fInjectedSexaquarkMass;  // (in GeV/c^2), could be: 1.73, 1.8, 1.87, 1.94, 2.01
+    Bool_t fIncludeSignalLog;        //
     Bool_t fDoQA;                    //
     // reaction channel, could be:
     // - 'A' = "AntiSexaquark,N->AntiLambda,K0S"
@@ -335,6 +337,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TList* fOutputListOfTrees;
     TTree* fTree;
     TList* fOutputListOfHists;
+    TTree* fLogTree;
 
     /** QA Histograms **/
 

@@ -10,7 +10,8 @@
 
 #include "AliAnalysisTaskSexaquark.h"
 
-void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Bool_t DoQA, Int_t ChooseNEvents = 0) {
+void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Bool_t IncludeSignalLog, Bool_t DoQA,
+                 Int_t ChooseNEvents = 0) {
 
     // tell root where to look for headers
     gInterpreter->ProcessLine(".include ${ROOTSYS}/include");
@@ -59,8 +60,9 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
 
     // load sexaquark task
     gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
-    AliAnalysisTaskSexaquark *task = reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro(
-        Form("AddSexaquark.C(\"name\", %i, \"%s\", \"%s\", %i)", (Int_t)IsMC, SourceOfV0s.Data(), SimulationSet.Data(), (Int_t)DoQA)));
+    AliAnalysisTaskSexaquark *task = reinterpret_cast<AliAnalysisTaskSexaquark *>(
+        gInterpreter->ExecuteMacro(Form("AddSexaquark.C(\"name\", %i, \"%s\", \"%s\", %i, %i)", (Int_t)IsMC, SourceOfV0s.Data(), SimulationSet.Data(),
+                                        (Int_t)IncludeSignalLog, (Int_t)DoQA)));
     task->SelectCollisionCandidates(AliVEvent::kINT7);
 
     if (!mgr->InitAnalysis()) {
@@ -76,11 +78,8 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
     // add a few files to the chain (change this so that your local files are added)
     chain->Add("AliESDs.root");
 
-    if (!ChooseNEvents) {
-        // read all events
-        mgr->StartAnalysis("local", chain);
-    } else {
-        // read the first NEvents
-        mgr->StartAnalysis("local", chain, ChooseNEvents);
-    }
+    if (!ChooseNEvents)
+        mgr->StartAnalysis("local", chain);  // read all events
+    else
+        mgr->StartAnalysis("local", chain, ChooseNEvents);  // read the first NEvents
 }

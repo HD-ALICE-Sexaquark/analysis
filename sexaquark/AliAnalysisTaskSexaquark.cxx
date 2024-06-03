@@ -10,6 +10,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fIsMC(0),
       fSourceOfV0s(),
       fSimulationSet(""),
+      fIncludeSignalLog(0),
       fDoQA(0),
       fReactionID(0),
       fInjectedSexaquarkMass(0),
@@ -25,6 +26,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fMagneticField(0.),
       fPDG(),
       fTree(0),
+      fLogTree(0),
       //   fEvent(),
       mcIndicesOfTrueV0s(),
       isMcIdxSignal(),
@@ -83,11 +85,12 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
 /*
  Constructor, called locally.
 */
-AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet, Bool_t DoQA)
+AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet, Bool_t IncludeSignalLog, Bool_t DoQA)
     : AliAnalysisTaskSE(name),
       fIsMC(IsMC),
       fSourceOfV0s(SourceOfV0s),
       fSimulationSet(SimulationSet),
+      fIncludeSignalLog(IncludeSignalLog),
       fDoQA(DoQA),
       fReactionID(0),
       fInjectedSexaquarkMass(0),
@@ -103,6 +106,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC
       fMagneticField(0.),
       fPDG(),
       fTree(0),
+      fLogTree(0),
       //   fEvent(),
       mcIndicesOfTrueV0s(),
       isMcIdxSignal(),
@@ -207,6 +211,8 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     fOutputListOfTrees = new TList();
     fOutputListOfTrees->SetOwner(kTRUE);
+
+    if (fIncludeSignalLog) fOutputListOfTrees->Add(fLogTree);
 
     fTree = new TTree("Events", "Tree of Events");
     // SetBranches();
