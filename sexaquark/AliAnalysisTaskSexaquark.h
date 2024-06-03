@@ -200,7 +200,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void AddLogTree(TTree* logTree) { fLogTree = logTree; }
     void CheckForInputErrors();
     void Initialize();
+
+    /* Histograms */
     void PrepareQAHistograms();
+    void PrepareTomographyHistograms();
     void PrepareTracksHistograms();
     void PrepareV0Histograms();
     void PrepareAntiSexaquarkHistograms();
@@ -338,6 +341,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TTree* fTree;
     TList* fOutputListOfHists;
     TTree* fLogTree;
+
+    /** Topography Histograms **/
+
+    TH1F* fHist_MCGen_SFM_Radius;
+    TH2F* fHist_MCGen_SFM_YvsX;
 
     /** QA Histograms **/
 
