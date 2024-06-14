@@ -2,7 +2,7 @@
 
 TTree *ReadLogs(TString filename);
 
-AliAnalysisTaskSexaquark *AddSexaquark(TString name = "name", Bool_t IsMC = kTRUE, TString SourceOfV0s = "offline", TString SimulationSet = "A1.8",
+AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s = "offline", Char_t ReactionID = 'A', Float_t SexaquarkMass = 1.8,
                                        Bool_t ReadSignalLogs = kTRUE, Bool_t DoQA = kFALSE) {
     // get the manager via the static access member. since it's static, you don't need
     // to create an instance of the class here to call the function
@@ -17,11 +17,23 @@ AliAnalysisTaskSexaquark *AddSexaquark(TString name = "name", Bool_t IsMC = kTRU
     TString fileName = AliAnalysisManager::GetCommonFileName();
     // fileName += ":Sexaquark";  // create a subfolder in the file
 
-    AliPhysicsSelectionTask *physSelTask = AddTaskPhysicsSelection(kTRUE);
+    AliPhysicsSelectionTask *physSelTask = AddTaskPhysicsSelection(IsMC);
 
     // now we create an instance of your task
-    AliAnalysisTaskSexaquark *task = new AliAnalysisTaskSexaquark(name, IsMC, SourceOfV0s, SimulationSet, ReadSignalLogs, DoQA);
+    AliAnalysisTaskSexaquark *task = new AliAnalysisTaskSexaquark("AliAnalysisTaskSexaquark");
     if (!task) return 0x0;
+
+    task->SelectCollisionCandidates(AliVEvent::kAnyINT);
+
+    task->IsMC(IsMC);
+    task->SetSourceOfV0s(SourceOfV0s);
+    task->SetReactionID(ReactionID);
+    task->SetSexaquarkMass(SexaquarkMass);
+    task->ReadSignalLogs(ReadSignalLogs);
+    task->DoQA(DoQA);
+    // task->ReweightPt(ReweightPt); // PENDING
+    // task->ReweightRadius(ReweightRadius); // PENDING
+    task->Initialize();
 
     // trigger configuration, commented on purpose
     // task->SelectCollisionCandidates(AliVEvent::kAnyINT);
@@ -100,7 +112,8 @@ TTree *ReadLogs(TString filename) {
 
         if (!RunNumber) {
             if (tstr_line.Contains("I-AliSimulation::ProcessEnvironmentVars: Run number = ")) {
-                RunNumber = TString(tstr_line(53, 59)).Atoi();  // assuming RN with length 6
+                RunNumber = TString(tstr_line(54, 59)).Atoi();  // assuming RN with length 6
+                printf("Gotten the following RN : %i", RunNumber);
             }
         }
 

@@ -191,15 +191,24 @@ class KFParticleMother : public KFParticle {
 class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
    public:
     AliAnalysisTaskSexaquark();
-    AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet, Bool_t IncludeSignalLog, Bool_t DoQA);
+    AliAnalysisTaskSexaquark(const char* name);
     virtual ~AliAnalysisTaskSexaquark();
     virtual void Terminate(Option_t* option) { return; }
 
-    /* Initialization */
-    virtual void UserCreateOutputObjects();
-    void AddLogTree(TTree* logTree) { fLogTree = logTree; }
-    void CheckForInputErrors();
+    /* To be stored at analysis manager */
+    void IsMC(Bool_t IsMC) { fIsMC = IsMC; };
+    void SetSourceOfV0s(TString SourceOfV0s) { fSourceOfV0s = SourceOfV0s; };
+    void SetReactionID(Char_t ReactionID) { fReactionID = ReactionID; };
+    void SetSexaquarkMass(Float_t SexaquarkMass) { fSexaquarkMass = SexaquarkMass; };
+    void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
+    void DoQA(Bool_t DoQA) { fDoQA = DoQA; };
+    // void ReweightPt(Bool_t ReweightPt) { fReweightPt = ReweightPt; }; // PENDING
+    // void ReweightRadius(Bool_t ReweightRadius) { fReweightRadius = ReweightRadius; }; // PENDING
     void Initialize();
+
+    /* Main ~ executed at runtime */
+    virtual void UserCreateOutputObjects();
+    virtual void UserExec(Option_t* option);
 
     /* Histograms */
     void PrepareQAHistograms();
@@ -209,8 +218,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void PrepareAntiSexaquarkHistograms();
     void PreparePosKaonPairHistograms();
 
-    /* Main */
-    virtual void UserExec(Option_t* option);
+    void AddLogTree(TTree* logTree) { fLogTree = logTree; }
 
     /* Cuts */
     void DefineTracksCuts(TString cuts_option);
@@ -307,23 +315,18 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                            const float* param2 = 0) const;
 
    private:
-    /* Input options */
-    Bool_t fIsMC;                    //
-    TString fSourceOfV0s;            // choose V0 finder: "offline", "on-the-fly", "custom", "kalman"
-    TString fSimulationSet;          // <ReactionID><InjectedSexaquarkMass>
-    Char_t fReactionID;              // could be: 'A', 'D', 'E', 'H'
-    Float_t fInjectedSexaquarkMass;  // (in GeV/c^2), could be: 1.73, 1.8, 1.87, 1.94, 2.01
-    Bool_t fIncludeSignalLog;        //
-    Bool_t fDoQA;                    //
-    // reaction channel, could be:
-    // - 'A' = "AntiSexaquark,N->AntiLambda,K0S"
-    // - 'D' = "AntiSexaquark,P->AntiLambda,K+"
-    // - 'E' = "AntiSexaquark,P->AntiLambda,K+,pi-,pi+"
-    // - 'H' = "AntiSexaquark,P->AntiProton,K+,K+,pi0"
-    TString fReactionChannel;
-    std::vector<Int_t> fProductsPDG;            //
-    std::vector<Int_t> fFinalStateProductsPDG;  //
-    Int_t fStruckNucleonPDG;                    // PDG Code of the struck nucleon, could ber: 2112 o 2212
+    /* Input options ~ persistent */
+    Bool_t fIsMC;                                                  // kTRUE if MC simulation, kFALSE if data
+    TString fSourceOfV0s;                                          // choose V0 finder: "offline", "on-the-fly", "custom", "kalman"
+    Char_t fReactionID;                                            // reaction channel identifier, could be: 'A', 'D', 'E', 'H'
+    Float_t fSexaquarkMass;                                        // (in GeV/c^2), could be: 1.73, 1.8, 1.87, 1.94, 2.01
+    Bool_t fReadSignalLogs;                                        //
+    Bool_t fDoQA;                                                  //
+    std::vector<Int_t> fProductsPDG;                               //
+    std::vector<Int_t> fFinalStateProductsPDG;                     //
+    Int_t fStruckNucleonPDG;                                       // PDG Code of the struck nucleon, could be: 2112 o 2212
+    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;  //
+    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;  //
 
     /* AliRoot objects */
     AliMCEvent* fMC;                // MC event
@@ -332,25 +335,23 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliESDVertex* fPrimaryVertex;   // primary vertex
     AliPIDResponse* fPIDResponse;   // pid response object
     Double_t fMagneticField;        // magnetic field
-    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;
-    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;
 
     /* ROOT objects */
-    TDatabasePDG fPDG;
-    TList* fOutputListOfTrees;
-    TTree* fTree;
-    TList* fOutputListOfHists;
-    TTree* fLogTree;
+    TDatabasePDG fPDG;          //!
+    TList* fOutputListOfTrees;  //!
+    TTree* fTree;               //!
+    TList* fOutputListOfHists;  //!
+    TTree* fLogTree;            //!
 
     /** Topography Histograms **/
 
-    TH1F* fHist_MCGen_SFM_Radius;
-    TH2F* fHist_MCGen_SFM_YvsX;
+    TH1F* fHist_MCGen_SFM_Radius;  //!
+    TH2F* fHist_MCGen_SFM_YvsX;    //!
 
     /** QA Histograms **/
 
-    std::map<TString, TH1F*> fHist_QA;
-    std::map<TString, TH2F*> f2DHist_QA;
+    std::map<TString, TH1F*> fHist_QA;    //!
+    std::map<TString, TH2F*> f2DHist_QA;  //!
 
     /** Tracks Histograms **/
 
@@ -363,11 +364,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      -- PENDING: in a sim.set of reactionID='A', signal K+ appear where they shouldn't exist, because of signal particles that were mis-id
      -- Note: should I only, besides if they're signal or not, use their true id? I think so, because it's a bookkeeping of TRUE particles
     */
-    std::unordered_map<Int_t, TH1F*> fHist_Tracks_Bookkeep;
+    std::unordered_map<Int_t, TH1F*> fHist_Tracks_Bookkeep;  //!
     // key: `stage, set, pdg, property`, value: histogram
-    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;
+    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;  //!
     // key: `set`, value: histogram
-    std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;
+    std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;  //!
 
     /** V0s Histograms **/
 
@@ -387,11 +388,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      - `32` : found true secondary V0s
      - `33` : found true signal V0s
     */
-    std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;
+    std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;  //!
     // key: `stage, set, pdg, property`, value: histogram
-    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;
+    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;  //!
     // key: `set`, value: histogram
-    std::map<TString, TH2F*> f2DHist_V0s_ArmenterosPodolanski;
+    std::map<TString, TH2F*> f2DHist_V0s_ArmenterosPodolanski;  //!
 
     /** Anti-Sexaquark Histograms **/
 
@@ -404,66 +405,66 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     */
     TH1F* fHist_AntiSexaquarks_Bookkeep;
     // key: `stage, set, property`, value: histogram
-    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_AntiSexaquarks;
+    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_AntiSexaquarks;  //!
 
     /** Channel H / Pos. Kaon Pairs Histograms **/
 
     TH1F* fHist_PosKaonPairs_Bookkeep;
     // key: `stage, set, property`, value: histogram
-    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_PosKaonPairs;
+    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_PosKaonPairs;  //!
 
     /** Containers -- vectors and hash tables **/
     // NOTE: when adding a new one, don't forget to clear it on ClearContainers() //
 
     /* filled at `ProcessMCGen()` */
-    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;  //
+    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;
 
-    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;     //
-    std::unordered_map<Int_t, Bool_t> isMcIdxSecondary;  //
+    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;
+    std::unordered_map<Int_t, Bool_t> isMcIdxSecondary;
 
-    std::unordered_map<Int_t, UInt_t> getReactionIdx_fromMcIdx;               //
-    std::unordered_map<UInt_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;  //
+    std::unordered_map<Int_t, UInt_t> getReactionIdx_fromMcIdx;
+    std::unordered_map<UInt_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;
 
-    std::unordered_map<Int_t, Bool_t> doesMcIdxHaveMother;      //
-    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromMcIdx;  //
-    std::unordered_map<Int_t, Int_t> getNegDauMcIdx_fromMcIdx;  //
-    std::unordered_map<Int_t, Int_t> getPosDauMcIdx_fromMcIdx;  //
+    std::unordered_map<Int_t, Bool_t> doesMcIdxHaveMother;
+    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromMcIdx;
+    std::unordered_map<Int_t, Int_t> getNegDauMcIdx_fromMcIdx;
+    std::unordered_map<Int_t, Int_t> getPosDauMcIdx_fromMcIdx;
 
-    std::vector<Int_t> mcIndicesOfTrueV0s;  //
+    std::vector<Int_t> mcIndicesOfTrueV0s;
 
     /* filled at `ProcessTracks()` */
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;            //
-    std::unordered_map<Int_t, Bool_t> doesEsdIdxPassTrackSelection;  //
-    std::unordered_map<Int_t, Int_t> getEsdIdx_fromMcIdx;            //
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;
+    std::unordered_map<Int_t, Bool_t> doesEsdIdxPassTrackSelection;
+    std::unordered_map<Int_t, Int_t> getEsdIdx_fromMcIdx;
 
-    std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;                          //
-    std::unordered_map<Int_t, UInt_t> getReactionIdx_fromEsdIdx;               //
-    std::unordered_map<UInt_t, std::vector<Int_t>> getEsdIdx_fromReactionIdx;  //
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;
+    std::unordered_map<Int_t, UInt_t> getReactionIdx_fromEsdIdx;
+    std::unordered_map<UInt_t, std::vector<Int_t>> getEsdIdx_fromReactionIdx;
 
-    std::unordered_map<Int_t, Bool_t> doesEsdIdxHaveMother;      //
-    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromEsdIdx;  //
-    std::unordered_map<Int_t, Int_t> getNegDauEsdIdx_fromMcIdx;  //
-    std::unordered_map<Int_t, Int_t> getPosDauEsdIdx_fromMcIdx;  //
+    std::unordered_map<Int_t, Bool_t> doesEsdIdxHaveMother;
+    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromEsdIdx;
+    std::unordered_map<Int_t, Int_t> getNegDauEsdIdx_fromMcIdx;
+    std::unordered_map<Int_t, Int_t> getPosDauEsdIdx_fromMcIdx;
 
-    std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //
-    std::vector<Int_t> esdIndicesOfPosKaonTracks;     //
-    std::vector<Int_t> esdIndicesOfPiMinusTracks;     //
-    std::vector<Int_t> esdIndicesOfPiPlusTracks;      //
+    std::vector<Int_t> esdIndicesOfAntiProtonTracks;
+    std::vector<Int_t> esdIndicesOfPosKaonTracks;
+    std::vector<Int_t> esdIndicesOfPiMinusTracks;
+    std::vector<Int_t> esdIndicesOfPiPlusTracks;
 
     /* filled at `GetV0sFromESD() and [Custom|Kalman]V0Finder()` */
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;     //
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;     //
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;  //
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromKaonZeroShortIdx;  //
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromPionPairIdx;       //
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromPionPairIdx;       //
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromKaonZeroShortIdx;
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromPionPairIdx;
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromPionPairIdx;
 
-    std::vector<AliESDv0> esdAntiLambdas;     //
-    std::vector<AliESDv0> esdKaonsZeroShort;  //
+    std::vector<AliESDv0> esdAntiLambdas;
+    std::vector<AliESDv0> esdKaonsZeroShort;
 
-    std::vector<KFParticleMother> kfAntiLambdas;     //
-    std::vector<KFParticleMother> kfKaonsZeroShort;  //
-    std::vector<KFParticleMother> kfPionPairs;       //
+    std::vector<KFParticleMother> kfAntiLambdas;
+    std::vector<KFParticleMother> kfKaonsZeroShort;
+    std::vector<KFParticleMother> kfPionPairs;
 
     void ClearContainers();
 

@@ -10,7 +10,7 @@
 
 #include "AliAnalysisTaskSexaquark.h"
 
-void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Bool_t IncludeSignalLog, Bool_t DoQA,
+void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Bool_t ReadSignalLogs, Bool_t DoQA,
                  Int_t ChooseNEvents = 0) {
 
     // tell root where to look for headers
@@ -26,8 +26,11 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
     mgr->SetInputEventHandler(esdH);
     esdH->SetNeedField();  // necessary to get GoldenChi2
 
-    AliMCEventHandler *mcHand = new AliMCEventHandler();
-    mgr->SetMCtruthEventHandler(mcHand);
+    AliMCEventHandler *mcHand = nullptr;
+    if (IsMC) {
+        mcHand = new AliMCEventHandler();
+        mgr->SetMCtruthEventHandler(mcHand);
+    }
 
     // choose options depending on data period
     Int_t n_pass;
@@ -56,14 +59,15 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
     TString pid_response_path = gSystem->ExpandPathName("${ALICE_ROOT}/ANALYSIS/macros/AddTaskPIDResponse.C");
     AliAnalysisTaskPIDResponse *PIDresponseTask = reinterpret_cast<AliAnalysisTaskPIDResponse *>(
         gInterpreter->ExecuteMacro(Form("%s(%i, 1, 1, \"%i\")", pid_response_path.Data(), (Int_t)IsMC, n_pass)));
-    PIDresponseTask->SelectCollisionCandidates(AliVEvent::kINT7);
 
     // load sexaquark task
     gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
+
+    Char_t ReactionID = SimulationSet(0);
+    Float_t SexaquarkMass = ((TString)SimulationSet(1, SimulationSet.Length())).Atof();
     AliAnalysisTaskSexaquark *task = reinterpret_cast<AliAnalysisTaskSexaquark *>(
-        gInterpreter->ExecuteMacro(Form("AddSexaquark.C(\"name\", %i, \"%s\", \"%s\", %i, %i)", (Int_t)IsMC, SourceOfV0s.Data(), SimulationSet.Data(),
-                                        (Int_t)IncludeSignalLog, (Int_t)DoQA)));
-    task->SelectCollisionCandidates(AliVEvent::kINT7);
+        gInterpreter->ExecuteMacro(Form("AddSexaquark.C(%i, \"%s\", \'%c\', %.2f, %i, %i)", (Int_t)IsMC, SourceOfV0s.Data(), ReactionID,
+                                        SexaquarkMass, (Int_t)ReadSignalLogs, (Int_t)DoQA)));
 
     if (!mgr->InitAnalysis()) {
         return;
@@ -82,4 +86,10 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
         mgr->StartAnalysis("local", chain);  // read all events
     else
         mgr->StartAnalysis("local", chain, ChooseNEvents);  // read the first NEvents
+
+    // clean memory
+    delete mgr;
+    delete esdH;
+    delete mcHand;
+    delete chain;
 }

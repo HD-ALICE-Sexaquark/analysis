@@ -9,12 +9,10 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
     : AliAnalysisTaskSE(),
       fIsMC(0),
       fSourceOfV0s(),
-      fSimulationSet(""),
-      fIncludeSignalLog(0),
+      fReadSignalLogs(0),
       fDoQA(0),
       fReactionID(0),
-      fInjectedSexaquarkMass(0),
-      fReactionChannel(""),
+      fSexaquarkMass(0),
       fStruckNucleonPDG(0),
       fOutputListOfTrees(0),
       fOutputListOfHists(0),
@@ -27,7 +25,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fPDG(),
       fTree(0),
       fLogTree(0),
-      //   fEvent(),
+      // fEvent(),
       mcIndicesOfTrueV0s(),
       isMcIdxSignal(),
       kMax_NSigma_Pion(0.),
@@ -85,17 +83,14 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
 /*
  Constructor, called locally.
 */
-AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name, Bool_t IsMC, TString SourceOfV0s, TString SimulationSet, Bool_t IncludeSignalLog,
-                                                   Bool_t DoQA)
+AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
     : AliAnalysisTaskSE(name),
-      fIsMC(IsMC),
-      fSourceOfV0s(SourceOfV0s),
-      fSimulationSet(SimulationSet),
-      fIncludeSignalLog(IncludeSignalLog),
-      fDoQA(DoQA),
+      fIsMC(0),
+      fSourceOfV0s(0),
+      fReadSignalLogs(0),
+      fDoQA(0),
       fReactionID(0),
-      fInjectedSexaquarkMass(0),
-      fReactionChannel(""),
+      fSexaquarkMass(0),
       fStruckNucleonPDG(0),
       fOutputListOfTrees(0),
       fOutputListOfHists(0),
@@ -184,16 +179,6 @@ AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
 */
 void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
-    CheckForInputErrors();
-    Initialize();
-
-    DefineTracksCuts("Standard");
-    DefineV0Cuts("Standard");
-    DefineSexaquarkCuts("Standard");
-    DefinePosKaonPairCuts("Standard");
-
-    /** Add mandatory routines **/
-
     AliAnalysisManager* man = AliAnalysisManager::GetAnalysisManager();
     if (!man) {
         AliFatal("ERROR: AliAnalysisManager couldn't be found.");
@@ -211,9 +196,9 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     /* Trees */
 
     fOutputListOfTrees = new TList();
-    fOutputListOfTrees->SetOwner(kTRUE);
+    fOutputListOfTrees->SetOwner(kTRUE); /* the TList destructor should delete all objects added to it */
 
-    if (fIncludeSignalLog) fOutputListOfTrees->Add(fLogTree);
+    if (fReadSignalLogs) fOutputListOfTrees->Add(fLogTree);
 
     fTree = new TTree("Events", "Tree of Events");
     // SetBranches();
@@ -224,7 +209,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     /* Histograms */
 
     fOutputListOfHists = new TList();
-    fOutputListOfHists->SetOwner(kTRUE);
+    fOutputListOfHists->SetOwner(kTRUE); /* the TList destructor should delete all objects added to it */
 
     if (fDoQA) PrepareQAHistograms();
     PrepareTomographyHistograms();
@@ -566,7 +551,6 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
     for (TString& stage : AS_stages) {
         for (TString& set : AS_sets) {
             for (Int_t prop_idx = 0; prop_idx < (Int_t)AS_props.size(); prop_idx++) {
-
                 if (!fIsMC && (stage == "MCGen" || stage == "Findable" || set == "Signal")) continue;
                 if (fReactionID == 'H' && (stage == "Findable" || stage == "Found")) continue;
 
@@ -732,12 +716,44 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 */
 void AliAnalysisTaskSexaquark::Initialize() {
 
-    /* Parse TString: get reaction ID and injected sexaquark mass from SimulationSet */
+    std::array<TString, 4> validSourcesOfV0s = {"offline", "on-the-fly", "custom", "kalman"};
 
-    fReactionID = fSimulationSet(0);
-    fInjectedSexaquarkMass = ((TString)fSimulationSet(1, fSimulationSet.Length())).Atof();
+    if (std::find(validSourcesOfV0s.begin(), validSourcesOfV0s.end(), fSourceOfV0s) == validSourcesOfV0s.end()) {
+        AliWarning("Source of V0s must be \"offline\", \"on-the-fly\", \"custom\" or \"kalman\".");
+        AliWarning("=> Setting it to \"kalman\".");
+        fSourceOfV0s = "kalman";
+    }
 
-    /* PENDING: inj. sexaquark mass doesn't make sense when analyzing data... do smth about it... */
+    if (fReactionID == 'H' && (fSourceOfV0s == "on-the-fly" || fSourceOfV0s == "offline")) {
+        AliWarning("Source of V0s must be \"custom\" or \"kalman\" for the reaction channel H.");
+        AliWarning("=> Setting it to \"kalman\".");
+        fSourceOfV0s = "kalman";
+    }
+
+    std::array<Char_t, 4> validReactionIDs = {'A', 'D', 'E', 'H'};
+    if (std::find(validReactionIDs.begin(), validReactionIDs.end(), fReactionID) == validReactionIDs.end()) {
+        AliWarning("Reaction ID must be set.");
+        AliWarning("=> Setting it to 'A'.");
+        fReactionID = 'A';
+    }
+
+    /* Define cuts */
+
+    DefineTracksCuts("standard");
+    // clang-format off
+    if (fReactionID != 'H') DefineV0Cuts("standard");
+    else DefinePosKaonPairCuts("standard");
+    // clang-format on
+    DefineSexaquarkCuts("standard");
+
+    /*
+    // PENDING
+    if (fReweightPt && !fSexaquarkMass) {
+        AliWarning("Sexaquark mass must be set for reweighting the pT distribution.");
+        AliWarning("=> Setting it to 1.8 GeV/c^2.");
+        fSexaquarkMass = 1.8;
+    }
+    */
 
     getNegPdgCode_fromV0PdgCode[-3122] = -2212;
     getPosPdgCode_fromV0PdgCode[-3122] = 211;
@@ -746,37 +762,40 @@ void AliAnalysisTaskSexaquark::Initialize() {
 
     /* Assign the rest of properties related to the respective Reaction Channel */
 
+    TString ReactionChannel;
     if (fReactionID == 'A') {
-        fReactionChannel = "AntiSexaquark,N->AntiLambda,K0S";
+        ReactionChannel = "AntiSexaquark,N->AntiLambda,K0S";
         fProductsPDG = {-3122, 310};
         fFinalStateProductsPDG = {-2212, 211, -211, 211};
         fStruckNucleonPDG = 2112;
     } else if (fReactionID == 'D') {
-        fReactionChannel = "AntiSexaquark,P->AntiLambda,K+";
+        ReactionChannel = "AntiSexaquark,P->AntiLambda,K+";
         fProductsPDG = {-3122, 321};
         fFinalStateProductsPDG = {-2212, 211, 321};
         fStruckNucleonPDG = 2212;
     } else if (fReactionID == 'E') {
-        fReactionChannel = "AntiSexaquark,P->AntiLambda,K+,pi-,pi+";
+        ReactionChannel = "AntiSexaquark,P->AntiLambda,K+,pi-,pi+";
         fProductsPDG = {-3122, 321, -211, 211};
         fFinalStateProductsPDG = {-2212, 211, 321, -211, 211};
         fStruckNucleonPDG = 2212;
     } else if (fReactionID == 'H') {
-        fReactionChannel = "AntiSexaquark,P->AntiProton,K+,K+,pi0";
+        ReactionChannel = "AntiSexaquark,P->AntiProton,K+,K+,pi0";
         fProductsPDG = {-2212, 321, 321, 111};
         fFinalStateProductsPDG = {321, 321};  // focused only on K+K+
         fStruckNucleonPDG = 2212;
     }
 
-    AliInfo("Initializing AliAnalysisTaskSexaquark...");
-    AliInfo("INPUT OPTIONS:");
+    AliInfo("Initializing...");
+    AliInfo("Settings:");
+    AliInfo("========");
     AliInfoF(">> IsMC                = %i", (Int_t)fIsMC);
     AliInfoF(">> Source of V0s       = %s", fSourceOfV0s.Data());
-    AliInfoF(">> Simulation Set      = %s", fSimulationSet.Data());
     AliInfoF(">> Reaction ID         = %c", fReactionID);
-    AliInfoF(">> Reaction Channel    = %s", fReactionChannel.Data());
-    AliInfoF(">> Inj. Sexaquark Mass = %.2f", fInjectedSexaquarkMass);
+    AliInfoF(">> Reaction Channel    = %s", ReactionChannel.Data());
+    AliInfoF(">> Sexaquark Mass      = %.2f", fSexaquarkMass);
     AliInfoF(">> DoQA                = %i", (Int_t)fDoQA);
+    // AliInfoF(">> ReweightPt          = %i", (Int_t)fReweightPt); // PENDING
+    // AliInfoF(">> ReweightRadius      = %i", (Int_t)fReweightRadius); // PENDING
 }
 
 /*
@@ -791,7 +810,7 @@ void AliAnalysisTaskSexaquark::DefineTracksCuts(TString cuts_option) {
 
     kMax_Track_Eta = 1.;
     kMin_Track_NTPCClusters = 50;
-    kMax_Track_Chi2PerNTPCClusters = 7.;
+    kMax_Track_Chi2PerNTPCClusters = 2.;
     kTurnedOn_Track_StatusCuts = kTRUE;
     kTurnedOn_Track_RejectKinks = kFALSE;  // PENDING: need to study further
     // kMin_Track_DCAwrtPV = 2.;
@@ -971,28 +990,12 @@ void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
 void AliAnalysisTaskSexaquark::DefinePosKaonPairCuts(TString cuts_option) {
 
     if (fSourceOfV0s == "kalman") {
-
         kMin_PosKaonPair_Radius = 20;
         kMin_PosKaonPair_Pt = 0.2;
         kMax_PosKaonPair_DCAbtwKaons = 0.2;
         kMax_PosKaonPair_DCApkaSV = 0.2;
         kMax_PosKaonPair_DCApkbSV = 0.2;
         // kMax_PosKaonPair_Chi2ndf = 0.1;
-    }
-}
-
-/*
- Search for possible contradictions in the input options
-*/
-void AliAnalysisTaskSexaquark::CheckForInputErrors() {
-
-    std::array<std::string, 4> validSources = {"offline", "on-the-fly", "custom", "kalman"};
-    if (std::find(validSources.begin(), validSources.end(), fSourceOfV0s) == validSources.end()) {
-        AliFatal("ERROR: source of V0s must be \"offline\", \"on-the-fly\", \"custom\" or \"kalman\".");
-    }
-
-    if (fReactionID == 'H' && (fSourceOfV0s == "on-the-fly" || fSourceOfV0s == "offline")) {
-        AliFatal("ERROR: source of V0s must be \"custom\" or \"kalman\" for the reaction channel H.");
     }
 }
 
@@ -1584,7 +1587,6 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         if (TMath::Abs(n_sigma_pion) < kMax_NSigma_Pion && track->Charge() > 0.) possiblePID.push_back(211);
 
         for (Int_t& esdPdgCode : possiblePID) {
-
             if (fDoQA) {
                 if (esdPdgCode == -2212) {
                     f2DHist_QA["TPC_NSigmaProtonVsInnerParamP"]->Fill(track->GetInnerParam()->P(), n_sigma_proton);
