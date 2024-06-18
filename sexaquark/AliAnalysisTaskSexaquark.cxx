@@ -212,7 +212,6 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fOutputListOfHists->SetOwner(kTRUE); /* the TList destructor should delete all objects added to it */
 
     if (fDoQA) PrepareQAHistograms();
-    PrepareTomographyHistograms();
     PrepareTracksHistograms();
     if (fReactionID == 'H')
         PreparePosKaonPairHistograms();
@@ -314,19 +313,6 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
                                        QA_ylow[prop_idx], QA_yup[prop_idx]);
         fOutputListOfHists->Add(f2DHist_QA[histKey]);
     }
-}
-
-/*
- */
-void AliAnalysisTaskSexaquark::PrepareTomographyHistograms() {
-
-    TString stage = "MCGen_SecFromMaterial";
-
-    fHist_MCGen_SFM_Radius = new TH1F(stage + "_Radius", "", 500, 0., 250.);
-    fOutputListOfHists->Add(fHist_MCGen_SFM_Radius);
-
-    fHist_MCGen_SFM_YvsX = new TH2F(stage + "_YvsX", "", 600, -600., 600., 600, -600., 600.);
-    fOutputListOfHists->Add(fHist_MCGen_SFM_YvsX);
 }
 
 /*
@@ -1080,24 +1066,6 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
                     getReactionIdx_fromMcIdx[mcIdx] = reaction_idx;
                     getMcIdx_fromReactionIdx[reaction_idx].push_back(mcIdx);
                 }
-            }
-        }
-
-        /* Determine if it's a secondary particle */
-        // NOTE:
-        // Include signal particles, as well, because despite they were injected as primaries,
-        // in reality, they are not
-        //
-
-        isMcIdxSecondary[mcIdx] = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || isMcIdxSignal[mcIdx];
-
-        /* Regardless of its species, if the particle comes from material, add it to the tomography histograms */
-
-        if (mcPart->IsSecondaryFromMaterial() && TMath::Abs(pdg_mc) == 11 && mcPart->Pt() > 0.05 && mother_idx > -1) {
-            Double_t orig_radius = TMath::Sqrt(mcPart->Xv() * mcPart->Xv() + mcPart->Yv() * mcPart->Yv());
-            if (orig_radius < 250.) {
-                fHist_MCGen_SFM_Radius->Fill(orig_radius);
-                fHist_MCGen_SFM_YvsX->Fill(mcPart->Xv(), mcPart->Yv());
             }
         }
 
