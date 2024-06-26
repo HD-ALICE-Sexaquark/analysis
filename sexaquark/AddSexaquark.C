@@ -35,9 +35,6 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
     // task->ReweightRadius(ReweightRadius); // PENDING
     task->Initialize();
 
-    // trigger configuration, commented on purpose
-    // task->SelectCollisionCandidates(AliVEvent::kAnyINT);
-
     TTree *CsvTree;
     if (ReadSignalLogs) {
         CsvTree = ReadLogs("sim.log");
@@ -45,9 +42,14 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
     }
 
     mgr->AddTask(task);
+
     mgr->ConnectInput(task, 0, mgr->GetCommonInputContainer());
     mgr->ConnectOutput(task, 1, mgr->CreateContainer("Trees", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
-    mgr->ConnectOutput(task, 2, mgr->CreateContainer("Hists", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
+    mgr->ConnectOutput(task, 2, mgr->CreateContainer("QA_Hists", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
+    mgr->ConnectOutput(task, 3, mgr->CreateContainer("Tracks_Hists", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
+    mgr->ConnectOutput(task, 4, mgr->CreateContainer("V0s_Hists", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
+    mgr->ConnectOutput(task, 5, mgr->CreateContainer("Sexaquarks_Hists", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
+    mgr->ConnectOutput(task, 6, mgr->CreateContainer("PosKaonPairs_Hists", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
 
     return task;
 }

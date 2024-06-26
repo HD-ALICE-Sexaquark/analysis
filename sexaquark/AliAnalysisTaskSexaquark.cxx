@@ -14,8 +14,12 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fReactionID(0),
       fSexaquarkMass(0),
       fStruckNucleonPDG(0),
-      fOutputListOfTrees(0),
-      fOutputListOfHists(0),
+      fList_Trees(0),
+      fList_QA_Hists(0),
+      fList_Tracks_Hists(0),
+      fList_V0s_Hists(0),
+      fList_Sexaquarks_Hists(0),
+      fList_PosKaonPairs_Hists(0),
       fMC(0),
       fMC_PrimaryVertex(0),
       fESD(0),
@@ -93,8 +97,12 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fReactionID(0),
       fSexaquarkMass(0),
       fStruckNucleonPDG(0),
-      fOutputListOfTrees(0),
-      fOutputListOfHists(0),
+      fList_Trees(0),
+      fList_QA_Hists(0),
+      fList_Tracks_Hists(0),
+      fList_V0s_Hists(0),
+      fList_Sexaquarks_Hists(0),
+      fList_PosKaonPairs_Hists(0),
       fMC(0),
       fMC_PrimaryVertex(0),
       fESD(0),
@@ -160,20 +168,25 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       kMax_PosKaonPair_Chi2ndf(0.),
       kMax_Sexa_Chi2ndf(0.) {
     DefineInput(0, TChain::Class());
-    DefineOutput(1, TList::Class());
-    DefineOutput(2, TList::Class());
+    DefineOutput(1, TList::Class());  // fList_Trees
+    DefineOutput(2, TList::Class());  // fList_QA_Hists
+    DefineOutput(3, TList::Class());  // fList_Tracks_Hists
+    DefineOutput(4, TList::Class());  // fList_V0s_Hists
+    DefineOutput(5, TList::Class());  // fList_Sexaquarks_Hists
+    DefineOutput(6, TList::Class());  // fList_PosKaonPairs_Hists
 }
 
 /*
  Destructor.
+ - Note: if `TList::SetOwner(kTRUE)` was called, the TList destructor should delete all objects added to it
 */
 AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
-    if (fOutputListOfTrees) {
-        delete fOutputListOfTrees;
-    }
-    if (fOutputListOfHists) {
-        delete fOutputListOfHists;
-    }
+    if (fList_Trees) delete fList_Trees;
+    if (fList_QA_Hists) delete fList_QA_Hists;
+    if (fList_Tracks_Hists) delete fList_Tracks_Hists;
+    if (fList_V0s_Hists) delete fList_V0s_Hists;
+    if (fList_Sexaquarks_Hists) delete fList_Sexaquarks_Hists;
+    if (fList_PosKaonPairs_Hists) delete fList_PosKaonPairs_Hists;
 }
 
 /*
@@ -197,31 +210,48 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     /* Trees */
 
-    fOutputListOfTrees = new TList();
-    fOutputListOfTrees->SetOwner(kTRUE); /* the TList destructor should delete all objects added to it */
+    fList_Trees = new TList();
+    fList_Trees->SetOwner(kTRUE);
 
-    if (fReadSignalLogs) fOutputListOfTrees->Add(fLogTree);
+    if (fReadSignalLogs) fList_Trees->Add(fLogTree);
 
     fTree = new TTree("Events", "Tree of Events");
     // SetBranches();
-    fOutputListOfTrees->Add(fTree);
+    fList_Trees->Add(fTree);
 
-    PostData(1, fOutputListOfTrees);
+    PostData(1, fList_Trees);
 
     /* Histograms */
 
-    fOutputListOfHists = new TList();
-    fOutputListOfHists->SetOwner(kTRUE); /* the TList destructor should delete all objects added to it */
-
+    fList_QA_Hists = new TList();
+    fList_QA_Hists->SetOwner(kTRUE);
     if (fDoQA) PrepareQAHistograms();
-    PrepareTracksHistograms();
-    if (fReactionID == 'H')
-        PreparePosKaonPairHistograms();
-    else
-        PrepareV0Histograms();
-    PrepareAntiSexaquarkHistograms();
+    PostData(2, fList_QA_Hists);
 
-    PostData(2, fOutputListOfHists);
+    fList_Tracks_Hists = new TList();
+    fList_Tracks_Hists->SetOwner(kTRUE);
+
+    fList_V0s_Hists = new TList();
+    fList_V0s_Hists->SetOwner(kTRUE);
+
+    fList_Sexaquarks_Hists = new TList();
+    fList_Sexaquarks_Hists->SetOwner(kTRUE);
+
+    fList_PosKaonPairs_Hists = new TList();
+    fList_PosKaonPairs_Hists->SetOwner(kTRUE);
+
+    PrepareTracksHistograms();
+    if (fReactionID != 'H') {
+        PrepareV0Histograms();
+        PrepareAntiSexaquarkHistograms();
+    } else {
+        PreparePosKaonPairHistograms();
+    }
+
+    PostData(3, fList_Tracks_Hists);
+    PostData(4, fList_V0s_Hists);
+    PostData(5, fList_Sexaquarks_Hists);
+    PostData(6, fList_PosKaonPairs_Hists);
 }
 
 /*
@@ -268,7 +298,7 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
     for (Int_t prop_idx = 0; prop_idx < (Int_t)QA_props.size(); prop_idx++) {
         histKey = QA_props[prop_idx];
         fHist_QA[histKey] = new TH1F("QA_" + histKey, "", QA_nbins[prop_idx], QA_min[prop_idx], QA_max[prop_idx]);
-        fOutputListOfHists->Add(fHist_QA[histKey]);
+        fList_QA_Hists->Add(fHist_QA[histKey]);
     }
 
     /* 2D Hists */
@@ -313,7 +343,7 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
         histKey = QA_props[prop_idx];
         f2DHist_QA[histKey] = new TH2F("QA_" + histKey, "", QA_nbinsx[prop_idx], QA_xlow[prop_idx], QA_xup[prop_idx], QA_nbinsy[prop_idx],
                                        QA_ylow[prop_idx], QA_yup[prop_idx]);
-        fOutputListOfHists->Add(f2DHist_QA[histKey]);
+        fList_QA_Hists->Add(f2DHist_QA[histKey]);
     }
 }
 
@@ -349,7 +379,7 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
 
     for (Int_t& species : tracks_species) {
         fHist_Tracks_Bookkeep[species] = new TH1F(Form("%s_Bookkeep", tracks_name[species].Data()), "", 15, 0., 15.);
-        fOutputListOfHists->Add(fHist_Tracks_Bookkeep[species]);
+        fList_Tracks_Hists->Add(fHist_Tracks_Bookkeep[species]);
     }
 
     for (TString& stage : tracks_stages) {
@@ -373,7 +403,7 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
                     TString histName = Form("%s_%s_%s_%s", stage.Data(), set.Data(), tracks_name[species].Data(), tracks_props[prop_idx].Data());
                     std::tuple<TString, TString, Int_t, TString> histKey = std::make_tuple(stage, set, species, tracks_props[prop_idx]);
                     fHist_Tracks[histKey] = new TH1F(histName, "", tracks_nbins[prop_idx], tracks_min[prop_idx], tracks_max[prop_idx]);
-                    fOutputListOfHists->Add(fHist_Tracks[histKey]);
+                    fList_Tracks_Hists->Add(fHist_Tracks[histKey]);
                 }
             }
         }
@@ -382,7 +412,7 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
     for (TString& set : tracks_sets) {
         TString histName = Form("Tracks_%s_TPCsignal", set.Data());
         f2DHist_Tracks_TPCsignal[set] = new TH2F(histName, "", 200, 0., 10., 200, 0., 400.);
-        fOutputListOfHists->Add(f2DHist_Tracks_TPCsignal[set]);
+        fList_Tracks_Hists->Add(f2DHist_Tracks_TPCsignal[set]);
     }
 }
 
@@ -420,7 +450,7 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
     for (Int_t sp = 0; sp < (Int_t)V0_species.size(); sp++) {
         if (fReactionID != 'E' && V0_species[sp] == 422) continue;
         fHist_V0s_Bookkeep[V0_species[sp]] = new TH1F(Form("%s_Bookkeep", V0_name[sp].Data()), "", 50, 0., 50.);
-        fOutputListOfHists->Add(fHist_V0s_Bookkeep[V0_species[sp]]);
+        fList_V0s_Hists->Add(fHist_V0s_Bookkeep[V0_species[sp]]);
     }
 
     for (TString& stage : V0_stages) {
@@ -450,7 +480,7 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
                     Float_t minEdge = V0_props[prop_idx] == "Mass" ? kMin_V0_Mass[V0_species[sp]] : V0_min[prop_idx];
                     Float_t maxEdge = V0_props[prop_idx] == "Mass" ? kMax_V0_Mass[V0_species[sp]] : V0_max[prop_idx];
                     fHist_V0s[histKey] = new TH1F(histName, "", V0_nbins[prop_idx], minEdge, maxEdge);
-                    fOutputListOfHists->Add(fHist_V0s[histKey]);
+                    fList_V0s_Hists->Add(fHist_V0s[histKey]);
                 }
             }
         }
@@ -459,7 +489,7 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
     for (TString& set : V0_sets) {
         TString histName = Form("Found_%s_V0s_ArmenterosPodolanski", set.Data());
         f2DHist_V0s_ArmenterosPodolanski[set] = new TH2F(histName, "", 200, -1., 1., 200, 0., 0.3);
-        fOutputListOfHists->Add(f2DHist_V0s_ArmenterosPodolanski[set]);
+        fList_V0s_Hists->Add(f2DHist_V0s_ArmenterosPodolanski[set]);
     }
 }
 
@@ -534,7 +564,7 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
     // clang-format on
 
     fHist_AntiSexaquarks_Bookkeep = new TH1F("AntiSexaquarks_Bookkeep", "", 25, 0., 25.);
-    fOutputListOfHists->Add(fHist_AntiSexaquarks_Bookkeep);
+    fList_Sexaquarks_Hists->Add(fHist_AntiSexaquarks_Bookkeep);
 
     for (TString& stage : AS_stages) {
         for (TString& set : AS_sets) {
@@ -554,7 +584,7 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
                 TString histName = Form("%s_%s_AntiSexaquark_%s", stage.Data(), set.Data(), AS_props[prop_idx].Data());
                 std::tuple<TString, TString, TString> histKey = std::make_tuple(stage, set, AS_props[prop_idx]);
                 fHist_AntiSexaquarks[histKey] = new TH1F(histName, "", AS_nbins[prop_idx], AS_min[prop_idx], AS_max[prop_idx]);
-                fOutputListOfHists->Add(fHist_AntiSexaquarks[histKey]);
+                fList_Sexaquarks_Hists->Add(fHist_AntiSexaquarks[histKey]);
             }
         }
     }
@@ -589,7 +619,7 @@ void AliAnalysisTaskSexaquark::PreparePosKaonPairHistograms() {
     // clang-format on
 
     fHist_PosKaonPairs_Bookkeep = new TH1F("PosKaonPairs_Bookkeep", "", 25, 0., 25.);
-    fOutputListOfHists->Add(fHist_PosKaonPairs_Bookkeep);
+    fList_PosKaonPairs_Hists->Add(fHist_PosKaonPairs_Bookkeep);
 
     for (TString& stage : stages) {
         for (TString& set : sets) {
@@ -604,7 +634,7 @@ void AliAnalysisTaskSexaquark::PreparePosKaonPairHistograms() {
                 TString histName = Form("%s_%s_PosKaonPair_%s", stage.Data(), set.Data(), props[prop_idx].Data());
                 std::tuple<TString, TString, TString> histKey = std::make_tuple(stage, set, props[prop_idx]);
                 fHist_PosKaonPairs[histKey] = new TH1F(histName, "", nbins[prop_idx], min[prop_idx], max[prop_idx]);
-                fOutputListOfHists->Add(fHist_PosKaonPairs[histKey]);
+                fList_PosKaonPairs_Hists->Add(fHist_PosKaonPairs[histKey]);
             }
         }
     }
@@ -612,7 +642,7 @@ void AliAnalysisTaskSexaquark::PreparePosKaonPairHistograms() {
 
 /*
  Main function, called per each event at RUNTIME ~ execution on Grid
- - Uses: `fIsMC`, `fMC_PrimaryVertex`, `fESD`, `fPrimaryVertex`, `fMagneticField`, `fSourceOfV0s`, `fOutputListOfTrees`,
+ - Uses: `fIsMC`, `fMC_PrimaryVertex`, `fESD`, `fPrimaryVertex`, `fMagneticField`, `fSourceOfV0s`, `fList_Trees`,
  `fOutputListOfHists`
 */
 void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
@@ -695,8 +725,12 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     ClearContainers();
 
-    PostData(1, fOutputListOfTrees);
-    PostData(2, fOutputListOfHists);
+    PostData(1, fList_Trees);
+    PostData(2, fList_QA_Hists);
+    PostData(3, fList_Tracks_Hists);
+    PostData(4, fList_V0s_Hists);
+    PostData(5, fList_Sexaquarks_Hists);
+    PostData(6, fList_PosKaonPairs_Hists);
 }
 
 /*
@@ -1053,7 +1087,6 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         if (isMcIdxSignal[mcIdx]) {
             getReactionIdx_fromMcIdx[mcIdx] = mother_idx < 0 ? mcPart->MCStatusCode() : getReactionIdx_fromMcIdx[mother_idx];
             getMcIdx_fromReactionIdx[getReactionIdx_fromMcIdx[mcIdx]].push_back(mcIdx);
-            AliInfoF("mcIdx, pdg, reaction = %i, %i, %i", mcIdx, pdg_mc, getReactionIdx_fromMcIdx[mcIdx]);
         }
 
         /* Determine if it's a secondary particle */

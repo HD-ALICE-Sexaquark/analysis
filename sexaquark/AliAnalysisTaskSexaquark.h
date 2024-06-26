@@ -336,11 +336,15 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Double_t fMagneticField;        // magnetic field
 
     /* ROOT objects */
-    TDatabasePDG fPDG;          //!
-    TList* fOutputListOfTrees;  //!
-    TTree* fTree;               //!
-    TList* fOutputListOfHists;  //!
-    TTree* fLogTree;            //!
+    TDatabasePDG fPDG;                //!
+    TList* fList_Trees;               //!
+    TTree* fTree;                     //!
+    TList* fList_QA_Hists;            //!
+    TList* fList_Tracks_Hists;        //!
+    TList* fList_V0s_Hists;           //!
+    TList* fList_Sexaquarks_Hists;    //!
+    TList* fList_PosKaonPairs_Hists;  //!
+    TTree* fLogTree;                  //!
 
     /** QA Histograms **/
 
