@@ -473,6 +473,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMax_Track_Chi2PerNTPCClusters;
     Bool_t kTurnedOn_Track_StatusCuts;
     Bool_t kTurnedOn_Track_RejectKinks;
+    Float_t kMin_Track_DCA_wrtPV;
     Float_t kMin_Track_DCAxy_wrtPV;
     Float_t kMin_Track_DCAz_wrtPV;
     std::unordered_map<Int_t, Float_t> kMin_Track_Pt;
