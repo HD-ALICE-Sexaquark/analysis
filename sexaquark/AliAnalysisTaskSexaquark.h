@@ -202,8 +202,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void SetSexaquarkMass(Float_t SexaquarkMass) { fSexaquarkMass = SexaquarkMass; };
     void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
     void DoQA(Bool_t DoQA) { fDoQA = DoQA; };
-    // void ReweightPt(Bool_t ReweightPt) { fReweightPt = ReweightPt; }; // PENDING
-    // void ReweightRadius(Bool_t ReweightRadius) { fReweightRadius = ReweightRadius; }; // PENDING
+    void ReweightPt(Bool_t ReweightPt) { fReweightPt = ReweightPt; };
+    void ReweightRadius(Bool_t ReweightRadius) { fReweightRadius = ReweightRadius; };
     void Initialize();
 
     /* Main ~ executed at runtime */
@@ -217,7 +217,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void PrepareAntiSexaquarkHistograms();
     void PreparePosKaonPairHistograms();
 
+    /* External objects */
     void AddLogTree(TTree* logTree) { fLogTree = logTree; }
+    void AddPtWeights(TH1D* ptWeights) { fPtWeights = ptWeights; }
+    void AddRadiusWeights(TH1F* radiusWeights) { fRadiusWeights = radiusWeights; }
 
     /* Cuts */
     void DefineTracksCuts(TString cuts_option);
@@ -321,6 +324,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t fSexaquarkMass;                                        // (in GeV/c^2), could be: 1.73, 1.8, 1.87, 1.94, 2.01
     Bool_t fReadSignalLogs;                                        //
     Bool_t fDoQA;                                                  //
+    Bool_t fReweightPt;                                            //
+    Bool_t fReweightRadius;                                        //
     std::vector<Int_t> fProductsPDG;                               //
     std::vector<Int_t> fFinalStateProductsPDG;                     //
     Int_t fStruckNucleonPDG;                                       // PDG Code of the struck nucleon, could be: 2112 o 2212
@@ -345,6 +350,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TList* fList_Sexaquarks_Hists;    //!
     TList* fList_PosKaonPairs_Hists;  //!
     TTree* fLogTree;                  //!
+    TH1D* fPtWeights;                 //!
+    TH1F* fRadiusWeights;             //!
 
     /** QA Histograms **/
 

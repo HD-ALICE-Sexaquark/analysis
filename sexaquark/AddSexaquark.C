@@ -1,6 +1,10 @@
 /* --- */
 
 TTree *ReadLogs(TString filename);
+TH1D *GetPtWeights(TString filename, Float_t SexaquarkMass);
+TH1F *GetRadiusWeights(TString filename);
+
+/* --- */
 
 AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s = "offline", Char_t ReactionID = 'A', Float_t SexaquarkMass = 1.8,
                                        Bool_t ReadSignalLogs = kTRUE, Bool_t DoQA = kFALSE) {
@@ -31,8 +35,8 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
     task->SetSexaquarkMass(SexaquarkMass);
     task->ReadSignalLogs(ReadSignalLogs);
     task->DoQA(DoQA);
-    // task->ReweightPt(ReweightPt); // PENDING
-    // task->ReweightRadius(ReweightRadius); // PENDING
+    task->ReweightPt(kTRUE);      // TESTING
+    task->ReweightRadius(kTRUE);  // TESTING
     task->Initialize();
 
     TTree *CsvTree;
@@ -40,6 +44,14 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
         CsvTree = ReadLogs("sim.log");
         task->AddLogTree(CsvTree);
     }
+
+    TH1D *PtWeightsHist = GetPtWeights("blastwave.root", SexaquarkMass);
+    task->AddPtWeights(PtWeightsHist);
+
+    TH1F *RadiusWeightsHist = GetRadiusWeights("radius-weights.root");
+    task->AddRadiusWeights(RadiusWeightsHist);
+
+    /* --- */
 
     mgr->AddTask(task);
 
@@ -55,7 +67,7 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
 }
 
 /*
-
+  Read a log file, extract initial conditions data as in CSV format and populate TTree.
 */
 TTree *ReadLogs(TString filename) {
 
@@ -142,4 +154,46 @@ TTree *ReadLogs(TString filename) {
     SimLog.close();
 
     return t;
+}
+
+/*
+  Get a histogram with the pt weights for the blast wave.
+*/
+TH1D *GetPtWeights(TString filename, Float_t SexaquarkMass) {
+
+    TFile *f = TFile::Open(filename);
+    if (!f) {
+        std::cerr << "GetPtWeights :: Unable to open file: " << filename << std::endl;
+        return nullptr;
+    }
+
+    TString hist_name = Form("BlastWaveHist_%.2f", SexaquarkMass);
+    TH1D *h = dynamic_cast<TH1D *>(f->Get(hist_name));
+    if (!h) {
+        std::cerr << "GetPtWeights :: Unable to find histogram " << hist_name << " in file " << filename << std::endl;
+        return nullptr;
+    }
+
+    return h;
+}
+
+/*
+  Get a histogram with the radius weights of photon conversions.
+*/
+TH1F *GetRadiusWeights(TString filename) {
+
+    TFile *f = TFile::Open(filename);
+    if (!f) {
+        std::cerr << "GetRadiusWeights :: Unable to open file " << filename << std::endl;
+        return nullptr;
+    }
+
+    TString hist_name = "MCGen_PhotonConversions_Radius";
+    TH1F *h = dynamic_cast<TH1F *>(f->Get("Hists")->FindObject(hist_name));
+    if (!h) {
+        std::cerr << "GetRadiusWeights :: Unable to find histogram " << hist_name << " in file " << filename << std::endl;
+        return nullptr;
+    }
+
+    return h;
 }

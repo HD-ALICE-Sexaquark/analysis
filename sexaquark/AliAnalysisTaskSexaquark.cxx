@@ -228,6 +228,10 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     if (fDoQA) PrepareQAHistograms();
     PostData(2, fList_QA_Hists);
 
+    // TESTING
+    fList_QA_Hists->Add(fPtWeights);
+    fList_QA_Hists->Add(fRadiusWeights);
+
     fList_Tracks_Hists = new TList();
     fList_Tracks_Hists->SetOwner(kTRUE);
 
