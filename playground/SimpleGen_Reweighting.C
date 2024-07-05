@@ -124,7 +124,7 @@ void SimpleGen_Reweighting(Int_t N = 25000) {
 
     // convert to a histogram
     TH1F* hPtModel = new TH1F("hPtModel", "hPtModel", 100, 0., 5.);
-    for (Int_t i = 0; i < N; i++) {
+    for (Int_t i = 0; i < 4 * N; i++) {
         hPtModel->Fill(fPtModel->GetRandom());
     }
 

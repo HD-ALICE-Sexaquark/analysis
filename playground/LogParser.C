@@ -1,4 +1,10 @@
-#include "include/Headers.hxx"
+#include "TFile.h"
+#include "TList.h"
+#include "TObjArray.h"
+#include "TObjString.h"
+#include "TString.h"
+#include "TSystemDirectory.h"
+#include "TTree.h"
 
 /*
  Read the `sim.log` files, to extract:
