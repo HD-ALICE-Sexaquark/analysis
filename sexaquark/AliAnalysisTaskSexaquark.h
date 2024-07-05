@@ -219,8 +219,16 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* External objects */
     void AddLogTree(TTree* logTree) { fLogTree = logTree; }
-    void AddPtWeights(TH1D* ptWeights) { fPtWeights = ptWeights; }
-    void AddRadiusWeights(TH1F* radiusWeights) { fRadiusWeights = radiusWeights; }
+    void AddPtWeights(TH1D* ptWeights) {
+        fPtWeights = ptWeights;
+        fPtWeights->Scale(1. / fPtWeights->Integral());
+    }
+    void AddRadiusWeights(TH1F* radiusWeights) {
+        fRadiusWeights = radiusWeights;
+        fRadiusWeights->Scale(1. / fRadiusWeights->Integral());
+    }
+    Double_t GetPtWeight(Int_t reactionIdx);
+    Double_t GetRadiusWeight(Int_t reactionIdx);
 
     /* Cuts */
     void DefineTracksCuts(TString cuts_option);
@@ -429,6 +437,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     std::unordered_map<Int_t, UInt_t> getReactionIdx_fromMcIdx;
     std::unordered_map<UInt_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;
+    std::unordered_map<UInt_t, Float_t> getPt_fromReactionIdx;  // PENDING: it should be the TRUE INJECTED PT
+    std::unordered_map<UInt_t, Float_t> getRadius_fromReactionIdx;
 
     std::unordered_map<Int_t, Bool_t> doesMcIdxHaveMother;
     std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromMcIdx;

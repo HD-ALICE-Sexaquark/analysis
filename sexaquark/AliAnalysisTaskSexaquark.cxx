@@ -503,7 +503,7 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
 */
 void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
 
-    TString AS_stages[3] = {"MCGen", "Findable", "Found"};
+    TString AS_stages[4] = {"MCGen", "Findable", "Found", "Reweighted"};
     TString AS_sets[2] = {"All", "Signal"};
 
     std::vector<TString> AS_props;
@@ -584,6 +584,9 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
                     ((AS_props[prop_idx].Contains("DCA") && AS_props[prop_idx] != "DCAwrtPV") || AS_props[prop_idx].Contains("Chi2"))) {
                     continue;
                 }
+
+                if (stage == "Reweighted" && set != "Signal") continue;
+                if (stage == "Reweighted" && !(AS_props[prop_idx] == "Pt" || AS_props[prop_idx] == "Radius")) continue;
 
                 TString histName = Form("%s_%s_AntiSexaquark_%s", stage.Data(), set.Data(), AS_props[prop_idx].Data());
                 std::tuple<TString, TString, TString> histKey = std::make_tuple(stage, set, AS_props[prop_idx]);
@@ -1346,6 +1349,11 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
                                          fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
         dca_wrt_pv = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), secondary_vertex.X(), secondary_vertex.Y(),
                                   secondary_vertex.Z(), fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+
+        /* Fill containers */
+
+        getPt_fromReactionIdx[reactionIdx] = lvAntiSexaquark.Pt();
+        getRadius_fromReactionIdx[reactionIdx] = radius;
 
         /* Fill histograms */
 
@@ -3437,6 +3445,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
     Float_t dca_v0b_pos_sv;
 
     Bool_t is_signal;
+    Int_t reaction_idx;
 
     Float_t impar_v0a_neg_sv[2], impar_v0a_pos_sv[2];
     Float_t impar_v0b_neg_sv[2], impar_v0b_pos_sv[2];
@@ -3605,6 +3614,9 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Chi2ndf")]->Fill((Double_t)kfAntiSexaquark.GetChi2() /
                                                                                       (Double_t)kfAntiSexaquark.GetNDF());  // exclusive
 
+            reaction_idx = getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
+            fHist_AntiSexaquarks[std::make_tuple("Reweighted", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt(), GetPtWeight(reaction_idx));
+            fHist_AntiSexaquarks[std::make_tuple("Reweighted", "Signal", "Radius")]->Fill(radius, GetRadiusWeight(reaction_idx));
         }  // end of loop over K0S
     }      // end of loop over anti-lambdas
 }
@@ -6072,6 +6084,8 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
 
     getReactionIdx_fromMcIdx.clear();
     getMcIdx_fromReactionIdx.clear();
+    getPt_fromReactionIdx.clear();
+    getRadius_fromReactionIdx.clear();
 
     doesMcIdxHaveMother.clear();
     getMotherMcIdx_fromMcIdx.clear();
@@ -6113,4 +6127,26 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
     kfAntiLambdas.clear();
     kfKaonsZeroShort.clear();
     kfPionPairs.clear();
+}
+
+/*                                   */
+/**  Reweighting-related functions  **/
+/*** ============================= ***/
+
+/*
+  For a signal candidate, given its reaction index, get its true Pt,
+  and find its weight on the `fPtWeights` histogram.
+*/
+Double_t AliAnalysisTaskSexaquark::GetPtWeight(Int_t reactionIdx) {
+    Float_t pt = getPt_fromReactionIdx[reactionIdx];
+    return fPtWeights->GetBinContent(fPtWeights->FindBin(pt));
+}
+
+/*
+  For a signal candidate, given its reaction index, get its true interaction radius,
+  and find its weight on the `fRadiusWeights` histogram.
+*/
+Double_t AliAnalysisTaskSexaquark::GetRadiusWeight(Int_t reactionIdx) {
+    Float_t radius = getRadius_fromReactionIdx[reactionIdx];
+    return fRadiusWeights->GetBinContent(fRadiusWeights->FindBin(radius));
 }
