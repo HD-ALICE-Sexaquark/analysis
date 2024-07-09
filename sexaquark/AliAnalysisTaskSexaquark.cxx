@@ -515,59 +515,68 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
     if (fReactionID == 'A') {
         AS_props = {"Mass",     "Pt",       "Px",          "Py",          "Pz",          "Phi",         "Radius",
                     "Zv",       "Eta",      "Rapidity",    "DecayLength", "CPAwrtPV",    "DCAwrtPV",    "DCAbtwV0s",
-                    "DCAv0aSV", "DCAv0bSV", "DCAv0anegSV", "DCAv0aposSV", "DCAv0bnegSV", "DCAv0bposSV", "Chi2ndf"};
+                    "DCAv0aSV", "DCAv0bSV", "DCAv0anegSV", "DCAv0aposSV", "DCAv0bnegSV", "DCAv0bposSV", "Chi2ndf",
+                    "Pt_ini"};
         AS_nbins = {100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100, 100, 100,
-                    100, 100, 100, 100, 100, 100, 100};
+                    100, 100, 100, 100, 100, 100, 100,
+                    100};
         AS_min = {-10., -10., -10., -10., -50., -2 * TMath::Pi(), 0.,
-                  -50., -2.,  -5.,  0.,   0.,   0., 0.,
-                  0.,   0.,   0.,   0.,   0.,   0., 0.};
+                  -50., -2.,  -5.,  0.,   0.,   0.,               0.,
+                  0.,   0.,   0.,   0.,   0.,   0.,               0.,
+                  0.};
         AS_max = {10., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
                   50., 2.,  5.,  500., 1.,  10.,             2.,
-                  2.,  2.,  10., 10.,  10., 10.,             1.};
+                  2.,  2.,  10., 10.,  10., 10.,             1.,
+                  5.};
     } else if (fReactionID == 'D') {
         AS_props = {"Mass",       "Pt",         "Px",       "Py",          "Pz",         "Phi",        "Radius",
                     "Zv",         "Eta",        "Rapidity", "DecayLength", "CPAwrtPV",   "DCAwrtPV",   "DCAv0ba",
-                    "DCAv0negba", "DCAv0posba", "DCAv0SV",  "DCAbaSV",     "DCAv0negSV", "DCAv0posSV", "Chi2ndf"};
+                    "DCAv0negba", "DCAv0posba", "DCAv0SV",  "DCAbaSV",     "DCAv0negSV", "DCAv0posSV", "Chi2ndf",
+                    "Pt_ini"};
         AS_nbins = {100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100, 100, 100,
-                    100, 100, 100, 100, 100, 100, 100};
+                    100, 100, 100, 100, 100, 100, 100,
+                    100};
         AS_min = {-10., -10., -10., -10., -50., 0., 0.,
                   -50., -2.,  -5.,  0.,   0.,   0., 0.,
-                  0.,   0.,   0.,   0.,   0.,   0., 0.};
+                  0.,   0.,   0.,   0.,   0.,   0., 0.,
+                  0.};
         AS_max = {10., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
                   50., 2.,  5.,  500., 1.,  10.,             10.,
-                  10., 10., 10., 10.,  10., 10.,             1.};
+                  10., 10., 10., 10.,  10., 10.,             1.,
+                  5.};
     } else if (fReactionID == 'E') {
         AS_props = {"Mass",    "Pt",       "Px",          "Py",       "Pz",       "Phi",     "Radius",     "Zv",
                     "Eta",     "Rapidity", "DecayLength", "CPAwrtPV", "DCAwrtPV", "DCAv0SV", "DCAv0negSV", "DCAv0posSV",
                     "DCApkSV", "DCApmSV",  "DCAppSV",     "DCAv0pk",  "DCAv0pm",  "DCAv0pp", "DCApkpm",    "DCApkpp",
-                    "Chi2",    "Chi2ndf"};
+                    "Chi2",    "Chi2ndf",  "Pt_ini"};
         AS_nbins = {100, 100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100, 100, 100, 100,
-                    100, 100};
+                    100, 100, 100};
         AS_min = {-10., -10., -10., -10., -50., 0., 0., -50.,
                   -2.,  -5.,  0.,   0.,   0.,   0., 0., 0.,
                   0.,   0.,   0.,   0.,   0.,   0., 0., 0.,
-                  0.,   0.};
+                  0.,   0.,   0.};
         AS_max = {10., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
                   2.,  5.,  500., 1.,  10., 10.,             10.,  10.,
                   10., 10., 10.,  10., 10., 10.,             10.,  1.,
-                  30., 30.};
+                  30., 30., 5.};
     } else if (fReactionID == 'H') {
         AS_props = {"Mass", "Pt",       "Px",          "Py",       "Pz",       "Phi",   "Radius",   "Zv",
-                    "Eta",  "Rapidity", "DecayLength", "CPAwrtPV", "DCAwrtPV"};
+                    "Eta",  "Rapidity", "DecayLength", "CPAwrtPV", "DCAwrtPV", "Pt_ini"};
         AS_nbins = {100, 100, 100, 100, 100, 100, 100, 100,
-                    100, 100, 100, 100, 100};
+                    100, 100, 100, 100, 100, 100};
         AS_min = {-10., -10., -10., -10., -50., 0., 0., -50.,
-                  -2.,  -5.,  0.,   0.,   0.};
+                  -2.,  -5.,  0.,   0.,   0., 0.};
         AS_max = {10., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
-                  2.,  5.,  500., 1.,  10.};
+                  2.,  5.,  500., 1.,  10., 5.};
     }
     // clang-format on
 
     fHist_AntiSexaquarks_Bookkeep = new TH1F("AntiSexaquarks_Bookkeep", "", 25, 0., 25.);
+    fHist_AntiSexaquarks_Bookkeep->Sumw2();
     fList_Sexaquarks_Hists->Add(fHist_AntiSexaquarks_Bookkeep);
 
     for (TString& stage : AS_stages) {
@@ -585,12 +594,15 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
                     continue;
                 }
 
+                if (stage != "MCGen" && AS_props[prop_idx] == "Pt_ini") continue;
+
                 if (stage == "Reweighted" && set != "Signal") continue;
                 if (stage == "Reweighted" && !(AS_props[prop_idx] == "Pt" || AS_props[prop_idx] == "Radius")) continue;
 
                 TString histName = Form("%s_%s_AntiSexaquark_%s", stage.Data(), set.Data(), AS_props[prop_idx].Data());
                 std::tuple<TString, TString, TString> histKey = std::make_tuple(stage, set, AS_props[prop_idx]);
                 fHist_AntiSexaquarks[histKey] = new TH1F(histName, "", AS_nbins[prop_idx], AS_min[prop_idx], AS_max[prop_idx]);
+                if (stage == "Reweighted") fHist_AntiSexaquarks[histKey]->Sumw2();
                 fList_Sexaquarks_Hists->Add(fHist_AntiSexaquarks[histKey]);
             }
         }
@@ -766,6 +778,8 @@ void AliAnalysisTaskSexaquark::Initialize() {
         fReactionID = 'A';
     }
 
+    if (fReweightPt && !fReadSignalLogs) AliFatal("Signal logs must be read for reweighting the pT distribution.");
+
     /* Define cuts */
 
     DefineTracksCuts("standard");
@@ -823,8 +837,8 @@ void AliAnalysisTaskSexaquark::Initialize() {
     AliInfoF(">> Reaction Channel    = %s", ReactionChannel.Data());
     AliInfoF(">> Sexaquark Mass      = %.2f", fSexaquarkMass);
     AliInfoF(">> DoQA                = %i", (Int_t)fDoQA);
-    // AliInfoF(">> ReweightPt          = %i", (Int_t)fReweightPt); // PENDING
-    // AliInfoF(">> ReweightRadius      = %i", (Int_t)fReweightRadius); // PENDING
+    AliInfoF(">> ReweightPt          = %i", (Int_t)fReweightPt);
+    AliInfoF(">> ReweightRadius      = %i", (Int_t)fReweightRadius);
 }
 
 /*
@@ -1304,6 +1318,13 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
     Float_t cpa_wrt_pv;
     Float_t dca_wrt_pv;
 
+    Double_t injected_px, injected_py;
+    Double_t injected_pt;
+    if (fReadSignalLogs) {
+        fLogTree->SetBranchAddress("Sexa_Px_ini", &injected_px);
+        fLogTree->SetBranchAddress("Sexa_Py_ini", &injected_py);
+    }
+
     /* Loop over reactions */
 
     for (UInt_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
@@ -1352,7 +1373,11 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
         /* Fill containers */
 
-        getPt_fromReactionIdx[reactionIdx] = lvAntiSexaquark.Pt();
+        if (fReadSignalLogs) {
+            fLogTree->GetEntry(reactionIdx - 600);
+            injected_pt = TMath::Sqrt(TMath::Power(injected_px, 2) + TMath::Power(injected_py, 2));
+            getPt_fromReactionIdx[reactionIdx] = injected_pt;
+        }
         getRadius_fromReactionIdx[reactionIdx] = radius;
 
         /* Fill histograms */
@@ -1360,11 +1385,14 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
         fHist_AntiSexaquarks_Bookkeep->Fill(0);
         if (fReactionID == 'H') fHist_PosKaonPairs_Bookkeep->Fill(0);
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Mass")]->Fill(lvAntiSexaquark.M());
+        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pt_ini")]->Sumw2();
+        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pt_ini")]->Fill(injected_pt);
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Px")]->Fill(lvAntiSexaquark.Px());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Py")]->Fill(lvAntiSexaquark.Py());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
+        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Radius")]->Sumw2();
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Radius")]->Fill(radius);
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Zv")]->Fill(mcProduct->Zv());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
@@ -3446,6 +3474,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
 
     Bool_t is_signal;
     Int_t reaction_idx;
+    Double_t pt_weight, radius_weight;
 
     Float_t impar_v0a_neg_sv[2], impar_v0a_pos_sv[2];
     Float_t impar_v0b_neg_sv[2], impar_v0b_pos_sv[2];
@@ -3615,8 +3644,15 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
                                                                                       (Double_t)kfAntiSexaquark.GetNDF());  // exclusive
 
             reaction_idx = getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
-            fHist_AntiSexaquarks[std::make_tuple("Reweighted", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt(), GetPtWeight(reaction_idx));
-            fHist_AntiSexaquarks[std::make_tuple("Reweighted", "Signal", "Radius")]->Fill(radius, GetRadiusWeight(reaction_idx));
+            pt_weight = GetPtWeight(reaction_idx);
+            radius_weight = GetRadiusWeight(reaction_idx);
+
+            fHist_AntiSexaquarks[std::make_tuple("Reweighted", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt(), pt_weight);
+            fHist_AntiSexaquarks[std::make_tuple("Reweighted", "Signal", "Radius")]->Fill(radius, radius_weight);
+
+            fHist_AntiSexaquarks_Bookkeep->Fill(21, pt_weight);
+            fHist_AntiSexaquarks_Bookkeep->Fill(22, radius_weight);
+            fHist_AntiSexaquarks_Bookkeep->Fill(23, pt_weight * radius_weight);
         }  // end of loop over K0S
     }      // end of loop over anti-lambdas
 }
