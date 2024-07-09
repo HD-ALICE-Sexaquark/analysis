@@ -77,6 +77,7 @@ void GenerateBlastWaveTF1s() {
         /* Histogram */
 
         h = new TH1D(Form("BlastWaveHist_%.2f", inv_mass), "", 100, min_pt, max_pt);
+        h->Sumw2();
 
         for (Int_t i = 0; i < n_entries; i++) {
             h->Fill(f->GetRandom(rnd));

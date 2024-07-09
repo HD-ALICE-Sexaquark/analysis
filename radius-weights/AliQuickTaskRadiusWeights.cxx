@@ -57,6 +57,7 @@ void AliQuickTaskRadiusWeights::PrepareHistograms() {
     TString stage = "MCGen_PhotonConversions";
 
     fHist_MCGen_SFM_Radius = new TH1F(stage + "_Radius", "", 360, 0., 180.);
+    fHist_MCGen_SFM_Radius->Sumw2();
     fOutputListOfHists->Add(fHist_MCGen_SFM_Radius);
 
     fHist_MCGen_SFM_YvsX = new TH2F(stage + "_YvsX", "", 600, -600., 600., 600, -600., 600.);
@@ -65,8 +66,6 @@ void AliQuickTaskRadiusWeights::PrepareHistograms() {
 
 /*
  Main function, called per each event at RUNTIME ~ execution on Grid
- - Uses: `fIsMC`, `fMC_PrimaryVertex`, `fESD`, `fPrimaryVertex`, `fMagneticField`, `fSourceOfV0s`, `fOutputListOfTrees`,
- `fOutputListOfHists`
 */
 void AliQuickTaskRadiusWeights::UserExec(Option_t*) {
 
@@ -86,7 +85,7 @@ void AliQuickTaskRadiusWeights::UserExec(Option_t*) {
 
 /*
  Loop over MC particles in a single event.
- - Uses: `fMC`, `fPDG`, `fMC_PrimaryVertex`
+ - Uses: `fMC`, `fMC_PrimaryVertex`
 */
 void AliQuickTaskRadiusWeights::ProcessMCGen() {
 
@@ -130,7 +129,6 @@ void AliQuickTaskRadiusWeights::ProcessMCGen() {
                     mcDaughter = (AliMCParticle*)fMC->GetTrack(mcIdxNegDaughter);
                     conv_radius = TMath::Sqrt(mcDaughter->Xv() * mcDaughter->Xv() + mcDaughter->Yv() * mcDaughter->Yv());
                     if (5. < conv_radius && conv_radius < 180.) {
-                        AliInfoF("Photon conversion at %.2f cm", conv_radius);  // DEBUG
                         fHist_MCGen_SFM_Radius->Fill(conv_radius);
                         fHist_MCGen_SFM_YvsX->Fill(mcDaughter->Xv(), mcDaughter->Yv());
                     }
