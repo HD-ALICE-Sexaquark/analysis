@@ -416,9 +416,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      - `19`   : Found
      - `20`   : Found signal
     */
-    TH1F* fHist_AntiSexaquarks_Bookkeep;
+    TH1D* fHist_AntiSexaquarks_Bookkeep;
     // key: `stage, set, property`, value: histogram
-    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_AntiSexaquarks;  //!
+    std::map<std::tuple<TString, TString, TString>, TH1D*> fHist_AntiSexaquarks;  //!
 
     /** Channel H / Pos. Kaon Pairs Histograms **/
 
