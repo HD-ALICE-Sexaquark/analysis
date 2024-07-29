@@ -1,11 +1,11 @@
 #!/bin/bash
 
-DATASET_TYPE="sim" # ${1}
-MC_TYPE="signal" # ${2}
-RC="A"
-SM=1.8
+export DATASET_TYPE="sim" # ${1}
+export MC_TYPE="signal" # ${2}
+export RC="A"
+export SM=1.8
 
-RUN_NUMBERS=(
+export RUN_NUMBERS=(
             ### LHC15o_pass2 / central tracking / hadron PID (144 / 144)
             246994 246991 246989 246984 246982 246948 246945 246928 246871 246870
             246867 246865 246864 246859 246858 246851 246847 246846 246845 246844
@@ -38,7 +38,7 @@ RUN_NUMBERS=(
             295610 295589 295588 295586 295585 296307 296068 295947 295945 295943
             295677 295908 295881 295671 295665
             ### LHC18r_pass3 / central tracking / hadron PID (90 / 90)
-            # 297595 297590 297588 297558 297544 297542 297541 297540 297537 297512
+            297595 297590 297588 297558 297544 297542 297541 297540 297537 297512
             297483 297481 297479 297452 297451 297450 297446 297442 297441 297415
             297414 297413 297406 297405 297380 297379 297372 297367 297366 297363
             297336 297335 297333 297332 297317 297311 297310 297278 297222 297221
@@ -49,28 +49,28 @@ RUN_NUMBERS=(
             296787 296786 296785 296784 296781 296752 296694 296693 296691 296690
             )
 
-SIMS_DIR=/home/ceres/borquez/some/sims
-CURRENT_DIR=$(pwd)
+export SIMS_DIR=${HOME}/some/sims
+export CURRENT_DIR=$(pwd)
 
 for ((i=0; i<${#RUN_NUMBERS[@]}; i++)); do
 
-    RN=${RUN_NUMBERS[i]}
+    export RN=${RUN_NUMBERS[i]}
 
     # determine DATASET
     DS_FILE=$(rg -l ${RN} ${CURRENT_DIR}/../doc/)
     DS_FILE=$(basename ${DS_FILE})
-    DS=${DS_FILE/%_*}
+    export DS=${DS_FILE/%_*}
 
     # determine SIMSET and RUN_DIR
     if [[ ${MC_TYPE} == "signal" ]]; then
         if [[ ${DS} == "LHC15o" ]]; then SS="LHC23l1b3"
         elif [[ ${DS} == "LHC18q" || ${DS} == "LHC18r" ]]; then SS="LHC23l1a3"; fi
-        RUN_DIR=${SIMS_DIR}/${SS}/${RC}${SM}/${RN}
+        export RUN_DIR=${SIMS_DIR}/${SS}/${RC}${SM}/${RN}
     elif [[ ${MC_TYPE} == "bkg" ]]; then
         if [[ ${DS} == "LHC15o" ]]; then SS="LHC20j6a"
         elif [[ ${DS} == "LHC18q" || ${DS} == "LHC18r" ]]; then SS="LHC20e3a"; fi
-        RUN_DIR=${SIMS_DIR}/${SS}/${RN}
+        export RUN_DIR=${SIMS_DIR}/${SS}/${RN}
     fi
 
-    sbatch --job-name=${DATASET_TYPE}_${MC_TYPE}_${RC}${SM}_${RN} run_sim.sh ${MC_TYPE} ${RC} ${SM} ${RN} ${CURRENT_DIR} ${RUN_DIR} ${DS}
+    sbatch --job-name=${DATASET_TYPE}_${MC_TYPE}_${RC}${SM}_${RN} run_sim.sh
 done

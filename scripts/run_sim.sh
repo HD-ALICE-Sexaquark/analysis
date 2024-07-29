@@ -2,14 +2,12 @@
 
 #SBATCH --partition=main
 #SBATCH --time=10:00
+#SBATCH --mem-per-cpu=3000
 
-MC_TYPE=$1
-RC=$2
-SM=$3
-RN=$4
-CURRENT_DIR=$5
-RUN_DIR=$6
-DS=$7
+if [[ -z ${MC_TYPE} || -z ${RC} || -z ${SM} || -z ${RN} || -z ${CURRENT_DIR} || -z ${RUN_DIR} || -z ${DS} ]]; then
+    echo "run_sim.sh :: one or more env. vars. are undefined!!"
+    exit 1
+fi
 
 V0S_OPTION="kalman"
 
@@ -48,7 +46,7 @@ for DN in {001..006}; do # CONTROL N DIRS
     ln -s ${RUN_DIR}/${DN}/galice.root
     if [[ ${MC_TYPE} == "signal" ]]; then  ln -s ${RUN_DIR}/${DN}/sim.log; fi
 
-    aliroot -l -b -q 'runAnalysis.C(1, "'${DS}'", "'${V0S_OPTION}'", "'${RC}${SM}'", '${READ_LOGS}', 1, 0)'
+    aliroot -l -b -q 'runAnalysis.C(1, "'${DS}'", "'${V0S_OPTION}'", "'${RC}${SM}'", '${READ_LOGS}', 1, 1, 1, 0)'
 done
 
 cd ${CURRENT_DIR}
