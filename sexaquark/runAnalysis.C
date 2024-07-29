@@ -10,8 +10,8 @@
 
 #include "AliAnalysisTaskSexaquark.h"
 
-void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Bool_t ReadSignalLogs, Bool_t DoQA,
-                 Int_t ChooseNEvents = 0) {
+void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Bool_t ReadSignalLogs, Bool_t DoQA, Bool_t ReweightPt,
+                 Bool_t ReweightRadius, Int_t ChooseNEvents = 0) {
 
     // tell root where to look for headers
     gInterpreter->ProcessLine(".include ${ROOTSYS}/include");
@@ -66,8 +66,8 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
     Char_t ReactionID = SimulationSet(0);
     Float_t SexaquarkMass = ((TString)SimulationSet(1, SimulationSet.Length())).Atof();
     AliAnalysisTaskSexaquark *task = reinterpret_cast<AliAnalysisTaskSexaquark *>(
-        gInterpreter->ExecuteMacro(Form("AddSexaquark.C(%i, \"%s\", \'%c\', %.2f, %i, %i)", (Int_t)IsMC, SourceOfV0s.Data(), ReactionID,
-                                        SexaquarkMass, (Int_t)ReadSignalLogs, (Int_t)DoQA)));
+        gInterpreter->ExecuteMacro(Form("AddSexaquark.C(%i, \"%s\", \'%c\', %.2f, %i, %i, %i, %i)", (Int_t)IsMC, SourceOfV0s.Data(), ReactionID,
+                                        SexaquarkMass, (Int_t)ReadSignalLogs, (Int_t)DoQA, (Int_t)ReweightPt, (Int_t)ReweightRadius)));
 
     if (!mgr->InitAnalysis()) {
         return;

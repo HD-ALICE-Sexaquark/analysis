@@ -7,7 +7,8 @@ TH1F *GetRadiusWeights(TString filename);
 /* --- */
 
 AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s = "offline", Char_t ReactionID = 'A', Float_t SexaquarkMass = 1.8,
-                                       Bool_t ReadSignalLogs = kTRUE, Bool_t DoQA = kFALSE) {
+                                       Bool_t ReadSignalLogs = kTRUE, Bool_t DoQA = kFALSE, Bool_t ReweightPt = kFALSE,
+                                       Bool_t ReweightRadius = kFALSE) {
     // get the manager via the static access member. since it's static, you don't need
     // to create an instance of the class here to call the function
     AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
@@ -35,8 +36,8 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
     task->SetSexaquarkMass(SexaquarkMass);
     task->ReadSignalLogs(ReadSignalLogs);
     task->DoQA(DoQA);
-    task->ReweightPt(kTRUE);      // TESTING
-    task->ReweightRadius(kTRUE);  // TESTING
+    task->ReweightPt(ReweightPt);
+    task->ReweightRadius(ReweightRadius);
     task->Initialize();
 
     TTree *CsvTree;
