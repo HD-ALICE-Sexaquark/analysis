@@ -1,76 +1,58 @@
 #!/bin/bash
 
-export DATASET_TYPE="sim" # ${1}
-export MC_TYPE="signal" # ${2}
+if [[ -z ${ANALYSIS_DIR} || -z ${SEXAQUARK_DIR} || -z ${OUTPUT_DIR} || -z ${SIMS_DIR} ]]; then
+    echo "submit_many.sh :: make sure to first set:"
+    echo "submiy_many.sh :: - ANALYSIS_DIR  : where the main repository is"
+    echo "submit_many.sh :: - SEXAQUARK_DIR : where the AliAnalysisTaskSexaquark is"
+    echo "submit_many.sh :: - OUTPUT_DIR    : where the output will be stored"
+    echo "submit_many.sh :: - SIMS_DIR      : where the simulations are"
+    exit 1
+fi
+
+mkdir -p ${OUTPUT_DIR}/slurm_logs
+export SBATCH_SETUP="--partition=main"
+SBATCH_SETUP+=" --output=${OUTPUT_DIR}/slurm_logs/slurm-%J.out"
+SBATCH_SETUP+=" --error=${OUTPUT_DIR}/slurm_logs/slurm-%J.err"
+SBATCH_SETUP+=" --time=05:00"
+SBATCH_SETUP+=" --mem-per-cpu=2500"
+
+export IS_MC=1
+export MC_TYPE="signal"
+export V0S_OPTION="kalman"
 export RC="A"
 export SM=1.8
+export READ_LOGS=1
+export DO_QA=1
+export REWEIGHT_PT=1
+export REWEIGHT_RADIUS=1
 
-export RUN_NUMBERS=(
-            ### LHC15o_pass2 / central tracking / hadron PID (144 / 144)
-            246994 246991 246989 246984 246982 246948 246945 246928 246871 246870
-            246867 246865 246864 246859 246858 246851 246847 246846 246845 246844
-            246810 246809 246808 246807 246805 246804 246766 246765 246763 246760
-            246759 246758 246757 246751 246750 246434 246431 246424 246392 246391
-            246276 246275 246272 246271 246225 246222 246217 246185 246182 246181
-            246180 246178 246153 246152 246151 246148 246115 246113 246089 246087
-            246053 246052 246049 246048 246042 246037 246036 246012 246003 246001
-            245963 245954 245952 245949 245923 245833 245831 245829 245793 245785
-            245775 245766 245759 245752 245731 245729 245705 245702 245692 245683
-            245554 245545 245544 245543 245542 245540 245535 245507 245505 245504
-            245501 245497 245496 245454 245453 245450 245446 245441 245411 245410
-            245409 245407 245401 245397 245396 245353 245349 245347 245346 245345
-            245343 245259 245233 245232 245231 245152 245151 245146 245145 245068
-            245066 245064 244983 244982 244980 244975 244918 244917 245439 245452
-            245700 245738 246428 246980
-            ### LHC18q_pass3 / central tracking / hadron PID (135 / 135)
-            296623 296622 296621 296619 296618 296616 296615 296594 296553 296552
-            296551 296550 296548 296547 296516 296512 296511 296510 296509 296472
-            296433 296424 296423 296420 296419 296415 296414 296383 296381 296380
-            296379 296378 296377 296376 296375 296312 296309 296304 296303 296280
-            296279 296273 296270 296269 296247 296246 296244 296243 296242 296241
-            296240 296198 296197 296196 296195 296194 296192 296191 296143 296142
-            296135 296134 296133 296132 296123 296074 296066 296065 296063 296062
-            296060 296016 295942 295941 295937 295936 295913 295910 295909 295861
-            295860 295859 295856 295855 295854 295853 295831 295829 295826 295825
-            295822 295819 295818 295816 295791 295788 295786 295763 295762 295759
-            295758 295755 295754 295725 295723 295721 295719 295718 295717 295714
-            295712 295676 295675 295673 295668 295667 295666 295615 295612 295611
-            295610 295589 295588 295586 295585 296307 296068 295947 295945 295943
-            295677 295908 295881 295671 295665
-            ### LHC18r_pass3 / central tracking / hadron PID (90 / 90)
-            297595 297590 297588 297558 297544 297542 297541 297540 297537 297512
-            297483 297481 297479 297452 297451 297450 297446 297442 297441 297415
-            297414 297413 297406 297405 297380 297379 297372 297367 297366 297363
-            297336 297335 297333 297332 297317 297311 297310 297278 297222 297221
-            297218 297196 297195 297193 297133 297132 297129 297128 297124 297123
-            297119 297118 297117 297085 297035 297031 296966 296941 296938 296935
-            296934 296932 296931 296930 296903 296900 296899 296894 296852 296851
-            296850 296848 296839 296838 296836 296835 296799 296794 296793 296790
-            296787 296786 296785 296784 296781 296752 296694 296693 296691 296690
-            )
+CURRENT_DIR=$(pwd)
 
-export SIMS_DIR=${HOME}/some/sims
-export CURRENT_DIR=$(pwd)
+DATASETS=( # "LHC15o_pass2"
+           "LHC18q_pass3"
+           "LHC18r_pass3"
+           )
 
-for ((i=0; i<${#RUN_NUMBERS[@]}; i++)); do
+for ((i=0; i<${#DATASETS[@]}; i++)); do
+    export DS=${DATASETS[$i]}
 
-    export RN=${RUN_NUMBERS[i]}
+    RUN_NUMBERS=( $(cat "${ANALYSIS_DIR}/doc/${DS}_rn.txt") )
 
-    # determine DATASET
-    DS_FILE=$(rg -l ${RN} ${CURRENT_DIR}/../doc/)
-    DS_FILE=$(basename ${DS_FILE})
-    export DS=${DS_FILE/%_*}
+    for ((j=0; j<${#RUN_NUMBERS[@]}; j++)); do
+        export RN=${RUN_NUMBERS[$j]}
+        # export RN=${RUN_NUMBERS[0]} # CONTROL
 
-    # determine SIMSET and RUN_DIR
-    if [[ ${MC_TYPE} == "signal" ]]; then
-        if [[ ${DS} == "LHC15o" ]]; then SS="LHC23l1b3"
-        elif [[ ${DS} == "LHC18q" || ${DS} == "LHC18r" ]]; then SS="LHC23l1a3"; fi
-        export RUN_DIR=${SIMS_DIR}/${SS}/${RC}${SM}/${RN}
-    elif [[ ${MC_TYPE} == "bkg" ]]; then
-        if [[ ${DS} == "LHC15o" ]]; then SS="LHC20j6a"
-        elif [[ ${DS} == "LHC18q" || ${DS} == "LHC18r" ]]; then SS="LHC20e3a"; fi
-        export RUN_DIR=${SIMS_DIR}/${SS}/${RN}
-    fi
+        # determine SIMSET and RUN_DIR
+        if [[ ${MC_TYPE} == "signal" ]]; then
+            if [[ ${DS:0:6} == "LHC15o" ]]; then SS="LHC23l1b3"
+            elif [[ ${DS:0:6} == "LHC18q" || ${DS:0:6} == "LHC18r" ]]; then SS="LHC23l1a3"; fi
+            export RUN_DIR=${SIMS_DIR}/${SS}/${RC}${SM}/${RN}
+        elif [[ ${MC_TYPE} == "bkg" ]]; then
+            if [[ ${DS:0:6} == "LHC15o" ]]; then SS="LHC20j6a"
+            elif [[ ${DS:0:6} == "LHC18q" || ${DS:0:6} == "LHC18r" ]]; then SS="LHC20e3a"; fi
+            export RUN_DIR=${SIMS_DIR}/${SS}/${RN}
+        fi
 
-    sbatch --job-name=${DATASET_TYPE}_${MC_TYPE}_${RC}${SM}_${RN} run_sim.sh
+        sbatch ${SBATCH_SETUP} single_rn.sh
+    done
 done

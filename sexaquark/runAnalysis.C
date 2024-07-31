@@ -10,8 +10,15 @@
 
 #include "AliAnalysisTaskSexaquark.h"
 
-void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString SimulationSet, Bool_t ReadSignalLogs, Bool_t DoQA, Bool_t ReweightPt,
-                 Bool_t ReweightRadius, Int_t ChooseNEvents = 0) {
+void runAnalysis(Bool_t IsMC,            //
+                 TString RunPeriod,      // "LHC15o_pass2", "LHC18q_pass3", "LHC18r_pass3"
+                 TString SourceOfV0s,    // "kalman", "offline", "on-the-fly", "custom"
+                 TString SimulationSet,  // "<A,D,E,H><1.73,1.8,1.87,1.94,2.01>" e.g. "A1.73"
+                 Bool_t ReadSignalLogs,  //
+                 Bool_t DoQA,            //
+                 Bool_t ReweightPt,      //
+                 Bool_t ReweightRadius,  //
+                 Int_t ChooseNEvents = 0) {
 
     // tell root where to look for headers
     gInterpreter->ProcessLine(".include ${ROOTSYS}/include");
@@ -32,16 +39,9 @@ void runAnalysis(Bool_t IsMC, TString RunPeriod, TString SourceOfV0s, TString Si
         mgr->SetMCtruthEventHandler(mcHand);
     }
 
-    // choose options depending on data period
-    Int_t n_pass;
-    if (RunPeriod == "LHC15o") {
-        n_pass = 2;
-    } else if (RunPeriod == "LHC18q" || RunPeriod == "LHC18r") {
-        n_pass = 3;
-    } else {
-        printf("Data period not recognized");
-        return;
-    }
+    // get n_pass from the string RunPeriod = "LHC15o_pass2"
+    TString n_pass_str = RunPeriod(RunPeriod.Length() - 1, 1);
+    Int_t n_pass = n_pass_str.Atoi();
 
     // CDB CONNECT
     /*
