@@ -33,7 +33,6 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
     task->IsMC(IsMC);
     task->SetSourceOfV0s(SourceOfV0s);
     task->SetReactionID(ReactionID);
-    task->SetSexaquarkMass(SexaquarkMass);
     task->ReadSignalLogs(ReadSignalLogs);
     task->DoQA(DoQA);
     task->ReweightPt(ReweightPt);

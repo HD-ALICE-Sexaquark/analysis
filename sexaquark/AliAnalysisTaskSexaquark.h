@@ -199,7 +199,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void IsMC(Bool_t IsMC) { fIsMC = IsMC; };
     void SetSourceOfV0s(TString SourceOfV0s) { fSourceOfV0s = SourceOfV0s; };
     void SetReactionID(Char_t ReactionID) { fReactionID = ReactionID; };
-    void SetSexaquarkMass(Float_t SexaquarkMass) { fSexaquarkMass = SexaquarkMass; };
     void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
     void DoQA(Bool_t DoQA) { fDoQA = DoQA; };
     void ReweightPt(Bool_t ReweightPt) { fReweightPt = ReweightPt; };
@@ -329,7 +328,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t fIsMC;                                                  // kTRUE if MC simulation, kFALSE if data
     TString fSourceOfV0s;                                          // choose V0 finder: "offline", "on-the-fly", "custom", "kalman"
     Char_t fReactionID;                                            // reaction channel identifier, could be: 'A', 'D', 'E', 'H'
-    Float_t fSexaquarkMass;                                        // (in GeV/c^2), could be: 1.73, 1.8, 1.87, 1.94, 2.01
     Bool_t fReadSignalLogs;                                        //
     Bool_t fDoQA;                                                  //
     Bool_t fReweightPt;                                            //

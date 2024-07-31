@@ -14,7 +14,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fReweightPt(0),
       fReweightRadius(0),
       fReactionID(0),
-      fSexaquarkMass(0),
       fStruckNucleonPDG(0),
       fList_Trees(0),
       fList_QA_Hists(0),
@@ -99,7 +98,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fReweightPt(0),
       fReweightRadius(0),
       fReactionID(0),
-      fSexaquarkMass(0),
       fStruckNucleonPDG(0),
       fList_Trees(0),
       fList_QA_Hists(0),
@@ -793,15 +791,6 @@ void AliAnalysisTaskSexaquark::Initialize() {
     // clang-format on
     DefineSexaquarkCuts("standard");
 
-    /*
-    // PENDING
-    if (fReweightPt && !fSexaquarkMass) {
-        AliWarning("Sexaquark mass must be set for reweighting the pT distribution.");
-        AliWarning("=> Setting it to 1.8 GeV/c^2.");
-        fSexaquarkMass = 1.8;
-    }
-    */
-
     getNegPdgCode_fromV0PdgCode[-3122] = -2212;
     getPosPdgCode_fromV0PdgCode[-3122] = 211;
     getNegPdgCode_fromV0PdgCode[310] = -211;
@@ -839,7 +828,6 @@ void AliAnalysisTaskSexaquark::Initialize() {
     AliInfoF(">> Source of V0s       = %s", fSourceOfV0s.Data());
     AliInfoF(">> Reaction ID         = %c", fReactionID);
     AliInfoF(">> Reaction Channel    = %s", ReactionChannel.Data());
-    AliInfoF(">> Sexaquark Mass      = %.2f", fSexaquarkMass);
     AliInfoF(">> DoQA                = %i", (Int_t)fDoQA);
     AliInfoF(">> ReweightPt          = %i", (Int_t)fReweightPt);
     AliInfoF(">> ReweightRadius      = %i", (Int_t)fReweightRadius);
