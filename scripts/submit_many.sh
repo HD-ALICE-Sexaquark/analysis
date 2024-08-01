@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ -z ${ANALYSIS_DIR} || -z ${SEXAQUARK_DIR} || -z ${OUTPUT_DIR} || -z ${SIMS_DIR} ]]; then
+if [[ -z ${ANALYSIS_DIR} || -z ${SEXAQUARK_DIR} || -z ${OUTPUT_DIR} || -z ${SLURM_LOGS_DIR} || -z ${SIMS_DIR} ]]; then
     echo "submit_many.sh :: make sure to first set:"
     echo "submiy_many.sh :: - ANALYSIS_DIR  : where the main repository is"
     echo "submit_many.sh :: - SEXAQUARK_DIR : where the AliAnalysisTaskSexaquark is"
@@ -9,12 +9,11 @@ if [[ -z ${ANALYSIS_DIR} || -z ${SEXAQUARK_DIR} || -z ${OUTPUT_DIR} || -z ${SIMS
     exit 1
 fi
 
-mkdir -p ${OUTPUT_DIR}/slurm_logs
 export SBATCH_SETUP="--partition=main"
-SBATCH_SETUP+=" --output=${OUTPUT_DIR}/slurm_logs/slurm-%J.out"
-SBATCH_SETUP+=" --error=${OUTPUT_DIR}/slurm_logs/slurm-%J.err"
-SBATCH_SETUP+=" --time=05:00"
-SBATCH_SETUP+=" --mem-per-cpu=2500"
+SBATCH_SETUP+=" --output=${SLURM_LOGS_DIR}/slurm-%J.out"
+SBATCH_SETUP+=" --error=${SLURM_LOGS_DIR}/slurm-%J.err"
+SBATCH_SETUP+=" --time=10:00"
+SBATCH_SETUP+=" --mem-per-cpu=2000"
 
 export IS_MC=1
 export MC_TYPE="signal"
@@ -28,10 +27,11 @@ export REWEIGHT_RADIUS=1
 
 CURRENT_DIR=$(pwd)
 
-DATASETS=( # "LHC15o_pass2"
-           "LHC18q_pass3"
-           "LHC18r_pass3"
-           )
+DATASETS=(
+         "LHC15o_pass2"
+         "LHC18q_pass3"
+         "LHC18r_pass3"
+         )
 
 for ((i=0; i<${#DATASETS[@]}; i++)); do
     export DS=${DATASETS[$i]}
@@ -53,6 +53,7 @@ for ((i=0; i<${#DATASETS[@]}; i++)); do
             export RUN_DIR=${SIMS_DIR}/${SS}/${RN}
         fi
 
-        sbatch ${SBATCH_SETUP} single_rn.sh
+        JOB_NAME="--job-name=${RC}${SM}_${RN}"
+        sbatch ${JOB_NAME} ${SBATCH_SETUP} single_rn.sh
     done
 done
