@@ -399,8 +399,6 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
 
                     if (stage == "MCGen" && set == "True") continue;
 
-                    if (fReactionID == 'A' && species == 321 && set == "Signal") continue;
-
                     if (stage == "MCGen" && !(tracks_props[prop_idx] == "Px" || tracks_props[prop_idx] == "Py" || tracks_props[prop_idx] == "Pt" ||
                                               tracks_props[prop_idx] == "Pz" || tracks_props[prop_idx] == "Eta")) {
                         continue;
@@ -604,7 +602,9 @@ void AliAnalysisTaskSexaquark::PrepareAntiSexaquarkHistograms() {
                 TString histName = Form("%s_%s_AntiSexaquark_%s", stage.Data(), set.Data(), AS_props[prop_idx].Data());
                 std::tuple<TString, TString, TString> histKey = std::make_tuple(stage, set, AS_props[prop_idx]);
                 fHist_AntiSexaquarks[histKey] = new TH1D(histName, "", AS_nbins[prop_idx], AS_min[prop_idx], AS_max[prop_idx]);
-                if (stage == "Reweighted") fHist_AntiSexaquarks[histKey]->Sumw2();
+                if (stage == "Reweighted" || (stage == "MCGen" && (AS_props[prop_idx] == "Pt_ini" || AS_props[prop_idx] == "Radius"))) {
+                    fHist_AntiSexaquarks[histKey]->Sumw2();
+                }
                 fList_Sexaquarks_Hists->Add(fHist_AntiSexaquarks[histKey]);
             }
         }
@@ -1377,14 +1377,12 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
         fHist_AntiSexaquarks_Bookkeep->Fill(0);
         if (fReactionID == 'H') fHist_PosKaonPairs_Bookkeep->Fill(0);
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Mass")]->Fill(lvAntiSexaquark.M());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pt_ini")]->Sumw2();
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pt_ini")]->Fill(injected_pt);
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Px")]->Fill(lvAntiSexaquark.Px());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Py")]->Fill(lvAntiSexaquark.Py());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Radius")]->Sumw2();
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Radius")]->Fill(radius);
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Zv")]->Fill(mcProduct->Zv());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
