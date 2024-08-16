@@ -7,43 +7,127 @@ ClassImp(AliAnalysisTaskSexaquark);
 */
 AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
     : AliAnalysisTaskSE(),
+      /*  */
       fIsMC(0),
       fSourceOfV0s(),
-      fReadSignalLogs(0),
+      fReactionID(0),
       fDoQA(0),
+      fReadSignalLogs(0),
       fReweightPt(0),
       fReweightRadius(0),
-      fReactionID(0),
-      fStruckNucleonPDG(0),
+      /*  */
+      fMC(0),
+      fMC_PrimaryVertex(0),
+      fESD(0),
+      fPrimaryVertex(0),
+      fPIDResponse(0),
+      fMagneticField(0.),
+      /*  */
+      fPDG(),
       fList_Trees(0),
+      fTree(0),
       fList_QA_Hists(0),
       fList_Tracks_Hists(0),
       fList_V0s_Hists(0),
       fList_Sexaquarks_Hists(0),
       fList_PosKaonPairs_Hists(0),
-      fMC(0),
-      fMC_PrimaryVertex(0),
-      fESD(0),
-      fPIDResponse(0),
-      fPrimaryVertex(0),
-      fMagneticField(0.),
-      fPDG(),
-      fTree(0),
+      /*  */
+      fAliEnPath(),
       fLogTree(0),
-      // fEvent(),
-      mcIndicesOfTrueV0s(),
+      fIsFirstEvent(0),
+      fPtWeights(0),
+      fRadiusWeights(0),
+      /*  */
+      fProductsPDG(),
+      fFinalStateProductsPDG(),
+      fStruckNucleonPDG(0),
+      getNegPdgCode_fromV0PdgCode(),
+      getPosPdgCode_fromV0PdgCode(),
+      /*  */
+      fHist_QA(),
+      f2DHist_QA(),
+      fHist_Tracks_Bookkeep(),
+      fHist_Tracks(),
+      f2DHist_Tracks_TPCsignal(),
+      fHist_V0s_Bookkeep(),
+      fHist_V0s(),
+      f2DHist_V0s_ArmenterosPodolanski(),
+      fHist_AntiSexaquarks_Bookkeep(),
+      fHist_AntiSexaquarks(),
+      fHist_PosKaonPairs_Bookkeep(),
+      fHist_PosKaonPairs(),
+      /*  */
+      getPdgCode_fromMcIdx(),
       isMcIdxSignal(),
+      isMcIdxSecondary(),
+      getReactionIdx_fromMcIdx(),
+      getMcIdx_fromReactionIdx(),
+      getPt_fromReactionIdx(),
+      getRadius_fromReactionIdx(),
+      doesMcIdxHaveMother(),
+      getMotherMcIdx_fromMcIdx(),
+      getNegDauMcIdx_fromMcIdx(),
+      getPosDauMcIdx_fromMcIdx(),
+      mcIndicesOfTrueV0s(),
+      /*  */
+      getMcIdx_fromEsdIdx(),
+      doesEsdIdxPassTrackSelection(),
+      getEsdIdx_fromMcIdx(),
+      isEsdIdxSignal(),
+      getReactionIdx_fromEsdIdx(),
+      getEsdIdx_fromReactionIdx(),
+      doesEsdIdxHaveMother(),
+      getMotherMcIdx_fromEsdIdx(),
+      getNegDauEsdIdx_fromMcIdx(),
+      getPosDauEsdIdx_fromMcIdx(),
+      esdIndicesOfAntiProtonTracks(),
+      esdIndicesOfPosKaonTracks(),
+      esdIndicesOfPiMinusTracks(),
+      esdIndicesOfPiPlusTracks(),
+      /*  */
+      getEsdIdxOfNegDau_fromAntiLambdaIdx(),
+      getEsdIdxOfPosDau_fromAntiLambdaIdx(),
+      getEsdIdxOfNegDau_fromKaonZeroShortIdx(),
+      getEsdIdxOfPosDau_fromKaonZeroShortIdx(),
+      getEsdIdxOfNegDau_fromPionPairIdx(),
+      getEsdIdxOfPosDau_fromPionPairIdx(),
+      esdAntiLambdas(),
+      esdKaonsZeroShort(),
+      kfAntiLambdas(),
+      kfKaonsZeroShort(),
+      kfPionPairs(),
+      /*  */
       kMax_NSigma_Pion(0.),
       kMax_NSigma_Kaon(0.),
       kMax_NSigma_Proton(0.),
       kMax_Track_Eta(0.),
       kMin_Track_NTPCClusters(0.),
       kMax_Track_Chi2PerNTPCClusters(0.),
-      kTurnedOn_Track_StatusCuts(0.),
-      kTurnedOn_Track_RejectKinks(0.),
+      kTurnedOn_Track_StatusCuts(0),
+      kTurnedOn_Track_RejectKinks(0),
       kMin_Track_DCA_wrtPV(0.),
       kMin_Track_DCAxy_wrtPV(0.),
       kMin_Track_DCAz_wrtPV(0.),
+      kMin_Track_Pt(),
+      /*  */
+      kMin_V0_Mass(),
+      kMax_V0_Mass(),
+      kMax_V0_Eta(),
+      kMax_V0_ArmPtOverAlpha(),
+      kMin_V0_Pt(),
+      kMin_V0_Radius(),
+      kMin_V0_DecayLength(),
+      kMax_V0_DecayLength(),
+      kMin_V0_CPAwrtPV(),
+      kMax_V0_CPAwrtPV(),
+      kMin_V0_DCAwrtPV(),
+      kMax_V0_DCAbtwDau(),
+      kMax_V0_DCAnegV0(),
+      kMax_V0_DCAposV0(),
+      kMax_V0_ImprvDCAbtwDau(),
+      kMax_V0_Chi2(),
+      kMax_V0_Chi2ndf(),
+      /*  */
       kMin_Sexa_Mass(0.),
       kMax_Sexa_Mass(0.),
       kMin_Sexa_Pt(0.),
@@ -55,18 +139,19 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       kMax_Sexa_CPAwrtPV(0.),
       kMin_Sexa_DCAwrtPV(0.),
       kMax_Sexa_DCAwrtPV(0.),
-      kMax_Sexa_DCAbtwV0s(0.),  // channel A
+      kMax_Sexa_Chi2ndf(0.),
+      kMax_Sexa_DCAbtwV0s(0.),
       kMax_Sexa_DCAv0aSV(0.),
       kMax_Sexa_DCAv0bSV(0.),
       kMax_Sexa_DCAv0anegSV(0.),
       kMax_Sexa_DCAv0aposSV(0.),
       kMax_Sexa_DCAv0bnegSV(0.),
       kMax_Sexa_DCAv0bposSV(0.),
-      kMax_Sexa_DCAv0ba(0.),  // channel D
       kMax_Sexa_DCAbaSV(0.),
+      kMax_Sexa_DCAv0ba(0.),
       kMax_Sexa_DCAv0negba(0.),
       kMax_Sexa_DCAv0posba(0.),
-      kMax_Sexa_DCAv0SV(0.),  // channel E
+      kMax_Sexa_DCAv0SV(0.),
       kMax_Sexa_DCAv0negSV(0.),
       kMax_Sexa_DCAv0posSV(0.),
       kMax_Sexa_DCApkSV(0.),
@@ -77,57 +162,143 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       kMax_Sexa_DCAv0pp(0.),
       kMax_Sexa_DCApkpm(0.),
       kMax_Sexa_DCApkpp(0.),
-      kMin_PosKaonPair_Radius(0.),  // channel H
+      /*  */
+      kMin_PosKaonPair_Radius(0.),
       kMin_PosKaonPair_Pt(0.),
       kMin_PosKaonPair_DCAwrtPV(0.),
       kMax_PosKaonPair_DCAbtwKaons(0.),
       kMax_PosKaonPair_DCApkaSV(0.),
       kMax_PosKaonPair_DCApkbSV(0.),
-      kMax_PosKaonPair_Chi2ndf(0.),
-      kMax_Sexa_Chi2ndf(0.) {}
+      kMax_PosKaonPair_Chi2ndf(0.)
+// fEvent()
+{}
 
 /*
  Constructor, called locally.
 */
 AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
     : AliAnalysisTaskSE(name),
+      /*  */
       fIsMC(0),
-      fSourceOfV0s(0),
-      fReadSignalLogs(0),
+      fSourceOfV0s(),
+      fReactionID(0),
       fDoQA(0),
+      fReadSignalLogs(0),
       fReweightPt(0),
       fReweightRadius(0),
-      fReactionID(0),
-      fStruckNucleonPDG(0),
+      /*  */
+      fMC(0),
+      fMC_PrimaryVertex(0),
+      fESD(0),
+      fPrimaryVertex(0),
+      fPIDResponse(0),
+      fMagneticField(0.),
+      /*  */
+      fPDG(),
       fList_Trees(0),
+      fTree(0),
       fList_QA_Hists(0),
       fList_Tracks_Hists(0),
       fList_V0s_Hists(0),
       fList_Sexaquarks_Hists(0),
       fList_PosKaonPairs_Hists(0),
-      fMC(0),
-      fMC_PrimaryVertex(0),
-      fESD(0),
-      fPIDResponse(0),
-      fPrimaryVertex(0),
-      fMagneticField(0.),
-      fPDG(),
-      fTree(0),
+      /*  */
+      fAliEnPath(),
       fLogTree(0),
-      //   fEvent(),
-      mcIndicesOfTrueV0s(),
+      fIsFirstEvent(0),
+      fPtWeights(0),
+      fRadiusWeights(0),
+      /*  */
+      fProductsPDG(),
+      fFinalStateProductsPDG(),
+      fStruckNucleonPDG(0),
+      getNegPdgCode_fromV0PdgCode(),
+      getPosPdgCode_fromV0PdgCode(),
+      /*  */
+      fHist_QA(),
+      f2DHist_QA(),
+      fHist_Tracks_Bookkeep(),
+      fHist_Tracks(),
+      f2DHist_Tracks_TPCsignal(),
+      fHist_V0s_Bookkeep(),
+      fHist_V0s(),
+      f2DHist_V0s_ArmenterosPodolanski(),
+      fHist_AntiSexaquarks_Bookkeep(),
+      fHist_AntiSexaquarks(),
+      fHist_PosKaonPairs_Bookkeep(),
+      fHist_PosKaonPairs(),
+      /*  */
+      getPdgCode_fromMcIdx(),
       isMcIdxSignal(),
+      isMcIdxSecondary(),
+      getReactionIdx_fromMcIdx(),
+      getMcIdx_fromReactionIdx(),
+      getPt_fromReactionIdx(),
+      getRadius_fromReactionIdx(),
+      doesMcIdxHaveMother(),
+      getMotherMcIdx_fromMcIdx(),
+      getNegDauMcIdx_fromMcIdx(),
+      getPosDauMcIdx_fromMcIdx(),
+      mcIndicesOfTrueV0s(),
+      /*  */
+      getMcIdx_fromEsdIdx(),
+      doesEsdIdxPassTrackSelection(),
+      getEsdIdx_fromMcIdx(),
+      isEsdIdxSignal(),
+      getReactionIdx_fromEsdIdx(),
+      getEsdIdx_fromReactionIdx(),
+      doesEsdIdxHaveMother(),
+      getMotherMcIdx_fromEsdIdx(),
+      getNegDauEsdIdx_fromMcIdx(),
+      getPosDauEsdIdx_fromMcIdx(),
+      esdIndicesOfAntiProtonTracks(),
+      esdIndicesOfPosKaonTracks(),
+      esdIndicesOfPiMinusTracks(),
+      esdIndicesOfPiPlusTracks(),
+      /*  */
+      getEsdIdxOfNegDau_fromAntiLambdaIdx(),
+      getEsdIdxOfPosDau_fromAntiLambdaIdx(),
+      getEsdIdxOfNegDau_fromKaonZeroShortIdx(),
+      getEsdIdxOfPosDau_fromKaonZeroShortIdx(),
+      getEsdIdxOfNegDau_fromPionPairIdx(),
+      getEsdIdxOfPosDau_fromPionPairIdx(),
+      esdAntiLambdas(),
+      esdKaonsZeroShort(),
+      kfAntiLambdas(),
+      kfKaonsZeroShort(),
+      kfPionPairs(),
+      /*  */
       kMax_NSigma_Pion(0.),
       kMax_NSigma_Kaon(0.),
       kMax_NSigma_Proton(0.),
       kMax_Track_Eta(0.),
       kMin_Track_NTPCClusters(0.),
       kMax_Track_Chi2PerNTPCClusters(0.),
-      kTurnedOn_Track_StatusCuts(0.),
-      kTurnedOn_Track_RejectKinks(0.),
+      kTurnedOn_Track_StatusCuts(0),
+      kTurnedOn_Track_RejectKinks(0),
       kMin_Track_DCA_wrtPV(0.),
       kMin_Track_DCAxy_wrtPV(0.),
       kMin_Track_DCAz_wrtPV(0.),
+      kMin_Track_Pt(),
+      /*  */
+      kMin_V0_Mass(),
+      kMax_V0_Mass(),
+      kMax_V0_Eta(),
+      kMax_V0_ArmPtOverAlpha(),
+      kMin_V0_Pt(),
+      kMin_V0_Radius(),
+      kMin_V0_DecayLength(),
+      kMax_V0_DecayLength(),
+      kMin_V0_CPAwrtPV(),
+      kMax_V0_CPAwrtPV(),
+      kMin_V0_DCAwrtPV(),
+      kMax_V0_DCAbtwDau(),
+      kMax_V0_DCAnegV0(),
+      kMax_V0_DCAposV0(),
+      kMax_V0_ImprvDCAbtwDau(),
+      kMax_V0_Chi2(),
+      kMax_V0_Chi2ndf(),
+      /*  */
       kMin_Sexa_Mass(0.),
       kMax_Sexa_Mass(0.),
       kMin_Sexa_Pt(0.),
@@ -139,18 +310,19 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       kMax_Sexa_CPAwrtPV(0.),
       kMin_Sexa_DCAwrtPV(0.),
       kMax_Sexa_DCAwrtPV(0.),
-      kMax_Sexa_DCAbtwV0s(0.),  // channel A
+      kMax_Sexa_Chi2ndf(0.),
+      kMax_Sexa_DCAbtwV0s(0.),
       kMax_Sexa_DCAv0aSV(0.),
       kMax_Sexa_DCAv0bSV(0.),
       kMax_Sexa_DCAv0anegSV(0.),
       kMax_Sexa_DCAv0aposSV(0.),
       kMax_Sexa_DCAv0bnegSV(0.),
       kMax_Sexa_DCAv0bposSV(0.),
-      kMax_Sexa_DCAv0ba(0.),  // channel D
       kMax_Sexa_DCAbaSV(0.),
+      kMax_Sexa_DCAv0ba(0.),
       kMax_Sexa_DCAv0negba(0.),
       kMax_Sexa_DCAv0posba(0.),
-      kMax_Sexa_DCAv0SV(0.),  // channel E
+      kMax_Sexa_DCAv0SV(0.),
       kMax_Sexa_DCAv0negSV(0.),
       kMax_Sexa_DCAv0posSV(0.),
       kMax_Sexa_DCApkSV(0.),
@@ -161,14 +333,16 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       kMax_Sexa_DCAv0pp(0.),
       kMax_Sexa_DCApkpm(0.),
       kMax_Sexa_DCApkpp(0.),
-      kMin_PosKaonPair_Radius(0.),  // channel H
+      /*  */
+      kMin_PosKaonPair_Radius(0.),
       kMin_PosKaonPair_Pt(0.),
       kMin_PosKaonPair_DCAwrtPV(0.),
       kMax_PosKaonPair_DCAbtwKaons(0.),
       kMax_PosKaonPair_DCApkaSV(0.),
       kMax_PosKaonPair_DCApkbSV(0.),
-      kMax_PosKaonPair_Chi2ndf(0.),
-      kMax_Sexa_Chi2ndf(0.) {
+      kMax_PosKaonPair_Chi2ndf(0.)
+// fEvent()
+{
     DefineInput(0, TChain::Class());
     DefineOutput(1, TList::Class());  // fList_Trees
     DefineOutput(2, TList::Class());  // fList_QA_Hists
@@ -196,15 +370,15 @@ AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
 */
 void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
+    AliInfo("!! It begins !!");
+
+    /** Add mandatory routines **/
+
     AliAnalysisManager* man = AliAnalysisManager::GetAnalysisManager();
-    if (!man) {
-        AliFatal("ERROR: AliAnalysisManager couldn't be found.");
-    }
+    if (!man) AliFatal("ERROR: AliAnalysisManager couldn't be found.");
 
     AliESDInputHandler* inputHandler = (AliESDInputHandler*)(man->GetInputEventHandler());
-    if (!inputHandler) {
-        AliFatal("ERROR: AliESDInputHandler couldn't be found.");
-    }
+    if (!inputHandler) AliFatal("ERROR: AliESDInputHandler couldn't be found.");
 
     fPIDResponse = inputHandler->GetPIDResponse();
 
@@ -215,12 +389,15 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fList_Trees = new TList();
     fList_Trees->SetOwner(kTRUE);
 
-    if (fReadSignalLogs) fList_Trees->Add(fLogTree);
+    fLogTree = nullptr;
+    if (fReadSignalLogs) {
+        fLogTree = new TTree("Injected", "Injected");
+        fList_Trees->Add(fLogTree);
+    }
 
-    fTree = new TTree("Events", "Tree of Events");
+    fTree = new TTree("Events", "Events");
     // SetBranches();
     fList_Trees->Add(fTree);
-
     PostData(1, fList_Trees);
 
     /* Histograms */
@@ -228,36 +405,31 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fList_QA_Hists = new TList();
     fList_QA_Hists->SetOwner(kTRUE);
     if (fDoQA) PrepareQAHistograms();
+    if (fReweightPt) fList_QA_Hists->Add(fPtWeights);
+    if (fReweightRadius) fList_QA_Hists->Add(fRadiusWeights);
     PostData(2, fList_QA_Hists);
-
-    // TESTING
-    fList_QA_Hists->Add(fPtWeights);
-    fList_QA_Hists->Add(fRadiusWeights);
 
     fList_Tracks_Hists = new TList();
     fList_Tracks_Hists->SetOwner(kTRUE);
+    PrepareTracksHistograms();
+    PostData(3, fList_Tracks_Hists);
 
     fList_V0s_Hists = new TList();
     fList_V0s_Hists->SetOwner(kTRUE);
+    if (fReactionID != 'H') PrepareV0Histograms();
+    PostData(4, fList_V0s_Hists);
 
     fList_Sexaquarks_Hists = new TList();
     fList_Sexaquarks_Hists->SetOwner(kTRUE);
+    if (fReactionID != 'H') PrepareAntiSexaquarkHistograms();
+    PostData(5, fList_Sexaquarks_Hists);
 
     fList_PosKaonPairs_Hists = new TList();
     fList_PosKaonPairs_Hists->SetOwner(kTRUE);
-
-    PrepareTracksHistograms();
-    if (fReactionID != 'H') {
-        PrepareV0Histograms();
-        PrepareAntiSexaquarkHistograms();
-    } else {
-        PreparePosKaonPairHistograms();
-    }
-
-    PostData(3, fList_Tracks_Hists);
-    PostData(4, fList_V0s_Hists);
-    PostData(5, fList_Sexaquarks_Hists);
+    if (fReactionID == 'H') PreparePosKaonPairHistograms();
     PostData(6, fList_PosKaonPairs_Hists);
+
+    AliInfo("!! It ends !!");
 }
 
 /*
@@ -668,6 +840,15 @@ void AliAnalysisTaskSexaquark::PreparePosKaonPairHistograms() {
 */
 void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
+    /* Handle external logs */
+
+    if (fIsFirstEvent) {
+        if (fAliEnPath == "") AliInfo("!! No luck finding fAliEnPath !!");
+        AliInfoF("!! fAliEnPath: %s !!", fAliEnPath.Data());
+        if (LoadLogsIntoTree()) fLogTree->Print();
+        fIsFirstEvent = kFALSE;
+    }
+
     /* Load MC Gen. Event and PV */
 
     if (fIsMC) {
@@ -678,8 +859,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     /* Load Reconstructed Event, PV and Magnetic Field */
 
-    // AliInfoF("(before) KFParticle::GetFieldAlice() = %f", KFParticle::GetFieldAlice());  // DEBUG
-
     fESD = dynamic_cast<AliESDEvent*>(InputEvent());
     if (!fESD) AliFatal("ERROR: AliESDEvent couldn't be found.");
     fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
@@ -689,8 +868,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     // init KFparticle
     KFParticle::SetField(fMagneticField);
-
-    // AliInfoF("(after) KFParticle::GetFieldAlice() = %f", KFParticle::GetFieldAlice());  // DEBUG
 
     if (!PassesEventSelection()) return;
 
@@ -752,6 +929,26 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     PostData(4, fList_V0s_Hists);
     PostData(5, fList_Sexaquarks_Hists);
     PostData(6, fList_PosKaonPairs_Hists);
+}
+
+/*
+ User implementation of Notify(). Needed for reading the AliEn path.
+ This function is loaded during AliAnalysisManager::Notify().
+ It's called after UserCreateOutputObjects(), but before each UserExec().
+*/
+Bool_t AliAnalysisTaskSexaquark::UserNotify() {
+    AliAnalysisManager* man = AliAnalysisManager::GetAnalysisManager();
+    if (!man) AliFatal("!! Analysis Manager not found !!");
+    TTree* man_tree = man->GetTree();
+    if (!man_tree) AliFatal("!! Analysis Manager Tree not found !!");
+    TFile* man_file = man_tree->GetCurrentFile();
+    if (!man_file) AliFatal("!! Analysis Manager File not found !!");
+    fAliEnPath = man_file->GetName();
+    AliInfoF("!! Loaded AliEn Path: %s !!", fAliEnPath.Data());
+
+    fIsFirstEvent = kTRUE;
+
+    return kTRUE;
 }
 
 /*
@@ -6180,9 +6377,140 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
     kfPionPairs.clear();
 }
 
-/*                                   */
-/**  Reweighting-related functions  **/
-/*** ============================= ***/
+/*                    */
+/**  External Files  **/
+/*** ============== ***/
+
+/*
+ Hola hola.
+ It's loaded after UserCreateOutputObjects() and before UserExec()
+ - Uses: `fAliEnPath`, `fLogTree`
+ Note: must be executed ONLY when analyzing SIGNAL SIMs, protection PENDING!
+*/
+Bool_t AliAnalysisTaskSexaquark::LoadLogsIntoTree() {
+
+    TGrid* alien = nullptr;
+    if (!gGrid) {
+        alien = TGrid::Connect("alien://");
+        if (!alien) return kFALSE;
+    }
+
+    TString AliEn_Dir = fAliEnPath(0, fAliEnPath.Last('/'));
+    TString Log_Basename = "sim.log";
+
+    TObjArray* tokens = fAliEnPath.Tokenize("/");
+    Int_t AliEn_Year = ((TObjString*)tokens->At(3))->GetString().Atoi();
+    // TString AliEn_ProductionName = ((TObjString*)tokens->At(4))->GetString();
+    TString AliEn_SimSubSet = ((TObjString*)tokens->At(5))->GetString();
+    Char_t ReactionChannelLetter = AliEn_SimSubSet[0];
+    Double_t SM = TString(AliEn_SimSubSet(1, 4)).Atof();
+    Int_t AliEn_RunNumber = ((TObjString*)tokens->At(6))->GetString().Atoi();
+    Int_t AliEn_DirNumber = ((TObjString*)tokens->At(7))->GetString().Atoi();
+
+    TString orig_path = Form("%s/%s", AliEn_Dir.Data(), Log_Basename.Data());
+    AliInfoF("!! Copying file %s ... !!", orig_path.Data());
+
+    gSystem->Exec(Form("alien.py cp %s file://.", orig_path.Data()));
+
+    TString new_path = Form("%s/%s", gSystem->pwd(), Log_Basename.Data());
+    AliInfoF("!! Reading file %s ... !!", new_path.Data());
+
+    std::ifstream SimLog(new_path);
+    if (!SimLog.is_open()) {
+        AliInfo("!! Unable to open file !!");
+        return kFALSE;
+    }
+
+    Int_t EventID = -1;
+    Int_t ReactionID;
+    Int_t NPDGCode;
+    Double_t SPx, SPy, SPz;
+    Double_t NPx, NPy, NPz;
+
+    if (fLogTree->GetBranch("ReactionChannel")) {
+        fLogTree->SetBranchAddress("RunNumber", &AliEn_RunNumber);
+        fLogTree->SetBranchAddress("DirNumber", &AliEn_DirNumber);
+        fLogTree->SetBranchAddress("ReactionChannel", &ReactionChannelLetter);
+        fLogTree->SetBranchAddress("EventID", &EventID);
+        fLogTree->SetBranchAddress("ReactionID", &ReactionID);
+        fLogTree->SetBranchAddress("Nucl_PDGCode", &NPDGCode);
+        fLogTree->SetBranchAddress("Sexa_Px_ini", &SPx);
+        fLogTree->SetBranchAddress("Sexa_Py_ini", &SPy);
+        fLogTree->SetBranchAddress("Sexa_Pz_ini", &SPz);
+        fLogTree->SetBranchAddress("Sexa_M_ini", &SM);
+        fLogTree->SetBranchAddress("Fermi_Px", &NPx);
+        fLogTree->SetBranchAddress("Fermi_Py", &NPy);
+        fLogTree->SetBranchAddress("Fermi_Pz", &NPz);
+    } else {
+        fLogTree->Branch("RunNumber", &AliEn_RunNumber);
+        fLogTree->Branch("DirNumber", &AliEn_DirNumber);
+        fLogTree->Branch("ReactionChannel", &ReactionChannelLetter);
+        fLogTree->Branch("EventID", &EventID);
+        fLogTree->Branch("ReactionID", &ReactionID);
+        fLogTree->Branch("Nucl_PDGCode", &NPDGCode);
+        fLogTree->Branch("Sexa_Px_ini", &SPx);
+        fLogTree->Branch("Sexa_Py_ini", &SPy);
+        fLogTree->Branch("Sexa_Pz_ini", &SPz);
+        fLogTree->Branch("Sexa_M_ini", &SM);
+        fLogTree->Branch("Fermi_Px", &NPx);
+        fLogTree->Branch("Fermi_Py", &NPy);
+        fLogTree->Branch("Fermi_Pz", &NPz);
+    }
+
+    // auxiliary variables
+    std::string cstr_line;
+    TString tstr_line, csv;
+    TObjArray* csv_arr = nullptr;
+
+    /* Read lines */
+
+    while (std::getline(SimLog, cstr_line)) {
+
+        tstr_line = cstr_line;
+
+        // a new event has appeared
+        if (tstr_line.Contains("I-AliGenCocktail::Generate: Generator 1: AliGenHijing")) EventID++;
+
+        if (!tstr_line.Contains("I-AliGenSexaquarkReaction::GenerateN: 6")) continue;
+
+        csv = static_cast<TString>(tstr_line(38, tstr_line.Length() - 1));
+        csv_arr = csv.Tokenize(",");
+
+        ReactionID = dynamic_cast<TObjString*>(csv_arr->At(0))->String().Atoi();
+        NPDGCode = ReactionChannelLetter == 'A' ? 2112 : 2212;  // considering only ADEH
+        SPx = dynamic_cast<TObjString*>(csv_arr->At(1))->String().Atof();
+        SPy = dynamic_cast<TObjString*>(csv_arr->At(2))->String().Atof();
+        SPz = dynamic_cast<TObjString*>(csv_arr->At(3))->String().Atof();
+        NPx = dynamic_cast<TObjString*>(csv_arr->At(4))->String().Atof();
+        NPy = dynamic_cast<TObjString*>(csv_arr->At(5))->String().Atof();
+        NPz = dynamic_cast<TObjString*>(csv_arr->At(6))->String().Atof();
+
+        fLogTree->Fill();
+    }  // end of loop over lines
+
+    AliInfo("!! Closing file ... !!");
+    SimLog.close();
+
+    return kTRUE;
+}
+
+/*
+  Add pT weights.
+*/
+void AliAnalysisTaskSexaquark::AddPtWeights(TH1D* ptWeights) {
+    fPtWeights = dynamic_cast<TH1D*>(ptWeights->Clone());
+    fPtWeights->Scale(1. / fPtWeights->Integral());
+    fPtWeights->Print();
+}
+
+/*
+ Add radius weights.
+*/
+void AliAnalysisTaskSexaquark::AddRadiusWeights(TH1F* radiusWeights) {
+    fRadiusWeights = dynamic_cast<TH1F*>(radiusWeights->Clone());
+    fRadiusWeights->Scale(1. / fRadiusWeights->Integral());
+    fRadiusWeights->Print();
+}
 
 /*
   For a signal candidate, given its reaction index, get its true Pt,

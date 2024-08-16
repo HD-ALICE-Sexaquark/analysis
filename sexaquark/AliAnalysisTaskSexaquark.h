@@ -1,5 +1,5 @@
-#ifndef AliAnalysisTaskSexaquark_H
-#define AliAnalysisTaskSexaquark_H
+#ifndef ALIANALYSISTASKSEXAQUARK_H
+#define ALIANALYSISTASKSEXAQUARK_H
 
 #ifndef ALIANALYSISTASKSE_H
 #include "AliAnalysisTaskSE.h"
@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <array>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
@@ -16,17 +17,20 @@
 #include "TArray.h"
 #include "TChain.h"
 #include "TDatabasePDG.h"
+#include "TFile.h"
+#include "TGrid.h"
 #include "TH1.h"
-#include "TH1F.h"
 #include "TList.h"
 #include "TLorentzVector.h"
+#include "TObjArray.h"
+#include "TObjString.h"
 #include "TROOT.h"
 #include "TString.h"
+#include "TSystem.h"
 #include "TTree.h"
 #include "TVector3.h"
 
 #include "AliAnalysisManager.h"
-#include "AliAnalysisTask.h"
 #include "AliExternalTrackParam.h"
 #include "AliHelix.h"
 #include "AliInputEventHandler.h"
@@ -195,12 +199,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     virtual ~AliAnalysisTaskSexaquark();
     virtual void Terminate(Option_t* option) { return; }
 
-    /* To be stored at analysis manager */
+    /* Settings ~ stored in Analysis Manager */
     void IsMC(Bool_t IsMC) { fIsMC = IsMC; };
     void SetSourceOfV0s(TString SourceOfV0s) { fSourceOfV0s = SourceOfV0s; };
     void SetReactionID(Char_t ReactionID) { fReactionID = ReactionID; };
-    void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
     void DoQA(Bool_t DoQA) { fDoQA = DoQA; };
+    void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
     void ReweightPt(Bool_t ReweightPt) { fReweightPt = ReweightPt; };
     void ReweightRadius(Bool_t ReweightRadius) { fReweightRadius = ReweightRadius; };
     void Initialize();
@@ -208,6 +212,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Main ~ executed at runtime */
     virtual void UserCreateOutputObjects();
     virtual void UserExec(Option_t* option);
+    virtual Bool_t UserNotify();
 
     /* Histograms */
     void PrepareQAHistograms();
@@ -215,19 +220,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void PrepareV0Histograms();
     void PrepareAntiSexaquarkHistograms();
     void PreparePosKaonPairHistograms();
-
-    /* External objects */
-    void AddLogTree(TTree* logTree) { fLogTree = logTree; }
-    void AddPtWeights(TH1D* ptWeights) {
-        fPtWeights = ptWeights;
-        fPtWeights->Scale(1. / fPtWeights->Integral());
-    }
-    void AddRadiusWeights(TH1F* radiusWeights) {
-        fRadiusWeights = radiusWeights;
-        fRadiusWeights->Scale(1. / fRadiusWeights->Integral());
-    }
-    Double_t GetPtWeight(Int_t reactionIdx);
-    Double_t GetRadiusWeight(Int_t reactionIdx);
 
     /* Cuts */
     void DefineTracksCuts(TString cuts_option);
@@ -288,6 +280,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                  TLorentzVector lvPosKaonA, TLorentzVector lvPosKaonB);
 
     /* Utilities */
+    void ClearContainers();
     Bool_t Preoptimize(const AliExternalTrackParam* nt, AliExternalTrackParam* pt, Double_t* lPreprocessxn, Double_t* lPreprocessxp,
                        const Double_t b);
     void GetHelixCenter(const AliExternalTrackParam* track, Double_t center[2], const Double_t b);
@@ -323,30 +316,32 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void GetDStoParticleBz(float Bz, const KFParticleBase& p, const KFParticleBase& q, float dS[2], float dsdr[4][6], const float* param1 = 0,
                            const float* param2 = 0) const;
 
+    /* External Files */
+    Bool_t LoadLogsIntoTree();
+    void AddPtWeights(TH1D* ptWeights);
+    void AddRadiusWeights(TH1F* radiusWeights);
+    Double_t GetPtWeight(Int_t reactionIdx);
+    Double_t GetRadiusWeight(Int_t reactionIdx);
+
    private:
-    /* Input options ~ persistent */
-    Bool_t fIsMC;                                                  // kTRUE if MC simulation, kFALSE if data
-    TString fSourceOfV0s;                                          // choose V0 finder: "offline", "on-the-fly", "custom", "kalman"
-    Char_t fReactionID;                                            // reaction channel identifier, could be: 'A', 'D', 'E', 'H'
-    Bool_t fReadSignalLogs;                                        //
-    Bool_t fDoQA;                                                  //
-    Bool_t fReweightPt;                                            //
-    Bool_t fReweightRadius;                                        //
-    std::vector<Int_t> fProductsPDG;                               //
-    std::vector<Int_t> fFinalStateProductsPDG;                     //
-    Int_t fStruckNucleonPDG;                                       // PDG Code of the struck nucleon, could be: 2112 o 2212
-    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;  //
-    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;  //
+    /* Settings ~ stored in Analysis Manager ~ all persistent */
+    Bool_t fIsMC;            // kTRUE if MC simulation, kFALSE if data
+    TString fSourceOfV0s;    // choose V0 finder: "kalman", "custom", "on-the-fly", "offline"
+    Char_t fReactionID;      // reaction channel identifier, could be: 'A', 'D', 'E', 'H'
+    Bool_t fDoQA;            //
+    Bool_t fReadSignalLogs;  //
+    Bool_t fReweightPt;      //
+    Bool_t fReweightRadius;  //
 
-    /* AliRoot objects */
-    AliMCEvent* fMC;                // MC event
-    AliVVertex* fMC_PrimaryVertex;  // MC gen. (or true) primary vertex
-    AliESDEvent* fESD;              // reconstructed event
-    AliESDVertex* fPrimaryVertex;   // primary vertex
-    AliPIDResponse* fPIDResponse;   // pid response object
-    Double_t fMagneticField;        // magnetic field
+    /* AliRoot Objects */
+    AliMCEvent* fMC;                //! MC event
+    AliVVertex* fMC_PrimaryVertex;  //! MC gen. (or true) primary vertex
+    AliESDEvent* fESD;              //! reconstructed event
+    AliESDVertex* fPrimaryVertex;   //! primary vertex
+    AliPIDResponse* fPIDResponse;   //! pid response object
+    Double_t fMagneticField;        //! magnetic field
 
-    /* ROOT objects */
+    /* ROOT Objects */
     TDatabasePDG fPDG;                //!
     TList* fList_Trees;               //!
     TTree* fTree;                     //!
@@ -355,9 +350,22 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TList* fList_V0s_Hists;           //!
     TList* fList_Sexaquarks_Hists;    //!
     TList* fList_PosKaonPairs_Hists;  //!
-    TTree* fLogTree;                  //!
-    TH1D* fPtWeights;                 //!
-    TH1F* fRadiusWeights;             //!
+
+    /* External Files */
+    TString fAliEnPath;    //!
+    TTree* fLogTree;       //!
+    Bool_t fIsFirstEvent;  //!
+    TH1D* fPtWeights;      // (persistent)
+    TH1F* fRadiusWeights;  // (persistent)
+
+    /* Filled at Initialize() ~ persistent */
+    std::vector<Int_t> fProductsPDG;                               //
+    std::vector<Int_t> fFinalStateProductsPDG;                     //
+    Int_t fStruckNucleonPDG;                                       // PDG Code of the struck nucleon, could be: 2112 o 2212
+    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;  //
+    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;  //
+
+    /*** Histograms ***/
 
     /** QA Histograms **/
 
@@ -414,157 +422,160 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      - `19`   : Found
      - `20`   : Found signal
     */
-    TH1D* fHist_AntiSexaquarks_Bookkeep;
+    TH1D* fHist_AntiSexaquarks_Bookkeep;  //!
     // key: `stage, set, property`, value: histogram
     std::map<std::tuple<TString, TString, TString>, TH1D*> fHist_AntiSexaquarks;  //!
 
     /** Channel H / Pos. Kaon Pairs Histograms **/
 
-    TH1F* fHist_PosKaonPairs_Bookkeep;
+    TH1F* fHist_PosKaonPairs_Bookkeep;  //!
     // key: `stage, set, property`, value: histogram
     std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_PosKaonPairs;  //!
 
-    /** Containers -- vectors and hash tables **/
-    // NOTE: when adding a new one, don't forget to clear it on ClearContainers() //
+    /*** Containers -- vectors and hash tables ***/
+    // NOTE: when adding a new one, don't forget to clear it on ClearContainers()!
 
     /* filled at `ProcessMCGen()` */
-    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;
+    std::unordered_map<Int_t, Int_t> getPdgCode_fromMcIdx;  //!
 
-    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;
-    std::unordered_map<Int_t, Bool_t> isMcIdxSecondary;
+    std::unordered_map<Int_t, Bool_t> isMcIdxSignal;     //!
+    std::unordered_map<Int_t, Bool_t> isMcIdxSecondary;  //!
 
-    std::unordered_map<Int_t, UInt_t> getReactionIdx_fromMcIdx;
-    std::unordered_map<UInt_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;
-    std::unordered_map<UInt_t, Float_t> getPt_fromReactionIdx;  // PENDING: it should be the TRUE INJECTED PT
-    std::unordered_map<UInt_t, Float_t> getRadius_fromReactionIdx;
+    std::unordered_map<Int_t, UInt_t> getReactionIdx_fromMcIdx;               //!
+    std::unordered_map<UInt_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;  //!
+    std::unordered_map<UInt_t, Float_t> getPt_fromReactionIdx;                //! PENDING: it should be the TRUE INJECTED PT
+    std::unordered_map<UInt_t, Float_t> getRadius_fromReactionIdx;            //!
 
-    std::unordered_map<Int_t, Bool_t> doesMcIdxHaveMother;
-    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromMcIdx;
-    std::unordered_map<Int_t, Int_t> getNegDauMcIdx_fromMcIdx;
-    std::unordered_map<Int_t, Int_t> getPosDauMcIdx_fromMcIdx;
+    std::unordered_map<Int_t, Bool_t> doesMcIdxHaveMother;      //!
+    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromMcIdx;  //!
+    std::unordered_map<Int_t, Int_t> getNegDauMcIdx_fromMcIdx;  //!
+    std::unordered_map<Int_t, Int_t> getPosDauMcIdx_fromMcIdx;  //!
 
-    std::vector<Int_t> mcIndicesOfTrueV0s;
+    std::vector<Int_t> mcIndicesOfTrueV0s;  //!
 
     /* filled at `ProcessTracks()` */
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;
-    std::unordered_map<Int_t, Bool_t> doesEsdIdxPassTrackSelection;
-    std::unordered_map<Int_t, Int_t> getEsdIdx_fromMcIdx;
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;            //!
+    std::unordered_map<Int_t, Bool_t> doesEsdIdxPassTrackSelection;  //!
+    std::unordered_map<Int_t, Int_t> getEsdIdx_fromMcIdx;            //!
 
-    std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;
-    std::unordered_map<Int_t, UInt_t> getReactionIdx_fromEsdIdx;
-    std::unordered_map<UInt_t, std::vector<Int_t>> getEsdIdx_fromReactionIdx;
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;                          //!
+    std::unordered_map<Int_t, UInt_t> getReactionIdx_fromEsdIdx;               //!
+    std::unordered_map<UInt_t, std::vector<Int_t>> getEsdIdx_fromReactionIdx;  //!
 
-    std::unordered_map<Int_t, Bool_t> doesEsdIdxHaveMother;
-    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromEsdIdx;
-    std::unordered_map<Int_t, Int_t> getNegDauEsdIdx_fromMcIdx;
-    std::unordered_map<Int_t, Int_t> getPosDauEsdIdx_fromMcIdx;
+    std::unordered_map<Int_t, Bool_t> doesEsdIdxHaveMother;      //!
+    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromEsdIdx;  //!
+    std::unordered_map<Int_t, Int_t> getNegDauEsdIdx_fromMcIdx;  //!
+    std::unordered_map<Int_t, Int_t> getPosDauEsdIdx_fromMcIdx;  //!
 
-    std::vector<Int_t> esdIndicesOfAntiProtonTracks;
-    std::vector<Int_t> esdIndicesOfPosKaonTracks;
-    std::vector<Int_t> esdIndicesOfPiMinusTracks;
-    std::vector<Int_t> esdIndicesOfPiPlusTracks;
+    std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //!
+    std::vector<Int_t> esdIndicesOfPosKaonTracks;     //!
+    std::vector<Int_t> esdIndicesOfPiMinusTracks;     //!
+    std::vector<Int_t> esdIndicesOfPiPlusTracks;      //!
 
     /* filled at `GetV0sFromESD() and [Custom|Kalman]V0Finder()` */
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromKaonZeroShortIdx;
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromPionPairIdx;
-    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromPionPairIdx;
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;     //!
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;     //!
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;  //!
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromKaonZeroShortIdx;  //!
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromPionPairIdx;       //!
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromPionPairIdx;       //!
 
-    std::vector<AliESDv0> esdAntiLambdas;
-    std::vector<AliESDv0> esdKaonsZeroShort;
+    std::vector<AliESDv0> esdAntiLambdas;     //!
+    std::vector<AliESDv0> esdKaonsZeroShort;  //!
 
-    std::vector<KFParticleMother> kfAntiLambdas;
-    std::vector<KFParticleMother> kfKaonsZeroShort;
-    std::vector<KFParticleMother> kfPionPairs;
-
-    void ClearContainers();
+    std::vector<KFParticleMother> kfAntiLambdas;     //!
+    std::vector<KFParticleMother> kfKaonsZeroShort;  //!
+    std::vector<KFParticleMother> kfPionPairs;       //!
 
     /*** Cuts ***/
 
-    /* Track selection */
-    Float_t kMax_NSigma_Pion;
-    Float_t kMax_NSigma_Kaon;
-    Float_t kMax_NSigma_Proton;
-    Float_t kMax_Track_Eta;
-    Float_t kMin_Track_NTPCClusters;
-    Float_t kMax_Track_Chi2PerNTPCClusters;
-    Bool_t kTurnedOn_Track_StatusCuts;
-    Bool_t kTurnedOn_Track_RejectKinks;
-    Float_t kMin_Track_DCA_wrtPV;
-    Float_t kMin_Track_DCAxy_wrtPV;
-    Float_t kMin_Track_DCAz_wrtPV;
-    std::unordered_map<Int_t, Float_t> kMin_Track_Pt;
+    /** Tracks **/
+    Float_t kMax_NSigma_Pion;                          //
+    Float_t kMax_NSigma_Kaon;                          //
+    Float_t kMax_NSigma_Proton;                        //
+    Float_t kMax_Track_Eta;                            //
+    Float_t kMin_Track_NTPCClusters;                   //
+    Float_t kMax_Track_Chi2PerNTPCClusters;            //
+    Bool_t kTurnedOn_Track_StatusCuts;                 //
+    Bool_t kTurnedOn_Track_RejectKinks;                //
+    Float_t kMin_Track_DCA_wrtPV;                      //
+    Float_t kMin_Track_DCAxy_wrtPV;                    //
+    Float_t kMin_Track_DCAz_wrtPV;                     //
+    std::unordered_map<Int_t, Float_t> kMin_Track_Pt;  //
 
-    /* V0s */
-    std::unordered_map<Int_t, Float_t> kMin_V0_Mass;
-    std::unordered_map<Int_t, Float_t> kMax_V0_Mass;
-    std::unordered_map<Int_t, Float_t> kMax_V0_Eta;
-    std::unordered_map<Int_t, Float_t> kMax_V0_ArmPtOverAlpha;
-    std::unordered_map<Int_t, Float_t> kMin_V0_Pt;
-    std::unordered_map<Int_t, Float_t> kMin_V0_Radius;
-    std::unordered_map<Int_t, Float_t> kMin_V0_DecayLength;
-    std::unordered_map<Int_t, Float_t> kMax_V0_DecayLength;
-    std::unordered_map<Int_t, Float_t> kMin_V0_CPAwrtPV;
-    std::unordered_map<Int_t, Float_t> kMax_V0_CPAwrtPV;
-    std::unordered_map<Int_t, Float_t> kMin_V0_DCAwrtPV;
-    std::unordered_map<Int_t, Float_t> kMax_V0_DCAbtwDau;
-    std::unordered_map<Int_t, Float_t> kMax_V0_DCAnegV0;
-    std::unordered_map<Int_t, Float_t> kMax_V0_DCAposV0;
-    std::unordered_map<Int_t, Float_t> kMax_V0_ImprvDCAbtwDau;
-    std::unordered_map<Int_t, Float_t> kMax_V0_Chi2;
-    std::unordered_map<Int_t, Float_t> kMax_V0_Chi2ndf;
+    /** V0s **/
+    std::unordered_map<Int_t, Float_t> kMin_V0_Mass;            //
+    std::unordered_map<Int_t, Float_t> kMax_V0_Mass;            //
+    std::unordered_map<Int_t, Float_t> kMax_V0_Eta;             //
+    std::unordered_map<Int_t, Float_t> kMax_V0_ArmPtOverAlpha;  //
+    std::unordered_map<Int_t, Float_t> kMin_V0_Pt;              //
+    std::unordered_map<Int_t, Float_t> kMin_V0_Radius;          //
+    std::unordered_map<Int_t, Float_t> kMin_V0_DecayLength;     //
+    std::unordered_map<Int_t, Float_t> kMax_V0_DecayLength;     //
+    std::unordered_map<Int_t, Float_t> kMin_V0_CPAwrtPV;        //
+    std::unordered_map<Int_t, Float_t> kMax_V0_CPAwrtPV;        //
+    std::unordered_map<Int_t, Float_t> kMin_V0_DCAwrtPV;        //
+    std::unordered_map<Int_t, Float_t> kMax_V0_DCAbtwDau;       //
+    std::unordered_map<Int_t, Float_t> kMax_V0_DCAnegV0;        //
+    std::unordered_map<Int_t, Float_t> kMax_V0_DCAposV0;        //
+    std::unordered_map<Int_t, Float_t> kMax_V0_ImprvDCAbtwDau;  //
+    std::unordered_map<Int_t, Float_t> kMax_V0_Chi2;            //
+    std::unordered_map<Int_t, Float_t> kMax_V0_Chi2ndf;         //
 
-    /* Anti-Sexaquark candidates */
-    Float_t kMin_Sexa_Mass, kMax_Sexa_Mass;
-    Float_t kMin_Sexa_Pt;
-    Float_t kMax_Sexa_Eta;
-    Float_t kMax_Sexa_Rapidity;
-    Float_t kMin_Sexa_DecayLength;
-    Float_t kMin_Sexa_Radius;
-    Float_t kMin_Sexa_CPAwrtPV, kMax_Sexa_CPAwrtPV;
-    Float_t kMin_Sexa_DCAwrtPV, kMax_Sexa_DCAwrtPV;
-    Float_t kMax_Sexa_Chi2ndf;
+    /** Anti-Sexaquark Candidates **/
+    Float_t kMin_Sexa_Mass;         //
+    Float_t kMax_Sexa_Mass;         //
+    Float_t kMin_Sexa_Pt;           //
+    Float_t kMax_Sexa_Eta;          //
+    Float_t kMax_Sexa_Rapidity;     //
+    Float_t kMin_Sexa_DecayLength;  //
+    Float_t kMin_Sexa_Radius;       //
+    Float_t kMin_Sexa_CPAwrtPV;     //
+    Float_t kMax_Sexa_CPAwrtPV;     //
+    Float_t kMin_Sexa_DCAwrtPV;     //
+    Float_t kMax_Sexa_DCAwrtPV;     //
+    Float_t kMax_Sexa_Chi2ndf;      //
     // channel A
-    Float_t kMax_Sexa_DCAbtwV0s;
-    Float_t kMax_Sexa_DCAv0aSV;
-    Float_t kMax_Sexa_DCAv0bSV;
-    Float_t kMax_Sexa_DCAv0anegSV;
-    Float_t kMax_Sexa_DCAv0aposSV;
-    Float_t kMax_Sexa_DCAv0bnegSV;
-    Float_t kMax_Sexa_DCAv0bposSV;
+    Float_t kMax_Sexa_DCAbtwV0s;    //
+    Float_t kMax_Sexa_DCAv0aSV;     //
+    Float_t kMax_Sexa_DCAv0bSV;     //
+    Float_t kMax_Sexa_DCAv0anegSV;  //
+    Float_t kMax_Sexa_DCAv0aposSV;  //
+    Float_t kMax_Sexa_DCAv0bnegSV;  //
+    Float_t kMax_Sexa_DCAv0bposSV;  //
     // channel D
-    Float_t kMax_Sexa_DCAbaSV;
-    Float_t kMax_Sexa_DCAv0ba;
-    Float_t kMax_Sexa_DCAv0negba;
-    Float_t kMax_Sexa_DCAv0posba;
+    Float_t kMax_Sexa_DCAbaSV;     //
+    Float_t kMax_Sexa_DCAv0ba;     //
+    Float_t kMax_Sexa_DCAv0negba;  //
+    Float_t kMax_Sexa_DCAv0posba;  //
     // channel E
-    Float_t kMax_Sexa_DCAv0SV;
-    Float_t kMax_Sexa_DCAv0negSV;
-    Float_t kMax_Sexa_DCAv0posSV;
-    Float_t kMax_Sexa_DCApkSV;
-    Float_t kMax_Sexa_DCApmSV;
-    Float_t kMax_Sexa_DCAppSV;
-    Float_t kMax_Sexa_DCAv0pk;
-    Float_t kMax_Sexa_DCAv0pm;
-    Float_t kMax_Sexa_DCAv0pp;
-    Float_t kMax_Sexa_DCApkpm;
-    Float_t kMax_Sexa_DCApkpp;
+    Float_t kMax_Sexa_DCAv0SV;     //
+    Float_t kMax_Sexa_DCAv0negSV;  //
+    Float_t kMax_Sexa_DCAv0posSV;  //
+    Float_t kMax_Sexa_DCApkSV;     //
+    Float_t kMax_Sexa_DCApmSV;     //
+    Float_t kMax_Sexa_DCAppSV;     //
+    Float_t kMax_Sexa_DCAv0pk;     //
+    Float_t kMax_Sexa_DCAv0pm;     //
+    Float_t kMax_Sexa_DCAv0pp;     //
+    Float_t kMax_Sexa_DCApkpm;     //
+    Float_t kMax_Sexa_DCApkpp;     //
 
-    /* K+K+ pairs */
-    Float_t kMin_PosKaonPair_Radius;
-    Float_t kMin_PosKaonPair_Pt;
-    Float_t kMin_PosKaonPair_DCAwrtPV;
-    Float_t kMax_PosKaonPair_DCAbtwKaons;
-    Float_t kMax_PosKaonPair_DCApkaSV;
-    Float_t kMax_PosKaonPair_DCApkbSV;
-    Float_t kMax_PosKaonPair_Chi2ndf;
+    /** Secondary K+K+ Pairs **/
+    Float_t kMin_PosKaonPair_Radius;       //
+    Float_t kMin_PosKaonPair_Pt;           //
+    Float_t kMin_PosKaonPair_DCAwrtPV;     //
+    Float_t kMax_PosKaonPair_DCAbtwKaons;  //
+    Float_t kMax_PosKaonPair_DCApkaSV;     //
+    Float_t kMax_PosKaonPair_DCApkbSV;     //
+    Float_t kMax_PosKaonPair_Chi2ndf;      //
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
 
-    ClassDef(AliAnalysisTaskSexaquark, 1);
+    /// \cond CLASSDEF
+    ClassDef(AliAnalysisTaskSexaquark, 84);
+    /// \endcond
 };
 
 #endif
