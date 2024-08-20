@@ -405,8 +405,8 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fList_QA_Hists = new TList();
     fList_QA_Hists->SetOwner(kTRUE);
     if (fDoQA) PrepareQAHistograms();
-    if (fReweightPt) fList_QA_Hists->Add(fPtWeights);
-    if (fReweightRadius) fList_QA_Hists->Add(fRadiusWeights);
+    // if (fReweightPt) fList_QA_Hists->Add(fPtWeights); // PENDING: don't want to add them...
+    // if (fReweightRadius) fList_QA_Hists->Add(fRadiusWeights); // PENDING: don't want to add them...
     PostData(2, fList_QA_Hists);
 
     fList_Tracks_Hists = new TList();
@@ -845,7 +845,8 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     if (fIsFirstEvent) {
         if (fAliEnPath == "") AliInfo("!! No luck finding fAliEnPath !!");
         AliInfoF("!! fAliEnPath: %s !!", fAliEnPath.Data());
-        if (LoadLogsIntoTree()) fLogTree->Print();
+        LoadLogsIntoTree();
+        // if (LoadLogsIntoTree()) fLogTree->Print();
         fIsFirstEvent = kFALSE;
     }
 

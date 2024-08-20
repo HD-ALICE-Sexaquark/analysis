@@ -44,6 +44,15 @@ void runAnalysis(TString Mode,            // "local", "grid"
     if (ProductionName.Contains("23l1")) GridDataDir += Form("/%s", SimulationSet.Data());  // signal MC
     TString GridDataPattern = "/*/AliESDs.root";
 
+    TString GridWorkingDir = "work";
+    TString GridOutputDir = "sexaquark";
+    if (!IsMC)
+        GridOutputDir += "_data";
+    else if (ProductionName.Contains("23l1"))
+        GridOutputDir += Form("_signal_mc_%s", SimulationSet.Data());
+    else
+        GridOutputDir += "_bkg_mc";
+
     std::vector<Int_t> GridRunNumbers;
     std::ifstream RunNumbersFile(RunNumbersList);
     if (!RunNumbersFile.is_open()) {
@@ -114,8 +123,9 @@ void runAnalysis(TString Mode,            // "local", "grid"
         alienHandler->SetKeepLogs(kTRUE);
         alienHandler->SetMergeViaJDL(kFALSE);
         // alienHandler->SetMaxMergeStages(1);
-        alienHandler->SetGridWorkingDir("work");
-        alienHandler->SetGridOutputDir("sexaquark");
+        alienHandler->SetGridWorkingDir(GridWorkingDir);
+        alienHandler->SetGridOutputDir(GridOutputDir);
+        alienHandler->SetAnalysisMacro("TaskSexaquark.C");
         alienHandler->SetJDLName("TaskSexaquark.jdl");
         alienHandler->SetExecutable("TaskSexaquark.sh");
         mgr->SetGridHandler(alienHandler);
@@ -175,10 +185,10 @@ void runAnalysis(TString Mode,            // "local", "grid"
 
     if (Mode == "grid") {
         if (GridTestMode) {
-            alienHandler->SetNtestFiles(1);
+            alienHandler->SetNtestFiles(5);
             alienHandler->SetRunMode("test");
         } else {
-            alienHandler->SetSplitMaxInputFileNumber(1);
+            alienHandler->SetSplitMaxInputFileNumber(55);
             alienHandler->SetRunMode("full");
         }
         mgr->StartAnalysis("grid");
