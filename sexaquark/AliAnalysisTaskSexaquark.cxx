@@ -21,6 +21,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fESD(0),
       fPrimaryVertex(0),
       fPIDResponse(0),
+      fEventCuts(),
       fMagneticField(0.),
       /*  */
       fPDG(),
@@ -192,6 +193,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fESD(0),
       fPrimaryVertex(0),
       fPIDResponse(0),
+      fEventCuts(),
       fMagneticField(0.),
       /*  */
       fPDG(),
@@ -405,8 +407,11 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fList_QA_Hists = new TList();
     fList_QA_Hists->SetOwner(kTRUE);
     if (fDoQA) PrepareQAHistograms();
-    // if (fReweightPt) fList_QA_Hists->Add(fPtWeights); // PENDING: don't want to add them...
-    // if (fReweightRadius) fList_QA_Hists->Add(fRadiusWeights); // PENDING: don't want to add them...
+    // ! NOTE:                                                                                                    ! //
+    // ! the following lines are commented on purpose, adding these histograms makes sense for debugging purposes ! //
+    // ! but not for production purposes, as they would only increase the filesize when merging the output files  ! //
+    // if (fReweightPt) fList_QA_Hists->Add(fPtWeights);
+    // if (fReweightRadius) fList_QA_Hists->Add(fRadiusWeights);
     PostData(2, fList_QA_Hists);
 
     fList_Tracks_Hists = new TList();
@@ -864,8 +869,7 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     if (!fESD) AliFatal("ERROR: AliESDEvent couldn't be found.");
     fPrimaryVertex = const_cast<AliESDVertex*>(fESD->GetPrimaryVertex());
     fMagneticField = fESD->GetMagneticField();
-
-    AliInfoF("fMagneticField = %f", fMagneticField);  // DEBUG
+    fRunNumber = fESD->GetRunNumber();
 
     // init KFparticle
     KFParticle::SetField(fMagneticField);
@@ -1604,14 +1608,21 @@ Bool_t AliAnalysisTaskSexaquark::PassesEventSelection() {
 
     /* MC PV z-vertex range */
 
-    if (fIsMC) {
-        if (TMath::Abs(fMC_PrimaryVertex->GetZ()) > 10.) return kFALSE;
-    }
+    if (fIsMC && TMath::Abs(fMC_PrimaryVertex->GetZ()) > 10.) return kFALSE;
     AliInfo("!! MC Event Passed z-vertex range on PV !!");  // DEBUG
 
     if (fDoQA) fHist_QA["Events_Bookkeep"]->Fill(1);
 
-    /* trigger */
+    // ! REFERENCE: https://twiki.cern.ch/twiki/bin/viewauth/ALICE/AliDPGRunList18r ! //
+    if (!fIsMC && (fRunNumber == 296749 || fRunNumber == 296750 || fRunNumber == 296849 || fRunNumber == 296890 || fRunNumber == 297029 ||
+                   fRunNumber == 297194 || fRunNumber == 297219 || fRunNumber == 297481)) {
+        fEventCuts.UseTimeRangeCut();
+        fEventCuts.OverrideAutomaticTriggerSelection(AliVEvent::kAny);
+        if (!fEventCuts.AcceptEvent(fESD)) return kFALSE;
+        AliInfo("!! MC Event Passed z-vertex range on PV !!");  // DEBUG
+    }
+
+    /* Trigger Selection */
 
     Bool_t MB = (fInputHandler->IsEventSelected() & AliVEvent::kINT7);  // kAnyINT
     if (!MB) {
@@ -6399,19 +6410,22 @@ Bool_t AliAnalysisTaskSexaquark::LoadLogsIntoTree() {
     TString AliEn_Dir = fAliEnPath(0, fAliEnPath.Last('/'));
     TString Log_Basename = "sim.log";
 
+    // ! assuming path ends with format .../LHC23l1a3/A1.73/297595/001/sim.log ! //
     TObjArray* tokens = fAliEnPath.Tokenize("/");
-    Int_t AliEn_Year = ((TObjString*)tokens->At(3))->GetString().Atoi();
-    // TString AliEn_ProductionName = ((TObjString*)tokens->At(4))->GetString();
-    TString AliEn_SimSubSet = ((TObjString*)tokens->At(5))->GetString();
+    Int_t AliEn_DirNumber = ((TObjString*)tokens->At(tokens->GetEntries() - 2))->GetString().Atoi();
+    Int_t AliEn_RunNumber = ((TObjString*)tokens->At(tokens->GetEntries() - 3))->GetString().Atoi();
+    TString AliEn_SimSubSet = ((TObjString*)tokens->At(tokens->GetEntries() - 4))->GetString();
     Char_t ReactionChannelLetter = AliEn_SimSubSet[0];
     Double_t SM = TString(AliEn_SimSubSet(1, 4)).Atof();
-    Int_t AliEn_RunNumber = ((TObjString*)tokens->At(6))->GetString().Atoi();
-    Int_t AliEn_DirNumber = ((TObjString*)tokens->At(7))->GetString().Atoi();
 
     TString orig_path = Form("%s/%s", AliEn_Dir.Data(), Log_Basename.Data());
     AliInfoF("!! Copying file %s ... !!", orig_path.Data());
 
-    gSystem->Exec(Form("alien.py cp %s file://.", orig_path.Data()));
+    if (AliEn_Dir.BeginsWith("alien://")) {
+        gSystem->Exec(Form("alien.py cp %s file://.", orig_path.Data()));
+    } else {
+        gSystem->Exec(Form("cp %s .", orig_path.Data()));
+    }
 
     TString new_path = Form("%s/%s", gSystem->pwd(), Log_Basename.Data());
     AliInfoF("!! Reading file %s ... !!", new_path.Data());

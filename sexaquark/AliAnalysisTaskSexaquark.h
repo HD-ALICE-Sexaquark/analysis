@@ -31,11 +31,14 @@
 #include "TVector3.h"
 
 #include "AliAnalysisManager.h"
+#include "AliEventCuts.h"
 #include "AliExternalTrackParam.h"
 #include "AliHelix.h"
 #include "AliInputEventHandler.h"
 #include "AliLog.h"
 #include "AliPIDResponse.h"
+#include "AliVEvent.h"
+#include "AliVVertex.h"
 
 #include "AliESD.h"
 #include "AliESDEvent.h"
@@ -47,7 +50,6 @@
 #include "AliMCEvent.h"
 #include "AliMCEventHandler.h"
 #include "AliMCParticle.h"
-#include "AliVVertex.h"
 
 #include "Math/Factory.h"
 #include "Math/Functor.h"
@@ -339,7 +341,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliESDEvent* fESD;              //! reconstructed event
     AliESDVertex* fPrimaryVertex;   //! primary vertex
     AliPIDResponse* fPIDResponse;   //! pid response object
+    AliEventCuts fEventCuts;        //! event cuts
     Double_t fMagneticField;        //! magnetic field
+    Int_t fRunNumber;               //! run number
 
     /* ROOT Objects */
     TDatabasePDG fPDG;                //!
@@ -355,8 +359,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TString fAliEnPath;    //!
     TTree* fLogTree;       //!
     Bool_t fIsFirstEvent;  //!
-    TH1D* fPtWeights;      // (persistent)
-    TH1F* fRadiusWeights;  // (persistent)
+    TH1D* fPtWeights;      //
+    TH1F* fRadiusWeights;  //
 
     /* Filled at Initialize() ~ persistent */
     std::vector<Int_t> fProductsPDG;                               //

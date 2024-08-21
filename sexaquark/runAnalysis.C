@@ -16,6 +16,7 @@
 #include "AliAnalysisTaskSexaquark.h"
 
 void runAnalysis(TString Mode,            // "local", "grid"
+                 TString LocalInputPath,  // (only valid when Mode == "local") dir that contains ProductionName dirs
                  Bool_t GridTestMode,     // (only valid when Mode == "grid")
                  Bool_t IsMC,             //
                  TString ProductionName,  // for data: "LHC15o", "LHC18q", "LHC18r"
@@ -30,6 +31,63 @@ void runAnalysis(TString Mode,            // "local", "grid"
                  Bool_t ReweightRadius,   // (only valid when analyzing signal MC)
                  Int_t ChooseNEvents = 0) {
 
+    /* Check for Input Errors */
+
+    if (Mode != "local" && Mode != "grid") {
+        std::cerr << "!! runAnalysis.C !! Error !! Invalid mode " << Mode << " !!" << std::endl;
+        return;
+    }
+
+    if (Mode == "local") {
+        if (LocalInputPath == "") {
+            std::cerr << "!! runAnalysis.C !! Error !! LocalInputPath cannot be empty on local mode !!" << std::endl;
+            return;
+        }
+        if (GridTestMode) {
+            std::cerr << "!! runAnalysis.C !! Error !! GridTestMode is only valid on local mode !!" << std::endl;
+            return;
+        }
+    }
+
+    if (Mode == "grid") {
+        if (LocalInputPath != "") {
+            std::cerr << "!! runAnalysis.C !! Error !! LocalInputPath is only valid on local mode !!" << std::endl;
+            return;
+        }
+        if (ChooseNEvents) {
+            std::cerr << "!! runAnalysis.C !! Error !! ChooseNEvents is only valid on local mode !!" << std::endl;
+            return;
+        }
+    }
+
+    if (IsMC && (ProductionName == "LHC15o" || ProductionName == "LHC18q" || ProductionName == "LHC18r")) {
+        std::cerr << "!! runAnalysis.C !! Error !! Make sure to put a valid ProductionName for simulations !!" << std::endl;
+        return;
+    }
+
+    if (!IsMC) {
+        if (DoQA || ReadSignalLogs || ReweightPt || ReweightRadius) {
+            std::cerr << "!! runAnalysis.C !! Error !! DoQA, ReadSignalLogs, ReweightPt, and ReweightRadius are only valid for MC !!" << std::endl;
+            return;
+        }
+        if (ProductionName != "LHC15o" && ProductionName != "LHC18q" && ProductionName != "LHC18r") {
+            std::cerr << "!! runAnalysis.C !! Error !! Make sure to put a valid ProductionName for data !!" << std::endl;
+            return;
+        }
+    }
+
+    if (!ProductionName.Contains("LHC23l1") && (ReadSignalLogs || ReweightPt || ReweightRadius)) {
+        std::cerr << "!! runAnalysis.C !! Error !! ReadSignalLogs, ReweightPt, and ReweightRadius are only valid for signal MC !!" << std::endl;
+        return;
+    }
+
+    if (ReweightPt && !ReadSignalLogs) {
+        std::cerr << "!! runAnalysis.C !! Error !! ReweightPt is only valid when ReadSignalLogs is enabled !!" << std::endl;
+        return;
+    }
+
+    std::cout << "!! runAnalysis.C !! Passed initial input checks !!" << std::endl;
+
     /* Determine Further Options */
 
     Int_t PassNumber = 3;  // default for 18qr and anchored sims
@@ -40,6 +98,9 @@ void runAnalysis(TString Mode,            // "local", "grid"
 
     TString ProductionYear = "20" + ProductionName(3, 2);
 
+    TString LocalDataDir = Form("%s/%s", LocalInputPath.Data(), ProductionName.Data());
+    if (ProductionName.Contains("23l1")) LocalDataDir += Form("/%s", SimulationSet.Data());  // signal MC
+
     TString GridDataDir = Form("/alice/sim/%s/%s", ProductionYear.Data(), ProductionName.Data());
     if (ProductionName.Contains("23l1")) GridDataDir += Form("/%s", SimulationSet.Data());  // signal MC
     TString GridDataPattern = "/*/AliESDs.root";
@@ -49,9 +110,9 @@ void runAnalysis(TString Mode,            // "local", "grid"
     if (!IsMC)
         GridOutputDir += "_data";
     else if (ProductionName.Contains("23l1"))
-        GridOutputDir += Form("_signal_mc_%s", SimulationSet.Data());
+        GridOutputDir += Form("_SignalMC_%s", SimulationSet.Data());
     else
-        GridOutputDir += "_bkg_mc";
+        GridOutputDir += "_BkgMC";
 
     std::vector<Int_t> GridRunNumbers;
     std::ifstream RunNumbersFile(RunNumbersList);
@@ -65,30 +126,6 @@ void runAnalysis(TString Mode,            // "local", "grid"
 
     std::cout << "!! runAnalysis.C !! Passed further options !!" << std::endl;
 
-    /* Check for Input Errors */
-
-    if (!IsMC && (DoQA || ReadSignalLogs || ReweightPt || ReweightRadius)) {
-        std::cerr << "!! runAnalysis.C !! Error !! DoQA, ReadSignalLogs, ReweightPt, and ReweightRadius are only valid for MC !!" << std::endl;
-        return;
-    }
-
-    if (!ProductionName.Contains("LHC23l1") && (ReadSignalLogs || ReweightPt || ReweightRadius)) {
-        std::cerr << "!! runAnalysis.C !! Error !! ReadSignalLogs, ReweightPt, and ReweightRadius are only valid for signal MC !!" << std::endl;
-        return;
-    }
-
-    if (!IsMC && (ProductionName != "LHC15o" && ProductionName != "LHC18q" && ProductionName != "LHC18r")) {
-        std::cerr << "!! runAnalysis.C !! Error !! Make sure to put a valid ProductionName for data !!" << std::endl;
-        return;
-    }
-
-    if (ReweightPt && !ReadSignalLogs) {
-        std::cerr << "!! runAnalysis.C !! Error !! ReweightPt is only valid when ReadSignalLogs is enabled !!" << std::endl;
-        return;
-    }
-
-    std::cout << "!! runAnalysis.C !! Passed input checks !!" << std::endl;
-
     /* Start */
 
     gInterpreter->ProcessLine(".include .");
@@ -99,7 +136,7 @@ void runAnalysis(TString Mode,            // "local", "grid"
 
     AliAnalysisManager *mgr = new AliAnalysisManager("AnalysisManager_Sexaquark");
 
-    std::cout << "!! runAnalysis.C !! Passed start !!" << std::endl;
+    std::cout << "!! runAnalysis.C !! Created AliAnalysisManager !!" << std::endl;
 
     /* Grid Connection */
 
@@ -128,10 +165,13 @@ void runAnalysis(TString Mode,            // "local", "grid"
         alienHandler->SetAnalysisMacro("TaskSexaquark.C");
         alienHandler->SetJDLName("TaskSexaquark.jdl");
         alienHandler->SetExecutable("TaskSexaquark.sh");
-        mgr->SetGridHandler(alienHandler);
-    }
+        alienHandler->SetDefaultOutputs(kFALSE);
+        alienHandler->SetOutputFiles("AnalysisResults.root");
 
-    std::cout << "!! runAnalysis.C !! Passed grid connection !!" << std::endl;
+        mgr->SetGridHandler(alienHandler);
+
+        std::cout << "!! runAnalysis.C !! Passed grid connection !!" << std::endl;
+    }
 
     /* Input Handlers */
 
@@ -160,7 +200,7 @@ void runAnalysis(TString Mode,            // "local", "grid"
         gInterpreter->ExecuteMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C" + TaskPIDResponse_Options));
     if (!TaskPIDResponse) return;
 
-    std::cout << "!! runAnalysis.C !! Passed adding of helper tasks !!" << std::endl;
+    std::cout << "!! runAnalysis.C !! Passed addition of helper tasks !!" << std::endl;
 
     /* Add Sexaquark Task */
 
@@ -172,7 +212,7 @@ void runAnalysis(TString Mode,            // "local", "grid"
         reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro("AddSexaquark.C" + TaskSexaquark_Options));
     if (!TaskSexaquark) return;
 
-    std::cout << "!! runAnalysis.C !! Passed adding of main task !!" << std::endl;
+    std::cout << "!! runAnalysis.C !! Passed addition of main task !!" << std::endl;
 
     /* Init Analysis Manager */
 
@@ -192,21 +232,19 @@ void runAnalysis(TString Mode,            // "local", "grid"
             alienHandler->SetRunMode("full");
         }
         mgr->StartAnalysis("grid");
-    } else if (Mode == "local") {
-        /* WORK IN PROGRESS */
+    } else {  // local mode
         TChain *chain = new TChain("esdTree");
-        if (!ChooseNEvents) {
-            std::vector<TString> localFiles = {"/home/ceres/borquez/some/sims/LHC20e3a/297595/001/AliESDs.root"};
-            for (Int_t ifile = 0; ifile < (Int_t)localFiles.size(); ifile++) {
-                chain->AddFile(localFiles[ifile]);
+        TString FilePath;
+        for (Int_t &RN : GridRunNumbers) {
+            for (Int_t DN = 0; DN < 6; DN++) {  // local directories (hardcoded)
+                FilePath = Form("%s/%i/%03i/AliESDs.root", LocalDataDir.Data(), RN, DN);
+                chain->AddFile(FilePath);
             }
-            mgr->StartAnalysis("local", chain);  // read all events
-        } else {
-            mgr->StartAnalysis("local", chain, ChooseNEvents);  // read first NEvents
         }
-    } else {
-        std::cerr << "!! runAnalysis.C !! Error !! Invalid mode " << Mode << " !!" << std::endl;
-        return;
+        if (!ChooseNEvents)
+            mgr->StartAnalysis("local", chain);  // read all events
+        else
+            mgr->StartAnalysis("local", chain, ChooseNEvents);  // read first NEvents
     }
 
     std::cout << "!! runAnalysis.C !! Passed StartAnalysis !!" << std::endl;
