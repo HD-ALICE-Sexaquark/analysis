@@ -2,7 +2,15 @@
 
 ## Run Numbers
 
-Choosing the run numbers with `Central Barrel Tracking_hadron PID`. In detail: `LHC15o_pass2_rn.txt`, `LHC18q_pass3_rn.txt`, `LHC18r_pass3_rn.txt`.
+Choosing the run numbers with `Central Barrel Tracking_hadron PID`. In detail:
+
+- `LHC15o_pass2_rn.txt` (total: 144)
+- `LHC18q_pass3_rn.txt` (total: 135)
+- `LHC18r_pass3_rn.txt` (total: 90)
+- `LHC18qr_pass3_rn.txt` (total: 225)
+- `LHC18qr_extra_pass3_rn.txt` (total: 232)
+  - Added 7 extra run numbers! Only valid in data and gen. purpose MC
+  - Reference: https://twiki.cern.ch/twiki/bin/viewauth/ALICE/AliDPGRunList18r
 
 ## Simulations
 
