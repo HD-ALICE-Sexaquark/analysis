@@ -162,11 +162,8 @@ void runAnalysis(TString Mode,            // "local", "grid"
         // alienHandler->SetMaxMergeStages(1);
         alienHandler->SetGridWorkingDir(GridWorkingDir);
         alienHandler->SetGridOutputDir(GridOutputDir);
-        alienHandler->SetAnalysisMacro("TaskSexaquark.C");
         alienHandler->SetJDLName("TaskSexaquark.jdl");
         alienHandler->SetExecutable("TaskSexaquark.sh");
-        alienHandler->SetDefaultOutputs(kFALSE);
-        alienHandler->SetOutputFiles("AnalysisResults.root");
 
         mgr->SetGridHandler(alienHandler);
 

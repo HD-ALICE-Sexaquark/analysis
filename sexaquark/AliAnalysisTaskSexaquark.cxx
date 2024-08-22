@@ -6408,26 +6408,25 @@ Bool_t AliAnalysisTaskSexaquark::LoadLogsIntoTree() {
     }
 
     TString AliEn_Dir = fAliEnPath(0, fAliEnPath.Last('/'));
-    TString Log_Basename = "sim.log";
+
+    TString orig_path = Form("%s/sim.log", AliEn_Dir.Data());
+    AliInfoF("!! Copying file %s ... !!", orig_path.Data());
 
     // ! assuming path ends with format .../LHC23l1a3/A1.73/297595/001/sim.log ! //
     TObjArray* tokens = fAliEnPath.Tokenize("/");
     Int_t AliEn_DirNumber = ((TObjString*)tokens->At(tokens->GetEntries() - 2))->GetString().Atoi();
     Int_t AliEn_RunNumber = ((TObjString*)tokens->At(tokens->GetEntries() - 3))->GetString().Atoi();
     TString AliEn_SimSubSet = ((TObjString*)tokens->At(tokens->GetEntries() - 4))->GetString();
-    Char_t ReactionChannelLetter = AliEn_SimSubSet[0];
-    Double_t SM = TString(AliEn_SimSubSet(1, 4)).Atof();
 
-    TString orig_path = Form("%s/%s", AliEn_Dir.Data(), Log_Basename.Data());
-    AliInfoF("!! Copying file %s ... !!", orig_path.Data());
+    TString Log_NewBasename = Form("sim_%s_%i_%03i.log", AliEn_SimSubSet.Data(), AliEn_RunNumber, AliEn_DirNumber);
 
     if (AliEn_Dir.BeginsWith("alien://")) {
-        gSystem->Exec(Form("alien.py cp %s file://.", orig_path.Data()));
+        gSystem->Exec(Form("alien.py cp %s file://./%s", orig_path.Data(), Log_NewBasename.Data()));
     } else {
         gSystem->Exec(Form("cp %s .", orig_path.Data()));
     }
 
-    TString new_path = Form("%s/%s", gSystem->pwd(), Log_Basename.Data());
+    TString new_path = Form("%s/%s", gSystem->pwd(), Log_NewBasename.Data());
     AliInfoF("!! Reading file %s ... !!", new_path.Data());
 
     std::ifstream SimLog(new_path);
@@ -6435,6 +6434,9 @@ Bool_t AliAnalysisTaskSexaquark::LoadLogsIntoTree() {
         AliInfo("!! Unable to open file !!");
         return kFALSE;
     }
+
+    Char_t ReactionChannelLetter = AliEn_SimSubSet[0];
+    Double_t SM = TString(AliEn_SimSubSet(1, 4)).Atof();
 
     Int_t EventID = -1;
     Int_t ReactionID;
