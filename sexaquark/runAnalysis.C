@@ -25,6 +25,7 @@ void runAnalysis(TString Mode,            // "local", "grid"
                  TString RunNumbersList,  // path to file with run numbers
                  TString SourceOfV0s,     // "kalman", "custom", "on-the-fly", "offline"
                  TString SimulationSet,   // format: "<A,D,E,H><1.73,1.8,1.87,1.94,2.01>" e.g. "A1.73"
+                 TString StopAfter,       // "MC", "Tracks", "Findables", "V0s"
                  Bool_t DoQA,             //
                  Bool_t ReadSignalLogs,   // (only valid when analyzing signal MC)
                  Bool_t ReweightPt,       // (only valid when analyzing signal MC and ReadSignalLogs enabled)
@@ -192,6 +193,11 @@ void runAnalysis(TString Mode,            // "local", "grid"
         gInterpreter->ExecuteMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C" + TaskPhysicsSelection_Options));
     if (!TaskPhysicsSelection) return;
 
+    TString TaskCentrality_Options = "";  // nothing
+    AliMultSelectionTask *TaskCentrality = reinterpret_cast<AliMultSelectionTask *>(
+        gInterpreter->ExecuteMacro("$ALICE_PHYSICS/OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C" + TaskCentrality_Options));
+    if (!TaskCentrality) return;
+
     TString TaskPIDResponse_Options = Form("(%i, 1, 1, \"%i\")", (Int_t)IsMC, PassNumber);
     AliAnalysisTaskPIDResponse *TaskPIDResponse = reinterpret_cast<AliAnalysisTaskPIDResponse *>(
         gInterpreter->ExecuteMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C" + TaskPIDResponse_Options));
@@ -203,8 +209,9 @@ void runAnalysis(TString Mode,            // "local", "grid"
 
     gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
 
-    TString TaskSexaquark_Options = Form("(%i, \"%s\", \'%c\', %.2f, %i, %i, %i, %i)", (Int_t)IsMC, SourceOfV0s.Data(), ReactionID, SexaquarkMass,
-                                         (Int_t)DoQA, (Int_t)ReadSignalLogs, (Int_t)ReweightPt, (Int_t)ReweightRadius);
+    TString TaskSexaquark_Options =
+        Form("(%i, \"%s\", \'%c\', %.2f, \"%s\", %i, %i, %i, %i)", (Int_t)IsMC, SourceOfV0s.Data(), ReactionID, SexaquarkMass, StopAfter.Data(),
+             (Int_t)DoQA, (Int_t)ReadSignalLogs, (Int_t)ReweightPt, (Int_t)ReweightRadius);
     AliAnalysisTaskSexaquark *TaskSexaquark =
         reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro("AddSexaquark.C" + TaskSexaquark_Options));
     if (!TaskSexaquark) return;

@@ -36,6 +36,7 @@
 #include "AliHelix.h"
 #include "AliInputEventHandler.h"
 #include "AliLog.h"
+#include "AliMultSelection.h"
 #include "AliPIDResponse.h"
 #include "AliVEvent.h"
 #include "AliVVertex.h"
@@ -206,6 +207,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void SetSourceOfV0s(TString SourceOfV0s) { fSourceOfV0s = SourceOfV0s; };
     void SetReactionID(Char_t ReactionID) { fReactionID = ReactionID; };
     void DoQA(Bool_t DoQA) { fDoQA = DoQA; };
+    void StopAfter(TString StopAfter) { fStopAfter = StopAfter; };
     void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
     void ReweightPt(Bool_t ReweightPt) { fReweightPt = ReweightPt; };
     void ReweightRadius(Bool_t ReweightRadius) { fReweightRadius = ReweightRadius; };
@@ -214,6 +216,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Main ~ executed at runtime */
     virtual void UserCreateOutputObjects();
     virtual void UserExec(Option_t* option);
+    void EndOfEvent();
     virtual Bool_t UserNotify();
 
     /* Histograms */
@@ -255,8 +258,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* Sexaquark */
     void GeoSexaquarkFinder_ChannelA();
-    // void GeoSexaquarkFinder_ChannelD();
-    // void GeoSexaquarkFinder_ChannelE();
+    void GeoSexaquarkFinder_ChannelD();
+    void GeoSexaquarkFinder_ChannelE();
     void KalmanSexaquarkFinder_ChannelA();
     void KalmanSexaquarkFinder_ChannelD();
     void KalmanSexaquarkFinder_ChannelE();
@@ -320,9 +323,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* External Files */
     Bool_t LoadLogsIntoTree();
-    void AddPtWeights(TH1D* ptWeights);
+    void AddPtWeights(std::vector<TH1D*> ptWeights);
     void AddRadiusWeights(TH1F* radiusWeights);
-    Double_t GetPtWeight(Int_t reactionIdx);
+    Double_t GetPtWeight(Int_t reactionIdx, Int_t centralityBin);
     Double_t GetRadiusWeight(Int_t reactionIdx);
 
    private:
@@ -331,6 +334,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TString fSourceOfV0s;    // choose V0 finder: "kalman", "custom", "on-the-fly", "offline"
     Char_t fReactionID;      // reaction channel identifier, could be: 'A', 'D', 'E', 'H'
     Bool_t fDoQA;            //
+    TString fStopAfter;      // "MC", "Tracks", "Findables", "V0s" (default: "")
     Bool_t fReadSignalLogs;  //
     Bool_t fReweightPt;      //
     Bool_t fReweightRadius;  //
@@ -344,6 +348,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliEventCuts fEventCuts;        //! event cuts
     Double_t fMagneticField;        //! magnetic field
     Int_t fRunNumber;               //! run number
+    Float_t fCentrality;            //! centrality percentile
 
     /* ROOT Objects */
     TDatabasePDG fPDG;                //!
@@ -356,11 +361,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TList* fList_PosKaonPairs_Hists;  //!
 
     /* External Files */
-    TString fAliEnPath;    //!
-    TTree* fLogTree;       //!
-    Bool_t fIsFirstEvent;  //!
-    TH1D* fPtWeights;      //
-    TH1F* fRadiusWeights;  //
+    TString fAliEnPath;             //!
+    TTree* fLogTree;                //!
+    Bool_t fIsFirstEvent;           //!
+    std::vector<TH1D*> fPtWeights;  //
+    TH1F* fRadiusWeights;           //
 
     /* Filled at Initialize() ~ persistent */
     std::vector<Int_t> fProductsPDG;                               //
