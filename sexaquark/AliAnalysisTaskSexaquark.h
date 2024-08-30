@@ -263,19 +263,19 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void KalmanSexaquarkFinder_ChannelA();
     void KalmanSexaquarkFinder_ChannelD();
     void KalmanSexaquarkFinder_ChannelE();
-    Bool_t PassesSexaquarkCuts_ChannelA(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDv0 esdKaonZeroShort,
-                                        AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos, AliESDtrack* esdKaonZeroShortNeg,
-                                        AliESDtrack* esdKaonZeroShortPos);
-    Bool_t PassesSexaquarkCuts_ChannelA(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
+    Bool_t PassesSexaquarkCuts_ChannelA(Bool_t isSignal, TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda,
+                                        AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos,
+                                        AliESDtrack* esdKaonZeroShortNeg, AliESDtrack* esdKaonZeroShortPos);
+    Bool_t PassesSexaquarkCuts_ChannelA(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
                                         KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos,
                                         KFParticle kfKaonZeroShortNeg, KFParticle kfKaonZeroShortPos);
     // Bool_t PassesSexaquarkCuts_ChannelD(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack* esdPosKaon,
     // AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
-    Bool_t PassesSexaquarkCuts_ChannelD(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
+    Bool_t PassesSexaquarkCuts_ChannelD(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
                                         KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
     // Bool_t PassesSexaquarkCuts_ChannelE(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack* esdPosKaon,
     // AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
-    Bool_t PassesSexaquarkCuts_ChannelE(KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
+    Bool_t PassesSexaquarkCuts_ChannelE(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
                                         KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfPosKaon, KFParticle kfPiMinus,
                                         KFParticle kfPiPlus);
 
@@ -425,11 +425,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /** Anti-Sexaquark Histograms **/
 
     /*
-     - `0`    : MC Gen.
-     - `1`    : Findable
-     - `2-18` : Effect of cuts
-     - `19`   : Found
-     - `20`   : Found signal
+     - `0`   : MC Gen.
+     - `10`  : Findable
+     - `20+` : Effect of cuts on found
+     - `50`  : All found
+     - `60+` : Effect of cuts on signal
+     - `90`  : Signal found
     */
     TH1D* fHist_AntiSexaquarks_Bookkeep;  //!
     // key: `stage, set, property`, value: histogram
@@ -496,7 +497,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::vector<KFParticleMother> kfKaonsZeroShort;  //!
     std::vector<KFParticleMother> kfPionPairs;       //!
 
-    /*** Cuts ***/
+    /*** Cuts ~ persistent, because they are set on Initialize() ***/
 
     /** Tracks **/
     Float_t kMax_NSigma_Pion;                          //
