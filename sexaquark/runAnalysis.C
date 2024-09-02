@@ -232,6 +232,8 @@ void runAnalysis(TString Mode,            // "local", "grid"
             alienHandler->SetNtestFiles(5);
             alienHandler->SetRunMode("test");
         } else {
+            // alienHandler->SetNtestFiles(5);               // TEST
+            // alienHandler->SetSplitMaxInputFileNumber(5);  // TEST
             alienHandler->SetSplitMaxInputFileNumber(55);
             alienHandler->SetRunMode("full");
         }

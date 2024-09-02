@@ -223,7 +223,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void PrepareQAHistograms();
     void PrepareTracksHistograms();
     void PrepareV0Histograms();
-    void PrepareAntiSexaquarkHistograms();
+    void PrepareSexaquarkHistograms();
     void PreparePosKaonPairHistograms();
 
     /* Cuts */
@@ -239,12 +239,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Tracks */
     Bool_t PassesEventSelection();
     void ProcessTracks();
-    Bool_t PassesTrackSelection(AliESDtrack* track);
+    Bool_t PassesTrackSelectionAs(Int_t HypothesisPID, Bool_t is_true, Bool_t is_secondary, Bool_t is_signal, AliESDtrack* track);
     void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
-    void GetTracksHits(AliESDtrack* track, Int_t& firstHit, Int_t& lastHit);
 
     /* V0s, Anti-Sexaquarks, K+K+ pairs -- That Require True Info */
     void ProcessFindableV0s();
+    void ProcessFindablePionPairs();
     void ProcessFindableSexaquarks();
     void ProcessFindablePosKaonPairs();
 
@@ -252,9 +252,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void GetV0sFromESD(Bool_t onTheFly);
     void CustomV0Finder(Int_t pdgV0);
     void KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos);
-    Bool_t PassesV0Cuts(Int_t pdgV0, AliESDv0* v0, AliESDtrack* neg_track, AliESDtrack* pos_track);
-    Bool_t PassesV0Cuts(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0,
-                        TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+    Bool_t PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, AliESDv0* v0, AliESDtrack* neg_track,
+                          AliESDtrack* pos_track);
+    Bool_t PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, KFParticleMother kfV0, KFParticle kfDaughterNeg,
+                          KFParticle kfDaughterPos, TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
 
     /* Sexaquark */
     void GeoSexaquarkFinder_ChannelA();
@@ -304,6 +305,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Double_t SquaredDistanceBetweenLines(const Double_t* t, Double_t pos0[], Double_t dir0[], Double_t pos1[], Double_t dir1[]);
     Double_t Calculate_TwoLinesDCA_v1(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
     Double_t Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
+    Int_t GetCentralityBin(Float_t CentralityValue);
 
     /* Tree Operations */
     // Event_tt fEvent;
@@ -385,62 +387,62 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /*
      key: `pdg code`
-     - `0` : MC tracks
-     - `1` : secondary MC tracks
-     - `2` : signal MC tracks
-     (PENDING)
-     -- PENDING: in a sim.set of reactionID='A', signal K+ appear where they shouldn't exist, because of signal particles that were mis-id
-     -- Note: should I only, besides if they're signal or not, use their true id? I think so, because it's a bookkeeping of TRUE particles
+     - `0`    : MC tracks
+     - `10`   : SECONDARY MC tracks
+     - `20`   : SIGNAL MC tracks
+     - `30+`  : effect of cuts on found
+     - `50`   : found tracks that passed all cuts
+     - `60+`  : effect of cuts on TRUE tracks
+     - `80`   : found TRUE tracks that passed all cuts
+     - `90+`  : effect of cuts on SECONDARY tracks
+     - `110`  : found SECONDARY tracks that passed all cuts
+     - `120+` : effect of cuts on SIGNAL tracks
+     - `140`  : found SIGNAL tracks that passed all cuts
     */
-    std::unordered_map<Int_t, TH1F*> fHist_Tracks_Bookkeep;  //!
-    // key: `stage, set, pdg, property`, value: histogram
-    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;  //!
-    // key: `set`, value: histogram
-    std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;  //!
+    std::unordered_map<Int_t, TH1F*> fHist_Tracks_Bookkeep;                      //!
+    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;  //! key: `stage, set, pdg, property`
+    std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;                           //! key: `set`, value: histogram
 
     /** V0s Histograms **/
 
     /*
      key: `V0 pdg code`
-     - `0` : MC V0s
-     - `1` : MC V0s w/ charged decay products
-     - `2` : secondary MC V0s
-     - `3` : secondary MC V0s w/ charged decay products
-     - `4` : signal MC V0s
-     - `5` : signal MC V0s w/ charged decay products
-     - `6` : findable true V0s
-     - `7` : findable true secondary V0s
-     - `8` : findable true signal V0s
-     - `30` : found V0s
-     - `31` : found true V0s
-     - `32` : found true secondary V0s
-     - `33` : found true signal V0s
+     - `0+`   : MC V0s           ( 1: relevant channels)
+     - `10+`  : SECONDARY MC V0s (11: relevant channels)
+     - `20+`  : SIGNAL MC V0s    (21: relevant channels)
+     - `30`   : findable true V0s
+     - `40`   : findable true SECONDARY V0s
+     - `50`   : findable true SIGNAL V0s
+     - `60+`  : effect of cuts on found
+     - `80`   : found V0s that passed all cuts
+     - `90+`  : effect of cuts on TRUE V0s
+     - `110`  : found TRUE V0s that passed all cuts
+     - `120+` : effect of cuts on SECONDARY V0s
+     - `140`  : found SECONDARY V0s that passed all cuts
+     - `150+` : effect of cuts on SIGNAL V0s
+     - `170`  : found SIGNAL V0s that passed all cuts
     */
-    std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;  //!
-    // key: `stage, set, pdg, property`, value: histogram
-    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;  //!
-    // key: `set`, value: histogram
-    std::map<TString, TH2F*> f2DHist_V0s_ArmenterosPodolanski;  //!
+    std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;                      //!
+    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;  //! key: `stage, set, pdg, property`
+    std::map<TString, TH2F*> f2DHist_V0s_ArmenterosPodolanski;                //! key: `set`
 
     /** Anti-Sexaquark Histograms **/
 
     /*
      - `0`   : MC Gen.
-     - `10`  : Findable
-     - `20+` : Effect of cuts on found
-     - `50`  : All found
-     - `60+` : Effect of cuts on signal
-     - `90`  : Signal found
+     - `10`  : findable
+     - `20+` : effect of cuts on found candidates
+     - `50`  : found candidates that passed all cuts
+     - `60+` : effect of cuts on SIGNAL candidates
+     - `90`  : found SIGNAL candidates that passed all cuts
     */
-    TH1D* fHist_AntiSexaquarks_Bookkeep;  //!
-    // key: `stage, set, property`, value: histogram
-    std::map<std::tuple<TString, TString, TString>, TH1D*> fHist_AntiSexaquarks;  //!
+    TH1D* fHist_AntiSexaquarks_Bookkeep;                                          //!
+    std::map<std::tuple<TString, TString, TString>, TH1D*> fHist_AntiSexaquarks;  //! key: `stage, set, property`
 
     /** Channel H / Pos. Kaon Pairs Histograms **/
 
-    TH1F* fHist_PosKaonPairs_Bookkeep;  //!
-    // key: `stage, set, property`, value: histogram
-    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_PosKaonPairs;  //!
+    TH1F* fHist_PosKaonPairs_Bookkeep;                                          //!
+    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_PosKaonPairs;  //! key: `stage, set, property`
 
     /*** Containers -- vectors and hash tables ***/
     // NOTE: when adding a new one, don't forget to clear it on ClearContainers()!
@@ -453,7 +455,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     std::unordered_map<Int_t, UInt_t> getReactionIdx_fromMcIdx;               //!
     std::unordered_map<UInt_t, std::vector<Int_t>> getMcIdx_fromReactionIdx;  //!
-    std::unordered_map<UInt_t, Float_t> getPt_fromReactionIdx;                //! PENDING: it should be the TRUE INJECTED PT
+    std::unordered_map<UInt_t, Float_t> getPt_fromReactionIdx;                //!
     std::unordered_map<UInt_t, Float_t> getRadius_fromReactionIdx;            //!
 
     std::unordered_map<Int_t, Bool_t> doesMcIdxHaveMother;      //!
@@ -464,9 +466,14 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::vector<Int_t> mcIndicesOfTrueV0s;  //!
 
     /* filled at `ProcessTracks()` */
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;            //!
-    std::unordered_map<Int_t, Bool_t> doesEsdIdxPassTrackSelection;  //!
-    std::unordered_map<Int_t, Int_t> getEsdIdx_fromMcIdx;            //!
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;                       //!
+    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsProton;      //! necessary for `GetV0sFromESD()`
+    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsAntiProton;  //!
+    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsPosKaon;     //!
+    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsNegKaon;     //!
+    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsPiPlus;      //!
+    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsPiMinus;     //!
+    std::unordered_map<Int_t, Int_t> getEsdIdx_fromMcIdx;                       //!
 
     std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;                          //!
     std::unordered_map<Int_t, UInt_t> getReactionIdx_fromEsdIdx;               //!
