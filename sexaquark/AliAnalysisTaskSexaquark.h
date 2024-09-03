@@ -56,6 +56,8 @@
 #include "Math/Functor.h"
 #include "Math/Minimizer.h"
 
+#include "AliAnalysisTaskSexaquark_Structs.h"
+
 #define HomogeneousField  // homogeneous field in z direction, required by KFParticle
 #include "KFPTrack.h"
 #include "KFPVertex.h"
@@ -66,122 +68,6 @@
 class AliPIDResponse;
 class KFParticle;
 class KFVertex;
-
-/*
-struct V0_tt {
-    //
-    // Default common structure for the V0s
-    // (since I want to study 3 alternatives, let's keep the same format for each)
-    //
-    Int_t Idx_Pos;          // index of positive track
-    Int_t Idx_Neg;          // index of negative track
-    Float_t Px;             // x-component of V0 momentum
-    Float_t Py;             // y-component of V0 momentum
-    Float_t Pz;             // z-component of V0 momentum
-    Float_t X;              // x-coordinate of V0
-    Float_t Y;              // y-coordinate of V0
-    Float_t Z;              // z-coordinate of V0
-    Float_t Pos_Px;         // x-component of positive track momentum at V0 position
-    Float_t Pos_Py;         // y-component of positive track momentum at V0 position
-    Float_t Pos_Pz;         // z-component of positive track momentum at V0 position
-    Float_t Neg_Px;         // x-component of negative track momentum at V0 position
-    Float_t Neg_Py;         // y-component of negative track momentum at V0 position
-    Float_t Neg_Pz;         // z-component of negative track momentum at V0 position
-    Bool_t isSignal;        // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
-    Float_t E_asK0;         // energy of V0, assuming it's a K0
-    Float_t E_asAL;         // energy of V0, assuming it's an anti-lambda
-    Bool_t couldBeK0;       // kTRUE if K0 candidate, kFALSE if not
-    Bool_t couldBeAL;       // kTRUE if anti-lambda candidate, kFALSE if not
-    Float_t Chi2;           // chi2 value from the Kalman Filter (?)
-    Float_t DCA_Daughters;  // distance of closest approach between daughters
-    Float_t IP_wrtPV;       // impact parameter w.r.t. Primary Vertex
-    Float_t CPA_wrtPV;      // cosine of pointing angle w.r.t. Primary Vertex
-    Float_t ArmAlpha;       // Armenteros-Podolanski variable alpha
-    Float_t ArmPt;          // Armenteros-Podolanski variable Pt
-    Float_t DecayLength;    // distance between PV and V0
-    Float_t DCA_wrtPV;      // distance of closest approach to Primary Vertex
-};
-
-struct Event_tt {
-    //
-    // This is the structure of the output TTree
-    //
-
-    // MC particles
-
-    Int_t N_MCGen;                          // number of MC particles
-    std::vector<Float_t> MC_Px;             // x-component of true momentum
-    std::vector<Float_t> MC_Py;             // y-component of true momentum
-    std::vector<Float_t> MC_Pz;             // z-component of true momentum
-    std::vector<Float_t> MC_X;              // initial x-coordinate of generation vertex
-    std::vector<Float_t> MC_Y;              // initial y-coordinate of generation vertex
-    std::vector<Float_t> MC_Z;              // initial z-coordinate of generation vertex
-    std::vector<Float_t> MC_Xf;             // final x-coordinate of generation vertex
-    std::vector<Float_t> MC_Yf;             // final y-coordinate of generation vertex
-    std::vector<Float_t> MC_Zf;             // final z-coordinate of generation vertex
-    std::vector<Int_t> MC_PID;              // PDG code
-    std::vector<Int_t> MC_Mother;           // index of mother
-    std::vector<Int_t> MC_PID_Mother;       // PID of mother
-    std::vector<Int_t> MC_PID_GrandMother;  // PID of grandmother
-    std::vector<Int_t> MC_NDaughters;       // number of daughters
-    std::vector<Int_t> MC_FirstDau;         // index of first daughter
-    std::vector<Int_t> MC_LastDau;          // index of last daughter
-    std::vector<Int_t> MC_Status;           // MC status code
-    std::vector<Bool_t> MC_isSignal;        // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
-
-    // MC Rec. Tracks
-
-    Int_t N_MCRec;                          // number of MC reconstructed tracks
-    std::vector<Int_t> Idx_True;            // index of true MC particle
-    std::vector<Float_t> Rec_Px;            // x-component of reconstructed momentum
-    std::vector<Float_t> Rec_Py;            // y-component of reconstructed momentum
-    std::vector<Float_t> Rec_Pz;            // z-component of reconstructed momentum
-    std::vector<Short_t> Rec_Charge;        // measured charge
-    std::vector<Float_t> Rec_IP_wrtPV;      // transverse impact parameter w.r.t. Primary Vertex
-    std::vector<Float_t> Rec_NSigmaPion;    // absolute value of likeness to be a charged pion (closer to 0, the most likely)
-    std::vector<Float_t> Rec_NSigmaProton;  // absolute value of likeness to be a proton (closer to 0, the most likely)
-    std::vector<Short_t> Rec_NClustersTPC;  // number of clusters assigned in the TPC
-    std::vector<Bool_t> Rec_isDuplicate;    // kTRUE if track is a duplicate, kFALSE if not (v1: compared to true particle)
-    std::vector<Bool_t> Rec_isSimilar;      // kTRUE if track is a duplicate, kFALSE if not (v2: compared to similar particles)
-    std::vector<Bool_t> Rec_isSignal;       // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
-    std::vector<Float_t> Rec_HelixParam0;   // helix param. 0
-    std::vector<Float_t> Rec_HelixParam1;   // helix param. 1
-    std::vector<Float_t> Rec_HelixParam2;   // helix param. 2
-    std::vector<Float_t> Rec_HelixParam3;   // helix param. 3
-    std::vector<Float_t> Rec_HelixParam4;   // helix param. 4
-    std::vector<Float_t> Rec_HelixParam5;   // helix param. 5
-
-    //  V0s
-    Int_t N_V0s;                            // number of formed V0s
-    std::vector<Int_t> Idx_Pos;             // index of positive daughter
-    std::vector<Int_t> Idx_Neg;             // index of negative daughter
-    std::vector<Float_t> V0_Px;             // x-component of V0 momentum
-    std::vector<Float_t> V0_Py;             // y-component of V0 momentum
-    std::vector<Float_t> V0_Pz;             // z-component of V0 momentum
-    std::vector<Float_t> V0_X;              // x-coordinate of V0
-    std::vector<Float_t> V0_Y;              // y-coordinate of V0
-    std::vector<Float_t> V0_Z;              // z-coordinate of V0
-    std::vector<Float_t> Pos_Px;            // x-component of positive track momentum at V0 position
-    std::vector<Float_t> Pos_Py;            // y-component of positive track momentum at V0 position
-    std::vector<Float_t> Pos_Pz;            // z-component of positive track momentum at V0 position
-    std::vector<Float_t> Neg_Px;            // x-component of negative track momentum at V0 position
-    std::vector<Float_t> Neg_Py;            // y-component of negative track momentum at V0 position
-    std::vector<Float_t> Neg_Pz;            // z-component of negative track momentum at V0 position
-    std::vector<Bool_t> V0_isSignal;        // kTRUE if it belongs to anti-sexaquark signal, kFALSE if background
-    std::vector<Float_t> V0_E_asK0;         // energy of V0, assuming it's a K0
-    std::vector<Float_t> V0_E_asAL;         // energy of V0, assuming it's an anti-lambda
-    std::vector<Bool_t> V0_couldBeK0;       // kTRUE if K0 candidate, kFALSE if not
-    std::vector<Bool_t> V0_couldBeAL;       // kTRUE if anti-lambda candidate, kFALSE if not
-    std::vector<Float_t> V0_Chi2;           // chi2 value from the Kalman Filter (?)
-    std::vector<Float_t> V0_DCA_Daughters;  // distance of closest approach between daughters
-    std::vector<Float_t> V0_IP_wrtPV;       // impact parameter w.r.t. Primary Vertex
-    std::vector<Float_t> V0_CPA_wrtPV;      // cosine of pointing angle w.r.t. Primary Vertex
-    std::vector<Float_t> V0_ArmAlpha;       // Armenteros-Podolanski variable alpha
-    std::vector<Float_t> V0_ArmPt;          // Armenteros-Podolanski variable Pt
-    std::vector<Float_t> V0_DecayLength;    // distance between PV and V0
-    std::vector<Float_t> V0_DCA_wrtPV;      // distance of closest approach to Primary Vertex
-};
- */
 
 /*
  Auxiliary class to make use of protected function KFParticleBase::GetMeasurement()
@@ -307,15 +193,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Double_t Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
     Int_t GetCentralityBin(Float_t CentralityValue);
 
-    /* Tree Operations */
-    // Event_tt fEvent;
-    void SetBranches();
-    void MCGen_PushBack(Int_t evt_mc);
-    void MCRec_PushBack(Int_t evt_track);
-    void V0_PushBack(Int_t evt_v0);
-    void FillTree();
-    void ClearEvent();
-
     /* Kalman Filter Utilities */
     KFParticle CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge);
     KFVertex CreateKFVertex(const AliVVertex& vertex);
@@ -355,7 +232,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* ROOT Objects */
     TDatabasePDG fPDG;                //!
     TList* fList_Trees;               //!
-    TTree* fTree;                     //!
     TList* fList_QA_Hists;            //!
     TList* fList_Tracks_Hists;        //!
     TList* fList_V0s_Hists;           //!
@@ -375,6 +251,23 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Int_t fStruckNucleonPDG;                                       // PDG Code of the struck nucleon, could be: 2112 o 2212
     std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;  //
     std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;  //
+
+    /*** Trees ***/
+
+    /* Structs */
+    MCEvent_tt fBranch_MCEvent;    //!
+    MC_tt fBranch_MC;              //!
+    RecEvent_tt fBranch_RecEvent;  //!
+    Track_tt fBranch_Track;        //!
+    V0_tt fBranch_V0;              //!
+    Sxqk_A fBranch_Sexaquark_A;    //!
+
+    TTree* fTree_MCEvents;    //!
+    TTree* fTree_MC;          //!
+    TTree* fTree_RecEvents;   //!
+    TTree* fTree_Tracks;      //!
+    TTree* fTree_V0s;         //!
+    TTree* fTree_Sexaquarks;  //!
 
     /*** Histograms ***/
 

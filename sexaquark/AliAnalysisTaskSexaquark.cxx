@@ -29,7 +29,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       /*  */
       fPDG(),
       fList_Trees(0),
-      fTree(0),
       fList_QA_Hists(0),
       fList_Tracks_Hists(0),
       fList_V0s_Hists(0),
@@ -47,6 +46,20 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fStruckNucleonPDG(0),
       getNegPdgCode_fromV0PdgCode(),
       getPosPdgCode_fromV0PdgCode(),
+      /*  */
+      fBranch_MCEvent(),
+      fBranch_MC(),
+      fBranch_RecEvent(),
+      fBranch_Track(),
+      fBranch_V0(),
+      fBranch_Sexaquark_A(),
+      /*  */
+      fTree_MCEvents(0),
+      fTree_MC(0),
+      fTree_RecEvents(0),
+      fTree_Tracks(0),
+      fTree_V0s(0),
+      fTree_Sexaquarks(0),
       /*  */
       fHist_QA(),
       f2DHist_QA(),
@@ -209,7 +222,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       /*  */
       fPDG(),
       fList_Trees(0),
-      fTree(0),
       fList_QA_Hists(0),
       fList_Tracks_Hists(0),
       fList_V0s_Hists(0),
@@ -227,6 +239,20 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fStruckNucleonPDG(0),
       getNegPdgCode_fromV0PdgCode(),
       getPosPdgCode_fromV0PdgCode(),
+      /*  */
+      fBranch_MCEvent(),
+      fBranch_MC(),
+      fBranch_RecEvent(),
+      fBranch_Track(),
+      fBranch_V0(),
+      fBranch_Sexaquark_A(),
+      /*  */
+      fTree_MCEvents(0),
+      fTree_MC(0),
+      fTree_RecEvents(0),
+      fTree_Tracks(0),
+      fTree_V0s(0),
+      fTree_Sexaquarks(0),
       /*  */
       fHist_QA(),
       f2DHist_QA(),
@@ -413,9 +439,30 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
         fList_Trees->Add(fLogTree);
     }
 
-    fTree = new TTree("Events", "Events");
-    // SetBranches();
-    fList_Trees->Add(fTree);
+    fTree_MCEvents = new TTree("MC_Events", "MC_Events");
+    fTree_MCEvents->Branch("MCEvent", &fBranch_MCEvent);
+    fList_Trees->Add(fTree_MCEvents);
+
+    fTree_MC = new TTree("MC", "MC");
+    fTree_MC->Branch("MC", &fBranch_MC);
+    fList_Trees->Add(fTree_MC);
+
+    fTree_RecEvents = new TTree("Rec_Events", "Rec_Events");
+    fTree_RecEvents->Branch("RecEvent", &fBranch_RecEvent);
+    fList_Trees->Add(fTree_RecEvents);
+
+    fTree_Tracks = new TTree("Tracks", "Tracks");
+    fTree_Tracks->Branch("Track", &fBranch_Track);
+    fList_Trees->Add(fTree_Tracks);
+
+    fTree_V0s = new TTree("V0s", "V0s");
+    fTree_V0s->Branch("V0", &fBranch_V0);
+    fList_Trees->Add(fTree_V0s);
+
+    fTree_Sexaquarks = new TTree("Sexaquarks", "Sexaquarks");
+    fTree_Sexaquarks->Branch("Sexaquark", &fBranch_Sexaquark_A);
+    fList_Trees->Add(fTree_Sexaquarks);
+
     PostData(1, fList_Trees);
 
     /* Histograms */
@@ -1403,6 +1450,23 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             }
 
             if (isMcIdxSignal[mcIdx]) {
+                fBranch_MC.PdgCode = mcPart->PdgCode();
+                fBranch_MC.Idx = mcIdx;
+                fBranch_MC.Idx_Mother = mcPart->GetMother();
+                fBranch_MC.Idx_NDaughters = mcPart->GetNDaughters();
+                fBranch_MC.Idx_FirstDau = mcPart->GetDaughterFirst();
+                fBranch_MC.Idx_LastDau = mcPart->GetDaughterLast();
+                fBranch_MC.Px = mcPart->Px();
+                fBranch_MC.Py = mcPart->Py();
+                fBranch_MC.Pz = mcPart->Pz();
+                fBranch_MC.Xv_i = mcPart->Xv();
+                fBranch_MC.Yv_i = mcPart->Yv();
+                fBranch_MC.Zv_i = mcPart->Zv();
+                fBranch_MC.Status = mcPart->MCStatusCode();
+                fBranch_MC.IsSignal = isMcIdxSignal[mcIdx];
+                fBranch_MC.IsSecondary = isMcIdxSecondary[mcIdx];
+                fTree_MC->Fill();
+
                 fHist_Tracks_Bookkeep[pdg_mc]->Fill(20);
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Px")]->Fill(mcPart->Px());
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Py")]->Fill(mcPart->Py());
@@ -5974,351 +6038,6 @@ void AliAnalysisTaskSexaquark::Evaluate(const Double_t* h, Double_t t, Double_t 
     gg[0] = -h[4] * sn;
     gg[1] = h[4] * cs;
     gg[2] = 0.;
-}
-
-/*** TREE OPERATIONS ***/
-
-/*
- Define fTree's branches, and load them into fEvent (which is an Event_tt object)
-*/
-void AliAnalysisTaskSexaquark::SetBranches() {
-    /* MC particles */
-    /*
-        fTree->Branch("N_MCGen", &fEvent.N_MCGen);
-        fTree->Branch("MC_Px", &fEvent.MC_Px);
-        fTree->Branch("MC_Py", &fEvent.MC_Py);
-        fTree->Branch("MC_Pz", &fEvent.MC_Pz);
-        fTree->Branch("MC_X", &fEvent.MC_X);
-        fTree->Branch("MC_Y", &fEvent.MC_Y);
-        fTree->Branch("MC_Z", &fEvent.MC_Z);
-        fTree->Branch("MC_Xf", &fEvent.MC_Xf);
-        fTree->Branch("MC_Yf", &fEvent.MC_Yf);
-        fTree->Branch("MC_Zf", &fEvent.MC_Zf);
-        fTree->Branch("MC_PID", &fEvent.MC_PID);
-        fTree->Branch("MC_Mother", &fEvent.MC_Mother);
-        fTree->Branch("MC_PID_Mother", &fEvent.MC_PID_Mother);
-        fTree->Branch("MC_PID_GrandMother", &fEvent.MC_PID_GrandMother);
-        fTree->Branch("MC_NDaughters", &fEvent.MC_NDaughters);
-        fTree->Branch("MC_FirstDau", &fEvent.MC_FirstDau);
-        fTree->Branch("MC_LastDau", &fEvent.MC_LastDau);
-        fTree->Branch("MC_Status", &fEvent.MC_Status);
-        fTree->Branch("MC_isSignal", &fEvent.MC_isSignal);
-     */
-    /* MC Rec. Tracks */
-    /*
-        fTree->Branch("N_MCRec", &fEvent.N_MCRec);
-        fTree->Branch("Idx_True", &fEvent.Idx_True);
-        fTree->Branch("Rec_Px", &fEvent.Rec_Px);
-        fTree->Branch("Rec_Py", &fEvent.Rec_Py);
-        fTree->Branch("Rec_Pz", &fEvent.Rec_Pz);
-        fTree->Branch("Rec_Charge", &fEvent.Rec_Charge);
-        fTree->Branch("Rec_IP_wrtPV", &fEvent.Rec_IP_wrtPV);
-        fTree->Branch("Rec_NSigmaPion", &fEvent.Rec_NSigmaPion);
-        fTree->Branch("Rec_NSigmaProton", &fEvent.Rec_NSigmaProton);
-        fTree->Branch("Rec_NClustersTPC", &fEvent.Rec_NClustersTPC);
-        fTree->Branch("Rec_isDuplicate", &fEvent.Rec_isDuplicate);
-        fTree->Branch("Rec_isSimilar", &fEvent.Rec_isSimilar);
-        fTree->Branch("Rec_isSignal", &fEvent.Rec_isSignal);
-        fTree->Branch("Rec_HelixParam0", &fEvent.Rec_HelixParam0);
-        fTree->Branch("Rec_HelixParam1", &fEvent.Rec_HelixParam1);
-        fTree->Branch("Rec_HelixParam2", &fEvent.Rec_HelixParam2);
-        fTree->Branch("Rec_HelixParam3", &fEvent.Rec_HelixParam3);
-        fTree->Branch("Rec_HelixParam4", &fEvent.Rec_HelixParam4);
-        fTree->Branch("Rec_HelixParam5", &fEvent.Rec_HelixParam5);
-     */
-    /* V0s */
-    /*
-    fTree->Branch("N_V0s", &fEvent.N_V0s);
-    fTree->Branch("Idx_Pos", &fEvent.Idx_Pos);
-    fTree->Branch("Idx_Neg", &fEvent.Idx_Neg);
-    fTree->Branch("V0_Px", &fEvent.V0_Px);
-    fTree->Branch("V0_Py", &fEvent.V0_Py);
-    fTree->Branch("V0_Pz", &fEvent.V0_Pz);
-    fTree->Branch("V0_X", &fEvent.V0_X);
-    fTree->Branch("V0_Y", &fEvent.V0_Y);
-    fTree->Branch("V0_Z", &fEvent.V0_Z);
-    fTree->Branch("Pos_Px", &fEvent.Pos_Px);
-    fTree->Branch("Pos_Py", &fEvent.Pos_Py);
-    fTree->Branch("Pos_Pz", &fEvent.Pos_Pz);
-    fTree->Branch("Neg_Px", &fEvent.Neg_Px);
-    fTree->Branch("Neg_Py", &fEvent.Neg_Py);
-    fTree->Branch("Neg_Pz", &fEvent.Neg_Pz);
-    fTree->Branch("V0_isSignal", &fEvent.V0_isSignal);
-    fTree->Branch("V0_E_asK0", &fEvent.V0_E_asK0);
-    fTree->Branch("V0_E_asAL", &fEvent.V0_E_asAL);
-    fTree->Branch("V0_couldBeK0", &fEvent.V0_couldBeK0);
-    fTree->Branch("V0_couldBeAL", &fEvent.V0_couldBeAL);
-    fTree->Branch("V0_Chi2", &fEvent.V0_Chi2);
-    fTree->Branch("V0_DCA_Daughters", &fEvent.V0_DCA_Daughters);
-    fTree->Branch("V0_IP_wrtPV", &fEvent.V0_IP_wrtPV);
-    fTree->Branch("V0_CPA_wrtPV", &fEvent.V0_CPA_wrtPV);
-    fTree->Branch("V0_ArmAlpha", &fEvent.V0_ArmAlpha);
-    fTree->Branch("V0_ArmPt", &fEvent.V0_ArmPt);
-    fTree->Branch("V0_DecayLength", &fEvent.V0_DecayLength);
-    fTree->Branch("V0_DCA_wrtPV", &fEvent.V0_DCA_wrtPV);
-     */
-}
-
-/*
- Push one of the MC generated particles into the Event_tt object
-*/
-void AliAnalysisTaskSexaquark::MCGen_PushBack(Int_t evt_mc) {
-
-    Int_t idx_mc = 0;
-    AliMCParticle* mcPart = (AliMCParticle*)fMC->GetTrack(idx_mc);
-
-    Int_t evt_mother;
-    Int_t mother_pid;
-    Int_t grandmother_pid;
-    // MCGen_GetMotherInfo(mcPart, evt_mother, mother_pid, grandmother_pid);
-
-    Int_t n_daughters = 0;
-    Int_t evt_first_dau;
-    Int_t evt_last_dau;
-    // MCGen_GetDaughtersInfo(mcPart, n_daughters, evt_first_dau, evt_last_dau);
-
-    Float_t x_f = -999.;
-    Float_t y_f = -999.;
-    Float_t z_f = -999.;
-    if (n_daughters) {
-        AliMCParticle* mcDaughter = (AliMCParticle*)fMC->GetTrack(mcPart->GetDaughterFirst());
-        x_f = mcDaughter->Xv();
-        y_f = mcDaughter->Yv();
-        z_f = mcDaughter->Zv();
-    }
-
-    Bool_t is_signal = 0;  // MCGen_IsSignal(mcPart);
-
-#if DEBUG_MODE == 1
-    AliInfoF("%6i %6i %6i %6i %6i %6i %6i %6i %6i", evt_mc, idx_mc, mcPart->PdgCode(),
-             is_signal,  //
-             evt_mother, mother_pid,
-             grandmother_pid,  //
-             evt_first_dau, evt_last_dau);
-#endif
-    /*
-        fEvent.MC_Px.push_back(mcPart->Px());
-        fEvent.MC_Py.push_back(mcPart->Py());
-        fEvent.MC_Pz.push_back(mcPart->Pz());
-        fEvent.MC_X.push_back(mcPart->Xv());
-        fEvent.MC_Y.push_back(mcPart->Yv());
-        fEvent.MC_Z.push_back(mcPart->Zv());
-        fEvent.MC_Xf.push_back(x_f);
-        fEvent.MC_Yf.push_back(y_f);
-        fEvent.MC_Zf.push_back(z_f);
-        fEvent.MC_PID.push_back(mcPart->PdgCode());
-        fEvent.MC_Mother.push_back(evt_mother);
-        fEvent.MC_PID_Mother.push_back(mother_pid);
-        fEvent.MC_PID_GrandMother.push_back(grandmother_pid);
-        fEvent.MC_NDaughters.push_back(n_daughters);
-        fEvent.MC_FirstDau.push_back(evt_first_dau);
-        fEvent.MC_LastDau.push_back(evt_last_dau);
-        fEvent.MC_isSignal.push_back(is_signal);
-        fEvent.MC_Status.push_back(mcPart->MCStatusCode());
-         */
-}
-
-/*
- Push one of the MC reconstructed tracks into the Event_tt object
-*/
-void AliAnalysisTaskSexaquark::MCRec_PushBack(Int_t evt_track) {
-
-    Int_t idx_track = 0;  // fVec_Idx_MCRec[evt_track];
-    AliESDtrack* track = static_cast<AliESDtrack*>(fESD->GetTrack(idx_track));
-
-    Int_t idx_true = TMath::Abs(track->GetLabel());
-    AliMCParticle* mcTrue = (AliMCParticle*)fMC->GetTrack(idx_true);
-
-    Int_t evt_true = 0;          // fMap_Evt_MCGen[idx_true];
-    Bool_t is_signal = 0;        // MCGen_IsSignal(mcTrue);
-    Bool_t is_duplicate = 0;     // fVec_MCRec_IsDuplicate[evt_track];
-    Bool_t is_similar = kFALSE;  // PENDING! fVec_MCRec_IsSimilar[evt_track];
-    Float_t impact_param = MCRec_GetImpactParameter(track);
-    Double_t helix_param[6];
-    track->GetHelixParameters(helix_param, fESD->GetMagneticField());
-
-#if DEBUG_MODE > 0
-    AliInfoF("%6i %6i %6i %6i %6i", evt_track, idx_track, evt_true, idx_true, is_duplicate);
-#endif
-    /*
-        fEvent.Idx_True.push_back(evt_true);
-        fEvent.Rec_Px.push_back(track->Px());
-        fEvent.Rec_Py.push_back(track->Py());
-        fEvent.Rec_Pz.push_back(track->Pz());
-        fEvent.Rec_Charge.push_back(track->Charge());
-        fEvent.Rec_IP_wrtPV.push_back(impact_param);
-        fEvent.Rec_NSigmaPion.push_back(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion));
-        fEvent.Rec_NSigmaProton.push_back(fPIDResponse->NumberOfSigmasTPC(track, AliPID::kProton));
-        fEvent.Rec_NClustersTPC.push_back(track->GetTPCncls());
-        fEvent.Rec_isDuplicate.push_back(is_duplicate);
-        fEvent.Rec_isSimilar.push_back(is_similar);
-        fEvent.Rec_isSignal.push_back(is_signal);
-        fEvent.Rec_HelixParam0.push_back(helix_param[0]);
-        fEvent.Rec_HelixParam1.push_back(helix_param[1]);
-        fEvent.Rec_HelixParam2.push_back(helix_param[2]);
-        fEvent.Rec_HelixParam3.push_back(helix_param[3]);
-        fEvent.Rec_HelixParam4.push_back(helix_param[4]);
-        fEvent.Rec_HelixParam5.push_back(helix_param[5]);
-         */
-}
-
-/*
- Push one of the found V0s into the Event_tt object
-*/
-void AliAnalysisTaskSexaquark::V0_PushBack(Int_t evt_v0) {
-
-    // V0_tt this_V0;  // = fVec_V0s[evt_v0];
-
-#if DEBUG_MODE == 2
-    Int_t evt_pos = this_V0.Idx_Pos;
-    Int_t evt_neg = this_V0.Idx_Neg;
-    Int_t idx_pos = 0;  // fVec_Idx_MCRec[evt_pos];
-    Int_t idx_neg = 0;  // fVec_Idx_MCRec[evt_neg];
-    AliInfoF("%6i %6i %6i %6i", evt_pos, evt_neg, idx_pos, idx_neg);
-#endif
-    /*
-        fEvent.Idx_Pos.push_back(this_V0.Idx_Pos);
-        fEvent.Idx_Neg.push_back(this_V0.Idx_Neg);
-        fEvent.V0_Px.push_back(this_V0.Px);
-        fEvent.V0_Py.push_back(this_V0.Py);
-        fEvent.V0_Pz.push_back(this_V0.Pz);
-        fEvent.V0_X.push_back(this_V0.X);
-        fEvent.V0_Y.push_back(this_V0.Y);
-        fEvent.V0_Z.push_back(this_V0.Z);
-        fEvent.Pos_Px.push_back(this_V0.Pos_Px);
-        fEvent.Pos_Py.push_back(this_V0.Pos_Py);
-        fEvent.Pos_Pz.push_back(this_V0.Pos_Pz);
-        fEvent.Neg_Px.push_back(this_V0.Neg_Px);
-        fEvent.Neg_Py.push_back(this_V0.Neg_Py);
-        fEvent.Neg_Pz.push_back(this_V0.Neg_Pz);
-        fEvent.V0_isSignal.push_back(this_V0.isSignal);
-        fEvent.V0_E_asK0.push_back(this_V0.E_asK0);
-        fEvent.V0_E_asAL.push_back(this_V0.E_asAL);
-        fEvent.V0_couldBeK0.push_back(this_V0.couldBeK0);
-        fEvent.V0_couldBeAL.push_back(this_V0.couldBeAL);
-        fEvent.V0_Chi2.push_back(this_V0.Chi2);
-        fEvent.V0_DCA_Daughters.push_back(this_V0.DCA_Daughters);
-        fEvent.V0_IP_wrtPV.push_back(this_V0.IP_wrtPV);
-        fEvent.V0_CPA_wrtPV.push_back(this_V0.CPA_wrtPV);
-        fEvent.V0_ArmAlpha.push_back(this_V0.ArmAlpha);
-        fEvent.V0_ArmPt.push_back(this_V0.ArmPt);
-        fEvent.V0_DecayLength.push_back(this_V0.DecayLength);
-        fEvent.V0_DCA_wrtPV.push_back(this_V0.DCA_wrtPV);
-         */
-}
-
-/*
-
- */
-void AliAnalysisTaskSexaquark::FillTree() {
-    AliInfo("MONTE CARLO TREE");
-    AliInfo("");
-    AliInfo("         EVT    IDX    PID SIGNAL MOTHER  M_PID GM_PID FIRDAU LASDAU");
-    /*
-    fEvent.N_MCGen = (Int_t)fVec_Idx_MCGen.size();
-    for (Int_t ii = 0; ii < fEvent.N_MCGen; ii++) {
-        MCGen_PushBack(ii);
-    }
-
-    AliInfo("RECONSTRUCTED TRACKS");
-    AliInfo("");
-    AliInfo("         EVT    IDX EVTTRU IDXTRU DUPLI?");
-    fEvent.N_MCRec = (Int_t)fVec_Idx_MCRec.size();
-    for (Int_t ii = 0; ii < fEvent.N_MCRec; ii++) {
-        MCRec_PushBack(ii);
-    }
-
-    AliInfo("FOUND V0s");
-    AliInfo("");
-    AliInfo("   EVTPOS EVTNEG IDXPOS IDXNEG");
-    fEvent.N_V0s = (Int_t)fVec_V0s.size();
-    for (Int_t ii = 0; ii < fEvent.N_V0s; ii++) {
-        V0_PushBack(ii);
-    }
- */
-    // (tree operations) after all variables have been assigned, fill tree
-    fTree->Fill();
-}
-
-/*
- Clear all indices and vectors loaded in the Event_tt object
-*/
-void AliAnalysisTaskSexaquark::ClearEvent() {
-    /* MC particles */
-    /*
-    fEvent.N_MCGen = 0;
-    fEvent.MC_Px.clear();
-    fEvent.MC_Py.clear();
-    fEvent.MC_Pz.clear();
-    fEvent.MC_X.clear();
-    fEvent.MC_Y.clear();
-    fEvent.MC_Z.clear();
-    fEvent.MC_Xf.clear();
-    fEvent.MC_Yf.clear();
-    fEvent.MC_Zf.clear();
-    fEvent.MC_PID.clear();
-    fEvent.MC_Mother.clear();
-    fEvent.MC_PID_Mother.clear();
-    fEvent.MC_PID_GrandMother.clear();
-    fEvent.MC_NDaughters.clear();
-    fEvent.MC_FirstDau.clear();
-    fEvent.MC_LastDau.clear();
-    fEvent.MC_Status.clear();
-    fEvent.MC_isSignal.clear();
-     */
-    /* MC Rec. Tracks */
-    /*
-        fEvent.N_MCRec = 0;
-        fEvent.Idx_True.clear();
-        fEvent.Rec_Px.clear();
-        fEvent.Rec_Py.clear();
-        fEvent.Rec_Pz.clear();
-        fEvent.Rec_Charge.clear();
-        fEvent.Rec_IP_wrtPV.clear();
-        fEvent.Rec_NSigmaPion.clear();
-        fEvent.Rec_NSigmaProton.clear();
-        fEvent.Rec_NClustersTPC.clear();
-        fEvent.Rec_isDuplicate.clear();
-        fEvent.Rec_isSimilar.clear();
-        fEvent.Rec_isSignal.clear();
-        fEvent.Rec_HelixParam0.clear();
-        fEvent.Rec_HelixParam1.clear();
-        fEvent.Rec_HelixParam2.clear();
-        fEvent.Rec_HelixParam3.clear();
-        fEvent.Rec_HelixParam4.clear();
-        fEvent.Rec_HelixParam5.clear();
-     */
-    /* V0s */
-    /*
-    fEvent.N_V0s = 0;
-    fEvent.Idx_Pos.clear();
-    fEvent.Idx_Neg.clear();
-    fEvent.V0_Px.clear();
-    fEvent.V0_Py.clear();
-    fEvent.V0_Pz.clear();
-    fEvent.V0_X.clear();
-    fEvent.V0_Y.clear();
-    fEvent.V0_Z.clear();
-    fEvent.Pos_Px.clear();
-    fEvent.Pos_Py.clear();
-    fEvent.Pos_Pz.clear();
-    fEvent.Neg_Px.clear();
-    fEvent.Neg_Py.clear();
-    fEvent.Neg_Pz.clear();
-    fEvent.V0_isSignal.clear();
-    fEvent.V0_E_asK0.clear();
-    fEvent.V0_E_asAL.clear();
-    fEvent.V0_couldBeK0.clear();
-    fEvent.V0_couldBeAL.clear();
-    fEvent.V0_Chi2.clear();
-    fEvent.V0_DCA_Daughters.clear();
-    fEvent.V0_IP_wrtPV.clear();
-    fEvent.V0_CPA_wrtPV.clear();
-    fEvent.V0_ArmAlpha.clear();
-    fEvent.V0_ArmPt.clear();
-    fEvent.V0_DecayLength.clear();
-    fEvent.V0_DCA_wrtPV.clear();
- */
 }
 
 /*                             */

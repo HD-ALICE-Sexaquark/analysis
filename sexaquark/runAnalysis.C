@@ -148,7 +148,7 @@ void runAnalysis(TString Mode,            // "local", "grid"
         alienHandler->SetCheckCopy(kFALSE);
         alienHandler->AddIncludePath(
             "-I. -I$ROOTSYS/include -I$ALICE_ROOT -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include -I$KFPARTICLE_ROOT/include");
-        alienHandler->SetAdditionalLibs("AliAnalysisTaskSexaquark.cxx AliAnalysisTaskSexaquark.h");
+        alienHandler->SetAdditionalLibs("AliAnalysisTaskSexaquark.cxx AliAnalysisTaskSexaquark.h AliAnalysisTaskSexaquark_Structs.h");
         alienHandler->SetAnalysisSource("AliAnalysisTaskSexaquark.cxx");
         alienHandler->SetAliPhysicsVersion("vAN-20240807_O2-1");
         alienHandler->SetExecutableCommand("aliroot -l -q -b");
