@@ -28,8 +28,6 @@ void runAnalysis(TString Mode,            // "local", "grid"
                  TString StopAfter,       // "MC", "Tracks", "Findables", "V0s"
                  Bool_t DoQA,             //
                  Bool_t ReadSignalLogs,   // (only valid when analyzing signal MC)
-                 Bool_t ReweightPt,       // (only valid when analyzing signal MC and ReadSignalLogs enabled)
-                 Bool_t ReweightRadius,   // (only valid when analyzing signal MC)
                  Int_t ChooseNEvents = 0) {
 
     /* Check for Input Errors */
@@ -67,8 +65,8 @@ void runAnalysis(TString Mode,            // "local", "grid"
     }
 
     if (!IsMC) {
-        if (DoQA || ReadSignalLogs || ReweightPt || ReweightRadius) {
-            std::cerr << "!! runAnalysis.C !! Error !! DoQA, ReadSignalLogs, ReweightPt, and ReweightRadius are only valid for MC !!" << std::endl;
+        if (DoQA || ReadSignalLogs) {
+            std::cerr << "!! runAnalysis.C !! Error !! DoQA and ReadSignalLogs are only valid for MC !!" << std::endl;
             return;
         }
         if (ProductionName != "LHC15o" && ProductionName != "LHC18q" && ProductionName != "LHC18r") {
@@ -77,13 +75,8 @@ void runAnalysis(TString Mode,            // "local", "grid"
         }
     }
 
-    if (!ProductionName.Contains("LHC23l1") && (ReadSignalLogs || ReweightPt || ReweightRadius)) {
-        std::cerr << "!! runAnalysis.C !! Error !! ReadSignalLogs, ReweightPt, and ReweightRadius are only valid for signal MC !!" << std::endl;
-        return;
-    }
-
-    if (ReweightPt && !ReadSignalLogs) {
-        std::cerr << "!! runAnalysis.C !! Error !! ReweightPt is only valid when ReadSignalLogs is enabled !!" << std::endl;
+    if (!ProductionName.Contains("LHC23l1") && ReadSignalLogs) {
+        std::cerr << "!! runAnalysis.C !! Error !! ReadSignalLogs is only valid for signal MC !!" << std::endl;
         return;
     }
 
@@ -106,14 +99,14 @@ void runAnalysis(TString Mode,            // "local", "grid"
     if (ProductionName.Contains("23l1")) GridDataDir += Form("/%s", SimulationSet.Data());  // signal MC
     TString GridDataPattern = "/*/AliESDs.root";
 
-    TString GridWorkingDir = "work";
-    TString GridOutputDir = "sexaquark";
+    TString GridWorkingDir = "work/sexaquark";
     if (!IsMC)
-        GridOutputDir += "_data";
+        GridWorkingDir += Form("_Data_Channel%c", ReactionID);
     else if (ProductionName.Contains("23l1"))
-        GridOutputDir += Form("_SignalMC_%s", SimulationSet.Data());
+        GridWorkingDir += Form("_SignalMC_%s", SimulationSet.Data());
     else
-        GridOutputDir += "_BkgMC";
+        GridWorkingDir += Form("_BkgMC_Channel%c", ReactionID);
+    TString GridOutputDir = "output";
 
     std::vector<Int_t> GridRunNumbers;
     std::ifstream RunNumbersFile(RunNumbersList);
@@ -209,9 +202,8 @@ void runAnalysis(TString Mode,            // "local", "grid"
 
     gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
 
-    TString TaskSexaquark_Options =
-        Form("(%i, \"%s\", \'%c\', %.2f, \"%s\", %i, %i, %i, %i)", (Int_t)IsMC, SourceOfV0s.Data(), ReactionID, SexaquarkMass, StopAfter.Data(),
-             (Int_t)DoQA, (Int_t)ReadSignalLogs, (Int_t)ReweightPt, (Int_t)ReweightRadius);
+    TString TaskSexaquark_Options = Form("(%i, \"%s\", \'%c\', %.2f, \"%s\", %i, %i)", (Int_t)IsMC, SourceOfV0s.Data(), ReactionID, SexaquarkMass,
+                                         StopAfter.Data(), (Int_t)DoQA, (Int_t)ReadSignalLogs);
     AliAnalysisTaskSexaquark *TaskSexaquark =
         reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro("AddSexaquark.C" + TaskSexaquark_Options));
     if (!TaskSexaquark) return;
@@ -234,7 +226,7 @@ void runAnalysis(TString Mode,            // "local", "grid"
         } else {
             // alienHandler->SetNtestFiles(5);               // TEST
             // alienHandler->SetSplitMaxInputFileNumber(5);  // TEST
-            alienHandler->SetSplitMaxInputFileNumber(55);
+            alienHandler->SetSplitMaxInputFileNumber(25);
             alienHandler->SetRunMode("full");
         }
         mgr->StartAnalysis("grid");

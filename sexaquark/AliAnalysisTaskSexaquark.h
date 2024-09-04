@@ -95,8 +95,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void DoQA(Bool_t DoQA) { fDoQA = DoQA; };
     void StopAfter(TString StopAfter) { fStopAfter = StopAfter; };
     void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
-    void ReweightPt(Bool_t ReweightPt) { fReweightPt = ReweightPt; };
-    void ReweightRadius(Bool_t ReweightRadius) { fReweightRadius = ReweightRadius; };
     void Initialize();
 
     /* Main ~ executed at runtime */
@@ -202,10 +200,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* External Files */
     Bool_t LoadLogsIntoTree();
-    void AddPtWeights(std::vector<TH1D*> ptWeights);
-    void AddRadiusWeights(TH1F* radiusWeights);
-    Double_t GetPtWeight(Int_t reactionIdx, Int_t centralityBin);
-    Double_t GetRadiusWeight(Int_t reactionIdx);
 
    private:
     /* Settings ~ stored in Analysis Manager ~ all persistent */
@@ -215,8 +209,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t fDoQA;            //
     TString fStopAfter;      // "MC", "Tracks", "Findables", "V0s" (default: "")
     Bool_t fReadSignalLogs;  //
-    Bool_t fReweightPt;      //
-    Bool_t fReweightRadius;  //
 
     /* AliRoot Objects */
     AliMCEvent* fMC;                //! MC event
@@ -227,6 +219,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliEventCuts fEventCuts;        //! event cuts
     Double_t fMagneticField;        //! magnetic field
     Int_t fRunNumber;               //! run number
+    Int_t fDirNumber;               //! directory number
+    Int_t fEventNumber;             //! event number
     Float_t fCentrality;            //! centrality percentile
 
     /* ROOT Objects */
@@ -239,11 +233,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TList* fList_PosKaonPairs_Hists;  //!
 
     /* External Files */
-    TString fAliEnPath;             //!
-    TTree* fLogTree;                //!
-    Bool_t fIsFirstEvent;           //!
-    std::vector<TH1D*> fPtWeights;  //
-    TH1F* fRadiusWeights;           //
+    TString fAliEnPath;    //!
+    TTree* fLogTree;       //!
+    Bool_t fIsFirstEvent;  //!
 
     /* Filled at Initialize() ~ persistent */
     std::vector<Int_t> fProductsPDG;                               //
@@ -255,19 +247,23 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /*** Trees ***/
 
     /* Structs */
-    MCEvent_tt fBranch_MCEvent;    //!
-    MC_tt fBranch_MC;              //!
-    RecEvent_tt fBranch_RecEvent;  //!
-    Track_tt fBranch_Track;        //!
-    V0_tt fBranch_V0;              //!
-    Sxqk_A fBranch_Sexaquark_A;    //!
+    Event_tt fBranch_Event;                  //!
+    MC_tt fBranch_MC;                        //!
+    Track_tt fBranch_PiPlus;                 //!
+    Track_tt fBranch_PiMinus;                //!
+    Track_tt fBranch_AntiProton;             //!
+    V0_tt fBranch_AntiLambda;                //!
+    V0_tt fBranch_KaonZeroShort;             //!
+    RecSexaquark_aa fBranch_RecSexaquark_A;  //!
 
-    TTree* fTree_MCEvents;    //!
-    TTree* fTree_MC;          //!
-    TTree* fTree_RecEvents;   //!
-    TTree* fTree_Tracks;      //!
-    TTree* fTree_V0s;         //!
-    TTree* fTree_Sexaquarks;  //!
+    TTree* fTree_Events;          //!
+    TTree* fTree_MC;              //!
+    TTree* fTree_PiPluses;        //!
+    TTree* fTree_PiMinuses;       //!
+    TTree* fTree_AntiProtons;     //!
+    TTree* fTree_AntiLambdas;     //!
+    TTree* fTree_KaonsZeroShort;  //!
+    TTree* fTree_Sexaquarks;      //!
 
     /*** Histograms ***/
 
