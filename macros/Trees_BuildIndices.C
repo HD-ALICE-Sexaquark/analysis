@@ -1,0 +1,73 @@
+#include <iostream>
+#include <vector>
+
+void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
+
+    TFile* InputFile = TFile::Open(InputFileName, "READ");
+    if (!InputFile || InputFile->IsZombie()) {
+        std::cout << "!! ERROR !! Couldn't open file " << InputFileName << " !!" << std::endl;
+        return;
+    }
+
+    TString TreesListName = "Trees";
+    TList* TreesList = (TList*)InputFile->Get(TreesListName);
+    if (!TreesList) {
+        std::cout << "!! ERROR !! Couldn't find TList " << TreesListName << " in " << InputFileName << " !!" << std::endl;
+        InputFile->Close();
+        return;
+    }
+
+    TString OutputFileName = InputFileName.ReplaceAll(".root", "_indexed.root");
+    TFile* OutputFile = TFile::Open(OutputFileName, "RECREATE");
+    if (!OutputFile) {
+        std::cout << "!! ERROR !! Couldn't create file " << OutputFileName << " !!" << std::endl;
+        InputFile->Close();
+        return;
+    }
+
+    std::vector<TString> TreeNames = {"Injected",    "Events",      "MCParticles",    "PiPluses",  "PiMinuses",
+                                      "AntiProtons", "AntiLambdas", "KaonsZeroShort", "Sexaquarks"};
+    TString MajorIndex = "RunNumber * 1000 + DirNumber";
+    TString MinorIndex;
+    TString MinorIndex_General = "EventNumber * 10000000 + Idx";
+    TString MinorIndex_Sexaquark = "EventNumber * 1000 + ReactionID";
+    TString MinorIndex_Event = "Number";
+
+    TTree* InputEventsTree;
+    TTree* NewEventsTree;
+
+    for (Int_t i = 0; i < (Int_t)TreeNames.size(); i++) {
+        InputEventsTree = (TTree*)TreesList->FindObject(TreeNames[i]);
+        if (!InputEventsTree) {
+            std::cout << "!! ERROR !! Couldn't find TTree " << TreeNames[i] << " in " << TreesListName << " !!" << std::endl;
+            InputFile->Close();
+            OutputFile->Close();
+            return;
+        }
+
+        OutputFile->cd();
+
+        NewEventsTree = (TTree*)InputEventsTree->CloneTree();
+        if (!NewEventsTree) {
+            std::cout << "!! ERROR !! Failed to clone TTree " << TreeNames[i] << " !!" << std::endl;
+            InputFile->Close();
+            OutputFile->Close();
+            return;
+        }
+
+        MinorIndex = MinorIndex_General;
+        if (TreeNames[i] == "Sexaquarks" || TreeNames[i] == "Injected" || TreeNames[i] == "MCParticles") MinorIndex = MinorIndex_Sexaquark;
+        if (TreeNames[i] == "Events") MinorIndex = MinorIndex_Event;
+
+        NewEventsTree->BuildIndex(MajorIndex, MinorIndex);
+        std::cout << "!! INFO !! Indexing complete for TTree " << NewEventsTree->GetName() << " !!" << std::endl;
+
+        NewEventsTree->Write();
+        std::cout << "!! INFO !! Indexed TTree " << NewEventsTree->GetName() << " stored in " << OutputFileName << " !!" << std::endl;
+    }
+
+    OutputFile->Close();
+    InputFile->Close();
+
+    return;
+}
