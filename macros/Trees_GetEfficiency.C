@@ -4,25 +4,26 @@
 
 #include "TFile.h"
 #include "TTree.h"
+#include "TTreeIndex.h"
 
 #include "../sexaquark/AliAnalysisTaskSexaquark_Structs.h"
 
 // clang-format off
-// Indices
-//     MajorIndex
-//         Injected:    "Injected.RunNumber * 1000 + Injected.DirNumber"
-//         Events:      "Event.RunNumber * 1000 + Event.DirNumber"
-//         MCParticles: "MCParticle.RunNumber * 1000 + MCParticle.DirNumber"
-//         Tracks:      "Track.RunNumber * 1000 + Track.DirNumber"
-//         V0s:         "V0.RunNumber * 1000 + V0.DirNumber"
-//         Sexaquarks:  "Sexaquark.RunNumber * 1000 + Sexaquark.DirNumber"
-//     MinorIndex
-//         Injected:    "Injected.EventNumber * 1000 + Injected.ReactionID"
-//         Events:      "Event.Number"
-//         MCParticles: "MCParticle.EventNumber * 100000 + MCParticle.Idx" OR "MCParticle.EventNumber * 1000 + MCParticle.ReactionID"
-//         Tracks:      "Track.EventNumber * 100000 + Track.Idx"
-//         V0s:         "V0.EventNumber * 100000 + V0.Idx"
-//         Sexaquarks:  "Sexaquark.EventNumber * 1000 + Sexaquark.ReactionID"
+/* 
+ * Indices
+ *     MajorIndex
+ *         Injected:    "Injected.RunNumber * 1000 + Injected.DirNumber"
+ *         Events:      "Event.RunNumber * 1000 + Event.DirNumber"
+ *         MCParticles: "MCParticle.RunNumber"
+ *                      (^^ custom index ^^)
+ *         Sexaquarks:  "Sexaquark.RunNumber * 1000 + Sexaquark.DirNumber"
+ *     MinorIndex
+ *         Injected:    "Injected.EventNumber * 1000 + Injected.ReactionID"
+ *         Events:      "Event.Number"
+ *         MCParticles: "MCParticle.DirNumber * 100 * 1000 + MCParticle.EventNumber * 1000 + MCParticle.Status"
+ *                      (^^ custom index ^^)
+ *         Sexaquarks:  "Sexaquark.EventNumber * 1000 + Sexaquark.ReactionID"
+ */
 // clang-format on
 
 void Trees_GetEfficiency(TString InputFileName = "AnalysisResults_indexed.root") {
@@ -58,12 +59,6 @@ void Trees_GetEfficiency(TString InputFileName = "AnalysisResults_indexed.root")
 
     MC_tt* thisMC = nullptr;
     Tree["MCParticles"]->SetBranchAddress("MCParticle", &thisMC);
-
-    V0_tt* thisAL = nullptr;
-    Tree["AntiLambdas"]->SetBranchAddress("AntiLambda", &thisAL);
-
-    V0_tt* thisK0S = nullptr;
-    Tree["KaonsZeroShort"]->SetBranchAddress("KaonZeroShort", &thisK0S);
 
     RecSexaquark_aa* thisSexaquark = nullptr;
     Tree["Sexaquarks"]->SetBranchAddress("Sexaquark", &thisSexaquark);
@@ -111,22 +106,35 @@ void Trees_GetEfficiency(TString InputFileName = "AnalysisResults_indexed.root")
         DirNumber = thisInjected->DirNumber;
         EventNumber = thisInjected->EventNumber;
         ReactionID = thisInjected->ReactionID;
-        mcIdx = Tree["MCParticles"]->GetEntryNumberWithIndex(RunNumber * 1000 + DirNumber, EventNumber * 1000 + ReactionID);
-        if (mcIdx < 0) continue;
-        Tree["MCParticles"]->GetEntry(mcIdx);
-        Radius = TMath::Sqrt(thisMC->Xv_i * thisMC->Xv_i + thisMC->Yv_i * thisMC->Yv_i);
-        std::cout << thisMC->PdgCode << " " << Radius << std::endl;
-        TrueDistr["Radius"]->Fill(Radius);
+        mcIdx = Tree["MCParticles"]->GetEntryNumberWithIndex(RunNumber, DirNumber * 100 * 1000 + EventNumber * 1000 + ReactionID);
+        if (mcIdx >= 0) {
+            Tree["MCParticles"]->GetEntry(mcIdx);
+            Radius = TMath::Sqrt(thisMC->Xv_i * thisMC->Xv_i + thisMC->Yv_i * thisMC->Yv_i);
+            TrueDistr["Radius"]->Fill(Radius);
+        }
     }
+
+    /** Part 3: Efficiency **/
+
+    TH1F* Eff_Pt = new TH1F("Eff_Pt", "Eff_Pt", 100, 0., 5.);
+    TH1F* Eff_Radius = new TH1F("Eff_Radius", "Eff_Radius", 100, 0., 200.);
+
+    Eff_Pt->Divide(RecDistr["Pt"], TrueDistr["Pt"], 1., 1., "B");
+    Eff_Radius->Divide(RecDistr["Radius"], TrueDistr["Radius"], 1., 1., "B");
 
     /** Output File **/
 
     TString OutputFileName = InputFileName.ReplaceAll("Analysis", "Efficiency").ReplaceAll("_indexed", "");
     TFile* OutputFile = TFile::Open(OutputFileName, "RECREATE");
-    for (const auto& histName : {"Pt", "Radius"}) {
-        RecDistr[histName]->Write();
-        TrueDistr[histName]->Write();
-    }
+
+    TrueDistr["Pt"]->Write();
+    RecDistr["Pt"]->Write();
+    Eff_Pt->Write();
+
+    TrueDistr["Radius"]->Write();
+    RecDistr["Radius"]->Write();
+    Eff_Radius->Write();
+
     OutputFile->Close();
 
     InputFile->Close();

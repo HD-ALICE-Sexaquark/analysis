@@ -964,8 +964,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     }
     fTree_Events->Fill();
 
-    if (!PassesEventSelection()) return;
-
     /* MC */
 
     if (fIsMC) {
@@ -979,6 +977,11 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     }
 
     /* Tracks */
+
+    if (!PassesEventSelection()) {
+        EndOfEvent();
+        return;
+    }
 
     ProcessTracks();
 
@@ -1008,9 +1011,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     if (fSourceOfV0s == "on-the-fly" || fSourceOfV0s == "offline") {
         GetV0sFromESD(fSourceOfV0s == "on-the-fly");
-        if (fReactionID == 'A') GeoSexaquarkFinder_ChannelA();
-        // if (fReactionID == 'D') GeoSexaquarkFinder_ChannelD();
-        // if (fReactionID == 'E') GeoSexaquarkFinder_ChannelE();
     }
 
     if (fSourceOfV0s == "custom") {
@@ -1408,36 +1408,53 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
         mcPart = (AliMCParticle*)fMC->GetTrack(mcIdx);
 
-        /* Sanity check */
-
-        if (mcPart->Pt() < 1E-3 || mcPart->Pt() > 1E3) continue;
-
         pdg_mc = mcPart->PdgCode();
         getPdgCode_fromMcIdx[mcIdx] = pdg_mc;
 
-        /* Determine if particle is signal -- by checking if it's a reaction product */
-        // NOTE:
-        // If they're signal, their MC status number should be between 600 and 619.
-        // This is done exclusively for the MC productions to the sexaquark analysis.
-        // This was done to recognize each interaction, assigning a different number to each of
-        // the 20 antisexaquark-nucleon reactions that were injected in a single event.
-        //
-
         mother_idx = mcPart->GetMother();
+        n_daughters = mcPart->GetNDaughters();
+
         isMcIdxSignal[mcIdx] = mcPart->GetGeneratorIndex() == 2;
+
+        // include signal particles, as well, because despite they were injected as primaries, in reality, they are not
+        isMcIdxSecondary[mcIdx] = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || isMcIdxSignal[mcIdx];
 
         if (isMcIdxSignal[mcIdx]) {
             getReactionIdx_fromMcIdx[mcIdx] = mother_idx < 0 ? mcPart->MCStatusCode() : getReactionIdx_fromMcIdx[mother_idx];
             getMcIdx_fromReactionIdx[getReactionIdx_fromMcIdx[mcIdx]].push_back(mcIdx);
+
+            originVertex.SetXYZ(mcPart->Xv(), mcPart->Yv(), mcPart->Zv());
+            if (n_daughters) {
+                mcDaughter = (AliMCParticle*)fMC->GetTrack(mcPart->GetDaughterFirst());
+                decayVertex.SetXYZ(mcDaughter->Xv(), mcDaughter->Yv(), mcDaughter->Zv());
+            }
+
+            /* Fill MC tree */
+
+            fBranch_MC.EventNumber = fEventNumber;
+            fBranch_MC.DirNumber = fDirNumber;
+            fBranch_MC.RunNumber = fRunNumber;
+            fBranch_MC.ReactionID = getReactionIdx_fromMcIdx[mcIdx];
+            fBranch_MC.PdgCode = pdg_mc;
+            fBranch_MC.Idx = mcIdx;
+            fBranch_MC.Idx_Mother = mother_idx;
+            fBranch_MC.Idx_NDaughters = n_daughters;
+            fBranch_MC.Idx_FirstDau = mcPart->GetDaughterFirst();
+            fBranch_MC.Idx_LastDau = mcPart->GetDaughterLast();
+            fBranch_MC.Px = mcPart->Px();
+            fBranch_MC.Py = mcPart->Py();
+            fBranch_MC.Pz = mcPart->Pz();
+            fBranch_MC.Xv_i = originVertex.X();
+            fBranch_MC.Yv_i = originVertex.Y();
+            fBranch_MC.Zv_i = originVertex.Z();
+            fBranch_MC.Xv_f = n_daughters ? decayVertex.X() : 9999.;
+            fBranch_MC.Yv_f = n_daughters ? decayVertex.Y() : 9999.;
+            fBranch_MC.Zv_f = n_daughters ? decayVertex.Z() : 9999.;
+            fBranch_MC.Status = mcPart->MCStatusCode();
+            fBranch_MC.IsSecondary = isMcIdxSecondary[mcIdx];
+            fBranch_MC.IsSignal = isMcIdxSignal[mcIdx];
+            fTree_MC->Fill();
         }
-
-        /* Determine if it's a secondary particle */
-        // NOTE:
-        // Include signal particles, as well, because despite they were injected as primaries,
-        // in reality, they are not
-        //
-
-        isMcIdxSecondary[mcIdx] = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || isMcIdxSignal[mcIdx];
 
         /** Charged particles: anti-protons, kaons, pions **/
 
@@ -1462,30 +1479,6 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             }
 
             if (isMcIdxSignal[mcIdx]) {
-                fBranch_MC.EventNumber = fEventNumber;
-                fBranch_MC.DirNumber = fDirNumber;
-                fBranch_MC.RunNumber = fRunNumber;
-                fBranch_MC.ReactionID = getReactionIdx_fromMcIdx[mcIdx];
-                fBranch_MC.PdgCode = mcPart->PdgCode();
-                fBranch_MC.Idx = mcIdx;
-                fBranch_MC.Idx_Mother = mcPart->GetMother();
-                fBranch_MC.Idx_NDaughters = mcPart->GetNDaughters();
-                fBranch_MC.Idx_FirstDau = mcPart->GetDaughterFirst();
-                fBranch_MC.Idx_LastDau = mcPart->GetDaughterLast();
-                fBranch_MC.Px = mcPart->Px();
-                fBranch_MC.Py = mcPart->Py();
-                fBranch_MC.Pz = mcPart->Pz();
-                fBranch_MC.Xv_i = mcPart->Xv();
-                fBranch_MC.Yv_i = mcPart->Yv();
-                fBranch_MC.Zv_i = mcPart->Zv();
-                fBranch_MC.Xv_f = 9999.;
-                fBranch_MC.Yv_f = 9999.;
-                fBranch_MC.Zv_f = 9999.;
-                fBranch_MC.Status = mcPart->MCStatusCode();
-                fBranch_MC.IsSecondary = isMcIdxSecondary[mcIdx];
-                fBranch_MC.IsSignal = isMcIdxSignal[mcIdx];
-                fTree_MC->Fill();
-
                 fHist_Tracks_Bookkeep[pdg_mc]->Fill(20);
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Px")]->Fill(mcPart->Px());
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Py")]->Fill(mcPart->Py());
@@ -1509,7 +1502,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
             // conditions:
             // (1) has daughters
-            // (2) follows the following decay chains:
+            // (2) and they correspond to:
             //     -- anti-lambdas -> anti-proton pi+
             //     -- K0S -> pi+ pi-
 
@@ -1595,71 +1588,47 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
 
-            if (isMcIdxSecondary[mcIdx]) {
-                fHist_V0s_Bookkeep[pdg_mc]->Fill(11);
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Mass")]->Fill(mcPart->M());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pt")]->Fill(mcPart->Pt());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Px")]->Fill(mcPart->Px());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Py")]->Fill(mcPart->Py());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pz")]->Fill(mcPart->Pz());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Phi")]->Fill(mcPart->Phi());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OriginRadius")]->Fill(originVertex.Perp());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DecayRadius")]->Fill(decayVertex.Perp());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Zv")]->Fill(decayVertex.Z());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Eta")]->Fill(mcPart->Eta());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DecayLength")]->Fill(decay_length);
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OpeningAngle")]->Fill(opening_angle);
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-                fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
-            }
+            if (!isMcIdxSecondary[mcIdx]) continue;
 
-            if (isMcIdxSignal[mcIdx]) {
-                fBranch_MC.EventNumber = fEventNumber;
-                fBranch_MC.DirNumber = fDirNumber;
-                fBranch_MC.RunNumber = fRunNumber;
-                fBranch_MC.ReactionID = getReactionIdx_fromMcIdx[mcIdx];
-                fBranch_MC.PdgCode = mcPart->PdgCode();
-                fBranch_MC.Idx = mcIdx;
-                fBranch_MC.Idx_Mother = mcPart->GetMother();
-                fBranch_MC.Idx_NDaughters = mcPart->GetNDaughters();
-                fBranch_MC.Idx_FirstDau = mcPart->GetDaughterFirst();
-                fBranch_MC.Idx_LastDau = mcPart->GetDaughterLast();
-                fBranch_MC.Px = mcPart->Px();
-                fBranch_MC.Py = mcPart->Py();
-                fBranch_MC.Pz = mcPart->Pz();
-                fBranch_MC.Xv_i = originVertex.X();
-                fBranch_MC.Yv_i = originVertex.Y();
-                fBranch_MC.Zv_i = originVertex.Z();
-                fBranch_MC.Xv_f = decayVertex.X();
-                fBranch_MC.Yv_f = decayVertex.Y();
-                fBranch_MC.Zv_f = decayVertex.Z();
-                fBranch_MC.Status = mcPart->MCStatusCode();
-                fBranch_MC.IsSecondary = isMcIdxSecondary[mcIdx];
-                fBranch_MC.IsSignal = isMcIdxSignal[mcIdx];
-                fTree_MC->Fill();
+            fHist_V0s_Bookkeep[pdg_mc]->Fill(11);
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Mass")]->Fill(mcPart->M());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pt")]->Fill(mcPart->Pt());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Px")]->Fill(mcPart->Px());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Py")]->Fill(mcPart->Py());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pz")]->Fill(mcPart->Pz());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Phi")]->Fill(mcPart->Phi());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OriginRadius")]->Fill(originVertex.Perp());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DecayRadius")]->Fill(decayVertex.Perp());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Zv")]->Fill(decayVertex.Z());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Eta")]->Fill(mcPart->Eta());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DecayLength")]->Fill(decay_length);
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OpeningAngle")]->Fill(opening_angle);
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
 
-                fHist_V0s_Bookkeep[pdg_mc]->Fill(21);
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Mass")]->Fill(mcPart->M());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pt")]->Fill(mcPart->Pt());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Px")]->Fill(mcPart->Px());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Py")]->Fill(mcPart->Py());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pz")]->Fill(mcPart->Pz());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Phi")]->Fill(mcPart->Phi());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OriginRadius")]->Fill(originVertex.Perp());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DecayRadius")]->Fill(decayVertex.Perp());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Zv")]->Fill(decayVertex.Z());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Eta")]->Fill(mcPart->Eta());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DecayLength")]->Fill(decay_length);
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OpeningAngle")]->Fill(opening_angle);
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-                fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
-            }
+            if (!isMcIdxSignal[mcIdx]) continue;
+
+            fHist_V0s_Bookkeep[pdg_mc]->Fill(21);
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Mass")]->Fill(mcPart->M());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pt")]->Fill(mcPart->Pt());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Px")]->Fill(mcPart->Px());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Py")]->Fill(mcPart->Py());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pz")]->Fill(mcPart->Pz());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Phi")]->Fill(mcPart->Phi());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OriginRadius")]->Fill(originVertex.Perp());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DecayRadius")]->Fill(decayVertex.Perp());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Zv")]->Fill(decayVertex.Z());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Eta")]->Fill(mcPart->Eta());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DecayLength")]->Fill(decay_length);
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OpeningAngle")]->Fill(opening_angle);
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
         }  // end of anti-lambda && K0s condition
     }  // end of loop over MC particles
 }

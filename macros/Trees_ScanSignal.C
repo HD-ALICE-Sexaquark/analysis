@@ -8,21 +8,23 @@
 #include "../sexaquark/AliAnalysisTaskSexaquark_Structs.h"
 
 // clang-format off
-// Indices
-//     MajorIndex
-//         Injected:    "Injected.RunNumber * 1000 + Injected.DirNumber"
-//         Events:      "Event.RunNumber * 1000 + Event.DirNumber"
-//         MCParticles: "MCParticle.RunNumber * 1000 + MCParticle.DirNumber"
-//         Tracks:      "Track.RunNumber * 1000 + Track.DirNumber"
-//         V0s:         "V0.RunNumber * 1000 + V0.DirNumber"
-//         Sexaquarks:  "Sexaquark.RunNumber * 1000 + Sexaquark.DirNumber"
-//     MinorIndex
-//         Injected:    "Injected.EventNumber * 1000 + Injected.ReactionID"
-//         Events:      "Event.Number"
-//         MCParticles: "MCParticle.EventNumber * 1000000000 + MCParticle.Idx" OR "MCParticle.EventNumber * 1000 + MCParticle.ReactionID"
-//         Tracks:      "Track.EventNumber * 1000000000 + Track.Idx"
-//         V0s:         "V0.EventNumber * 1000000000 + V0.Idx"
-//         Sexaquarks:  "Sexaquark.EventNumber * 1000 + Sexaquark.ReactionID"
+/*
+ * Indices
+ *     MajorIndex
+ *         Injected:    "Injected.RunNumber * 1000 + Injected.DirNumber"
+ *         Events:      "Event.RunNumber * 1000 + Event.DirNumber"
+ *         MCParticles: "MCParticle.RunNumber * 1000 + MCParticle.DirNumber"
+ *         Tracks:      "Track.RunNumber * 1000 + Track.DirNumber"
+ *         V0s:         "V0.RunNumber * 1000 + V0.DirNumber"
+ *         Sexaquarks:  "Sexaquark.RunNumber * 1000 + Sexaquark.DirNumber"
+ *     MinorIndex
+ *         Injected:    "Injected.EventNumber * 1000 + Injected.ReactionID"
+ *         Events:      "Event.Number"
+ *         MCParticles: "MCParticle.EventNumber * 10000000 + MCParticle.Idx"
+ *         Tracks:      "Track.EventNumber * 10000000 + Track.Idx"
+ *         V0s:         "V0.EventNumber * 10000000 + V0.Idx"
+ *         Sexaquarks:  "Sexaquark.EventNumber * 1000 + Sexaquark.ReactionID"
+ */
 // clang-format on
 
 void Trees_ScanSignal(TString InputFileName = "AnalysisResults_indexed.root") {
@@ -146,6 +148,7 @@ void Trees_ScanSignal(TString InputFileName = "AnalysisResults_indexed.root") {
             Float_t AL_Mass = TMath::Sqrt(thisAL->E * thisAL->E - thisAL->Px * thisAL->Px - thisAL->Py * thisAL->Py - thisAL->Pz * thisAL->Pz);
             std::cout << "                     " << AL_Mass << std::endl;
             std::cout << "                     " << thisAL->Idx_True << std::endl;
+
         } else {
             std::cout << ">> No matching AntiLambda found" << std::endl;
         }
@@ -178,8 +181,8 @@ void Trees_ScanSignal(TString InputFileName = "AnalysisResults_indexed.root") {
                 Tree["MCParticles"]->GetEntryNumberWithIndex(RunNumber * 1000 + DirNumber, EventNumber * 10000000 + thisPiPlus->Idx_True);
             if (mc_alposdauEntry >= 0) {
                 Tree["MCParticles"]->GetEntry(mc_alposdauEntry);
-                std::cout << "   >> True: (" << thisMC->Idx << ") " << thisMC->PdgCode << " " << thisMC->Status << " " << thisMC->Idx_Mother
-                          << std::endl;
+                std::cout << "   >> True: (" << thisMC->Idx << ") " << thisMC->PdgCode << " " << thisMC->Status << " " << thisMC->Idx_Mother << " "
+                          << thisMC->ReactionID << std::endl;
             } else {
                 std::cout << "   >> No matching true MC particle found" << std::endl;
             }
@@ -200,8 +203,8 @@ void Trees_ScanSignal(TString InputFileName = "AnalysisResults_indexed.root") {
                 Tree["MCParticles"]->GetEntryNumberWithIndex(RunNumber * 1000 + DirNumber, EventNumber * 10000000 + thisAntiProton->Idx_True);
             if (mc_alnegdauEntry >= 0) {
                 Tree["MCParticles"]->GetEntry(mc_alnegdauEntry);
-                std::cout << "   >> True: (" << thisMC->Idx << ") " << thisMC->PdgCode << " " << thisMC->Status << " " << thisMC->Idx_Mother
-                          << std::endl;
+                std::cout << "   >> True: (" << thisMC->Idx << ") " << thisMC->PdgCode << " " << thisMC->Status << " " << thisMC->Idx_Mother << " "
+                          << thisMC->ReactionID << std::endl;
             } else {
                 std::cout << "   >> No matching true MC particle found" << std::endl;
             }
@@ -225,8 +228,8 @@ void Trees_ScanSignal(TString InputFileName = "AnalysisResults_indexed.root") {
                 Tree["MCParticles"]->GetEntryNumberWithIndex(RunNumber * 1000 + DirNumber, EventNumber * 10000000 + thisPiPlus->Idx_True);
             if (mc_k0sposdauEntry >= 0) {
                 Tree["MCParticles"]->GetEntry(mc_k0sposdauEntry);
-                std::cout << "   >> True: (" << thisMC->Idx << ") " << thisMC->PdgCode << " " << thisMC->Status << " " << thisMC->Idx_Mother
-                          << std::endl;
+                std::cout << "   >> True: (" << thisMC->Idx << ") " << thisMC->PdgCode << " " << thisMC->Status << " " << thisMC->Idx_Mother << " "
+                          << thisMC->ReactionID << std::endl;
             } else {
                 std::cout << "   >> No matching true MC particle found" << std::endl;
             }
@@ -247,8 +250,8 @@ void Trees_ScanSignal(TString InputFileName = "AnalysisResults_indexed.root") {
                 Tree["MCParticles"]->GetEntryNumberWithIndex(RunNumber * 1000 + DirNumber, EventNumber * 10000000 + thisPiMinus->Idx_True);
             if (mc_k0snegdauEntry >= 0) {
                 Tree["MCParticles"]->GetEntry(mc_k0snegdauEntry);
-                std::cout << "   >> True: (" << thisMC->Idx << ") " << thisMC->PdgCode << " " << thisMC->Status << " " << thisMC->Idx_Mother
-                          << std::endl;
+                std::cout << "   >> True: (" << thisMC->Idx << ") " << thisMC->PdgCode << " " << thisMC->Status << " " << thisMC->Idx_Mother << " "
+                          << thisMC->ReactionID << std::endl;
             } else {
                 std::cout << "   >> No matching true MC particle found" << std::endl;
             }

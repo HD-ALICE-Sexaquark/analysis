@@ -56,11 +56,22 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
         }
 
         MinorIndex = MinorIndex_General;
-        if (TreeNames[i] == "Sexaquarks" || TreeNames[i] == "Injected" || TreeNames[i] == "MCParticles") MinorIndex = MinorIndex_Sexaquark;
+        if (TreeNames[i] == "Sexaquarks" || TreeNames[i] == "Injected") MinorIndex = MinorIndex_Sexaquark;
         if (TreeNames[i] == "Events") MinorIndex = MinorIndex_Event;
 
         NewEventsTree->BuildIndex(MajorIndex, MinorIndex);
         std::cout << "!! INFO !! Indexing complete for TTree " << NewEventsTree->GetName() << " !!" << std::endl;
+
+        if (TreeNames[i] == "MCParticles") {
+            // Note:
+            // added custom index for easy access when looping over injected anti-sexaquarks
+            // "Status" preferred over "ReactionID" to identify the first-gen products of the interaction,
+            // which are the ones that contain the secondary vertex info
+            TString CustomMajorIndex = "RunNumber";
+            TString CustomMinorIndex = "DirNumber * 100 * 1000 + EventNumber * 1000 + Status";
+            NewEventsTree->BuildIndex(CustomMajorIndex, CustomMinorIndex);
+            std::cout << "!! INFO !! Custom index built for TTree " << NewEventsTree->GetName() << " !!" << std::endl;
+        }
 
         NewEventsTree->Write();
         std::cout << "!! INFO !! Indexed TTree " << NewEventsTree->GetName() << " stored in " << OutputFileName << " !!" << std::endl;
