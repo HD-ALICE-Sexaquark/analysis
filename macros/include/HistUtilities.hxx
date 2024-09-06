@@ -2,6 +2,7 @@
 #define HistUtilities_hxx
 
 #include "Headers.hxx"
+
 /**
   Get information from the name
   - input: name
@@ -125,8 +126,7 @@ void AddHistsToList(TList *list, const char *name) {
             // printf("AddTreesToList :: wildcard not found on filename\n");
             // printf("AddTreesToList :: Adding %s/%s/%s/%s/%s\n", top_directory.Data(), one_dir, filename.Data(), listname.Data(),
             // histname.Data());
-            AddFileToList(
-                list, TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, filename.Data(), listname.Data(), histname.Data()));
+            AddFileToList(list, TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, filename.Data(), listname.Data(), histname.Data()));
             continue;
         }
 
@@ -171,8 +171,7 @@ void AddHistsToList(TList *list, const char *name) {
             one_file = current_file->GetName();
             // printf("AddTreesToList :: Adding %s/%s/%s/%s/%s\n", top_directory.Data(), one_dir, one_file, listname.Data(),
             // histname.Data());
-            AddFileToList(list,
-                          TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, one_file, listname.Data(), histname.Data()));
+            AddFileToList(list, TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, one_file, listname.Data(), histname.Data()));
         }  // end of loop over files
 
         file_list.Delete();
