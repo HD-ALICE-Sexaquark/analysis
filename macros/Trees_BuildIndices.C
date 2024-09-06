@@ -9,6 +9,8 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
         return;
     }
 
+    /* Get Trees List */
+
     TString TreesListName = "Trees";
     TList* TreesList = (TList*)InputFile->Get(TreesListName);
     if (!TreesList) {
@@ -16,6 +18,8 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
         InputFile->Close();
         return;
     }
+
+    /* Open Output File */
 
     TString OutputFileName = InputFileName.ReplaceAll(".root", "_indexed.root");
     TFile* OutputFile = TFile::Open(OutputFileName, "RECREATE");
@@ -25,16 +29,22 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
         return;
     }
 
-    std::vector<TString> TreeNames = {"Injected",    "Events",      "MCParticles",    "PiPluses",  "PiMinuses",
-                                      "AntiProtons", "AntiLambdas", "KaonsZeroShort", "Sexaquarks"};
+    /* Define Major and Minor Indices */
+
     TString MajorIndex = "RunNumber * 1000 + DirNumber";
+
     TString MinorIndex;
     TString MinorIndex_General = "EventNumber * 10000000 + Idx";
     TString MinorIndex_Sexaquark = "EventNumber * 1000 + ReactionID";
     TString MinorIndex_Event = "Number";
 
+    /* Loop over trees */
+
     TTree* InputEventsTree;
     TTree* NewEventsTree;
+
+    std::vector<TString> TreeNames = {"Injected",    "Events",      "MCParticles",    "PiPluses",  "PiMinuses",
+                                      "AntiProtons", "AntiLambdas", "KaonsZeroShort", "Sexaquarks"};
 
     for (Int_t i = 0; i < (Int_t)TreeNames.size(); i++) {
         InputEventsTree = (TTree*)TreesList->FindObject(TreeNames[i]);

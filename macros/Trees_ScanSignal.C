@@ -138,6 +138,23 @@ void Trees_ScanSignal(TString InputFileName = "AnalysisResults_indexed.root") {
             std::cout << ">> No matching injected found" << std::endl;
         }
 
+        /* Event Info */
+
+        RunNumber = thisInjected->RunNumber;
+        DirNumber = thisInjected->DirNumber;
+        EventNumber = thisInjected->EventNumber;
+        eventEntry = Tree["Events"]->GetEntryNumberWithIndex(RunNumber * 1000 + DirNumber, EventNumber);
+
+        if (eventEntry >= 0) {
+            Tree["Events"]->GetEntry(eventEntry);
+            std::cout << ">> Event : " << thisEvent->RunNumber << " " << thisEvent->DirNumber << " " << thisEvent->Number << std::endl;
+            std::cout << "           " << thisEvent->MC_Xv_PV << " " << thisEvent->MC_Yv_PV << " " << thisEvent->MC_Zv_PV << std::endl;
+            std::cout << "           " << thisEvent->Rec_Xv_PV << " " << thisEvent->Rec_Yv_PV << " " << thisEvent->Rec_Zv_PV << std::endl;
+            std::cout << "           " << thisEvent->Centrality << std::endl;
+        } else {
+            std::cout << ">> No matching event found" << std::endl;
+        }
+
         /* Anti-Lambda Info */
 
         Int_t antilambdaEntry = Tree["AntiLambdas"]->GetEntryNumberWithIndex(RunNumber * 1000 + DirNumber, EventNumber * 10000000 + Idx_AL);
