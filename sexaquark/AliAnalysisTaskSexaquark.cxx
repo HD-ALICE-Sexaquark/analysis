@@ -4289,6 +4289,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Chi2ndf")]->Fill(chi2_ndf);
 
             // -- DEBUG -- //
+            /*
             AliInfo("!! Anti-Sexaquark Found !!");
             AliInfoF("RN: %i, EV: %i, DIR: %i", fRunNumber, fEventNumber, fDirNumber);
             AliInfoF("AL: %i, K0S: %i, ESDs: %i %i %i %i, MC: %i %i %i %i, MC Mothers: %i %i %i %i, Reaction: %i %i %i %i",  //
@@ -4302,6 +4303,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
                      getMotherMcIdx_fromEsdIdx[esdIdxNeg_KaonZeroShort], getMotherMcIdx_fromEsdIdx[esdIdxPos_KaonZeroShort],  //
                      getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda], getReactionIdx_fromEsdIdx[esdIdxPos_AntiLambda],
                      getReactionIdx_fromEsdIdx[esdIdxNeg_KaonZeroShort], getReactionIdx_fromEsdIdx[esdIdxPos_KaonZeroShort]);
+            */
             // -- END OF DEBUG -- //
 
             fBranch_RecSexaquark_A.ReactionID = getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
@@ -5501,17 +5503,6 @@ Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TV
     PCA1.SetXYZ(dir1[0] * t1 + pos1[0], dir1[1] * t1 + pos1[1], dir1[2] * t1 + pos1[2]);
 
     return dca;
-}
-
-/*
- Get the centrality bin from the centrality value. According to:
- - centrality ranges: 0-5, 5-10, 10-20, 20-30, 30-40, 40-50, 50-60, 60-70, 70-80, 80-90
- - centrality bin: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-*/
-Int_t AliAnalysisTaskSexaquark::GetCentralityBin(Float_t CentralityValue) {
-    Int_t centrality_bin = std::min(static_cast<Int_t>(0.1 * CentralityValue + 1), 9);
-    if (CentralityValue < 5.) centrality_bin = 0;
-    return centrality_bin;
 }
 
 /*** FUNCTIONS FOR THE CUSTOM OFFLINE V0 FINDER ***/

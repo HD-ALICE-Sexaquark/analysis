@@ -189,7 +189,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Double_t SquaredDistanceBetweenLines(const Double_t* t, Double_t pos0[], Double_t dir0[], Double_t pos1[], Double_t dir1[]);
     Double_t Calculate_TwoLinesDCA_v1(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
     Double_t Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
-    Int_t GetCentralityBin(Float_t CentralityValue);
 
     /* Kalman Filter Utilities */
     KFParticle CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge);

@@ -99,13 +99,13 @@ void runAnalysis(TString Mode,            // "local", "grid"
     if (ProductionName.Contains("23l1")) GridDataDir += Form("/%s", SimulationSet.Data());  // signal MC
     TString GridDataPattern = "/*/AliESDs.root";
 
-    TString GridWorkingDir = "work/sexaquark";
+    TString GridWorkingDir = "work/Sexaquark";
     if (!IsMC)
         GridWorkingDir += Form("_Data_Channel%c", ReactionID);
     else if (ProductionName.Contains("23l1"))
-        GridWorkingDir += Form("_SignalMC_%s", SimulationSet.Data());
+        GridWorkingDir += Form("_MC_%s_%s", ProductionName.Data(), SimulationSet.Data());
     else
-        GridWorkingDir += Form("_BkgMC_Channel%c", ReactionID);
+        GridWorkingDir += Form("_MC_%s_Channel%c", ProductionName.Data(), ReactionID);
     TString GridOutputDir = "output";
 
     std::vector<Int_t> GridRunNumbers;
@@ -226,7 +226,7 @@ void runAnalysis(TString Mode,            // "local", "grid"
         } else {
             // alienHandler->SetNtestFiles(5);               // TEST
             // alienHandler->SetSplitMaxInputFileNumber(5);  // TEST
-            alienHandler->SetSplitMaxInputFileNumber(25);
+            alienHandler->SetSplitMaxInputFileNumber(35);
             alienHandler->SetRunMode("full");
         }
         mgr->StartAnalysis("grid");
