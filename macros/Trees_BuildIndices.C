@@ -1,5 +1,4 @@
-#include <iostream>
-#include <vector>
+#include "include/Headers.hxx"
 
 void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
 
@@ -54,6 +53,7 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
             OutputFile->Close();
             return;
         }
+        std::cout << "!! INFO !! Input TTree " << TreeNames[i] << " has " << InputEventsTree->GetEntries() << " entries !!" << std::endl;
 
         OutputFile->cd();
 
@@ -64,6 +64,7 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
             OutputFile->Close();
             return;
         }
+        std::cout << "!! INFO !! Cloned TTree " << TreeNames[i] << " has " << NewEventsTree->GetEntries() << " entries !!" << std::endl;
 
         MinorIndex = MinorIndex_General;
         if (TreeNames[i] == "Sexaquarks" || TreeNames[i] == "Injected") MinorIndex = MinorIndex_Sexaquark;

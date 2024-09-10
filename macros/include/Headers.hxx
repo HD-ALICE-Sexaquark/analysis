@@ -29,6 +29,8 @@
 #include "TString.h"
 #include "TStyle.h"
 #include "TSystemDirectory.h"
+#include "TTree.h"
+#include "TTreeIndex.h"
 #include "TVector3.h"
 
 #endif

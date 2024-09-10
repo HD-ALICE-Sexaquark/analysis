@@ -1,10 +1,4 @@
-#include <iostream>
-#include <map>
-#include <vector>
-
-#include "TFile.h"
-#include "TTree.h"
-#include "TTreeIndex.h"
+#include "include/Headers.hxx"
 
 #include "../sexaquark/AliAnalysisTaskSexaquark_Structs.h"
 
