@@ -40,28 +40,28 @@ struct Event_tt {
  * Branch Name: MCParticle
  */
 struct MC_tt {
-    Int_t EventNumber;     //
-    Int_t DirNumber;       //
-    Int_t RunNumber;       //
-    Int_t ReactionID;      //
-    Int_t PdgCode;         // pdg code
-    Int_t Idx;             //
-    Int_t Idx_Mother;      // index of mother (within MC_tt)
-    Int_t Idx_NDaughters;  // number of daughters
-    Int_t Idx_FirstDau;    // index of first daughter (within MC_tt)
-    Int_t Idx_LastDau;     // index of last daughter (within MC_tt)
-    Float_t Px;            // momentum
-    Float_t Py;            //
-    Float_t Pz;            //
-    Float_t Xv_i;          // origin vertex
-    Float_t Yv_i;          //
-    Float_t Zv_i;          //
-    Float_t Xv_f;          // decay vertex
-    Float_t Yv_f;          //
-    Float_t Zv_f;          //
-    Int_t Status;          // MC status code
-    Bool_t IsSecondary;    //
-    Bool_t IsSignal;       //
+    Int_t EventNumber;   //
+    Int_t DirNumber;     //
+    Int_t RunNumber;     //
+    Int_t ReactionID;    //
+    Int_t PdgCode;       // pdg code
+    Int_t Idx;           //
+    Int_t Idx_Mother;    // index of mother (within MC_tt)
+    Int_t NDaughters;    // number of daughters
+    Int_t Idx_FirstDau;  // index of first daughter (within MC_tt)
+    Int_t Idx_LastDau;   // index of last daughter (within MC_tt)
+    Float_t Px;          // momentum
+    Float_t Py;          //
+    Float_t Pz;          //
+    Float_t Xv_i;        // origin vertex
+    Float_t Yv_i;        //
+    Float_t Zv_i;        //
+    Float_t Xv_f;        // decay vertex
+    Float_t Yv_f;        //
+    Float_t Zv_f;        //
+    Int_t Status;        // MC status code
+    Bool_t IsSecondary;  //
+    Bool_t IsSignal;     //
 };
 
 /**

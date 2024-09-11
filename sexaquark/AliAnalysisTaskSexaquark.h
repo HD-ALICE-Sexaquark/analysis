@@ -56,8 +56,6 @@
 #include "Math/Functor.h"
 #include "Math/Minimizer.h"
 
-#include "AliAnalysisTaskSexaquark_Structs.h"
-
 #define HomogeneousField  // homogeneous field in z direction, required by KFParticle
 #include "KFPTrack.h"
 #include "KFPVertex.h"
@@ -233,7 +231,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* External Files */
     TString fAliEnPath;    //!
-    TTree* fLogTree;       //!
     Bool_t fIsFirstEvent;  //!
 
     /* Filled at Initialize() ~ persistent */
@@ -245,20 +242,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /*** Trees ***/
 
-    /* Structs */
-    Event_tt fBranch_Event;                  //!
-    MC_tt fBranch_MC;                        //!
-    Track_tt fBranch_PiPlus;                 //!
-    Track_tt fBranch_PiMinus;                //!
-    Track_tt fBranch_AntiProton;             //!
-    V0_tt fBranch_AntiLambda;                //!
-    V0_tt fBranch_KaonZeroShort;             //!
-    RecSexaquark_aa fBranch_RecSexaquark_A;  //!
-
     TTree* fTree_Events;          //!
+    TTree* fTree_Injected;        //! is filled only when ReadSignalLogs (protection PENDING!)
     TTree* fTree_MC;              //!
     TTree* fTree_PiPluses;        //!
     TTree* fTree_PiMinuses;       //!
+    TTree* fTree_PosKaons;        //!
     TTree* fTree_AntiProtons;     //!
     TTree* fTree_AntiLambdas;     //!
     TTree* fTree_KaonsZeroShort;  //!
