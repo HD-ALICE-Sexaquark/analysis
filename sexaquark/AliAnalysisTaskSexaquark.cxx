@@ -49,9 +49,11 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fTree_MC(0),
       fTree_PiPluses(0),
       fTree_PiMinuses(0),
+      fTree_PosKaons(0),
       fTree_AntiProtons(0),
       fTree_AntiLambdas(0),
       fTree_KaonsZeroShort(0),
+      fTree_PionPairs(0),
       fTree_Sexaquarks(0),
       /*  */
       fHist_QA(),
@@ -184,9 +186,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       kMax_PosKaonPair_DCAbtwKaons(0.),
       kMax_PosKaonPair_DCApkaSV(0.),
       kMax_PosKaonPair_DCApkbSV(0.),
-      kMax_PosKaonPair_Chi2ndf(0.)
-// fEvent()
-{}
+      kMax_PosKaonPair_Chi2ndf(0.) {}
 
 /*
  Constructor, called locally.
@@ -235,9 +235,11 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fTree_MC(0),
       fTree_PiPluses(0),
       fTree_PiMinuses(0),
+      fTree_PosKaons(0),
       fTree_AntiProtons(0),
       fTree_AntiLambdas(0),
       fTree_KaonsZeroShort(0),
+      fTree_PionPairs(0),
       fTree_Sexaquarks(0),
       /*  */
       fHist_QA(),
@@ -370,9 +372,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       kMax_PosKaonPair_DCAbtwKaons(0.),
       kMax_PosKaonPair_DCApkaSV(0.),
       kMax_PosKaonPair_DCApkbSV(0.),
-      kMax_PosKaonPair_Chi2ndf(0.)
-// fEvent()
-{
+      kMax_PosKaonPair_Chi2ndf(0.) {
     DefineInput(0, TChain::Class());
     DefineOutput(1, TList::Class());  // fList_Trees
     DefineOutput(2, TList::Class());  // fList_QA_Hists
@@ -437,6 +437,9 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     fTree_PiMinuses = new TTree("PiMinuses", "PiMinuses");
     fList_Trees->Add(fTree_PiMinuses);
 
+    fTree_PosKaons = new TTree("PosKaons", "PosKaons");
+    fList_Trees->Add(fTree_PosKaons);
+
     fTree_AntiProtons = new TTree("AntiProtons", "AntiProtons");
     fList_Trees->Add(fTree_AntiProtons);
 
@@ -445,6 +448,9 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     fTree_KaonsZeroShort = new TTree("KaonsZeroShort", "KaonsZeroShort");
     fList_Trees->Add(fTree_KaonsZeroShort);
+
+    fTree_PionPairs = new TTree("PionPairs", "PionPairs");
+    fList_Trees->Add(fTree_PionPairs);
 
     fTree_Sexaquarks = new TTree("Sexaquarks", "Sexaquarks");
     fList_Trees->Add(fTree_Sexaquarks);
@@ -919,49 +925,51 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     // init KFparticle
     KFParticle::SetField(fMagneticField);
 
-    /* Tree operations */
-
-    // clang-format off
-    if (fTree_Events->GetBranch("RunNumber")) fTree_Events->Branch("EventNumber", &fEventNumber);
-    else fTree_Events->SetBranchAddress("EventNumber", &fEventNumber);
-
-    if (fTree_Events->GetBranch("DirNumber")) fTree_Events->Branch("DirNumber", &fDirNumber);
-    else fTree_Events->SetBranchAddress("DirNumber", &fDirNumber);
-
-    if (fTree_Events->GetBranch("RunNumber")) fTree_Events->Branch("RunNumber", &fRunNumber);
-    else fTree_Events->SetBranchAddress("RunNumber", &fRunNumber);
-
-    if (fTree_Events->GetBranch("Centrality")) fTree_Events->Branch("Centrality", &fCentrality);
-    else fTree_Events->SetBranchAddress("Centrality", &fCentrality);
+    /* Prepare branches */
 
     Float_t EventBranch_Rec_Xv_PV = fPrimaryVertex->GetX();
-    if (fTree_Events->GetBranch("Rec_Xv_PV")) fTree_Events->Branch("Rec_Xv_PV", &EventBranch_Rec_Xv_PV);
+    Float_t EventBranch_Rec_Yv_PV = fPrimaryVertex->GetY();
+    Float_t EventBranch_Rec_Zv_PV = fPrimaryVertex->GetZ();
+
+    // clang-format off
+    if (!fTree_Events->GetBranch("RunNumber")) fTree_Events->Branch("EventNumber", &fEventNumber);
+    else fTree_Events->SetBranchAddress("EventNumber", &fEventNumber);
+
+    if (!fTree_Events->GetBranch("DirNumber")) fTree_Events->Branch("DirNumber", &fDirNumber);
+    else fTree_Events->SetBranchAddress("DirNumber", &fDirNumber);
+
+    if (!fTree_Events->GetBranch("RunNumber")) fTree_Events->Branch("RunNumber", &fRunNumber);
+    else fTree_Events->SetBranchAddress("RunNumber", &fRunNumber);
+
+    if (!fTree_Events->GetBranch("Centrality")) fTree_Events->Branch("Centrality", &fCentrality);
+    else fTree_Events->SetBranchAddress("Centrality", &fCentrality);
+
+    if (!fTree_Events->GetBranch("Rec_Xv_PV")) fTree_Events->Branch("Rec_Xv_PV", &EventBranch_Rec_Xv_PV);
     else fTree_Events->SetBranchAddress("Rec_Xv_PV", &EventBranch_Rec_Xv_PV);
 
-    Float_t EventBranch_Rec_Yv_PV = fPrimaryVertex->GetY();
-    if (fTree_Events->GetBranch("Rec_Yv_PV")) fTree_Events->Branch("Rec_Yv_PV", &EventBranch_Rec_Yv_PV);
+    if (!fTree_Events->GetBranch("Rec_Yv_PV")) fTree_Events->Branch("Rec_Yv_PV", &EventBranch_Rec_Yv_PV);
     else fTree_Events->SetBranchAddress("Rec_Yv_PV", &EventBranch_Rec_Yv_PV);
 
-    Float_t EventBranch_Rec_Zv_PV = fPrimaryVertex->GetZ();
-    if (fTree_Events->GetBranch("Rec_Zv_PV")) fTree_Events->Branch("Rec_Zv_PV", &EventBranch_Rec_Zv_PV);
+    if (!fTree_Events->GetBranch("Rec_Zv_PV")) fTree_Events->Branch("Rec_Zv_PV", &EventBranch_Rec_Zv_PV);
     else fTree_Events->SetBranchAddress("Rec_Zv_PV", &EventBranch_Rec_Zv_PV);
 
     if (fIsMC) {
         Float_t EventBranch_MC_Xv_PV = fMC_PrimaryVertex->GetX();
-        if (fTree_Events->GetBranch("MC_Xv_PV")) fTree_Events->Branch("MC_Xv_PV", &EventBranch_MC_Xv_PV);
+        Float_t EventBranch_MC_Yv_PV = fMC_PrimaryVertex->GetY();
+        Float_t EventBranch_MC_Zv_PV = fMC_PrimaryVertex->GetZ();
+
+        if (!fTree_Events->GetBranch("MC_Xv_PV")) fTree_Events->Branch("MC_Xv_PV", &EventBranch_MC_Xv_PV);
         else fTree_Events->SetBranchAddress("MC_Xv_PV", &EventBranch_MC_Xv_PV);
 
-        Float_t EventBranch_MC_Yv_PV = fMC_PrimaryVertex->GetY();
-        if (fTree_Events->GetBranch("MC_Yv_PV")) fTree_Events->Branch("MC_Yv_PV", &EventBranch_MC_Yv_PV);
+        if (!fTree_Events->GetBranch("MC_Yv_PV")) fTree_Events->Branch("MC_Yv_PV", &EventBranch_MC_Yv_PV);
         else fTree_Events->SetBranchAddress("MC_Yv_PV", &EventBranch_MC_Yv_PV);
 
-        Float_t EventBranch_MC_Zv_PV = fMC_PrimaryVertex->GetZ();
-        if (fTree_Events->GetBranch("MC_Zv_PV")) fTree_Events->Branch("MC_Zv_PV", &EventBranch_MC_Zv_PV);
+        if (!fTree_Events->GetBranch("MC_Zv_PV")) fTree_Events->Branch("MC_Zv_PV", &EventBranch_MC_Zv_PV);
         else fTree_Events->SetBranchAddress("MC_Zv_PV", &EventBranch_MC_Zv_PV);
     }
-    
-    fTree_Events->Fill();
     // clang-format on
+
+    fTree_Events->Fill();
 
     /* MC */
 
@@ -1406,85 +1414,86 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
     /* Prepare branches */
 
+    Int_t tMC_ReactionID;
+    Float_t tMC_Px;
+    Float_t tMC_Py;
+    Float_t tMC_Pz;
+    Float_t tMC_Xv_i;
+    Float_t tMC_Yv_i;
+    Float_t tMC_Zv_i;
+    Float_t tMC_Xv_f;
+    Float_t tMC_Yv_f;
+    Float_t tMC_Zv_f;
+    Int_t tMC_Status;
+    Bool_t tMC_IsSecondary;
+    Bool_t tMC_IsSignal;
+
     // clang-format off
-    if (fTree_MC->GetBranch("EventNumber")) fTree_MC->Branch("EventNumber", &fEventNumber);
+    if (!fTree_MC->GetBranch("EventNumber")) fTree_MC->Branch("EventNumber", &fEventNumber);
     else fTree_MC->SetBranchAddress("EventNumber", &fEventNumber);
 
-    if (fTree_MC->GetBranch("DirNumber")) fTree_MC->Branch("DirNumber", &fDirNumber);
+    if (!fTree_MC->GetBranch("DirNumber")) fTree_MC->Branch("DirNumber", &fDirNumber);
     else fTree_MC->SetBranchAddress("DirNumber", &fDirNumber);
 
-    if (fTree_MC->GetBranch("RunNumber")) fTree_MC->Branch("RunNumber", &fRunNumber);
+    if (!fTree_MC->GetBranch("RunNumber")) fTree_MC->Branch("RunNumber", &fRunNumber);
     else fTree_MC->SetBranchAddress("RunNumber", &fRunNumber);
 
-    if (fTree_MC->GetBranch("Idx")) fTree_MC->Branch("Idx", &mcIdx);
+    if (!fTree_MC->GetBranch("Idx")) fTree_MC->Branch("Idx", &mcIdx);
     else fTree_MC->SetBranchAddress("Idx", &mcIdx);
 
-    if (fTree_MC->GetBranch("PdgCode")) fTree_MC->Branch("PdgCode", &pdg_mc);
+    if (!fTree_MC->GetBranch("PdgCode")) fTree_MC->Branch("PdgCode", &pdg_mc);
     else fTree_MC->SetBranchAddress("PdgCode", &pdg_mc);
 
-    if (fTree_MC->GetBranch("Idx_Mother")) fTree_MC->Branch("Idx_Mother", &mother_idx);
+    if (!fTree_MC->GetBranch("Idx_Mother")) fTree_MC->Branch("Idx_Mother", &mother_idx);
     else fTree_MC->SetBranchAddress("Idx_Mother", &mother_idx);
 
-    if (fTree_MC->GetBranch("NDaughters")) fTree_MC->Branch("NDaughters", &n_daughters);
+    if (!fTree_MC->GetBranch("NDaughters")) fTree_MC->Branch("NDaughters", &n_daughters);
     else fTree_MC->SetBranchAddress("NDaughters", &n_daughters);
 
-    if (fTree_MC->GetBranch("Idx_FirstDau")) fTree_MC->Branch("Idx_FirstDau", &idx_first_dau);
+    if (!fTree_MC->GetBranch("Idx_FirstDau")) fTree_MC->Branch("Idx_FirstDau", &idx_first_dau);
     else fTree_MC->SetBranchAddress("Idx_FirstDau", &idx_first_dau);
 
-    if (fTree_MC->GetBranch("Idx_LastDau")) fTree_MC->Branch("Idx_LastDau", &idx_last_dau);
+    if (!fTree_MC->GetBranch("Idx_LastDau")) fTree_MC->Branch("Idx_LastDau", &idx_last_dau);
     else fTree_MC->SetBranchAddress("Idx_LastDau", &idx_last_dau);
 
-    Int_t MCBranch_ReactionID;
-    if (fTree_MC->GetBranch("ReactionID")) fTree_MC->Branch("ReactionID", &MCBranch_ReactionID);
-    else fTree_MC->SetBranchAddress("ReactionID", &MCBranch_ReactionID);
+    if (!fTree_MC->GetBranch("ReactionID")) fTree_MC->Branch("ReactionID", &tMC_ReactionID);
+    else fTree_MC->SetBranchAddress("ReactionID", &tMC_ReactionID);
 
-    Float_t MCBranch_Px;
-    if (fTree_MC->GetBranch("Px")) fTree_MC->Branch("Px", &MCBranch_Px);
-    else fTree_MC->SetBranchAddress("Px", &MCBranch_Px);
+    if (!fTree_MC->GetBranch("Px")) fTree_MC->Branch("Px", &tMC_Px);
+    else fTree_MC->SetBranchAddress("Px", &tMC_Px);
 
-    Float_t MCBranch_Py;
-    if (fTree_MC->GetBranch("Py")) fTree_MC->Branch("Py", &MCBranch_Py);
-    else fTree_MC->SetBranchAddress("Py", &MCBranch_Py);
+    if (!fTree_MC->GetBranch("Py")) fTree_MC->Branch("Py", &tMC_Py);
+    else fTree_MC->SetBranchAddress("Py", &tMC_Py);
 
-    Float_t MCBranch_Pz;
-    if (fTree_MC->GetBranch("Pz")) fTree_MC->Branch("Pz", &MCBranch_Pz);
-    else fTree_MC->SetBranchAddress("Pz", &MCBranch_Pz);
+    if (!fTree_MC->GetBranch("Pz")) fTree_MC->Branch("Pz", &tMC_Pz);
+    else fTree_MC->SetBranchAddress("Pz", &tMC_Pz);
 
-    Float_t MCBranch_Xv_i;
-    if (fTree_MC->GetBranch("Xv_i")) fTree_MC->Branch("Xv_i", &MCBranch_Xv_i);
-    else fTree_MC->SetBranchAddress("Xv_i", &MCBranch_Xv_i);
+    if (!fTree_MC->GetBranch("Xv_i")) fTree_MC->Branch("Xv_i", &tMC_Xv_i);
+    else fTree_MC->SetBranchAddress("Xv_i", &tMC_Xv_i);
 
-    Float_t MCBranch_Yv_i;
-    if (fTree_MC->GetBranch("Yv_i")) fTree_MC->Branch("Yv_i", &MCBranch_Yv_i);
-    else fTree_MC->SetBranchAddress("Yv_i", &MCBranch_Yv_i);
+    if (!fTree_MC->GetBranch("Yv_i")) fTree_MC->Branch("Yv_i", &tMC_Yv_i);
+    else fTree_MC->SetBranchAddress("Yv_i", &tMC_Yv_i);
 
-    Float_t MCBranch_Zv_i;
-    if (fTree_MC->GetBranch("Zv_i")) fTree_MC->Branch("Zv_i", &MCBranch_Zv_i);
-    else fTree_MC->SetBranchAddress("Zv_i", &MCBranch_Zv_i);
+    if (!fTree_MC->GetBranch("Zv_i")) fTree_MC->Branch("Zv_i", &tMC_Zv_i);
+    else fTree_MC->SetBranchAddress("Zv_i", &tMC_Zv_i);
 
-    Float_t MCBranch_Xv_f;
-    if (fTree_MC->GetBranch("Xv_f")) fTree_MC->Branch("Xv_f", &MCBranch_Xv_f);
-    else fTree_MC->SetBranchAddress("Xv_f", &MCBranch_Xv_f);
+    if (!fTree_MC->GetBranch("Xv_f")) fTree_MC->Branch("Xv_f", &tMC_Xv_f);
+    else fTree_MC->SetBranchAddress("Xv_f", &tMC_Xv_f);
 
-    Float_t MCBranch_Yv_f;
-    if (fTree_MC->GetBranch("Yv_f")) fTree_MC->Branch("Yv_f", &MCBranch_Yv_f);
-    else fTree_MC->SetBranchAddress("Yv_f", &MCBranch_Yv_f);
+    if (!fTree_MC->GetBranch("Yv_f")) fTree_MC->Branch("Yv_f", &tMC_Yv_f);
+    else fTree_MC->SetBranchAddress("Yv_f", &tMC_Yv_f);
 
-    Float_t MCBranch_Zv_f;
-    if (fTree_MC->GetBranch("Zv_f")) fTree_MC->Branch("Zv_f", &MCBranch_Zv_f);
-    else fTree_MC->SetBranchAddress("Zv_f", &MCBranch_Zv_f);
+    if (!fTree_MC->GetBranch("Zv_f")) fTree_MC->Branch("Zv_f", &tMC_Zv_f);
+    else fTree_MC->SetBranchAddress("Zv_f", &tMC_Zv_f);
 
-    Int_t MCBranch_Status;
-    if (fTree_MC->GetBranch("Status")) fTree_MC->Branch("Status", &MCBranch_Status);
-    else fTree_MC->SetBranchAddress("Status", &MCBranch_Status);
+    if (!fTree_MC->GetBranch("Status")) fTree_MC->Branch("Status", &tMC_Status);
+    else fTree_MC->SetBranchAddress("Status", &tMC_Status);
 
-    Bool_t MCBranch_IsSecondary;
-    if (fTree_MC->GetBranch("IsSecondary")) fTree_MC->Branch("IsSecondary", &MCBranch_IsSecondary);
-    else fTree_MC->SetBranchAddress("IsSecondary", &MCBranch_IsSecondary);
+    if (!fTree_MC->GetBranch("IsSecondary")) fTree_MC->Branch("IsSecondary", &tMC_IsSecondary);
+    else fTree_MC->SetBranchAddress("IsSecondary", &tMC_IsSecondary);
 
-    Bool_t MCBranch_IsSignal;
-    if (fTree_MC->GetBranch("IsSignal")) fTree_MC->Branch("IsSignal", &MCBranch_IsSignal);
-    else fTree_MC->SetBranchAddress("IsSignal", &MCBranch_IsSignal);
+    if (!fTree_MC->GetBranch("IsSignal")) fTree_MC->Branch("IsSignal", &tMC_IsSignal);
+    else fTree_MC->SetBranchAddress("IsSignal", &tMC_IsSignal);
     // clang-format on
 
     /* Loop over MC gen. particles in this event */
@@ -1518,19 +1527,19 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
             /* Fill MC tree */
 
-            MCBranch_ReactionID = getReactionIdx_fromMcIdx[mcIdx];
-            MCBranch_Px = mcPart->Px();
-            MCBranch_Py = mcPart->Py();
-            MCBranch_Pz = mcPart->Pz();
-            MCBranch_Xv_i = originVertex.X();
-            MCBranch_Yv_i = originVertex.Y();
-            MCBranch_Zv_i = originVertex.Z();
-            MCBranch_Xv_f = n_daughters ? decayVertex.X() : 9999.;
-            MCBranch_Yv_f = n_daughters ? decayVertex.Y() : 9999.;
-            MCBranch_Zv_f = n_daughters ? decayVertex.Z() : 9999.;
-            MCBranch_Status = mcPart->MCStatusCode();
-            MCBranch_IsSecondary = isMcIdxSecondary[mcIdx];
-            MCBranch_IsSignal = isMcIdxSignal[mcIdx];
+            tMC_ReactionID = getReactionIdx_fromMcIdx[mcIdx];
+            tMC_Px = mcPart->Px();
+            tMC_Py = mcPart->Py();
+            tMC_Pz = mcPart->Pz();
+            tMC_Xv_i = originVertex.X();
+            tMC_Yv_i = originVertex.Y();
+            tMC_Zv_i = originVertex.Z();
+            tMC_Xv_f = n_daughters ? decayVertex.X() : 9999.;
+            tMC_Yv_f = n_daughters ? decayVertex.Y() : 9999.;
+            tMC_Zv_f = n_daughters ? decayVertex.Z() : 9999.;
+            tMC_Status = mcPart->MCStatusCode();
+            tMC_IsSecondary = isMcIdxSecondary[mcIdx];
+            tMC_IsSignal = isMcIdxSignal[mcIdx];
             fTree_MC->Fill();
         }
 
@@ -1921,60 +1930,64 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
     /* Prepare branches */
 
-    Float_t TrackBranch_Px;
-    Float_t TrackBranch_Py;
-    Float_t TrackBranch_Pz;
-    Float_t TrackBranch_Charge;
+    Float_t tTrack_Px;
+    Float_t tTrack_Py;
+    Float_t tTrack_Pz;
+    Float_t tTrack_Charge;
+    Int_t tTrack_ReactionID;
 
     for (TTree* ThisTree1 : {fTree_PiPluses, fTree_PiMinuses, fTree_PosKaons, fTree_AntiProtons}) {
+
+        ThisTree1->Print();
+
         // clang-format off
-        if (ThisTree1->GetBranch("EventNumber")) ThisTree1->Branch("EventNumber", &fEventNumber);
-        else ThisTree1->Branch("EventNumber", &fEventNumber);
+        if (!ThisTree1->GetBranch("EventNumber")) ThisTree1->Branch("EventNumber", &fEventNumber);
+        else ThisTree1->SetBranchAddress("EventNumber", &fEventNumber);
 
-        if (ThisTree1->GetBranch("DirNumber")) ThisTree1->Branch("DirNumber", &fDirNumber);
-        else ThisTree1->Branch("DirNumber", &fDirNumber);
+        if (!ThisTree1->GetBranch("DirNumber")) ThisTree1->Branch("DirNumber", &fDirNumber);
+        else ThisTree1->SetBranchAddress("DirNumber", &fDirNumber);
 
-        if (ThisTree1->GetBranch("RunNumber")) ThisTree1->Branch("RunNumber", &fRunNumber);
-        else ThisTree1->Branch("RunNumber", &fRunNumber);
+        if (!ThisTree1->GetBranch("RunNumber")) ThisTree1->Branch("RunNumber", &fRunNumber);
+        else ThisTree1->SetBranchAddress("RunNumber", &fRunNumber);
 
-        if (ThisTree1->GetBranch("Idx")) ThisTree1->Branch("Idx", &esdIdxTrack);
-        else ThisTree1->Branch("Idx", &esdIdxTrack);
+        if (!ThisTree1->GetBranch("Idx")) ThisTree1->Branch("Idx", &esdIdxTrack);
+        else ThisTree1->SetBranchAddress("Idx", &esdIdxTrack);
 
-        if (ThisTree1->GetBranch("Idx_True")) ThisTree1->Branch("Idx_True", &mcIdx);
-        else ThisTree1->Branch("Idx_True", &mcIdx);
+        if (!ThisTree1->GetBranch("Idx_True")) ThisTree1->Branch("Idx_True", &mcIdx);
+        else ThisTree1->SetBranchAddress("Idx_True", &mcIdx);
         
-        if (ThisTree1->GetBranch("Px")) ThisTree1->Branch("Px", &TrackBranch_Px);
-        else ThisTree1->Branch("Px", &TrackBranch_Px);
+        if (!ThisTree1->GetBranch("Px")) ThisTree1->Branch("Px", &tTrack_Px);
+        else ThisTree1->SetBranchAddress("Px", &tTrack_Px);
 
-        if (ThisTree1->GetBranch("Py")) ThisTree1->Branch("Py", &TrackBranch_Py);
-        else ThisTree1->Branch("Py", &TrackBranch_Py);
+        if (!ThisTree1->GetBranch("Py")) ThisTree1->Branch("Py", &tTrack_Py);
+        else ThisTree1->SetBranchAddress("Py", &tTrack_Py);
 
-        if (ThisTree1->GetBranch("Pz")) ThisTree1->Branch("Pz", &TrackBranch_Pz);
-        else ThisTree1->Branch("Pz", &TrackBranch_Pz);
+        if (!ThisTree1->GetBranch("Pz")) ThisTree1->Branch("Pz", &tTrack_Pz);
+        else ThisTree1->SetBranchAddress("Pz", &tTrack_Pz);
         
-        if (ThisTree1->GetBranch("Charge")) ThisTree1->Branch("Charge", &TrackBranch_Charge);
-        else ThisTree1->Branch("Charge", &TrackBranch_Charge);
+        if (!ThisTree1->GetBranch("Charge")) ThisTree1->Branch("Charge", &tTrack_Charge);
+        else ThisTree1->SetBranchAddress("Charge", &tTrack_Charge);
 
-        if (ThisTree1->GetBranch("NSigmaPion")) ThisTree1->Branch("NSigmaPion", &n_sigma_pion);
-        else ThisTree1->Branch("NSigmaPion", &n_sigma_pion);
+        if (!ThisTree1->GetBranch("NSigmaPion")) ThisTree1->Branch("NSigmaPion", &n_sigma_pion);
+        else ThisTree1->SetBranchAddress("NSigmaPion", &n_sigma_pion);
 
-        if (ThisTree1->GetBranch("NSigmaKaon")) ThisTree1->Branch("NSigmaKaon", &n_sigma_kaon);
-        else ThisTree1->Branch("NSigmaKaon", &n_sigma_kaon);
+        if (!ThisTree1->GetBranch("NSigmaKaon")) ThisTree1->Branch("NSigmaKaon", &n_sigma_kaon);
+        else ThisTree1->SetBranchAddress("NSigmaKaon", &n_sigma_kaon);
 
-        if (ThisTree1->GetBranch("NSigmaProton")) ThisTree1->Branch("NSigmaProton", &n_sigma_proton);
-        else ThisTree1->Branch("NSigmaProton", &n_sigma_proton);
+        if (!ThisTree1->GetBranch("NSigmaProton")) ThisTree1->Branch("NSigmaProton", &n_sigma_proton);
+        else ThisTree1->SetBranchAddress("NSigmaProton", &n_sigma_proton);
 
-        if (ThisTree1->GetBranch("IsTrue")) ThisTree1->Branch("IsTrue", &is_true);
-        else ThisTree1->Branch("IsTrue", &is_true);
+        if (!ThisTree1->GetBranch("IsTrue")) ThisTree1->Branch("IsTrue", &is_true);
+        else ThisTree1->SetBranchAddress("IsTrue", &is_true);
 
-        if (ThisTree1->GetBranch("IsSecondary")) ThisTree1->Branch("IsSecondary", &is_secondary);
-        else ThisTree1->Branch("IsSecondary", &is_secondary);
+        if (!ThisTree1->GetBranch("IsSecondary")) ThisTree1->Branch("IsSecondary", &is_secondary);
+        else ThisTree1->SetBranchAddress("IsSecondary", &is_secondary);
 
-        if (ThisTree1->GetBranch("IsSignal")) ThisTree1->Branch("IsSignal", &is_signal);
-        else ThisTree1->Branch("IsSignal", &is_signal);
+        if (!ThisTree1->GetBranch("IsSignal")) ThisTree1->Branch("IsSignal", &is_signal);
+        else ThisTree1->SetBranchAddress("IsSignal", &is_signal);
 
-        if (ThisTree1->GetBranch("ReactionID")) ThisTree1->Branch("ReactionID", &TrackBranch_ReactionID);
-        else ThisTree1->Branch("ReactionID", &TrackBranch_ReactionID);
+        if (!ThisTree1->GetBranch("ReactionID")) ThisTree1->Branch("ReactionID", &tTrack_ReactionID);
+        else ThisTree1->SetBranchAddress("ReactionID", &tTrack_ReactionID);
         // clang-format on
     }
 
@@ -2194,11 +2207,11 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             if (esdPdgCode == 321) ThisTree2 = fTree_PosKaons;
             if (esdPdgCode == -2212) ThisTree2 = fTree_AntiProtons;
 
-            TrackBranch_Px = track->Px();
-            TrackBranch_Py = track->Py();
-            TrackBranch_Pz = track->Pz();
-            TrackBranch_Charge = track->Charge();
-            TrackBranch_ReactionID = getReactionIdx_fromEsdIdx[esdIdxTrack];
+            tTrack_Px = track->Px();
+            tTrack_Py = track->Py();
+            tTrack_Pz = track->Pz();
+            tTrack_Charge = track->Charge();
+            tTrack_ReactionID = getReactionIdx_fromEsdIdx[esdIdxTrack];
             ThisTree2->Fill();
         }  // end of loop over PID hypotheses
     }  // end of loop over tracks
@@ -3941,6 +3954,103 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     TLorentzVector lvTrackPos;
     TLorentzVector lvV0;
 
+    /* Prepare branches */
+
+    Int_t tV0_ReactionID;
+    Int_t tV0_Idx;
+    Int_t tV0_Idx_Pos;
+    Int_t tV0_Idx_Neg;
+    Int_t tV0_Idx_True;
+    Float_t tV0_Px;
+    Float_t tV0_Py;
+    Float_t tV0_Pz;
+    Float_t tV0_E;
+    Float_t tV0_Xv_f;
+    Float_t tV0_Yv_f;
+    Float_t tV0_Zv_f;
+    Float_t tV0_Px_Pos;
+    Float_t tV0_Py_Pos;
+    Float_t tV0_Pz_Pos;
+    Float_t tV0_Px_Neg;
+    Float_t tV0_Py_Neg;
+    Float_t tV0_Pz_Neg;
+
+    for (TTree* ThisTree1 : {fTree_AntiLambdas, fTree_KaonsZeroShort, fTree_PionPairs}) {
+        // clang-format off
+        if (!ThisTree1->GetBranch("ReactionID")) ThisTree1->Branch("ReactionID", &tV0_ReactionID);
+        else ThisTree1->SetBranchAddress("ReactionID", &tV0_ReactionID);
+
+        if (!ThisTree1->GetBranch("EventNumber")) ThisTree1->Branch("EventNumber", &fEventNumber);
+        else ThisTree1->SetBranchAddress("EventNumber", &fEventNumber);
+
+        if (!ThisTree1->GetBranch("DirNumber")) ThisTree1->Branch("DirNumber", &fDirNumber);
+        else ThisTree1->SetBranchAddress("DirNumber", &fDirNumber);
+
+        if (!ThisTree1->GetBranch("RunNumber")) ThisTree1->Branch("RunNumber", &fRunNumber);
+        else ThisTree1->SetBranchAddress("RunNumber", &fRunNumber);
+
+        if (!ThisTree1->GetBranch("Idx")) ThisTree1->Branch("Idx", &tV0_Idx);
+        else ThisTree1->SetBranchAddress("Idx", &tV0_Idx);
+
+        if (!ThisTree1->GetBranch("Idx_Pos")) ThisTree1->Branch("Idx_Pos", &tV0_Idx_Pos);
+        else ThisTree1->SetBranchAddress("Idx_Pos", &tV0_Idx_Pos);
+
+        if (!ThisTree1->GetBranch("Idx_Neg")) ThisTree1->Branch("Idx_Neg", &tV0_Idx_Neg);
+        else ThisTree1->SetBranchAddress("Idx_Neg", &tV0_Idx_Neg);
+
+        if (!ThisTree1->GetBranch("Idx_True")) ThisTree1->Branch("Idx_True", &tV0_Idx_True);
+        else ThisTree1->SetBranchAddress("Idx_True", &tV0_Idx_True);
+
+        if (!ThisTree1->GetBranch("Px")) ThisTree1->Branch("Px", &tV0_Px);
+        else ThisTree1->SetBranchAddress("Px", &tV0_Px);
+
+        if (!ThisTree1->GetBranch("Py")) ThisTree1->Branch("Py", &tV0_Py);
+        else ThisTree1->SetBranchAddress("Py", &tV0_Py);
+
+        if (!ThisTree1->GetBranch("Pz")) ThisTree1->Branch("Pz", &tV0_Pz);
+        else ThisTree1->SetBranchAddress("Pz", &tV0_Pz);
+
+        if (!ThisTree1->GetBranch("E")) ThisTree1->Branch("E", &tV0_E);
+        else ThisTree1->SetBranchAddress("E", &tV0_E);
+
+        if (!ThisTree1->GetBranch("Xv_f")) ThisTree1->Branch("Xv_f", &tV0_Xv_f);
+        else ThisTree1->SetBranchAddress("Xv_f", &tV0_Xv_f);
+
+        if (!ThisTree1->GetBranch("Yv_f")) ThisTree1->Branch("Yv_f", &tV0_Yv_f);
+        else ThisTree1->SetBranchAddress("Yv_f", &tV0_Yv_f);
+
+        if (!ThisTree1->GetBranch("Zv_f")) ThisTree1->Branch("Zv_f", &tV0_Zv_f);
+        else ThisTree1->SetBranchAddress("Zv_f", &tV0_Zv_f);
+
+        if (!ThisTree1->GetBranch("Px_Pos")) ThisTree1->Branch("Px_Pos", &tV0_Px_Pos);
+        else ThisTree1->SetBranchAddress("Px_Pos", &tV0_Px_Pos);
+
+        if (!ThisTree1->GetBranch("Py_Pos")) ThisTree1->Branch("Py_Pos", &tV0_Py_Pos);
+        else ThisTree1->SetBranchAddress("Py_Pos", &tV0_Py_Pos);
+
+        if (!ThisTree1->GetBranch("Pz_Pos")) ThisTree1->Branch("Pz_Pos", &tV0_Pz_Pos);
+        else ThisTree1->SetBranchAddress("Pz_Pos", &tV0_Pz_Pos);
+
+        if (!ThisTree1->GetBranch("Px_Neg")) ThisTree1->Branch("Px_Neg", &tV0_Px_Neg);
+        else ThisTree1->SetBranchAddress("Px_Neg", &tV0_Px_Neg);
+
+        if (!ThisTree1->GetBranch("Py_Neg")) ThisTree1->Branch("Py_Neg", &tV0_Py_Neg);
+        else ThisTree1->SetBranchAddress("Py_Neg", &tV0_Py_Neg);
+
+        if (!ThisTree1->GetBranch("Pz_Neg")) ThisTree1->Branch("Pz_Neg", &tV0_Pz_Neg);
+        else ThisTree1->SetBranchAddress("Pz_Neg", &tV0_Pz_Neg);
+
+        if (!ThisTree1->GetBranch("IsTrue")) ThisTree1->Branch("IsTrue", &is_true);
+        else ThisTree1->SetBranchAddress("IsTrue", &is_true);
+
+        if (!ThisTree1->GetBranch("IsSecondary")) ThisTree1->Branch("IsSecondary", &is_secondary);
+        else ThisTree1->SetBranchAddress("IsSecondary", &is_secondary);
+
+        if (!ThisTree1->GetBranch("IsSignal")) ThisTree1->Branch("IsSignal", &is_signal);
+        else ThisTree1->SetBranchAddress("IsSignal", &is_signal);
+        // clang-format on
+    }
+
     /* Choose between anti-lambda, K0S or just pion pairs */
 
     std::vector<Int_t> esdIndicesNegTracks;
@@ -3948,8 +4058,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     std::vector<KFParticleMother>* kfFoundV0s;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfNegDau_fromFoundV0Idx;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfPosDau_fromFoundV0Idx;
-    TTree* thisTree;
-    V0_tt* thisBranch;
+    TTree* ThisTree2;
 
     if (pdgV0 == -3122) {
         esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
@@ -3957,8 +4066,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
         kfFoundV0s = &kfAntiLambdas;
         getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromAntiLambdaIdx;
         getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromAntiLambdaIdx;
-        thisTree = fTree_AntiLambdas;
-        thisBranch = &fBranch_AntiLambda;
+        ThisTree2 = fTree_AntiLambdas;
     } else {
         esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
         esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
@@ -3966,8 +4074,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             kfFoundV0s = &kfKaonsZeroShort;
             getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromKaonZeroShortIdx;
             getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromKaonZeroShortIdx;
-            thisTree = fTree_KaonsZeroShort;
-            thisBranch = &fBranch_KaonZeroShort;
+            ThisTree2 = fTree_KaonsZeroShort;
         } else if (pdgV0 == 422) {
             kfFoundV0s = &kfPionPairs;
             getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromPionPairIdx;
@@ -4160,31 +4267,25 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Chi2ndf")]->Fill(chi2_ndf);
             f2DHist_V0s_ArmenterosPodolanski["Signal"]->Fill(arm_alpha, arm_qt);
 
-            thisBranch->ReactionID = getReactionIdx_fromEsdIdx[esdIdxNeg];
-            thisBranch->EventNumber = fEventNumber;
-            thisBranch->DirNumber = fDirNumber;
-            thisBranch->RunNumber = fRunNumber;
-            thisBranch->Idx = (Int_t)kfFoundV0s->size() - 1;
-            thisBranch->Idx_Pos = esdIdxPos;
-            thisBranch->Idx_Neg = esdIdxNeg;
-            thisBranch->Idx_True = getMotherMcIdx_fromEsdIdx[esdIdxNeg];
-            thisBranch->Px = lvV0.Px();
-            thisBranch->Py = lvV0.Py();
-            thisBranch->Pz = lvV0.Pz();
-            thisBranch->E = lvV0.E();
-            thisBranch->Xv_f = kfV0.GetX();
-            thisBranch->Yv_f = kfV0.GetY();
-            thisBranch->Zv_f = kfV0.GetZ();
-            thisBranch->Px_Pos = lvTrackPos.Px();
-            thisBranch->Py_Pos = lvTrackPos.Py();
-            thisBranch->Pz_Pos = lvTrackPos.Pz();
-            thisBranch->Px_Neg = lvTrackNeg.Px();
-            thisBranch->Py_Neg = lvTrackNeg.Py();
-            thisBranch->Pz_Neg = lvTrackNeg.Pz();
-            thisBranch->IsTrue = is_true;
-            thisBranch->IsSecondary = is_secondary;
-            thisBranch->IsSignal = is_signal;
-            thisTree->Fill();
+            tV0_ReactionID = getReactionIdx_fromEsdIdx[esdIdxNeg];
+            tV0_Idx = (Int_t)kfFoundV0s->size() - 1;
+            tV0_Idx_Pos = esdIdxPos;
+            tV0_Idx_Neg = esdIdxNeg;
+            tV0_Idx_True = getMotherMcIdx_fromEsdIdx[esdIdxNeg];
+            tV0_Px = lvV0.Px();
+            tV0_Py = lvV0.Py();
+            tV0_Pz = lvV0.Pz();
+            tV0_E = lvV0.E();
+            tV0_Xv_f = kfV0.GetX();
+            tV0_Yv_f = kfV0.GetY();
+            tV0_Zv_f = kfV0.GetZ();
+            tV0_Px_Pos = lvTrackPos.Px();
+            tV0_Py_Pos = lvTrackPos.Py();
+            tV0_Pz_Pos = lvTrackPos.Pz();
+            tV0_Px_Neg = lvTrackNeg.Px();
+            tV0_Py_Neg = lvTrackNeg.Py();
+            tV0_Pz_Neg = lvTrackNeg.Pz();
+            ThisTree2->Fill();
         }  // end of loop over pos. tracks
     }  // end of loop over neg. tracks
 }
@@ -4245,10 +4346,80 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
     Float_t impar_v0a_neg_sv[2], impar_v0a_pos_sv[2];
     Float_t impar_v0b_neg_sv[2], impar_v0b_pos_sv[2];
 
+    Int_t idxAntiLambda;
+    Int_t idxKaonZeroShort;
+
+    /* Prepare branches */
+
+    Int_t aSxqk_ReactionID;
+    Float_t aSxqk_Px;
+    Float_t aSxqk_Py;
+    Float_t aSxqk_Pz;
+    Float_t aSxqk_E;
+    Float_t aSxqk_Xv_SV;
+    Float_t aSxqk_Yv_SV;
+    Float_t aSxqk_Zv_SV;
+
+    // clang-format off
+    if (!fTree_Sexaquarks->GetBranch("ReactionID")) fTree_Sexaquarks->Branch("ReactionID", &aSxqk_ReactionID);
+    else fTree_Sexaquarks->SetBranchAddress("ReactionID", &aSxqk_ReactionID);
+
+    if (!fTree_Sexaquarks->GetBranch("EventNumber")) fTree_Sexaquarks->Branch("EventNumber", &fEventNumber);
+    else fTree_Sexaquarks->SetBranchAddress("EventNumber", &fEventNumber);
+
+    if (!fTree_Sexaquarks->GetBranch("DirNumber")) fTree_Sexaquarks->Branch("DirNumber", &fDirNumber);
+    else fTree_Sexaquarks->SetBranchAddress("DirNumber", &fDirNumber);
+
+    if (!fTree_Sexaquarks->GetBranch("RunNumber")) fTree_Sexaquarks->Branch("RunNumber", &fRunNumber);
+    else fTree_Sexaquarks->SetBranchAddress("RunNumber", &fRunNumber);
+
+    if (!fTree_Sexaquarks->GetBranch("Idx_AL")) fTree_Sexaquarks->Branch("Idx_AL", &idxAntiLambda);
+    else fTree_Sexaquarks->SetBranchAddress("Idx_AL", &idxAntiLambda);
+
+    if (!fTree_Sexaquarks->GetBranch("Idx_K0S")) fTree_Sexaquarks->Branch("Idx_K0S", &idxKaonZeroShort);
+    else fTree_Sexaquarks->SetBranchAddress("Idx_K0S", &idxKaonZeroShort);
+
+    if (!fTree_Sexaquarks->GetBranch("Idx_AL_Neg")) fTree_Sexaquarks->Branch("Idx_AL_Neg", &esdIdxNeg_AntiLambda);
+    else fTree_Sexaquarks->SetBranchAddress("Idx_AL_Neg", &esdIdxNeg_AntiLambda);
+
+    if (!fTree_Sexaquarks->GetBranch("Idx_AL_Pos")) fTree_Sexaquarks->Branch("Idx_AL_Pos", &esdIdxPos_AntiLambda);
+    else fTree_Sexaquarks->SetBranchAddress("Idx_AL_Pos", &esdIdxPos_AntiLambda);
+
+    if (!fTree_Sexaquarks->GetBranch("Idx_K0S_Neg")) fTree_Sexaquarks->Branch("Idx_K0S_Neg", &esdIdxNeg_KaonZeroShort);
+    else fTree_Sexaquarks->SetBranchAddress("Idx_K0S_Neg", &esdIdxNeg_KaonZeroShort);
+
+    if (!fTree_Sexaquarks->GetBranch("Idx_K0S_Pos")) fTree_Sexaquarks->Branch("Idx_K0S_Pos", &esdIdxPos_KaonZeroShort);
+    else fTree_Sexaquarks->SetBranchAddress("Idx_K0S_Pos", &esdIdxPos_KaonZeroShort);
+
+    if (!fTree_Sexaquarks->GetBranch("Px")) fTree_Sexaquarks->Branch("Px", &aSxqk_Px);
+    else fTree_Sexaquarks->SetBranchAddress("Px", &aSxqk_Px);
+
+    if (!fTree_Sexaquarks->GetBranch("Py")) fTree_Sexaquarks->Branch("Py", &aSxqk_Py);
+    else fTree_Sexaquarks->SetBranchAddress("Py", &aSxqk_Py);
+
+    if (!fTree_Sexaquarks->GetBranch("Pz")) fTree_Sexaquarks->Branch("Pz", &aSxqk_Pz);
+    else fTree_Sexaquarks->SetBranchAddress("Pz", &aSxqk_Pz);
+
+    if (!fTree_Sexaquarks->GetBranch("E")) fTree_Sexaquarks->Branch("E", &aSxqk_E);
+    else fTree_Sexaquarks->SetBranchAddress("E", &aSxqk_E);
+
+    if (!fTree_Sexaquarks->GetBranch("Xv_SV")) fTree_Sexaquarks->Branch("Xv_SV", &aSxqk_Xv_SV);
+    else fTree_Sexaquarks->SetBranchAddress("Xv_SV", &aSxqk_Xv_SV);
+
+    if (!fTree_Sexaquarks->GetBranch("Yv_SV")) fTree_Sexaquarks->Branch("Yv_SV", &aSxqk_Yv_SV);
+    else fTree_Sexaquarks->SetBranchAddress("Yv_SV", &aSxqk_Yv_SV);
+
+    if (!fTree_Sexaquarks->GetBranch("Zv_SV")) fTree_Sexaquarks->Branch("Zv_SV", &aSxqk_Zv_SV);
+    else fTree_Sexaquarks->SetBranchAddress("Zv_SV", &aSxqk_Zv_SV);
+
+    if (!fTree_Sexaquarks->GetBranch("Chi2ndf")) fTree_Sexaquarks->Branch("Chi2ndf", &chi2_ndf);
+    else fTree_Sexaquarks->SetBranchAddress("Chi2ndf", &chi2_ndf);
+    // clang-format on
+
     /* Loop over all possible pairs of anti-lambdas and K0S */
 
-    for (Int_t idxAntiLambda = 0; idxAntiLambda < (Int_t)kfAntiLambdas.size(); idxAntiLambda++) {
-        for (Int_t idxKaonZeroShort = 0; idxKaonZeroShort < (Int_t)kfKaonsZeroShort.size(); idxKaonZeroShort++) {
+    for (idxAntiLambda = 0; idxAntiLambda < (Int_t)kfAntiLambdas.size(); idxAntiLambda++) {
+        for (idxKaonZeroShort = 0; idxKaonZeroShort < (Int_t)kfKaonsZeroShort.size(); idxKaonZeroShort++) {
 
             /* Check that no daughter is repeated between the V0s */
 
@@ -4427,24 +4598,14 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             */
             // -- END OF DEBUG -- //
 
-            fBranch_RecSexaquark_A.ReactionID = getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
-            fBranch_RecSexaquark_A.EventNumber = fEventNumber;
-            fBranch_RecSexaquark_A.DirNumber = fDirNumber;
-            fBranch_RecSexaquark_A.RunNumber = fRunNumber;
-            fBranch_RecSexaquark_A.Idx_AL = idxAntiLambda;
-            fBranch_RecSexaquark_A.Idx_K0S = idxKaonZeroShort;
-            fBranch_RecSexaquark_A.Idx_AL_Neg = esdIdxNeg_AntiLambda;
-            fBranch_RecSexaquark_A.Idx_AL_Pos = esdIdxPos_AntiLambda;
-            fBranch_RecSexaquark_A.Idx_K0S_Neg = esdIdxNeg_KaonZeroShort;
-            fBranch_RecSexaquark_A.Idx_K0S_Pos = esdIdxPos_KaonZeroShort;
-            fBranch_RecSexaquark_A.Px = lvAntiSexaquark.Px();
-            fBranch_RecSexaquark_A.Py = lvAntiSexaquark.Py();
-            fBranch_RecSexaquark_A.Pz = lvAntiSexaquark.Pz();
-            fBranch_RecSexaquark_A.E = lvAntiSexaquark.E();
-            fBranch_RecSexaquark_A.Xv_SV = kfAntiSexaquark.GetX();
-            fBranch_RecSexaquark_A.Yv_SV = kfAntiSexaquark.GetY();
-            fBranch_RecSexaquark_A.Zv_SV = kfAntiSexaquark.GetZ();
-            fBranch_RecSexaquark_A.Chi2ndf = chi2_ndf;
+            aSxqk_ReactionID = getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
+            aSxqk_Px = lvAntiSexaquark.Px();
+            aSxqk_Py = lvAntiSexaquark.Py();
+            aSxqk_Pz = lvAntiSexaquark.Pz();
+            aSxqk_E = lvAntiSexaquark.E();
+            aSxqk_Xv_SV = kfAntiSexaquark.GetX();
+            aSxqk_Yv_SV = kfAntiSexaquark.GetY();
+            aSxqk_Zv_SV = kfAntiSexaquark.GetZ();
             fTree_Sexaquarks->Fill();
         }  // end of loop over K0S
     }  // end of loop over anti-lambdas
@@ -6677,7 +6838,6 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
 /*!
  * Open the respective sim.log that corresponds to the RunNumber+DirNumber that's being analyzed.
  * From it, read the injected anti-sexaquark and struck nucleon kinematics and store them into a tree.
- * NOTE: this function it's called after UserCreateOutputObjects() and before UserExec()
  * NOTE: it must be executed ONLY when analyzing SIGNAL SIMs, protection PENDING!
  */
 Bool_t AliAnalysisTaskSexaquark::LoadLogsIntoTree() {
@@ -6716,56 +6876,61 @@ Bool_t AliAnalysisTaskSexaquark::LoadLogsIntoTree() {
         return kFALSE;
     }
 
-    // clang-format off
-    if (fTree_Injected->GetBranch("RunNumber")) fTree_Injected->SetBranchAddress("RunNumber", &AliEn_RunNumber);
-    else fTree_Injected->Branch("RunNumber", &AliEn_RunNumber);
-
-    if (fTree_Injected->GetBranch("DirNumber")) fTree_Injected->SetBranchAddress("DirNumber", &AliEn_DirNumber);
-    else fTree_Injected->Branch("DirNumber", &AliEn_DirNumber);
-
     Int_t CurrentEventNumber = -1;
-    if (fTree_Injected->GetBranch("EventNumber")) fTree_Injected->SetBranchAddress("EventNumber", &CurrentEventNumber);
-    else fTree_Injected->Branch("EventNumber", &CurrentEventNumber);
-
-    Int_t InjectedBranch_ReactionID;
-    if (fTree_Injected->GetBranch("ReactionID")) fTree_Injected->SetBranchAddress("ReactionID", &InjectedBranch_ReactionID);
-    else fTree_Injected->Branch("ReactionID", &InjectedBranch_ReactionID);
-
-    Float_t InjectedBranch_Px;
-    if (fTree_Injected->GetBranch("Px")) fTree_Injected->SetBranchAddress("Px", &InjectedBranch_Px);
-    else fTree_Injected->Branch("Px", &InjectedBranch_Px);
-
-    Float_t InjectedBranch_Py;
-    if (fTree_Injected->GetBranch("Py")) fTree_Injected->SetBranchAddress("Py", &InjectedBranch_Py);
-    else fTree_Injected->Branch("Py", &InjectedBranch_Py);
-
-    Float_t InjectedBranch_Pz;
-    if (fTree_Injected->GetBranch("Pz")) fTree_Injected->SetBranchAddress("Pz", &InjectedBranch_Pz);
-    else fTree_Injected->Branch("Pz", &InjectedBranch_Pz);
-
-    Int_t InjectedBranch_PdgCode_Nucleon = ReactionChannelLetter == 'A' ? 2112 : 2212;  // considering only ADEH
-    if (fTree_Injected->GetBranch("PdgCode_Nucleon")) fTree_Injected->SetBranchAddress("PdgCode_Nucleon", &InjectedBranch_PdgCode_Nucleon);
-    else fTree_Injected->Branch("PdgCode_Nucleon", &InjectedBranch_PdgCode_Nucleon);
-
-    Float_t InjectedBranch_Px_Nucleon; // fermi motion
-    if (fTree_Injected->GetBranch("Px_Nucleon")) fTree_Injected->SetBranchAddress("Px_Nucleon", &InjectedBranch_Px_Nucleon);
-    else fTree_Injected->Branch("Px_Nucleon", &InjectedBranch_Px_Nucleon);
-
-    Float_t InjectedBranch_Py_Nucleon; // fermi motion
-    if (fTree_Injected->GetBranch("Py_Nucleon")) fTree_Injected->SetBranchAddress("Py_Nucleon", &InjectedBranch_Py_Nucleon);
-    else fTree_Injected->Branch("Py_Nucleon", &InjectedBranch_Py_Nucleon);
-
-    Float_t InjectedBranch_Pz_Nucleon; // fermi motion
-    if (fTree_Injected->GetBranch("Pz_Nucleon")) fTree_Injected->SetBranchAddress("Pz_Nucleon", &InjectedBranch_Pz_Nucleon);
-    else fTree_Injected->Branch("Pz_Nucleon", &InjectedBranch_Pz_Nucleon);
+    Int_t tInjected_ReactionID;
 
     Char_t ReactionChannelLetter = AliEn_SimSubSet[0];
-    if (fTree_Injected->GetBranch("ReactionChannel")) fTree_Injected->SetBranchAddress("ReactionChannel", &ReactionChannelLetter);
-    else fTree_Injected->Branch("ReactionChannel", &ReactionChannelLetter);
-
     Double_t InjectedSexaquarkMass = TString(AliEn_SimSubSet(1, 4)).Atof();
-    if (fTree_Injected->GetBranch("M")) fTree_Injected->SetBranchAddress("M", &InjectedSexaquarkMass);
-    else fTree_Injected->Branch("M", &InjectedSexaquarkMass);
+
+    /* Prepare branches */
+
+    Float_t tInjected_Px;
+    Float_t tInjected_Py;
+    Float_t tInjected_Pz;
+    Int_t tInjected_PdgCode_Nucleon = ReactionChannelLetter == 'A' ? 2112 : 2212;  // considering only ADEH
+    Float_t tInjected_Px_Nucleon;                                                  // fermi motion
+    Float_t tInjected_Py_Nucleon;
+    Float_t tInjected_Pz_Nucleon;
+
+    // clang-format off
+    if (!fTree_Injected->GetBranch("RunNumber")) fTree_Injected->Branch("RunNumber", &AliEn_RunNumber);
+    else fTree_Injected->SetBranchAddress("RunNumber", &AliEn_RunNumber);
+
+    if (!fTree_Injected->GetBranch("DirNumber")) fTree_Injected->Branch("DirNumber", &AliEn_DirNumber);
+    else fTree_Injected->SetBranchAddress("DirNumber", &AliEn_DirNumber);
+
+    if (!fTree_Injected->GetBranch("EventNumber")) fTree_Injected->Branch("EventNumber", &CurrentEventNumber);
+    else fTree_Injected->SetBranchAddress("EventNumber", &CurrentEventNumber);
+
+    if (!fTree_Injected->GetBranch("ReactionID")) fTree_Injected->Branch("ReactionID", &tInjected_ReactionID);
+    else fTree_Injected->SetBranchAddress("ReactionID", &tInjected_ReactionID);
+
+    if (!fTree_Injected->GetBranch("Px")) fTree_Injected->Branch("Px", &tInjected_Px);
+    else fTree_Injected->SetBranchAddress("Px", &tInjected_Px);
+
+    if (!fTree_Injected->GetBranch("Py")) fTree_Injected->Branch("Py", &tInjected_Py);
+    else fTree_Injected->SetBranchAddress("Py", &tInjected_Py);
+
+    if (!fTree_Injected->GetBranch("Pz")) fTree_Injected->Branch("Pz", &tInjected_Pz);
+    else fTree_Injected->SetBranchAddress("Pz", &tInjected_Pz);
+
+    if (!fTree_Injected->GetBranch("PdgCode_Nucleon")) fTree_Injected->Branch("PdgCode_Nucleon", &tInjected_PdgCode_Nucleon);
+    else fTree_Injected->SetBranchAddress("PdgCode_Nucleon", &tInjected_PdgCode_Nucleon);
+
+    if (!fTree_Injected->GetBranch("Px_Nucleon")) fTree_Injected->Branch("Px_Nucleon", &tInjected_Px_Nucleon);
+    else fTree_Injected->SetBranchAddress("Px_Nucleon", &tInjected_Px_Nucleon);
+
+    if (!fTree_Injected->GetBranch("Py_Nucleon")) fTree_Injected->Branch("Py_Nucleon", &tInjected_Py_Nucleon);
+    else fTree_Injected->SetBranchAddress("Py_Nucleon", &tInjected_Py_Nucleon);
+
+    if (!fTree_Injected->GetBranch("Pz_Nucleon")) fTree_Injected->Branch("Pz_Nucleon", &tInjected_Pz_Nucleon);
+    else fTree_Injected->SetBranchAddress("Pz_Nucleon", &tInjected_Pz_Nucleon);
+
+    if (!fTree_Injected->GetBranch("ReactionChannel")) fTree_Injected->Branch("ReactionChannel", &ReactionChannelLetter);
+    else fTree_Injected->SetBranchAddress("ReactionChannel", &ReactionChannelLetter);
+
+    if (!fTree_Injected->GetBranch("M")) fTree_Injected->Branch("M", &InjectedSexaquarkMass);
+    else fTree_Injected->SetBranchAddress("M", &InjectedSexaquarkMass);
     // clang-format on
 
     // auxiliary variables
@@ -6787,18 +6952,16 @@ Bool_t AliAnalysisTaskSexaquark::LoadLogsIntoTree() {
         csv = static_cast<TString>(tstr_line(38, tstr_line.Length() - 1));
         csv_arr = csv.Tokenize(",");
 
-        InjectedBranch_ReactionID = dynamic_cast<TObjString*>(csv_arr->At(0))->String().Atoi();
-        InjectedBranch_Px = dynamic_cast<TObjString*>(csv_arr->At(1))->String().Atof();
-        InjectedBranch_Py = dynamic_cast<TObjString*>(csv_arr->At(2))->String().Atof();
-        InjectedBranch_Pz = dynamic_cast<TObjString*>(csv_arr->At(3))->String().Atof();
-        InjectedBranch_Px_Nucleon = dynamic_cast<TObjString*>(csv_arr->At(4))->String().Atof();
-        InjectedBranch_Py_Nucleon = dynamic_cast<TObjString*>(csv_arr->At(5))->String().Atof();
-        InjectedBranch_Pz_Nucleon = dynamic_cast<TObjString*>(csv_arr->At(6))->String().Atof();
+        tInjected_ReactionID = dynamic_cast<TObjString*>(csv_arr->At(0))->String().Atoi();
+        tInjected_Px = dynamic_cast<TObjString*>(csv_arr->At(1))->String().Atof();
+        tInjected_Py = dynamic_cast<TObjString*>(csv_arr->At(2))->String().Atof();
+        tInjected_Pz = dynamic_cast<TObjString*>(csv_arr->At(3))->String().Atof();
+        tInjected_Px_Nucleon = dynamic_cast<TObjString*>(csv_arr->At(4))->String().Atof();
+        tInjected_Py_Nucleon = dynamic_cast<TObjString*>(csv_arr->At(5))->String().Atof();
+        tInjected_Pz_Nucleon = dynamic_cast<TObjString*>(csv_arr->At(6))->String().Atof();
 
         fTree_Injected->Fill();
     }  // end of loop over lines
-
-    delete Branch_Injected;
 
     AliInfo("!! Closing file ... !!");
     SimLog.close();

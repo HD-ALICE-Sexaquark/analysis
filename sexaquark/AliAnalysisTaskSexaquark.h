@@ -251,6 +251,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TTree* fTree_AntiProtons;     //!
     TTree* fTree_AntiLambdas;     //!
     TTree* fTree_KaonsZeroShort;  //!
+    TTree* fTree_PionPairs;       //!
     TTree* fTree_Sexaquarks;      //!
 
     /*** Histograms ***/
