@@ -1,5 +1,5 @@
-#ifndef HEADERS_HXX
-#define HEADERS_HXX
+#ifndef Macros_Headers_hxx
+#define Macros_Headers_hxx
 
 #include <cstdlib>
 #include <fstream>

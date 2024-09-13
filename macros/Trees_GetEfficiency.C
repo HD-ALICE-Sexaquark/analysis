@@ -1,27 +1,23 @@
 #include "include/Headers.hxx"
 
-#include "../sexaquark/AliAnalysisTaskSexaquark_Structs.h"
-
 Int_t GetCentralityBin(Float_t CentralityValue);
 
-// clang-format off
-/* 
- * Indices
- *     MajorIndex
- *         Injected:    "Injected.RunNumber * 1000 + Injected.DirNumber"
- *         Events:      "Event.RunNumber * 1000 + Event.DirNumber"
- *         MCParticles: "MCParticle.RunNumber"
- *                      (^^ custom index ^^)
- *         Sexaquarks:  "Sexaquark.RunNumber * 1000 + Sexaquark.DirNumber"
- *     MinorIndex
- *         Injected:    "Injected.EventNumber * 1000 + Injected.ReactionID"
- *         Events:      "Event.Number"
- *         MCParticles: "MCParticle.DirNumber * 100 * 1000 + MCParticle.EventNumber * 1000 + MCParticle.Status"
- *                      (^^ custom index ^^)
- *         Sexaquarks:  "Sexaquark.EventNumber * 1000 + Sexaquark.ReactionID"
- */
-// clang-format on
+// Indices
+//     MajorIndex
+//         Events, Injected, Sexaquarks : "RunNumber * 1000 + DirNumber"
+//         MCParticles                  : "RunNumber"
+//                                        (^^ custom index ^^)
+//     MinorIndex
+//         Events               : "EventNumber"
+//         Injected, Sexaquarks : "EventNumber * 1000 + ReactionID"
+//         MCParticles          : "DirNumber * 100 * 1000 + EventNumber * 1000 + Status"
+//                                (^^ custom index ^^)
 
+/*
+ * Process an indexed `AnalysisResults.root` file.
+ * Produce (Pt, Radius) histograms for (true, reconstructed) anti-sexaquarks,
+ * as well as their (unweighted, weighted) efficiency distributions.
+ */
 void Trees_GetEfficiency(TString InputFileName = "AnalysisResults_indexed.root",                                                    //
                          TString PhotonConvRadiusPath = "/home/ceres/borquez/work/analysis/radius-weights/output_bkg/merged.root",  //
                          TString BlastWavePath = "/home/ceres/borquez/work/analysis/macros/blastwave_bt.root") {
@@ -48,17 +44,55 @@ void Trees_GetEfficiency(TString InputFileName = "AnalysisResults_indexed.root",
 
     /** Set Branches **/
 
-    Injected_tt* thisInjected = nullptr;
-    Tree["Injected"]->SetBranchAddress("Injected", &thisInjected);
+    /* Injected */
 
-    Event_tt* thisEvent = nullptr;
-    Tree["Events"]->SetBranchAddress("Event", &thisEvent);
+    Int_t Injected_RunNumber, Injected_DirNumber, Injected_EventNumber, Injected_ReactionID;
+    Float_t Injected_Px, Injected_Py, Injected_Pz, Injected_M;
 
-    MC_tt* thisMC = nullptr;
-    Tree["MCParticles"]->SetBranchAddress("MCParticle", &thisMC);
+    Tree["Injected"]->SetBranchAddress("RunNumber", &Injected_RunNumber);
+    Tree["Injected"]->SetBranchAddress("DirNumber", &Injected_DirNumber);
+    Tree["Injected"]->SetBranchAddress("EventNumber", &Injected_EventNumber);
+    Tree["Injected"]->SetBranchAddress("ReactionID", &Injected_ReactionID);
+    Tree["Injected"]->SetBranchAddress("Px", &Injected_Px);
+    Tree["Injected"]->SetBranchAddress("Py", &Injected_Py);
+    Tree["Injected"]->SetBranchAddress("Pz", &Injected_Pz);
+    Tree["Injected"]->SetBranchAddress("M", &Injected_M);
 
-    RecSexaquark_aa* thisSexaquark = nullptr;
-    Tree["Sexaquarks"]->SetBranchAddress("Sexaquark", &thisSexaquark);
+    /* MC Particles */
+
+    // added custom index for easy access when looping over injected anti-sexaquarks
+    // "Status" is preferred over "ReactionID" to identify the first-gen products of the interaction,
+    // because it contains the secondary vertex info
+    TString MCParticles_MajorIndex = "RunNumber";
+    TString MCParticles_MinorIndex = "DirNumber * 100 * 1000 + EventNumber * 1000 + Status";
+    TTreeIndex* MCParticles_Index = new TTreeIndex(Tree["MCParticles"], MCParticles_MajorIndex, MCParticles_MinorIndex);
+    Tree["MCParticles"]->SetTreeIndex(MCParticles_Index);
+
+    Float_t MC_Xv_i, MC_Yv_i;
+
+    Tree["MCParticles"]->SetBranchAddress("Xv_i", &MC_Xv_i);
+    Tree["MCParticles"]->SetBranchAddress("Yv_i", &MC_Yv_i);
+
+    /* Events */
+
+    Float_t Event_Centrality;
+
+    Tree["Events"]->SetBranchAddress("Centrality", &Event_Centrality);
+
+    /* Sexaquarks */
+
+    Int_t Sexaquark_RunNumber, Sexaquark_DirNumber, Sexaquark_EventNumber, Sexaquark_ReactionID;
+    Float_t Sexaquark_Xv_SV, Sexaquark_Yv_SV;
+    Float_t Sexaquark_Px, Sexaquark_Py;
+
+    Tree["Sexaquarks"]->SetBranchAddress("RunNumber", &Sexaquark_RunNumber);
+    Tree["Sexaquarks"]->SetBranchAddress("DirNumber", &Sexaquark_DirNumber);
+    Tree["Sexaquarks"]->SetBranchAddress("EventNumber", &Sexaquark_EventNumber);
+    Tree["Sexaquarks"]->SetBranchAddress("ReactionID", &Sexaquark_ReactionID);
+    Tree["Sexaquarks"]->SetBranchAddress("Px", &Sexaquark_Px);
+    Tree["Sexaquarks"]->SetBranchAddress("Py", &Sexaquark_Py);
+    Tree["Sexaquarks"]->SetBranchAddress("Xv_SV", &Sexaquark_Xv_SV);
+    Tree["Sexaquarks"]->SetBranchAddress("Yv_SV", &Sexaquark_Yv_SV);
 
     /** Auxiliar Variables **/
 
@@ -84,18 +118,18 @@ void Trees_GetEfficiency(TString InputFileName = "AnalysisResults_indexed.root",
     for (Int_t i = 0; i < Tree["Injected"]->GetEntries(); i++) {
         Tree["Injected"]->GetEntry(i);
         /*  */
-        if (SexaquarkMass < 1E-4) SexaquarkMass = thisInjected->M;
+        if (SexaquarkMass < 1E-4) SexaquarkMass = Injected_M;
         /*  */
-        TruePt = TMath::Sqrt(thisInjected->Px * thisInjected->Px + thisInjected->Py * thisInjected->Py);
+        TruePt = TMath::Sqrt(Injected_Px * Injected_Px + Injected_Py * Injected_Py);
         /*  */
-        RunNumber = thisInjected->RunNumber;
-        DirNumber = thisInjected->DirNumber;
-        EventNumber = thisInjected->EventNumber;
-        ReactionID = thisInjected->ReactionID;
+        RunNumber = Injected_RunNumber;
+        DirNumber = Injected_DirNumber;
+        EventNumber = Injected_EventNumber;
+        ReactionID = Injected_ReactionID;
         mcIdx = Tree["MCParticles"]->GetEntryNumberWithIndex(RunNumber, DirNumber * 100 * 1000 + EventNumber * 1000 + ReactionID);
         if (mcIdx >= 0) {
             Tree["MCParticles"]->GetEntry(mcIdx);
-            TrueRadius = TMath::Sqrt(thisMC->Xv_i * thisMC->Xv_i + thisMC->Yv_i * thisMC->Yv_i);
+            TrueRadius = TMath::Sqrt(MC_Xv_i * MC_Xv_i + MC_Yv_i * MC_Yv_i);
         }
         /*  */
         TrueDistr["Pt"]->Fill(TruePt);
@@ -111,9 +145,9 @@ void Trees_GetEfficiency(TString InputFileName = "AnalysisResults_indexed.root",
     for (Int_t i = 0; i < Tree["Sexaquarks"]->GetEntries(); i++) {
         Tree["Sexaquarks"]->GetEntry(i);
         /*  */
-        Pt = TMath::Sqrt(thisSexaquark->Px * thisSexaquark->Px + thisSexaquark->Py * thisSexaquark->Py);
+        Pt = TMath::Sqrt(Sexaquark_Px * Sexaquark_Px + Sexaquark_Py * Sexaquark_Py);
         /*  */
-        Radius = TMath::Sqrt(thisSexaquark->Xv_SV * thisSexaquark->Xv_SV + thisSexaquark->Yv_SV * thisSexaquark->Yv_SV);
+        Radius = TMath::Sqrt(Sexaquark_Xv_SV * Sexaquark_Xv_SV + Sexaquark_Yv_SV * Sexaquark_Yv_SV);
         /*  */
         RecDistr["Pt"]->Fill(Pt);
         RecDistr["Radius"]->Fill(Radius);
@@ -193,24 +227,24 @@ void Trees_GetEfficiency(TString InputFileName = "AnalysisResults_indexed.root",
     for (Int_t i = 0; i < Tree["Injected"]->GetEntries(); i++) {
         Tree["Injected"]->GetEntry(i);
         /*  */
-        TruePt = TMath::Sqrt(thisInjected->Px * thisInjected->Px + thisInjected->Py * thisInjected->Py);
+        TruePt = TMath::Sqrt(Injected_Px * Injected_Px + Injected_Py * Injected_Py);
         /*  */
-        RunNumber = thisInjected->RunNumber;
-        DirNumber = thisInjected->DirNumber;
-        EventNumber = thisInjected->EventNumber;
-        ReactionID = thisInjected->ReactionID;
+        RunNumber = Injected_RunNumber;
+        DirNumber = Injected_DirNumber;
+        EventNumber = Injected_EventNumber;
+        ReactionID = Injected_ReactionID;
         /*  */
         eventIdx = Tree["Events"]->GetEntryNumberWithIndex(RunNumber * 1000 + DirNumber, EventNumber);
         if (eventIdx >= 0) {
             Tree["Events"]->GetEntry(eventIdx);
-            centralityBin = GetCentralityBin(thisEvent->Centrality);
+            centralityBin = GetCentralityBin(Event_Centrality);
             weightPt = PtWeights[centralityBin]->GetBinContent(PtWeights[centralityBin]->FindBin(TruePt));
         }
         /*  */
         mcIdx = Tree["MCParticles"]->GetEntryNumberWithIndex(RunNumber, DirNumber * 100 * 1000 + EventNumber * 1000 + ReactionID);
         if (mcIdx >= 0) {
             Tree["MCParticles"]->GetEntry(mcIdx);
-            TrueRadius = TMath::Sqrt(thisMC->Xv_i * thisMC->Xv_i + thisMC->Yv_i * thisMC->Yv_i);
+            TrueRadius = TMath::Sqrt(MC_Xv_i * MC_Xv_i + MC_Yv_i * MC_Yv_i);
             weightRadius = RadiusWeights->GetBinContent(RadiusWeights->FindBin(TrueRadius));
         }
         /*  */
@@ -239,30 +273,30 @@ void Trees_GetEfficiency(TString InputFileName = "AnalysisResults_indexed.root",
     for (Int_t i = 0; i < Tree["Sexaquarks"]->GetEntries(); i++) {
         Tree["Sexaquarks"]->GetEntry(i);
         /*  */
-        Pt = TMath::Sqrt(thisSexaquark->Px * thisSexaquark->Px + thisSexaquark->Py * thisSexaquark->Py);
+        Pt = TMath::Sqrt(Sexaquark_Px * Sexaquark_Px + Sexaquark_Py * Sexaquark_Py);
         /*  */
-        Radius = TMath::Sqrt(thisSexaquark->Xv_SV * thisSexaquark->Xv_SV + thisSexaquark->Yv_SV * thisSexaquark->Yv_SV);
+        Radius = TMath::Sqrt(Sexaquark_Xv_SV * Sexaquark_Xv_SV + Sexaquark_Yv_SV * Sexaquark_Yv_SV);
         /*  */
-        RunNumber = thisSexaquark->RunNumber;
-        DirNumber = thisSexaquark->DirNumber;
-        EventNumber = thisSexaquark->EventNumber;
-        ReactionID = thisSexaquark->ReactionID;
+        RunNumber = Sexaquark_RunNumber;
+        DirNumber = Sexaquark_DirNumber;
+        EventNumber = Sexaquark_EventNumber;
+        ReactionID = Sexaquark_ReactionID;
         /*  */
         eventIdx = Tree["Events"]->GetEntryNumberWithIndex(RunNumber * 1000 + DirNumber, EventNumber);
         if (eventIdx >= 0) {
             Tree["Events"]->GetEntry(eventIdx);
-            centralityBin = GetCentralityBin(thisEvent->Centrality);
+            centralityBin = GetCentralityBin(Event_Centrality);
         }
         /*  */
         mcInjected = Tree["Injected"]->GetEntryNumberWithIndex(RunNumber * 1000 + DirNumber, EventNumber * 1000 + ReactionID);
         if (mcInjected >= 0) {
             Tree["Injected"]->GetEntry(mcInjected);
-            TruePt = TMath::Sqrt(thisInjected->Px * thisInjected->Px + thisInjected->Py * thisInjected->Py);
+            TruePt = TMath::Sqrt(Injected_Px * Injected_Px + Injected_Py * Injected_Py);
             /*  */
             mcIdx = Tree["MCParticles"]->GetEntryNumberWithIndex(RunNumber, DirNumber * 100 * 1000 + EventNumber * 1000 + ReactionID);
             if (mcIdx >= 0) {
                 Tree["MCParticles"]->GetEntry(mcIdx);
-                TrueRadius = TMath::Sqrt(thisMC->Xv_i * thisMC->Xv_i + thisMC->Yv_i * thisMC->Yv_i);
+                TrueRadius = TMath::Sqrt(MC_Xv_i * MC_Xv_i + MC_Yv_i * MC_Yv_i);
             }
         }
         /*  */

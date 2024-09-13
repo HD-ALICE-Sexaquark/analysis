@@ -1,5 +1,10 @@
 #include "include/Headers.hxx"
 
+/*
+ * Process an `AnalysisResults.root` file. Create indexed versions of each tree to improve data access efficiency.
+ * Build primary and secondary indices for each tree.
+ * Save the indexed trees to a new output file with `_indexed` appended to the original filename.
+ */
 void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
 
     TFile* InputFile = TFile::Open(InputFileName, "READ");
@@ -35,7 +40,7 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
     TString MinorIndex;
     TString MinorIndex_General = "EventNumber * 10000000 + Idx";
     TString MinorIndex_Sexaquark = "EventNumber * 1000 + ReactionID";
-    TString MinorIndex_Event = "Number";
+    TString MinorIndex_Event = "EventNumber";
 
     /* Loop over trees */
 
@@ -53,7 +58,7 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
             OutputFile->Close();
             return;
         }
-        std::cout << "!! INFO !! Input TTree " << TreeNames[i] << " has " << InputEventsTree->GetEntries() << " entries !!" << std::endl;
+        // std::cout << "!! INFO !! Input TTree " << TreeNames[i] << " has " << InputEventsTree->GetEntries() << " entries !!" << std::endl; // DEBUG
 
         OutputFile->cd();
 
@@ -64,7 +69,7 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
             OutputFile->Close();
             return;
         }
-        std::cout << "!! INFO !! Cloned TTree " << TreeNames[i] << " has " << NewEventsTree->GetEntries() << " entries !!" << std::endl;
+        // std::cout << "!! INFO !! Cloned TTree " << TreeNames[i] << " has " << NewEventsTree->GetEntries() << " entries !!" << std::endl; // DEBUG
 
         MinorIndex = MinorIndex_General;
         if (TreeNames[i] == "Sexaquarks" || TreeNames[i] == "Injected") MinorIndex = MinorIndex_Sexaquark;
@@ -73,23 +78,14 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
         NewEventsTree->BuildIndex(MajorIndex, MinorIndex);
         std::cout << "!! INFO !! Indexing complete for TTree " << NewEventsTree->GetName() << " !!" << std::endl;
 
-        if (TreeNames[i] == "MCParticles") {
-            // Note:
-            // added custom index for easy access when looping over injected anti-sexaquarks
-            // "Status" preferred over "ReactionID" to identify the first-gen products of the interaction,
-            // which are the ones that contain the secondary vertex info
-            TString CustomMajorIndex = "RunNumber";
-            TString CustomMinorIndex = "DirNumber * 100 * 1000 + EventNumber * 1000 + Status";
-            NewEventsTree->BuildIndex(CustomMajorIndex, CustomMinorIndex);
-            std::cout << "!! INFO !! Custom index built for TTree " << NewEventsTree->GetName() << " !!" << std::endl;
-        }
-
         NewEventsTree->Write();
-        std::cout << "!! INFO !! Indexed TTree " << NewEventsTree->GetName() << " stored in " << OutputFileName << " !!" << std::endl;
+        // std::cout << "!! INFO !! Indexed TTree " << NewEventsTree->GetName() << " stored in " << OutputFileName << " !!" << std::endl; // DEBUG
     }
 
     OutputFile->Close();
     InputFile->Close();
+
+    std::cout << "!! INFO !! All new trees have been stored in " << OutputFileName << " !!" << std::endl;
 
     return;
 }
