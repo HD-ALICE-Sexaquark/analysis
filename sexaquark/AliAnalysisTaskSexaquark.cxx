@@ -3,8 +3,8 @@
 ClassImp(AliAnalysisTaskSexaquark);
 
 /*
- Empty I/O constructor. Non-persistent members are initialized to their default values from here.
-*/
+ * Empty I/O constructor. Non-persistent members are initialized to their default values from here.
+ */
 AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
     : AliAnalysisTaskSE(),
       /*  */
@@ -189,8 +189,8 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       kMax_PosKaonPair_Chi2ndf(0.) {}
 
 /*
- Constructor, called locally.
-*/
+ * Constructor, called locally.
+ */
 AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
     : AliAnalysisTaskSE(name),
       /*  */
@@ -383,9 +383,9 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
 }
 
 /*
- Destructor.
- - Note: if `TList::SetOwner(kTRUE)` was called, the TList destructor should delete all objects added to it
-*/
+ * Destructor.
+ * - Note: if `TList::SetOwner(kTRUE)` was called, the TList destructor should delete all objects added to it
+ */
 AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
     if (fList_Trees) delete fList_Trees;
     if (fList_QA_Hists) delete fList_QA_Hists;
@@ -396,8 +396,8 @@ AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
 }
 
 /*
- Create output objects, called once at RUNTIME ~ execution on Grid
-*/
+ * Create output objects, called once at RUNTIME ~ execution on Grid
+ */
 void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     AliInfo("!! It begins !!");
@@ -488,9 +488,9 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 }
 
 /*
- Define and add QA histograms to the histograms output list.
- - Uses: `fHist_QA`, `f2DHist_QA`
-*/
+ * Define and add QA histograms to the histograms output list.
+ * - Uses: `fHist_QA`, `f2DHist_QA`
+ */
 void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
 
     /* 1D Hists */
@@ -582,9 +582,9 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
 }
 
 /*
- Define and add tracks' histograms to the histograms output list.
- - Uses: `fHist_Tracks_Bookkeep`, `fHist_Tracks`, `fOutputListOfHists`
-*/
+ * Define and add tracks' histograms to the histograms output list.
+ * - Uses: `fHist_Tracks_Bookkeep`, `fHist_Tracks`, `fOutputListOfHists`
+ */
 void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
 
     TString tracks_stages[2] = {"MCGen", "Found"};
@@ -647,9 +647,9 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
 }
 
 /*
- Define and add V0s' histograms to the histograms output list.
- - Uses: `fSourceOfV0s`, `fOutputListOfHists`
-*/
+ * Define and add V0s' histograms to the histograms output list.
+ * - Uses: `fSourceOfV0s`, `fOutputListOfHists`
+ */
 void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
 
     TString V0_stages[3] = {"MCGen", "Findable", "Found"};
@@ -735,9 +735,9 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
 }
 
 /*
- Define and add anti-sexaquark histograms to the histograms output list.
- - Uses: `fHist_AntiSexaquarks_Bookkeep`, `fList_Sexaquarks_Hists`, `fHist_AntiSexaquarks`, `fOutputListOfHists`
-*/
+ * Define and add anti-sexaquark histograms to the histograms output list.
+ * - Uses: `fHist_AntiSexaquarks_Bookkeep`, `fList_Sexaquarks_Hists`, `fHist_AntiSexaquarks`, `fOutputListOfHists`
+ */
 void AliAnalysisTaskSexaquark::PrepareSexaquarkHistograms() {
 
     TString SQ_stages[3] = {"MCGen", "Findable", "Found"};
@@ -833,9 +833,9 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarkHistograms() {
 }
 
 /*
- Define and add histograms for the K+K+ pairs to the histograms output list.
- - Uses: `fSourceOfV0s`, `fOutputListOfHists`
-*/
+ * Define and add histograms for the K+K+ pairs to the histograms output list.
+ * - Uses: `fSourceOfV0s`, `fOutputListOfHists`
+ */
 void AliAnalysisTaskSexaquark::PreparePosKaonPairHistograms() {
 
     TString stages[3] = {"MCGen", "Findable", "Found"};
@@ -883,10 +883,10 @@ void AliAnalysisTaskSexaquark::PreparePosKaonPairHistograms() {
 }
 
 /*
- Main function, called per each event at RUNTIME ~ execution on Grid
- - Uses: `fIsMC`, `fMC_PrimaryVertex`, `fESD`, `fPrimaryVertex`, `fMagneticField`, `fSourceOfV0s`, `fList_Trees`,
- `fOutputListOfHists`
-*/
+ * Main function, called per each event at RUNTIME ~ execution on Grid
+ * - Uses: `fIsMC`, `fMC_PrimaryVertex`, `fESD`, `fPrimaryVertex`, `fMagneticField`, `fSourceOfV0s`, `fList_Trees`,
+ * `fOutputListOfHists`
+ */
 void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     /* Handle external logs */
@@ -1064,8 +1064,8 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 }
 
 /*
- End of event.
-*/
+ * End of event.
+ */
 void AliAnalysisTaskSexaquark::EndOfEvent() {
 
     // FillTree();
@@ -1081,10 +1081,10 @@ void AliAnalysisTaskSexaquark::EndOfEvent() {
 }
 
 /*
- User implementation of Notify(). Needed for reading the AliEn path.
- This function is loaded during AliAnalysisManager::Notify().
- It's called after UserCreateOutputObjects(), but before each UserExec().
-*/
+ * User implementation of Notify(). Needed for reading the AliEn path.
+ * This function is loaded during AliAnalysisManager::Notify().
+ * It's called after UserCreateOutputObjects(), but before each UserExec().
+ */
 Bool_t AliAnalysisTaskSexaquark::UserNotify() {
     AliAnalysisManager* man = AliAnalysisManager::GetAnalysisManager();
     if (!man) AliFatal("!! Analysis Manager not found !!");
@@ -1105,8 +1105,8 @@ Bool_t AliAnalysisTaskSexaquark::UserNotify() {
 }
 
 /*
- Initialize analysis task.
-*/
+ * Initialize analysis task.
+ */
 void AliAnalysisTaskSexaquark::Initialize() {
 
     std::array<TString, 4> validSourcesOfV0s = {"offline", "on-the-fly", "custom", "kalman"};
@@ -1182,9 +1182,9 @@ void AliAnalysisTaskSexaquark::Initialize() {
 }
 
 /*
- Define track selection cuts.
- - Input: `cuts_option`
-*/
+ * Define track selection cuts.
+ * - Input: `cuts_option`
+ */
 void AliAnalysisTaskSexaquark::DefineTracksCuts(TString cuts_option) {
 
     kMax_NSigma_Pion = 3.;
@@ -1204,10 +1204,10 @@ void AliAnalysisTaskSexaquark::DefineTracksCuts(TString cuts_option) {
 }
 
 /*
- Define V0 selection cuts.
- - Uses: `fSourceOfV0s`
- - Input: `cuts_option`
-*/
+ * Define V0 selection cuts.
+ * - Uses: `fSourceOfV0s`
+ * - Input: `cuts_option`
+ */
 void AliAnalysisTaskSexaquark::DefineV0Cuts(TString cuts_option) {
 
     /* Common */
@@ -1289,10 +1289,10 @@ void AliAnalysisTaskSexaquark::DefineV0Cuts(TString cuts_option) {
 }
 
 /*
- Define anti-sexaquark candidates selection cuts.
- - Uses: `fSourceOfV0s`
- - Input: `cuts_option`
-*/
+ * Define anti-sexaquark candidates selection cuts.
+ * - Uses: `fSourceOfV0s`
+ * - Input: `cuts_option`
+ */
 void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
 
     /* Common */
@@ -1354,10 +1354,10 @@ void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
 }
 
 /*
- Define K+K+ pair selection cuts.
- - Uses: `fSourceOfV0s`
- - Input: `cuts_option`
-*/
+ * Define K+K+ pair selection cuts.
+ * - Uses: `fSourceOfV0s`
+ * - Input: `cuts_option`
+ */
 void AliAnalysisTaskSexaquark::DefinePosKaonPairCuts(TString cuts_option) {
 
     if (fSourceOfV0s == "kalman") {
@@ -1375,9 +1375,9 @@ void AliAnalysisTaskSexaquark::DefinePosKaonPairCuts(TString cuts_option) {
 /*** ============ ***/
 
 /*
- Loop over MC particles in a single event. Store the indices of the signal particles.
- - Uses: `fMC`, `fPDG`, `fMC_PrimaryVertex`
-*/
+ * Loop over MC particles in a single event. Store the indices of the signal particles.
+ * - Uses: `fMC`, `fPDG`, `fMC_PrimaryVertex`
+ */
 void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
     Int_t mcIdx;
@@ -1721,10 +1721,10 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 }
 
 /*
- Loop over generated antisexaquark-nucleon reactions.
- - Uses: `fMC`, `fPDG`, `fStruckNucleonPDG`
- - Containers: `getMcIdx_fromReactionIdx`
-*/
+ * Loop over generated antisexaquark-nucleon reactions.
+ * - Uses: `fMC`, `fPDG`, `fStruckNucleonPDG`
+ * - Containers: `getMcIdx_fromReactionIdx`
+ */
 void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
     AliMCParticle* mcProduct;
@@ -1818,8 +1818,8 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 /*** ============= ***/
 
 /*
- Apply event selection
-*/
+ * Apply event selection
+ */
 Bool_t AliAnalysisTaskSexaquark::PassesEventSelection() {
 
     if (fDoQA) fHist_QA["Events_Bookkeep"]->Fill(0);
@@ -1899,8 +1899,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesEventSelection() {
 }
 
 /*
- Loop over the reconstructed tracks in a single event.
-*/
+ * Loop over the reconstructed tracks in a single event.
+ */
 void AliAnalysisTaskSexaquark::ProcessTracks() {
 
     Int_t esdIdxTrack;
@@ -1937,8 +1937,6 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
     Int_t tTrack_ReactionID;
 
     for (TTree* ThisTree1 : {fTree_PiPluses, fTree_PiMinuses, fTree_PosKaons, fTree_AntiProtons}) {
-
-        ThisTree1->Print();
 
         // clang-format off
         if (!ThisTree1->GetBranch("EventNumber")) ThisTree1->Branch("EventNumber", &fEventNumber);
@@ -1993,7 +1991,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
     /** Loop over tracks in a single event **/
 
-    for (Int_t esdIdxTrack = 0; esdIdxTrack < fESD->GetNumberOfTracks(); esdIdxTrack++) {
+    for (esdIdxTrack = 0; esdIdxTrack < fESD->GetNumberOfTracks(); esdIdxTrack++) {
 
         /* Get track */
 
@@ -2220,11 +2218,11 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 }
 
 /*
- Determine if current AliESDtrack passes track selection,
- and fill the bookkeeping histograms to measure the effect of the cuts.
- - Input: `track`
- - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
-*/
+ * Determine if current AliESDtrack passes track selection,
+ * and fill the bookkeeping histograms to measure the effect of the cuts.
+ * - Input: `track`
+ * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
+ */
 Bool_t AliAnalysisTaskSexaquark::PassesTrackSelectionAs(Int_t HypothesisPID, Bool_t is_true, Bool_t is_secondary, Bool_t is_signal,
                                                         AliESDtrack* track) {
 
@@ -2335,9 +2333,9 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelectionAs(Int_t HypothesisPID, Boo
 }
 
 /*
- Plot the status of the track.
- - Input: `track`, `stage`, `esdPdgCode`
-*/
+ * Plot the status of the track.
+ * - Input: `track`, `stage`, `esdPdgCode`
+ */
 void AliAnalysisTaskSexaquark::PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode) {
 
     ULong64_t StatusCollection[16] = {AliESDtrack::kITSin,   AliESDtrack::kITSout,     AliESDtrack::kITSrefit,    AliESDtrack::kITSpid,
@@ -2355,10 +2353,10 @@ void AliAnalysisTaskSexaquark::PlotStatus(AliESDtrack* track, TString set, Int_t
 /*** ============================================================= ***/
 
 /*
- Find all true V0s that both of their daughters passed track selection.
- Variables are true MC vertexing & kinematics.
- - Uses: `fMC`, `fMC_PrimaryVertex`, `fHist_V0s`, `fHist_V0s_Bookkeep`
-*/
+ * Find all true V0s that both of their daughters passed track selection.
+ * Variables are true MC vertexing & kinematics.
+ * - Uses: `fMC`, `fMC_PrimaryVertex`, `fHist_V0s`, `fHist_V0s_Bookkeep`
+ */
 void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
     AliMCParticle* mcV0;
@@ -2485,9 +2483,9 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 }
 
 /*
-  Find the reconstructed signal pi+ (that don't come from the anti-lambda) and pi-
-  (only valid for Reaction Channel E: anti-lambda, K+, pi+, pi-)
-*/
+ * Find the reconstructed signal pi+ (that don't come from the anti-lambda) and pi-
+ * (only valid for Reaction Channel E: anti-lambda, K+, pi+, pi-)
+ */
 void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
 
     Int_t single_pion_pdg_code;
@@ -2599,11 +2597,11 @@ void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
 }
 
 /*
-  Find the anti-sexaquarks that have all of their *final-state particles* reconstructed. Valid for:
-  - Reaction Channel A: 1 anti-proton, 2 pi+, 1 pi-
-  - Reaction Channel D: 1 anti-proton, 1 pi+, 1 K+
-  - Reaction Channel E: 1 anti-proton, 2 pi+, 1 pi-, 1 K+
-*/
+ * Find the anti-sexaquarks that have all of their *final-state particles* reconstructed. Valid for:
+ * - Reaction Channel A: 1 anti-proton, 2 pi+, 1 pi-
+ * - Reaction Channel D: 1 anti-proton, 1 pi+, 1 K+
+ * - Reaction Channel E: 1 anti-proton, 2 pi+, 1 pi-, 1 K+
+ */
 void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
     AliMCParticle* mcFSPart;  // FS: final-state
@@ -2709,9 +2707,9 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 }
 
 /*
-  Find the anti-sexaquarks that have two K+s reconstructed.
-  Valid for Reaction Channel H: 1 anti-proton, 2 K+, 1 pi0
-*/
+ * Find the anti-sexaquarks that have two K+s reconstructed.
+ * Valid for Reaction Channel H: 1 anti-proton, 2 K+, 1 pi0
+ */
 void AliAnalysisTaskSexaquark::ProcessFindablePosKaonPairs() {
 
     Int_t pdgCode;
@@ -2797,12 +2795,12 @@ void AliAnalysisTaskSexaquark::ProcessFindablePosKaonPairs() {
 /*** ======================= ***/
 
 /*
- Loop over all the V0s that were found and stored in the ESD file by the Official V0 Finders.
- - Uses: `fESD`, `fMC`, `fPDG`, `fPrimaryVertex`
- - Containers: `esdAntiLambdas`, `getEsdIdxOfNegDau_fromAntiLambdaIdx`, `getEsdIdxOfPosDau_fromAntiLambdaIdx`, `isAntiLambdaIdxATrueV0`,
- `isEsdIdxDaughterOfTrueV0`, `getMcIdxOfTrueV0_fromEsdIdx`, `isMcIdxSignal`, `esdKaonsZeroShort`, `getEsdIdxOfNegDau_fromKaonZeroShortIdx`,
- `getEsdIdxOfPosDau_fromKaonZeroShortIdx`, `isKaonZeroShortIdxATrueV0`
-*/
+ * Loop over all the V0s that were found and stored in the ESD file by the Official V0 Finders.
+ * - Uses: `fESD`, `fMC`, `fPDG`, `fPrimaryVertex`
+ * - Containers: `esdAntiLambdas`, `getEsdIdxOfNegDau_fromAntiLambdaIdx`, `getEsdIdxOfPosDau_fromAntiLambdaIdx`, `isAntiLambdaIdxATrueV0`,
+ * `isEsdIdxDaughterOfTrueV0`, `getMcIdxOfTrueV0_fromEsdIdx`, `isMcIdxSignal`, `esdKaonsZeroShort`, `getEsdIdxOfNegDau_fromKaonZeroShortIdx`,
+ * `getEsdIdxOfPosDau_fromKaonZeroShortIdx`, `isKaonZeroShortIdxATrueV0`
+ */
 void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 
     AliESDv0* V0;
@@ -3071,11 +3069,11 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 }
 
 /*
- Custom V0 Finder.
- (Adapted from `AliRoot/STEER/ESD/AliV0vertexer.cxx`)
- - Uses: `fESD`, `fMC`, `fPDG`, `fPrimaryVertex`, `fMagneticField`
- - Input: `pdgV0`
-*/
+ * Custom V0 Finder.
+ * (Adapted from `AliRoot/STEER/ESD/AliV0vertexer.cxx`)
+ * - Uses: `fESD`, `fMC`, `fPDG`, `fPrimaryVertex`, `fMagneticField`
+ * - Input: `pdgV0`
+ */
 void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
     AliESDtrack* neg_track;
@@ -3339,11 +3337,11 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 }
 
 /*
- Apply cuts to a V0 candidate.
- - Input: `pdgV0`, `v0`, `neg_track`, `pos_track`
- - Uses: `fPrimaryVertex`
- - Return: `kTRUE` if the V0 candidate passes the cuts, `kFALSE` otherwise
-*/
+ * Apply cuts to a V0 candidate.
+ * - Input: `pdgV0`, `v0`, `neg_track`, `pos_track`
+ * - Uses: `fPrimaryVertex`
+ * - Return: `kTRUE` if the V0 candidate passes the cuts, `kFALSE` otherwise
+ */
 Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, AliESDv0* v0, AliESDtrack* neg_track,
                                                 AliESDtrack* pos_track) {
 
@@ -3472,11 +3470,11 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool
 }
 
 /*
- Apply cuts to a V0 candidate.
- - Input: `pdgV0`, `kfV0`, `kfDaughterNeg`, `kfDaughterPos`, `lvV0`, `lvTrackNeg`, `lvTrackPos`
- - Uses: `fPrimaryVertex`
- - Return: `kTRUE` if the V0 candidate passes the cuts, `kFALSE` otherwise
-*/
+ * Apply cuts to a V0 candidate.
+ * - Input: `pdgV0`, `kfV0`, `kfDaughterNeg`, `kfDaughterPos`, `lvV0`, `lvTrackNeg`, `lvTrackPos`
+ * - Uses: `fPrimaryVertex`
+ * - Return: `kTRUE` if the V0 candidate passes the cuts, `kFALSE` otherwise
+ */
 Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, KFParticleMother kfV0,
                                                 KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0, TLorentzVector lvTrackNeg,
                                                 TLorentzVector lvTrackPos) {
@@ -3589,10 +3587,10 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool
 /*** =============================== ***/
 
 /*
- Using two AliESDv0 objects, reconstruct the anti-sexaquark candidate.
- - Containers: `esdAntiLambdas`, `esdKaonsZeroShort`, `getEsdIdxOfNegDau_fromAntiLambdaIdx`, `getEsdIdxOfNegDau_fromKaonZeroShortIdx`,
- `getEsdIdxOfPosDau_fromKaonZeroShortIdx`, `getEsdIdxOfPosDau_fromAntiLambdaIdx`
-*/
+ * Using two AliESDv0 objects, reconstruct the anti-sexaquark candidate.
+ * - Containers: `esdAntiLambdas`, `esdKaonsZeroShort`, `getEsdIdxOfNegDau_fromAntiLambdaIdx`, `getEsdIdxOfNegDau_fromKaonZeroShortIdx`,
+ * `getEsdIdxOfPosDau_fromKaonZeroShortIdx`, `getEsdIdxOfPosDau_fromAntiLambdaIdx`
+ */
 void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
 
     /* Declare AliRoot objects */
@@ -3787,12 +3785,12 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
 }
 
 /*
- Apply anti-sexaquark candidate cuts. Exclusive to reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`.
- - Use: `fPrimaryVertex`, `fMagneticField`
- - Input: `SecondaryVertex`, `lvAntiSexaquark`, `esdAntiLambda`, `esdKaonZeroShort`, `esdAntiLambdaNeg`, `esdAntiLambdaPos`, `esdKaonZeroShortNeg`,
- `esdKaonZeroShortPos`
- - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
-*/
+ * Apply anti-sexaquark candidate cuts. Exclusive to reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`.
+ * - Use: `fPrimaryVertex`, `fMagneticField`
+ * - Input: `SecondaryVertex`, `lvAntiSexaquark`, `esdAntiLambda`, `esdKaonZeroShort`, `esdAntiLambdaNeg`, `esdAntiLambdaPos`, `esdKaonZeroShortNeg`,
+ * `esdKaonZeroShortPos`
+ * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
+ */
 Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark,
                                                               AliESDv0 esdAntiLambda, AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg,
                                                               AliESDtrack* esdAntiLambdaPos, AliESDtrack* esdKaonZeroShortNeg,
@@ -3918,11 +3916,11 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelE() {
 /*** ==================== ***/
 
 /*
- Find all V0s via Kalman Filter.
- - Uses: `fESD`, `fMC`
- - Input: `pdgV0`, `pdgTrackNeg`, `pdgTrackPos`
- - Output: `kfV0s`, `idxDaughters`
-*/
+ * Find all V0s via Kalman Filter.
+ * - Uses: `fESD`, `fMC`
+ * - Input: `pdgV0`, `pdgTrackNeg`, `pdgTrackPos`
+ * - Output: `kfV0s`, `idxDaughters`
+ */
 void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos) {
 
     AliESDtrack* esdTrackNeg;
@@ -4295,10 +4293,10 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 /*** ========================== ***/
 
 /*
- Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`
- - Uses: `fStruckNucleonPDG`, `fPDG`, `fPrimaryVertex`, `fESD`
- - Containers: `kf[AntiLambdas|KaonsZeroShort]`, `getEsdIdxOf[Neg|Pos]Dau_from[AntiLambda|KaonZeroShort]Idx`
-*/
+ * Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`
+ * - Uses: `fStruckNucleonPDG`, `fPDG`, `fPrimaryVertex`, `fESD`
+ * - Containers: `kf[AntiLambdas|KaonsZeroShort]`, `getEsdIdxOf[Neg|Pos]Dau_from[AntiLambda|KaonZeroShort]Idx`
+ */
 void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
 
     Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
@@ -4351,18 +4349,18 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
 
     /* Prepare branches */
 
-    Int_t aSxqk_ReactionID;
-    Float_t aSxqk_Px;
-    Float_t aSxqk_Py;
-    Float_t aSxqk_Pz;
-    Float_t aSxqk_E;
-    Float_t aSxqk_Xv_SV;
-    Float_t aSxqk_Yv_SV;
-    Float_t aSxqk_Zv_SV;
+    Int_t tSexaquarkA_ReactionID;
+    Float_t tSexaquarkA_Px;
+    Float_t tSexaquarkA_Py;
+    Float_t tSexaquarkA_Pz;
+    Float_t tSexaquarkA_E;
+    Float_t tSexaquarkA_Xv_SV;
+    Float_t tSexaquarkA_Yv_SV;
+    Float_t tSexaquarkA_Zv_SV;
 
     // clang-format off
-    if (!fTree_Sexaquarks->GetBranch("ReactionID")) fTree_Sexaquarks->Branch("ReactionID", &aSxqk_ReactionID);
-    else fTree_Sexaquarks->SetBranchAddress("ReactionID", &aSxqk_ReactionID);
+    if (!fTree_Sexaquarks->GetBranch("ReactionID")) fTree_Sexaquarks->Branch("ReactionID", &tSexaquarkA_ReactionID);
+    else fTree_Sexaquarks->SetBranchAddress("ReactionID", &tSexaquarkA_ReactionID);
 
     if (!fTree_Sexaquarks->GetBranch("EventNumber")) fTree_Sexaquarks->Branch("EventNumber", &fEventNumber);
     else fTree_Sexaquarks->SetBranchAddress("EventNumber", &fEventNumber);
@@ -4391,26 +4389,56 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
     if (!fTree_Sexaquarks->GetBranch("Idx_K0S_Pos")) fTree_Sexaquarks->Branch("Idx_K0S_Pos", &esdIdxPos_KaonZeroShort);
     else fTree_Sexaquarks->SetBranchAddress("Idx_K0S_Pos", &esdIdxPos_KaonZeroShort);
 
-    if (!fTree_Sexaquarks->GetBranch("Px")) fTree_Sexaquarks->Branch("Px", &aSxqk_Px);
-    else fTree_Sexaquarks->SetBranchAddress("Px", &aSxqk_Px);
+    if (!fTree_Sexaquarks->GetBranch("Px")) fTree_Sexaquarks->Branch("Px", &tSexaquarkA_Px);
+    else fTree_Sexaquarks->SetBranchAddress("Px", &tSexaquarkA_Px);
 
-    if (!fTree_Sexaquarks->GetBranch("Py")) fTree_Sexaquarks->Branch("Py", &aSxqk_Py);
-    else fTree_Sexaquarks->SetBranchAddress("Py", &aSxqk_Py);
+    if (!fTree_Sexaquarks->GetBranch("Py")) fTree_Sexaquarks->Branch("Py", &tSexaquarkA_Py);
+    else fTree_Sexaquarks->SetBranchAddress("Py", &tSexaquarkA_Py);
 
-    if (!fTree_Sexaquarks->GetBranch("Pz")) fTree_Sexaquarks->Branch("Pz", &aSxqk_Pz);
-    else fTree_Sexaquarks->SetBranchAddress("Pz", &aSxqk_Pz);
+    if (!fTree_Sexaquarks->GetBranch("Pz")) fTree_Sexaquarks->Branch("Pz", &tSexaquarkA_Pz);
+    else fTree_Sexaquarks->SetBranchAddress("Pz", &tSexaquarkA_Pz);
 
-    if (!fTree_Sexaquarks->GetBranch("E")) fTree_Sexaquarks->Branch("E", &aSxqk_E);
-    else fTree_Sexaquarks->SetBranchAddress("E", &aSxqk_E);
+    if (!fTree_Sexaquarks->GetBranch("E")) fTree_Sexaquarks->Branch("E", &tSexaquarkA_E);
+    else fTree_Sexaquarks->SetBranchAddress("E", &tSexaquarkA_E);
 
-    if (!fTree_Sexaquarks->GetBranch("Xv_SV")) fTree_Sexaquarks->Branch("Xv_SV", &aSxqk_Xv_SV);
-    else fTree_Sexaquarks->SetBranchAddress("Xv_SV", &aSxqk_Xv_SV);
+    if (!fTree_Sexaquarks->GetBranch("Xv_SV")) fTree_Sexaquarks->Branch("Xv_SV", &tSexaquarkA_Xv_SV);
+    else fTree_Sexaquarks->SetBranchAddress("Xv_SV", &tSexaquarkA_Xv_SV);
 
-    if (!fTree_Sexaquarks->GetBranch("Yv_SV")) fTree_Sexaquarks->Branch("Yv_SV", &aSxqk_Yv_SV);
-    else fTree_Sexaquarks->SetBranchAddress("Yv_SV", &aSxqk_Yv_SV);
+    if (!fTree_Sexaquarks->GetBranch("Yv_SV")) fTree_Sexaquarks->Branch("Yv_SV", &tSexaquarkA_Yv_SV);
+    else fTree_Sexaquarks->SetBranchAddress("Yv_SV", &tSexaquarkA_Yv_SV);
 
-    if (!fTree_Sexaquarks->GetBranch("Zv_SV")) fTree_Sexaquarks->Branch("Zv_SV", &aSxqk_Zv_SV);
-    else fTree_Sexaquarks->SetBranchAddress("Zv_SV", &aSxqk_Zv_SV);
+    if (!fTree_Sexaquarks->GetBranch("Zv_SV")) fTree_Sexaquarks->Branch("Zv_SV", &tSexaquarkA_Zv_SV);
+    else fTree_Sexaquarks->SetBranchAddress("Zv_SV", &tSexaquarkA_Zv_SV);
+
+    if (!fTree_Sexaquarks->GetBranch("DecayLength")) fTree_Sexaquarks->Branch("DecayLength", &decay_length);
+    else fTree_Sexaquarks->SetBranchAddress("DecayLength", &decay_length);
+
+    if (!fTree_Sexaquarks->GetBranch("CPAwrtPV")) fTree_Sexaquarks->Branch("CPAwrtPV", &cpa_wrt_pv);
+    else fTree_Sexaquarks->SetBranchAddress("CPAwrtPV", &cpa_wrt_pv);
+
+    if (!fTree_Sexaquarks->GetBranch("DCAwrtPV")) fTree_Sexaquarks->Branch("DCAwrtPV", &dca_wrt_pv);
+    else fTree_Sexaquarks->SetBranchAddress("DCAwrtPV", &dca_wrt_pv);
+
+    if (!fTree_Sexaquarks->GetBranch("DCAbtwV0s")) fTree_Sexaquarks->Branch("DCAbtwV0s", &dca_btw_v0s);
+    else fTree_Sexaquarks->SetBranchAddress("DCAbtwV0s", &dca_btw_v0s);
+
+    if (!fTree_Sexaquarks->GetBranch("DCAv0aSV")) fTree_Sexaquarks->Branch("DCAv0aSV", &dca_v0a_sv);
+    else fTree_Sexaquarks->SetBranchAddress("DCAv0aSV", &dca_v0a_sv);
+
+    if (!fTree_Sexaquarks->GetBranch("DCAv0bSV")) fTree_Sexaquarks->Branch("DCAv0bSV", &dca_v0b_sv);
+    else fTree_Sexaquarks->SetBranchAddress("DCAv0bSV", &dca_v0b_sv);
+
+    if (!fTree_Sexaquarks->GetBranch("DCAv0anegSV")) fTree_Sexaquarks->Branch("DCAv0anegSV", &dca_v0a_neg_sv);
+    else fTree_Sexaquarks->SetBranchAddress("DCAv0anegSV", &dca_v0a_neg_sv);
+
+    if (!fTree_Sexaquarks->GetBranch("DCAv0aposSV")) fTree_Sexaquarks->Branch("DCAv0aposSV", &dca_v0a_pos_sv);
+    else fTree_Sexaquarks->SetBranchAddress("DCAv0aposSV", &dca_v0a_pos_sv);
+
+    if (!fTree_Sexaquarks->GetBranch("DCAv0bnegSV")) fTree_Sexaquarks->Branch("DCAv0bnegSV", &dca_v0b_neg_sv);
+    else fTree_Sexaquarks->SetBranchAddress("DCAv0bnegSV", &dca_v0b_neg_sv);
+
+    if (!fTree_Sexaquarks->GetBranch("DCAv0bposSV")) fTree_Sexaquarks->Branch("DCAv0bposSV", &dca_v0b_pos_sv);
+    else fTree_Sexaquarks->SetBranchAddress("DCAv0bposSV", &dca_v0b_pos_sv);
 
     if (!fTree_Sexaquarks->GetBranch("Chi2ndf")) fTree_Sexaquarks->Branch("Chi2ndf", &chi2_ndf);
     else fTree_Sexaquarks->SetBranchAddress("Chi2ndf", &chi2_ndf);
@@ -4598,25 +4626,25 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             */
             // -- END OF DEBUG -- //
 
-            aSxqk_ReactionID = getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
-            aSxqk_Px = lvAntiSexaquark.Px();
-            aSxqk_Py = lvAntiSexaquark.Py();
-            aSxqk_Pz = lvAntiSexaquark.Pz();
-            aSxqk_E = lvAntiSexaquark.E();
-            aSxqk_Xv_SV = kfAntiSexaquark.GetX();
-            aSxqk_Yv_SV = kfAntiSexaquark.GetY();
-            aSxqk_Zv_SV = kfAntiSexaquark.GetZ();
+            tSexaquarkA_ReactionID = getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
+            tSexaquarkA_Px = lvAntiSexaquark.Px();
+            tSexaquarkA_Py = lvAntiSexaquark.Py();
+            tSexaquarkA_Pz = lvAntiSexaquark.Pz();
+            tSexaquarkA_E = lvAntiSexaquark.E();
+            tSexaquarkA_Xv_SV = kfAntiSexaquark.GetX();
+            tSexaquarkA_Yv_SV = kfAntiSexaquark.GetY();
+            tSexaquarkA_Zv_SV = kfAntiSexaquark.GetZ();
             fTree_Sexaquarks->Fill();
         }  // end of loop over K0S
     }  // end of loop over anti-lambdas
 }
 
 /*
- Apply anti-sexaquark candidate cuts. Exclusive to reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`.
- - Use: `fPrimaryVertex`
- - Input: `kf[AntiSexaquark|AntiLambda|KaonZeroShort|AntiLambdaNeg|AntiLambdaPos|KaonZeroShortNeg|KaonZeroShortPos]`, `lvAntiSexaquark`
- - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
-*/
+ * Apply anti-sexaquark candidate cuts. Exclusive to reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`.
+ * - Use: `fPrimaryVertex`
+ * - Input: `kf[AntiSexaquark|AntiLambda|KaonZeroShort|AntiLambdaNeg|AntiLambdaPos|KaonZeroShortNeg|KaonZeroShortPos]`, `lvAntiSexaquark`
+ * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
+ */
 Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark,
                                                               KFParticle kfAntiLambda, KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg,
                                                               KFParticle kfAntiLambdaPos, KFParticle kfKaonZeroShortNeg,
@@ -4716,10 +4744,10 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, K
 }
 
 /*
- Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel D: `AntiSexaquark,P->AntiLambda,K+`
- - Uses: `fStruckNucleonPDG`, `fPDG`, `fPrimaryVertex`, `fESD`
- - Containers: `kfAntiLambdas`, `esdIndicesOfPosKaonTracks`, `getEsdIdxOf[Neg|Pos]Dau_fromAntiLambdaIdx`
-*/
+ * Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel D: `AntiSexaquark,P->AntiLambda,K+`
+ * - Uses: `fStruckNucleonPDG`, `fPDG`, `fPrimaryVertex`, `fESD`
+ * - Containers: `kfAntiLambdas`, `esdIndicesOfPosKaonTracks`, `getEsdIdxOf[Neg|Pos]Dau_fromAntiLambdaIdx`
+ */
 void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
 
     Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
@@ -4915,11 +4943,11 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
 }
 
 /*
- Apply anti-sexaquark candidate cuts.
- - Use: `fPrimaryVertex`
- - Input: `kf[AntiSexaquark|AntiLambda|KaonZeroShort|AntiLambdaNeg|AntiLambdaPos|KaonZeroShortNeg|KaonZeroShortPos]`, `lvAntiSexaquark`
- - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
-*/
+ * Apply anti-sexaquark candidate cuts.
+ * - Use: `fPrimaryVertex`
+ * - Input: `kf[AntiSexaquark|AntiLambda|KaonZeroShort|AntiLambdaNeg|AntiLambdaPos|KaonZeroShortNeg|KaonZeroShortPos]`, `lvAntiSexaquark`
+ * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
+ */
 Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelD(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark,
                                                               KFParticle kfAntiLambda, KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg,
                                                               KFParticle kfAntiLambdaPos) {
@@ -5018,9 +5046,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelD(Bool_t isSignal, K
 }
 
 /*
- Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel E: `AntiSexaquark,P->AntiLambda,K+,pi-,pi+`
- - PENDING
-*/
+ * Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel E: `AntiSexaquark,P->AntiLambda,K+,pi-,pi+`
+ */
 void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
 
     Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
@@ -5260,10 +5287,9 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
 }
 
 /*
- Apply anti-sexaquark candidate cuts.
- // PENDING
- - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
-*/
+ * Apply anti-sexaquark candidate cuts via channel E reconstruction.
+ * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
+ */
 Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelE(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark,
                                                               KFParticle kfAntiLambda, KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau,
                                                               KFParticle kfPosKaon, KFParticle kfPiMinus, KFParticle kfPiPlus) {
@@ -5381,9 +5407,9 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelE(Bool_t isSignal, K
 /*** ========================== ***/
 
 /*
- Find all K+K+ pairs via Kalman Filter.
- - Uses: `fESD`, `esdIndicesOfPosKaonTracks`, `fHist_PosKaonPairs`
-*/
+ * Find all K+K+ pairs via Kalman Filter.
+ * - Uses: `fESD`, `esdIndicesOfPosKaonTracks`, `fHist_PosKaonPairs`
+ */
 void AliAnalysisTaskSexaquark::KalmanPosKaonPairFinder() {
 
     const Int_t kKaonPDGCode = 321;
@@ -5527,11 +5553,11 @@ void AliAnalysisTaskSexaquark::KalmanPosKaonPairFinder() {
 }
 
 /*
- Apply cuts to a K+K+ pair
- - Input: `kfPosKaonPair`, `kfPosKaonA`, `kfPosKaonB`, `lvPosKaonPair`, `lvPosKaonA`, `lvPosKaonB`
- - Uses: `fPrimaryVertex`
- - Return: `kTRUE` if the K+K+ pair passes the cuts, `kFALSE` otherwise
-*/
+ * Apply cuts to a K+K+ pair
+ * - Input: `kfPosKaonPair`, `kfPosKaonA`, `kfPosKaonB`, `lvPosKaonPair`, `lvPosKaonA`, `lvPosKaonB`
+ * - Uses: `fPrimaryVertex`
+ * - Return: `kTRUE` if the K+K+ pair passes the cuts, `kFALSE` otherwise
+ */
 Bool_t AliAnalysisTaskSexaquark::PassesPosKaonPairCuts(KFParticleMother kfPosKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB,
                                                        TLorentzVector lvPosKaonPair, TLorentzVector lvPosKaonA, TLorentzVector lvPosKaonB) {
 
@@ -5574,11 +5600,11 @@ Bool_t AliAnalysisTaskSexaquark::PassesPosKaonPairCuts(KFParticleMother kfPosKao
 /*** ====================== ***/
 
 /*
- Calculate the cosine of the pointing angle of a particle with momentum Px,Py,Pz and vertex X,Y,Z w.r.t. to a reference point
- - Input: `lvParticle`, `X`, `Y`, `Z`, `refPointX`, `refPointY`, `refPointZ`
- - Return: `cos(theta)`
- (Based on `AliRoot/STEER/ESD/AliESDv0::GetV0CosineOfPointingAngle()`)
-*/
+ * Calculate the cosine of the pointing angle of a particle with momentum Px,Py,Pz and vertex X,Y,Z w.r.t. to a reference point
+ * - Input: `lvParticle`, `X`, `Y`, `Z`, `refPointX`, `refPointY`, `refPointZ`
+ * - Return: `cos(theta)`
+ * (Based on `AliRoot/STEER/ESD/AliESDv0::GetV0CosineOfPointingAngle()`)
+ */
 Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(TLorentzVector lvParticle, Double_t X, Double_t Y, Double_t Z, Double_t refPointX,
                                                        Double_t refPointY, Double_t refPointZ) {
     TVector3 posRelativeToRef(X - refPointX, Y - refPointY, Z - refPointZ);
@@ -5586,8 +5612,8 @@ Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(TLorentzVector lvParticle
 }
 
 /*
- Overload of `CosinePointingAngle(...)`, using Px, Py, Pz instead of the particle's TLorentzVector.
-*/
+ * Overload of `CosinePointingAngle(...)`, using Px, Py, Pz instead of the particle's TLorentzVector.
+ */
 Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(Double_t Px, Double_t Py, Double_t Pz, Double_t X, Double_t Y, Double_t Z, Double_t refPointX,
                                                        Double_t refPointY, Double_t refPointZ) {
     TVector3 posRelativeToRef(X - refPointX, Y - refPointY, Z - refPointZ);
@@ -5596,9 +5622,9 @@ Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(Double_t Px, Double_t Py,
 }
 
 /*
- This gives the Armenteros-Podolanski alpha.
- (Based on `AliRoot/STEER/ESD/AliESDv0::AlphaV0()`)
-*/
+ * This gives the Armenteros-Podolanski alpha.
+ * (Based on `AliRoot/STEER/ESD/AliESDv0::AlphaV0()`)
+ */
 Double_t AliAnalysisTaskSexaquark::ArmenterosAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz,
                                                    Double_t Pos_Px, Double_t Pos_Py, Double_t Pos_Pz) {
     TVector3 momTot(V0_Px, V0_Py, V0_Pz);
@@ -5616,9 +5642,9 @@ Double_t AliAnalysisTaskSexaquark::ArmenterosAlpha(Double_t V0_Px, Double_t V0_P
 }
 
 /*
- This gives the Armenteros-Podolanski qT
- (Based on `AliRoot/STEER/ESD/AliESDv0::PtArmV0()`)
-*/
+ * This gives the Armenteros-Podolanski qT
+ * (Based on `AliRoot/STEER/ESD/AliESDv0::PtArmV0()`)
+ */
 Double_t AliAnalysisTaskSexaquark::ArmenterosQt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz) {
     TVector3 momTot(V0_Px, V0_Py, V0_Pz);
     TVector3 momNeg(Neg_Px, Neg_Py, Neg_Pz);
@@ -5627,12 +5653,12 @@ Double_t AliAnalysisTaskSexaquark::ArmenterosQt(Double_t V0_Px, Double_t V0_Py, 
 }
 
 /*
- Find the distance of closest approach to the Primary Vertex, after backtracking a V0.
- This function stores the point of closest approach, and returns its distance to the PV.
- (PENDING: are we sure of that?)
- - Input: `V0_Px`, `V0_Py`, `V0_Pz`, `V0_X`, `V0_Y`, `V0_Z`, `PV_X`, `PV_Y`, `PV_Z`
- - Return: the distance of closest approach to the PV
-*/
+ * Find the distance of closest approach to the Primary Vertex, after backtracking a V0.
+ * This function stores the point of closest approach, and returns its distance to the PV.
+ * (PENDING: are we sure of that?)
+ * - Input: `V0_Px`, `V0_Py`, `V0_Pz`, `V0_X`, `V0_Y`, `V0_Z`, `PV_X`, `PV_Y`, `PV_Z`
+ * - Return: the distance of closest approach to the PV
+ */
 Double_t AliAnalysisTaskSexaquark::LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t V0_X, Double_t V0_Y, Double_t V0_Z,
                                                 Double_t refPointX, Double_t refPointY, Double_t refPointZ) {
 
@@ -5668,8 +5694,8 @@ Double_t AliAnalysisTaskSexaquark::LinePointDCA(Double_t V0_Px, Double_t V0_Py, 
 }
 
 /*
- Calculate transverse impact parameter w.r.t. Primary Vertex.
-*/
+ * Calculate transverse impact parameter w.r.t. Primary Vertex.
+ */
 Float_t AliAnalysisTaskSexaquark::MCRec_GetImpactParameter(AliESDtrack* track) {
     Double_t PV[3];
     fPrimaryVertex->GetXYZ(PV);
@@ -5678,10 +5704,10 @@ Float_t AliAnalysisTaskSexaquark::MCRec_GetImpactParameter(AliESDtrack* track) {
 }
 
 /*
- Find a common vertex for two neutral particles, given their position and momentum, assuming they propagate in straight lines.
- If a common vertex cannot be found, then return the DCA between the two lines.
- (Based on Marty Cohen's answer in https://math.stackexchange.com/questions/2213165/find-shortest-distance-between-lines-in-3d)
-*/
+ * Find a common vertex for two neutral particles, given their position and momentum, assuming they propagate in straight lines.
+ * If a common vertex cannot be found, then return the DCA between the two lines.
+ * (Based on Marty Cohen's answer in https://math.stackexchange.com/questions/2213165/find-shortest-distance-between-lines-in-3d)
+ */
 Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v1(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0,
                                                             TVector3& PCA1) {
 
@@ -5723,12 +5749,12 @@ Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v1(TVector3 v3_pos0, TV
 }
 
 /*
- Given the parametric form of a line, find the distance between it and a point.
- - Variable: `t`, the parameter of the line.
- - Parameters: `point`, the point to which we want to calculate the distance.
- - Parameters: `linePoint`, `lineDir`, the position and direction of the line.
- - Return: the square of the distance between the point and the line.
-*/
+ * Given the parametric form of a line, find the distance between it and a point.
+ * - Variable: `t`, the parameter of the line.
+ * - Parameters: `point`, the point to which we want to calculate the distance.
+ * - Parameters: `linePoint`, `lineDir`, the position and direction of the line.
+ * - Return: the square of the distance between the point and the line.
+ */
 Double_t AliAnalysisTaskSexaquark::SquaredDistancePointToLine(const Double_t* t, Double_t point[], Double_t linePoint[], Double_t lineDir[]) {
     return TMath::Power(point[0] - linePoint[0] - t[0] * lineDir[0], 2) +  //
            TMath::Power(point[1] - linePoint[1] - t[0] * lineDir[1], 2) +  //
@@ -5736,11 +5762,11 @@ Double_t AliAnalysisTaskSexaquark::SquaredDistancePointToLine(const Double_t* t,
 }
 
 /*
- Given the parametric form of two lines, find their distance.
- - Variable: `t`, array of size 2, where `t[0]` and `t[1] are the parameters for the first and second line, respectively.
- - Parameters: `pos0`, `dir0`, `pos1`, `dir1`, the position and direction of the two lines.
- - Return: the square of the distance between the two lines.
-*/
+ * Given the parametric form of two lines, find their distance.
+ * - Variable: `t`, array of size 2, where `t[0]` and `t[1] are the parameters for the first and second line, respectively.
+ * - Parameters: `pos0`, `dir0`, `pos1`, `dir1`, the position and direction of the two lines.
+ * - Return: the square of the distance between the two lines.
+ */
 Double_t AliAnalysisTaskSexaquark::SquaredDistanceBetweenLines(const Double_t* t, Double_t pos0[], Double_t dir0[], Double_t pos1[],
                                                                Double_t dir1[]) {
     return TMath::Power(dir1[0] * t[1] + pos1[0] - (dir0[0] * t[0] + pos0[0]), 2) +
@@ -5749,10 +5775,10 @@ Double_t AliAnalysisTaskSexaquark::SquaredDistanceBetweenLines(const Double_t* t
 }
 
 /*
- Calculate the distance of closest approach between two lines, given their position and momentum, assuming they propagate in straight lines.
- - Input: `pos0`, `dir0`, `pos1`, `dir1`, the position and direction of the two lines.
- - Output: `CPA0`, `CPA1`, the closest point of approach for the two lines.
- - Return: the distance of closest approach between the two lines.
+ * Calculate the distance of closest approach between two lines, given their position and momentum, assuming they propagate in straight lines.
+ * - Input: `pos0`, `dir0`, `pos1`, `dir1`, the position and direction of the two lines.
+ * - Output: `CPA0`, `CPA1`, the closest point of approach for the two lines.
+ * - Return: the distance of closest approach between the two lines.
  */
 Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0,
                                                             TVector3& PCA1) {
@@ -5790,10 +5816,10 @@ Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TV
 /*** FUNCTIONS FOR THE CUSTOM OFFLINE V0 FINDER ***/
 
 /*
- This function pre-optimizes a two-track pair in the XY plane
- and provides two X values for the tracks if successful
- [copied from AliRoot/STEER/ESD/AliV0vertexer.cxx]
-*/
+ * This function pre-optimizes a two-track pair in the XY plane
+ * and provides two X values for the tracks if successful
+ * [copied from AliRoot/STEER/ESD/AliV0vertexer.cxx]
+ */
 Bool_t AliAnalysisTaskSexaquark::Preoptimize(const AliExternalTrackParam* nt, AliExternalTrackParam* pt, Double_t* lPreprocessxn,
                                              Double_t* lPreprocessxp, const Double_t b) {
     Double_t lMinimumX = -3.0;
@@ -6001,10 +6027,10 @@ Bool_t AliAnalysisTaskSexaquark::Preoptimize(const AliExternalTrackParam* nt, Al
 }
 
 /*
- Copied from AliV0ReaderV1::GetHelixCenter
- Get Center of the helix track parametrization
- (based on AliRoot/STEER/ESD/AliV0vertexer.cxx)
-*/
+ * Copied from AliV0ReaderV1::GetHelixCenter
+ * Get Center of the helix track parametrization
+ * (based on AliRoot/STEER/ESD/AliV0vertexer.cxx)
+ */
 void AliAnalysisTaskSexaquark::GetHelixCenter(const AliExternalTrackParam* track, Double_t center[2], const Double_t b) {
 
     Int_t charge = track->Charge();
@@ -6040,8 +6066,8 @@ void AliAnalysisTaskSexaquark::GetHelixCenter(const AliExternalTrackParam* track
 }
 
 /*
-  Calculate position of a point on a track and some derivatives
-  (Copied from `AliRoot/STEER/STEERBase/AliExternalTrackParam.cxx`)
+ * Calculate position of a point on a track and some derivatives
+ * (Copied from `AliRoot/STEER/STEERBase/AliExternalTrackParam.cxx`)
  */
 void AliAnalysisTaskSexaquark::Evaluate(const Double_t* h, Double_t t, Double_t r[3], Double_t g[3], Double_t gg[3]) {
     Double_t phase = h[4] * t + h[2];
@@ -6072,9 +6098,9 @@ void AliAnalysisTaskSexaquark::Evaluate(const Double_t* h, Double_t t, Double_t 
 /*** ======================= ***/
 
 /*
- Correct initialization of a KFParticle.
- (Copied from `AliPhysics/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.cxx`)
-*/
+ * Correct initialization of a KFParticle.
+ * (Copied from `AliPhysics/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.cxx`)
+ */
 KFParticle AliAnalysisTaskSexaquark::CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge) {
 
     Double_t fP[6];
@@ -6135,9 +6161,9 @@ KFParticle AliAnalysisTaskSexaquark::CreateKFParticle(AliExternalTrackParam& tra
 }
 
 /*
- Correct initialization of a KFVertex.
- (Copied from `AliPhysics/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.cxx`)
-*/
+ * Correct initialization of a KFVertex.
+ * (Copied from `AliPhysics/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.cxx`)
+ */
 KFVertex AliAnalysisTaskSexaquark::CreateKFVertex(const AliVVertex& vertex) {
 
     Double_t param[6];
@@ -6158,11 +6184,11 @@ KFVertex AliAnalysisTaskSexaquark::CreateKFVertex(const AliVVertex& vertex) {
 }
 
 /*
- Transport a KFParticle to the point of closest approach w.r.t. another KFParticle.
- - Uses: `fPDG`
- - Input: `kfThis`, `kfOther`, `pdgThis`, `chargeThis`
- - Return: `kfTransported`
-*/
+ * Transport a KFParticle to the point of closest approach w.r.t. another KFParticle.
+ * - Uses: `fPDG`
+ * - Input: `kfThis`, `kfOther`, `pdgThis`, `chargeThis`
+ * - Return: `kfTransported`
+ */
 KFParticle AliAnalysisTaskSexaquark::TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis) {
 
     float dS[2];
@@ -6769,8 +6795,8 @@ void AliAnalysisTaskSexaquark::GetDStoParticleBz( float Bz, const KFParticleBase
 // clang-format on
 
 /*
- Clear all containers.
-*/
+ * Clear all containers.
+ */
 void AliAnalysisTaskSexaquark::ClearContainers() {
 
     /*  */
@@ -6835,7 +6861,7 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
 /**  External Files  **/
 /*** ============== ***/
 
-/*!
+/*
  * Open the respective sim.log that corresponds to the RunNumber+DirNumber that's being analyzed.
  * From it, read the injected anti-sexaquark and struck nucleon kinematics and store them into a tree.
  * NOTE: it must be executed ONLY when analyzing SIGNAL SIMs, protection PENDING!
@@ -6880,7 +6906,7 @@ Bool_t AliAnalysisTaskSexaquark::LoadLogsIntoTree() {
     Int_t tInjected_ReactionID;
 
     Char_t ReactionChannelLetter = AliEn_SimSubSet[0];
-    Double_t InjectedSexaquarkMass = TString(AliEn_SimSubSet(1, 4)).Atof();
+    Float_t InjectedSexaquarkMass = TString(AliEn_SimSubSet(1, 4)).Atof();
 
     /* Prepare branches */
 
