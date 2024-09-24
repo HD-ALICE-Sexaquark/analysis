@@ -5,7 +5,7 @@
  * Build primary and secondary indices for each tree.
  * Save the indexed trees to a new output file with `_indexed` appended to the original filename.
  */
-void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
+void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root", TString ReactionLetter = "A") {
 
     TFile* InputFile = TFile::Open(InputFileName, "READ");
     if (!InputFile || InputFile->IsZombie()) {
@@ -47,8 +47,17 @@ void Trees_BuildIndices(TString InputFileName = "AnalysisResults.root") {
     TTree* InputEventsTree;
     TTree* NewEventsTree;
 
-    std::vector<TString> TreeNames = {"Injected",    "Events",      "MCParticles",    "PiPluses",  "PiMinuses",
-                                      "AntiProtons", "AntiLambdas", "KaonsZeroShort", "Sexaquarks"};
+    std::vector<TString> TreeNames = {"Injected", "Events", "MCParticles", "Sexaquarks", "AntiLambdas", "AntiProtons", "PiPluses"};
+    if (ReactionLetter == "A") {
+        TreeNames.push_back("KaonsZeroShort");
+        TreeNames.push_back("PiMinuses");
+    } else if (ReactionLetter == "D") {
+        TreeNames.push_back("PosKaons");
+    } else if (ReactionLetter == "E") {
+        TreeNames.push_back("PionPairs");
+        TreeNames.push_back("PiMinuses");
+        TreeNames.push_back("PosKaons");
+    }
 
     for (Int_t i = 0; i < (Int_t)TreeNames.size(); i++) {
         InputEventsTree = (TTree*)TreesList->FindObject(TreeNames[i]);
