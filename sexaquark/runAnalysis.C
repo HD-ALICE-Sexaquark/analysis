@@ -141,9 +141,9 @@ void runAnalysis(TString Mode,            // "local", "grid"
         alienHandler->SetCheckCopy(kFALSE);
         alienHandler->AddIncludePath(
             "-I. -I$ROOTSYS/include -I$ALICE_ROOT -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include -I$KFPARTICLE_ROOT/include");
-        alienHandler->SetAdditionalLibs("AliAnalysisTaskSexaquark.cxx AliAnalysisTaskSexaquark.h AliAnalysisTaskSexaquark_Structs.h");
+        alienHandler->SetAdditionalLibs("AliAnalysisTaskSexaquark.cxx AliAnalysisTaskSexaquark.h");
         alienHandler->SetAnalysisSource("AliAnalysisTaskSexaquark.cxx");
-        alienHandler->SetAliPhysicsVersion("vAN-20240807_O2-1");
+        alienHandler->SetAliPhysicsVersion("vAN-20240917_O2-1");
         alienHandler->SetExecutableCommand("aliroot -l -q -b");
         alienHandler->SetGridDataDir(GridDataDir);
         if (!IsMC) alienHandler->SetRunPrefix("000");
@@ -151,6 +151,7 @@ void runAnalysis(TString Mode,            // "local", "grid"
         alienHandler->SetDataPattern(GridDataPattern);
         alienHandler->SetTTL(3600);
         alienHandler->SetOutputToRunNo(kTRUE);
+        alienHandler->SetOutputFiles("AnalysisResults.root");
         alienHandler->SetKeepLogs(kTRUE);
         alienHandler->SetMergeViaJDL(kFALSE);
         // alienHandler->SetMaxMergeStages(1);

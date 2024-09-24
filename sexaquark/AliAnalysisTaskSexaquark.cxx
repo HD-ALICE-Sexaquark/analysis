@@ -894,7 +894,7 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     if (fIsFirstEvent) {
         if (fAliEnPath == "") AliInfo("!! No luck finding fAliEnPath !!");
         AliInfoF("!! fAliEnPath: %s !!", fAliEnPath.Data());
-        LoadLogsIntoTree();
+        if (fReadSignalLogs) LoadLogsIntoTree();
         // if (LoadLogsIntoTree()) fTree_Injected->Print();
         fIsFirstEvent = kFALSE;
     }
@@ -1717,7 +1717,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
         }  // end of anti-lambda && K0s condition
-    }  // end of loop over MC particles
+    }      // end of loop over MC particles
 }
 
 /*
@@ -1953,7 +1953,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
         if (!ThisTree1->GetBranch("Idx_True")) ThisTree1->Branch("Idx_True", &mcIdx);
         else ThisTree1->SetBranchAddress("Idx_True", &mcIdx);
-        
+
         if (!ThisTree1->GetBranch("Px")) ThisTree1->Branch("Px", &tTrack_Px);
         else ThisTree1->SetBranchAddress("Px", &tTrack_Px);
 
@@ -1962,7 +1962,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
         if (!ThisTree1->GetBranch("Pz")) ThisTree1->Branch("Pz", &tTrack_Pz);
         else ThisTree1->SetBranchAddress("Pz", &tTrack_Pz);
-        
+
         if (!ThisTree1->GetBranch("Charge")) ThisTree1->Branch("Charge", &tTrack_Charge);
         else ThisTree1->SetBranchAddress("Charge", &tTrack_Charge);
 
@@ -2212,7 +2212,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             tTrack_ReactionID = getReactionIdx_fromEsdIdx[esdIdxTrack];
             ThisTree2->Fill();
         }  // end of loop over PID hypotheses
-    }  // end of loop over tracks
+    }      // end of loop over tracks
 
     if (fDoQA) fHist_QA["NSelectedTracks"]->Fill(nSelectedTracks);
 }
@@ -3333,7 +3333,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
             f2DHist_V0s_ArmenterosPodolanski["Signal"]->Fill(vertex.AlphaV0(), vertex.PtArmV0());
         }  // end of loop over pos. tracks
-    }  // end of loop over neg. tracks
+    }      // end of loop over neg. tracks
 }
 
 /*
@@ -3778,7 +3778,7 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0bnegSV")]->Fill(dca_v0b_neg_sv);
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0bposSV")]->Fill(dca_v0b_pos_sv);
         }  // end of loop over K0S
-    }  // end of loop over anti-lambdas
+    }      // end of loop over anti-lambdas
 
     return;
 }
@@ -4285,7 +4285,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             tV0_Pz_Neg = lvTrackNeg.Pz();
             ThisTree2->Fill();
         }  // end of loop over pos. tracks
-    }  // end of loop over neg. tracks
+    }      // end of loop over neg. tracks
 }
 
 /*                                */
@@ -4626,7 +4626,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             tSexaquarkA_Zv_SV = kfAntiSexaquark.GetZ();
             fTree_Sexaquarks->Fill();
         }  // end of loop over K0S
-    }  // end of loop over anti-lambdas
+    }      // end of loop over anti-lambdas
 }
 
 /*
@@ -5026,7 +5026,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
             tSexaquarkD_Zv_SV = kfAntiSexaquark.GetZ();
             fTree_Sexaquarks->Fill();
         }  // end of loop over pos. kaons
-    }  // end of loop over anti-lambdas
+    }      // end of loop over anti-lambdas
 }
 
 /*
@@ -5285,7 +5285,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
 
     if (!fTree_Sexaquarks->GetBranch("DCAppPK")) fTree_Sexaquarks->Branch("DCAppPK", &dca_pp_pk);
     else fTree_Sexaquarks->SetBranchAddress("DCAppPK", &dca_pp_pk);
-    
+
     if (!fTree_Sexaquarks->GetBranch("Chi2ndf")) fTree_Sexaquarks->Branch("Chi2ndf", &chi2_ndf);
     else fTree_Sexaquarks->SetBranchAddress("Chi2ndf", &chi2_ndf);
     // clang-format on
@@ -5476,6 +5476,22 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                 fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAppPK")]->Fill(dca_pp_pk);
                 fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Chi2ndf")]->Fill(chi2_ndf);
 
+                // -- DEBUG -- //
+                // clang-format off
+                AliInfo("!! Anti-Sexaquark Found !!");
+                AliInfoF("RN: %i, EV: %i, DIR: %i", fRunNumber, fEventNumber, fDirNumber);
+                AliInfoF("AL: %i, PK: %i, PP: %i, ESDs: %i %i %i %i %i, MC: %i %i %i %i %i, MC Mothers: %i %i %i %i %i, Reaction: %i %i %i %i %i",
+                         idxAntiLambda, esdIdxPosKaon, idxPionPair,
+                         esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda, esdIdxPosKaon, esdIdxNeg_PionPair, esdIdxPos_PionPair,
+                         getMcIdx_fromEsdIdx[esdIdxNeg_AntiLambda], getMcIdx_fromEsdIdx[esdIdxPos_AntiLambda], getMcIdx_fromEsdIdx[esdIdxPosKaon],
+                         getMcIdx_fromEsdIdx[esdIdxNeg_PionPair], getMcIdx_fromEsdIdx[esdIdxPos_PionPair], //
+                         getMotherMcIdx_fromEsdIdx[esdIdxNeg_AntiLambda], getMotherMcIdx_fromEsdIdx[esdIdxPos_AntiLambda], getMotherMcIdx_fromEsdIdx[esdIdxPosKaon],
+                         getMotherMcIdx_fromEsdIdx[esdIdxNeg_PionPair], getMotherMcIdx_fromEsdIdx[esdIdxPos_PionPair],  //
+                         getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda], getReactionIdx_fromEsdIdx[esdIdxPos_AntiLambda], getReactionIdx_fromEsdIdx[esdIdxPosKaon],
+                         getReactionIdx_fromEsdIdx[esdIdxNeg_PionPair], getReactionIdx_fromEsdIdx[esdIdxPos_PionPair]);
+                // clang-format on
+                // -- END OF DEBUG -- //
+
                 tSexaquarkE_ReactionID = getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
                 tSexaquarkE_Px = lvAntiSexaquark.Px();
                 tSexaquarkE_Py = lvAntiSexaquark.Py();
@@ -5486,8 +5502,8 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                 tSexaquarkE_Zv_SV = kfAntiSexaquark.GetZ();
                 fTree_Sexaquarks->Fill();
             }  // end of loop over K+
-        }  // end of loop over pi+pi- pairs
-    }  // end of loop over anti-lambdas
+        }      // end of loop over pi+pi- pairs
+    }          // end of loop over anti-lambdas
 }
 
 /*
@@ -5719,7 +5735,6 @@ void AliAnalysisTaskSexaquark::KalmanPosKaonPairFinder() {
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "Pz")]->Fill(lvPosKaonPair.Pz());
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "Pt")]->Fill(lvPosKaonPair.Pt());
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "OpeningAngle")]->Fill(opening_angle);
-
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCAbtwKaons")]->Fill(dca_btw_kaons);
             fHist_PosKaonPairs[std::make_tuple("Found", "All", "DCApkaSV")]->Fill(dca_pka_sv);
@@ -5745,15 +5760,13 @@ void AliAnalysisTaskSexaquark::KalmanPosKaonPairFinder() {
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvPosKaonPair.Pz());
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvPosKaonPair.Pt());
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "OpeningAngle")]->Fill(opening_angle);
-
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCAbtwKaons")]->Fill(dca_btw_kaons);
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCApkaSV")]->Fill(dca_pka_sv);
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "DCApkbSV")]->Fill(dca_pkb_sv);
             fHist_PosKaonPairs[std::make_tuple("Found", "Signal", "Chi2ndf")]->Fill(chi2ndf);
-
         }  // end of loop over pos. tracks
-    }  // end of loop over neg. tracks
+    }      // end of loop over neg. tracks
 }
 
 /*
