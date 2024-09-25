@@ -164,8 +164,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* Channel H */
     void KalmanPosKaonPairFinder();
-    Bool_t PassesPosKaonPairCuts(KFParticleMother kfPosKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB, TLorentzVector lvPosKaonPair,
-                                 TLorentzVector lvPosKaonA, TLorentzVector lvPosKaonB);
+    Bool_t PassesPosKaonPairCuts(Bool_t isSignal, KFParticleMother kfPosKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB,
+                                 TLorentzVector lvPosKaonPair, TLorentzVector lvPosKaonA, TLorentzVector lvPosKaonB);
 
     /* Utilities */
     void ClearContainers();
@@ -252,6 +252,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TTree* fTree_AntiLambdas;     //!
     TTree* fTree_KaonsZeroShort;  //!
     TTree* fTree_PionPairs;       //!
+    TTree* fTree_KaonPairs;       //!
     TTree* fTree_Sexaquarks;      //!
 
     /*** Histograms ***/
@@ -319,8 +320,16 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /** Channel H / Pos. Kaon Pairs Histograms **/
 
-    TH1F* fHist_PosKaonPairs_Bookkeep;                                          //!
-    std::map<std::tuple<TString, TString, TString>, TH1F*> fHist_PosKaonPairs;  //! key: `stage, set, property`
+    /*
+     - `0`   : MC Gen.
+     - `10`  : findable
+     - `20+` : effect of cuts on found candidates
+     - `50`  : found candidates that passed all cuts
+     - `60+` : effect of cuts on SIGNAL candidates
+     - `90`  : found SIGNAL candidates that passed all cuts
+    */
+    TH1D* fHist_PosKaonPairs_Bookkeep;                                          //!
+    std::map<std::tuple<TString, TString, TString>, TH1D*> fHist_PosKaonPairs;  //! key: `stage, set, property`
 
     /*** Containers -- vectors and hash tables ***/
     // NOTE: when adding a new one, don't forget to clear it on ClearContainers()!
