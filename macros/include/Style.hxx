@@ -1,17 +1,23 @@
-#ifndef STYLE_HXX
-#define STYLE_HXX
+#ifndef Macros_Style_Hxx
+#define Macros_Style_Hxx
 
-Color_t myRed = kRed + 1;
-Color_t myGreen = kSpring - 8;
-Color_t myBlue = kAzure + 2;
-Color_t myOrange = kOrange + 2;
-Color_t myViolet = kViolet + 2;
-Color_t myYellow = kYellow + 1;
-Color_t myCyan = kCyan + 1;
-Color_t myMagenta = kPink - 8;
-Color_t myBlack = kGray + 3;
+#include "Headers.hxx"
 
-//________________________________________________________________________
+/*  */
+
+// colors based on matplotlib main colors
+TColor myBlue(TColor::GetFreeColorIndex(), 31, 119, 180);
+TColor myOrange(TColor::GetFreeColorIndex(), 255, 127, 14);
+TColor myGreen(TColor::GetFreeColorIndex(), 44, 160, 44);
+TColor myRed(TColor::GetFreeColorIndex(), 214, 39, 40);
+TColor myPurple(TColor::GetFreeColorIndex(), 148, 103, 189);
+TColor myBrown(TColor::GetFreeColorIndex(), 140, 86, 75);
+TColor myPink(TColor::GetFreeColorIndex(), 227, 119, 194);
+TColor myGray(TColor::GetFreeColorIndex(), 127, 127, 127);
+TColor myOlive(TColor::GetFreeColorIndex(), 188, 189, 34);
+TColor myCyan(TColor::GetFreeColorIndex(), 23, 190, 207);
+
+/*  */
 void DrawVerticalLine(Double_t x, Color_t color = kBlack, Style_t style = kDashed, Int_t width = 3) {
     gPad->Update();  // necessary
     Double_t u = (x - gPad->GetX1()) / (gPad->GetX2() - gPad->GetX1());
@@ -24,8 +30,8 @@ void DrawVerticalLine(Double_t x, Color_t color = kBlack, Style_t style = kDashe
     linex->Draw();
 }
 
-//________________________________________________________________________
-void SetMyHistStyle(TH1F *theHist) {
+/*  */
+void SetMyHistStyle(TH1 *theHist) {
     theHist->SetTitle("");
     theHist->SetLineWidth(2);
     theHist->SetFillStyle(0);
@@ -36,7 +42,7 @@ void SetMyHistStyle(TH1F *theHist) {
     theHist->GetXaxis()->SetTitleOffset(1.2);
 }
 
-//________________________________________________________________________
+/*  */
 void SetMyStyle() {
     gStyle->SetPadTickX(1);
     gStyle->SetPadTickY(1);
@@ -48,7 +54,7 @@ void SetMyStyle() {
     gStyle->SetPadLeftMargin(0.15);
 }
 
-//________________________________________________________________________
+/*  */
 void DrawText(TString content, Color_t color = kBlack, Float_t min_x = 0.55, Float_t min_y = 0.8,  //
               Short_t text_h_align = kHAlignCenter, Short_t text_v_align = kVAlignCenter) {
     TPaveText *pav = new TPaveText(min_x, min_y, min_x + 0.3, min_y + 0.1, "NDC");  // x1,y1,x2,y2
@@ -63,27 +69,32 @@ void DrawText(TString content, Color_t color = kBlack, Float_t min_x = 0.55, Flo
     pav->Draw();
 }
 
-//________________________________________________________________________
+/*  */
 void SetMy2DHistStyle(TH2F *theHist) {
+
     theHist->SetTitle("");
+
     theHist->GetYaxis()->SetTitleSize(0.04);
     theHist->GetYaxis()->SetTitleOffset(1.2);
+    theHist->GetYaxis()->SetTitleFont(62);
+
     theHist->GetXaxis()->SetTitleSize(0.04);
     theHist->GetXaxis()->SetTitleOffset(1.2);
+    theHist->GetXaxis()->SetTitleFont(62);
+
     theHist->GetZaxis()->SetMaxDigits(3);
     theHist->GetZaxis()->SetTickLength(0.02);
 }
 
-//________________________________________________________________________
+/*  */
 void SetMy2DStyle() {
+    gStyle->SetOptStat(0);
+
+    gStyle->SetLineWidth(2);
+
     gStyle->SetPadTickX(1);
     gStyle->SetPadTickY(1);
-    gStyle->SetLineWidth(2);
-    // only modify bottom and top margins
-    gStyle->SetPadTopMargin(0.05);
-    gStyle->SetPadBottomMargin(0.15);
-    gStyle->SetOptStat(0);
-    // set palette color
+
     gStyle->SetPalette(kDarkBodyRadiator);
     gStyle->SetNumberContours(255);
 }

@@ -1,20 +1,19 @@
-#ifndef UTILITIES_HXX
-#define UTILITIES_HXX
+#ifndef Macros_Utilities_hxx
+#define Macros_Utilities_hxx
 
 #include "Headers.hxx"
 
-//_____________________________________________________________________________
-void ParseTreeFilename(TString name, TString &dirname, TString &filename, TString &listname, TString &treename) {
-    //
-    // Get information from the name
-    // - input: name
-    // - outputs: dirname, filename, listname, treename
-    //
+/*
+ * Get information from the name
+ * - input: name
+ * - outputs: dirname, filename, listname, objname
+ */
+void ParseObjectPath(TString name, TString &dirname, TString &filename, TString &listname, TString &objname) {
 
     dirname.Clear();
     filename.Clear();
     listname.Clear();
-    treename.Clear();
+    objname.Clear();
 
     // find where .root is
     TString dot_root = ".root";
@@ -26,83 +25,96 @@ void ParseTreeFilename(TString name, TString &dirname, TString &filename, TStrin
     dirname = first_half(0, first_half.Last('/'));
     filename = first_half(first_half.Last('/') + 1, first_half.Length());
 
-    // second half: after .root, to extract listname and treename
+    // second half: after .root, to extract listname and objname
     TString second_half = name(js + dot_root.Length(), name.Length() - js);
     listname = second_half(1, second_half.Last('/') - 1);
-    treename = second_half(second_half.Last('/') + 1, second_half.Length());
+    objname = second_half(second_half.Last('/') + 1, second_half.Length());
 
-    // debug
     /*
-      std::cout << "ParseTreeFilename :: dirname  = " << dirname << std::endl;
-      std::cout << "ParseTreeFilename :: filename = " << filename << std::endl;
-      std::cout << "ParseTreeFilename :: listname = " << listname << std::endl;
-      std::cout << "ParseTreeFilename :: treename = " << treename << std::endl;
+    std::cout << ".. Utilities :: ParseObjectPath :: dirname  = " << dirname << std::endl;
+    std::cout << ".. Utilities :: ParseObjectPath :: filename = " << filename << std::endl;
+    std::cout << ".. Utilities :: ParseObjectPath :: listname = " << listname << std::endl;
+    std::cout << ".. Utilities :: ParseObjectPath :: objname = " << objname << std::endl;
     */
 }
 
-//_____________________________________________________________________________
-void AddFileToList(TList *list, const char *name) {
-    //
-    // Add a new file to this list
-    //
+/*
+ * Add a single object (from the path) to this list
+ */
+void AddSingleObject(TList *list, const char *name) {
 
-    TString dirname, filename, listname, treename;
-    ParseTreeFilename(name, dirname, filename, listname, treename);
+    TString dirname, filename, listname, objname;
+    ParseObjectPath(name, dirname, filename, listname, objname);
 
     TFile *input_file = new TFile(dirname + "/" + filename, "READ");
     TList *input_list = (TList *)input_file->Get(listname);
-    TTree *input_tree = (TTree *)input_list->FindObject(treename);
 
-    list->Add(input_tree);
+    TObject *obj = input_list->FindObject(objname);
+
+    TString ClassName = obj->ClassName();
+
+    // std::cout << ".. Utilities :: AddSingleObject :: Adding " << name << " .." << std::endl;
+
+    if (ClassName == "TH1F") {
+        TH1F *input_hist = (TH1F *)input_list->FindObject(objname);
+        TH1F *cloned_hist = (TH1F *)input_hist->Clone();
+        cloned_hist->SetDirectory(0);
+        list->Add(cloned_hist);
+    } else if (ClassName == "TH1D") {
+        TH1D *input_hist = (TH1D *)input_list->FindObject(objname);
+        TH1D *cloned_hist = (TH1D *)input_hist->Clone();
+        cloned_hist->SetDirectory(0);
+        list->Add(cloned_hist);
+    } else if (ClassName == "TH2F") {
+        TH2F *input_hist = (TH2F *)input_list->FindObject(objname);
+        TH2F *cloned_hist = (TH2F *)input_hist->Clone();
+        cloned_hist->SetDirectory(0);
+        list->Add(cloned_hist);
+    } else if (ClassName == "TTree") {
+        TTree *input_tree = (TTree *)input_list->FindObject(objname);
+        TTree *cloned_tree = input_tree->CloneTree();
+        cloned_tree->SetDirectory(0);
+        list->Add(cloned_tree);
+    } else {
+        std::cerr << "!! Utilities :: AddSingleObject :: Object " << objname << " is not a TH1F, TH1D, TH2F nor TTree !!" << std::endl;
+    }
+
+    input_file->Close();
 }
 
-//_____________________________________________________________________________
-void AddTreesToList(TList *list, const char *name) {
-    //
-    //
-    //
+/*
+ * Add multiple objects (from the path) to this list
+ */
+void AddObjects(TList *list, const char *name) {
 
-    TString directory, filename, listname, treename;
-    ParseTreeFilename(name, directory, filename, listname, treename);
+    TString directory, filename, listname, objname;
+    ParseObjectPath(name, directory, filename, listname, objname);
 
     // case A: no wildcard
     if (!filename.MaybeWildcard() && !directory.MaybeWildcard()) {
-        // printf("AddTreesToList :: wildcard not found\n");
-        // printf("AddTreesToList :: Adding %s\n", name);
-        AddFileToList(list, name);
+        AddSingleObject(list, name);
         return;
     }
 
     // quickly parse the top directory, too
     TString top_directory = directory(0, directory.Last('/'));
-    // printf("AddTreesToList :: top_directory = %s\n", top_directory.Data());
+    // printf("AddObjects :: top_directory = %s\n", top_directory.Data());
 
     // prepare the extract all the directories
     TList dir_list;
     const char *one_dir;
 
     if (directory.MaybeWildcard()) {
-        // printf("AddTreesToList :: wildcard found on directory path\n");
+        // printf("AddObjects :: wildcard found on directory path\n");
 
         void *top_dir = gSystem->OpenDirectory(top_directory);
 
         if (top_dir) {
             TRegexp re(directory, kTRUE);
-            // printf("AddTreesToList :: opened top_directory\n");
             while ((one_dir = gSystem->GetDirEntry(top_dir))) {
-                // printf("AddTreesToList :: one_dir = %s\n", one_dir);
                 if (!strcmp(one_dir, ".") || !strcmp(one_dir, "..")) {
-                    // printf("AddTreesToList :: -> excluded 1\n");
                     continue;
                 }
-                /*
-                        TString s = one_dir;
-                        if (directory != one_dir && s.Index(re) == kNPOS) {
-                          printf("AddTreesToList :: -> excluded 2\n");
-                          continue;
-                        }
-                 */
-                // printf("AddTreesToList :: >> one_dir = %s\n", one_dir);
                 dir_list.Add(new TObjString(one_dir));
             }
             gSystem->FreeDirectory(top_dir);
@@ -111,13 +123,10 @@ void AddTreesToList(TList *list, const char *name) {
             dir_list.Sort();
         }
     } else {
-        // no wilcard on directory, get only di
+        // no wilcard on directory, get single dir
         one_dir = directory(directory.Last('/') + 1, directory.Length()).Data();
         dir_list.Add(new TObjString(one_dir));
     }
-
-    // empty line
-    // printf("AddTreesToList ::\n");
 
     // loop over dirs
     TIter next_dir(&dir_list);
@@ -125,20 +134,12 @@ void AddTreesToList(TList *list, const char *name) {
     while ((current_dir = (TObjString *)next_dir())) {
 
         one_dir = current_dir->GetName();
-        // printf("AddTreesToList :: td+od = %s/%s\n", top_directory.Data(), one_dir);
 
-        // no wildcard on file
         if (!filename.MaybeWildcard()) {
-            // printf("AddTreesToList :: wildcard not found on filename\n");
-            // printf("AddTreesToList :: Adding %s/%s/%s/%s/%s\n", top_directory.Data(), one_dir, filename.Data(), listname.Data(),
-            // treename.Data());
-            AddFileToList(
-                list, TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, filename.Data(), listname.Data(), treename.Data()));
+            AddSingleObject(list, TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, filename.Data(), listname.Data(), objname.Data()));
             continue;
         }
 
-        // if there's a wildcard on the file
-        // printf("AddTreesToList :: wildcard found on filename\n");
         TList file_list;
         const char *one_file;
 
@@ -156,7 +157,7 @@ void AddTreesToList(TList *list, const char *name) {
                 if (filename != one_file && s.Index(re) == kNPOS) {
                     continue;
                 }
-                // printf("AddTreesToList :: >> one_file = %s\n", one_file);
+                printf("AddObjects :: >> one_file = %s\n", one_file);
                 file_list.Add(new TObjString(one_file));
             }
             gSystem->FreeDirectory(dir);
@@ -167,19 +168,14 @@ void AddTreesToList(TList *list, const char *name) {
             // printf("somethin happenud\n");
         }
 
-        // empty line
-        // printf("AddTreesToList ::\n");
-
         // loop over files
         TIter next_file(&file_list);
         TObjString *current_file;
         while ((current_file = (TObjString *)next_file())) {
 
             one_file = current_file->GetName();
-            // printf("AddTreesToList :: Adding %s/%s/%s/%s/%s\n", top_directory.Data(), one_dir, one_file, listname.Data(),
-            // treename.Data());
-            AddFileToList(list,
-                          TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, one_file, listname.Data(), treename.Data()));
+            // printf("AddObjects :: Adding %s/%s/%s/%s/%s\n", top_directory.Data(), one_dir, one_file, listname.Data(), objname.Data());
+            AddSingleObject(list, TString::Format("%s/%s/%s/%s/%s", top_directory.Data(), one_dir, one_file, listname.Data(), objname.Data()));
         }  // end of loop over files
 
         file_list.Delete();
