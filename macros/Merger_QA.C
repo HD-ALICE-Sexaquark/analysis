@@ -4,16 +4,23 @@
 /*
  * Merge all files of a directory as histograms
  */
-void Merger_QA(TString input_dir = "/home/ceres/borquez/some/output/A1.73_15o_latest", TString output_dir = "output/") {
+void Merger_QA(  //
+                 // TString input_dir = "/home/ceres/borquez/some/output/A_bkg_15o_latest",  //
+                 // TString pattern = "AnalysisResults_24514*.root",                         //
+    TString input_dir = "/home/ceres/borquez/some/output/A_bkg_18qr_latest",  //
+    TString pattern = "AnalysisResults_2*.root",                              //
+    TString output_dir = "output") {
 
     TDatabasePDG DB_PDG;
-    TString FilenamesPattern = input_dir.Contains("15o") ? "AnalysisResults_246991*.root" : "AnalysisResults_29759*.root";
     TString DirBaseName = gSystem->BaseName(input_dir);
+
+    TString InputListName;
 
     /* Prepare output */
 
     system("mkdir -p " + output_dir);
-    TFile *OutputFile = new TFile(output_dir + "QA_" + DirBaseName + ".root", "RECREATE");
+    TString OutputFilename = output_dir + "/QA_" + DirBaseName + ".root";
+    TFile *OutputFile = new TFile(OutputFilename, "RECREATE");
 
     TList *OutputList_QA_Hists = new TList();
 
@@ -21,99 +28,102 @@ void Merger_QA(TString input_dir = "/home/ceres/borquez/some/output/A1.73_15o_la
     /*** Case 1: Trees ***/
     /***               ***/
 
-    TString InputListName = "Trees";
-    TString InputTreeName = "Injected";
+    if (!input_dir.Contains("bkg")) {
 
-    TList *ListOfTrees = new TList();
+        InputListName = "Trees";
+        TString InputTreeName = "Injected";
 
-    TString TreePath = input_dir + "/" + FilenamesPattern + "/" + InputListName + "/" + InputTreeName;
-    std::cout << "TreePath = " << TreePath << std::endl;
-    AddObjects(ListOfTrees, TreePath.Data());
+        TList *ListOfTrees = new TList();
 
-    /* Prepare histograms */
+        TString TreePath = input_dir + "/" + pattern + "/" + InputListName + "/" + InputTreeName;
+        std::cout << "TreePath = " << TreePath << std::endl;
+        AddObjects(ListOfTrees, TreePath.Data());
 
-    TH1F *hInjected_Pt = new TH1F("hInjected_Pt", ";p_{T} (GeV/c);Counts", 200, -0.5, 5.5);
-    TH1F *hInjected_Phi = new TH1F("hInjected_Phi", ";#phi (rad);Counts", 200, -TMath::Pi() - 1., TMath::Pi() + 1.);
-    TH1F *hInjected_Rapidity = new TH1F("hInjected_Rapidity", ";Rapidity;Counts", 200, -0.9, 0.9);
+        /* Prepare histograms */
 
-    TH1F *hNucleon_P = new TH1F("hNucleon_Pt", ";p (GeV/c);Counts", 200, 0.2, 0.3);
-    TH1F *hNucleon_Phi = new TH1F("hNucleon_Phi", ";#phi (rad);Counts", 200, -TMath::Pi() - 1., TMath::Pi() + 1.);
-    TH1F *hNucleon_Theta = new TH1F("hNucleon_Theta", ";#theta (rad);Counts", 200, 0., TMath::Pi());
-    TH1F *hNucleon_Px = new TH1F("hNucleon_Px", ";p_{x} (GeV/c);Counts", 200, -0.3, 0.3);
-    TH1F *hNucleon_Py = new TH1F("hNucleon_Py", ";p_{y} (GeV/c);Counts", 200, -0.3, 0.3);
-    TH1F *hNucleon_Pz = new TH1F("hNucleon_Pz", ";p_{z} (GeV/c);Counts", 200, -0.3, 0.3);
+        TH1F *hInjected_Pt = new TH1F("hInjected_Pt", ";p_{T} (GeV/c);Counts", 200, -0.5, 5.5);
+        TH1F *hInjected_Phi = new TH1F("hInjected_Phi", ";#phi (rad);Counts", 200, -TMath::Pi() - 1., TMath::Pi() + 1.);
+        TH1F *hInjected_Rapidity = new TH1F("hInjected_Rapidity", ";Rapidity;Counts", 200, -0.9, 0.9);
 
-    /* Prepare variables */
+        TH1F *hNucleon_P = new TH1F("hNucleon_P", ";p (GeV/c);Counts", 200, 0.2, 0.3);
+        TH1F *hNucleon_Phi = new TH1F("hNucleon_Phi", ";#phi (rad);Counts", 200, -TMath::Pi() - 1., TMath::Pi() + 1.);
+        TH1F *hNucleon_Theta = new TH1F("hNucleon_Theta", ";#theta (rad);Counts", 200, 0., TMath::Pi());
+        TH1F *hNucleon_Px = new TH1F("hNucleon_Px", ";p_{x} (GeV/c);Counts", 200, -0.3, 0.3);
+        TH1F *hNucleon_Py = new TH1F("hNucleon_Py", ";p_{y} (GeV/c);Counts", 200, -0.3, 0.3);
+        TH1F *hNucleon_Pz = new TH1F("hNucleon_Pz", ";p_{z} (GeV/c);Counts", 200, -0.3, 0.3);
 
-    Float_t Injected_Px;
-    Float_t Injected_Py;
-    Float_t Injected_Pz;
-    Float_t Injected_M;
+        /* Prepare variables */
 
-    TLorentzVector Sexaquark;
+        Float_t Injected_Px;
+        Float_t Injected_Py;
+        Float_t Injected_Pz;
+        Float_t Injected_M;
 
-    Int_t Nucleon_PdgCode;
-    Float_t Nucleon_Px;
-    Float_t Nucleon_Py;
-    Float_t Nucleon_Pz;
-    Float_t Nucleon_M;
+        TLorentzVector Sexaquark;
 
-    TLorentzVector Nucleon;
+        Int_t Nucleon_PdgCode;
+        Float_t Nucleon_Px;
+        Float_t Nucleon_Py;
+        Float_t Nucleon_Pz;
+        Float_t Nucleon_M;
 
-    /* Loop over trees */
+        TLorentzVector Nucleon;
 
-    TIter next(ListOfTrees);
-    while (TObject *obj = next()) {
+        /* Loop over trees */
 
-        TTree *CurrentTree = (TTree *)obj;
+        TIter next(ListOfTrees);
+        while (TObject *obj = next()) {
 
-        /* Set branches */
+            TTree *CurrentTree = (TTree *)obj;
 
-        CurrentTree->SetBranchAddress("Px", &Injected_Px);
-        CurrentTree->SetBranchAddress("Py", &Injected_Py);
-        CurrentTree->SetBranchAddress("Pz", &Injected_Pz);
-        CurrentTree->SetBranchAddress("M", &Injected_M);
+            /* Set branches */
 
-        CurrentTree->SetBranchAddress("PdgCode_Nucleon", &Nucleon_PdgCode);
-        CurrentTree->SetBranchAddress("Px_Nucleon", &Nucleon_Px);
-        CurrentTree->SetBranchAddress("Py_Nucleon", &Nucleon_Py);
-        CurrentTree->SetBranchAddress("Pz_Nucleon", &Nucleon_Pz);
+            CurrentTree->SetBranchAddress("Px", &Injected_Px);
+            CurrentTree->SetBranchAddress("Py", &Injected_Py);
+            CurrentTree->SetBranchAddress("Pz", &Injected_Pz);
+            CurrentTree->SetBranchAddress("M", &Injected_M);
 
-        /* Fill histograms */
+            CurrentTree->SetBranchAddress("PdgCode_Nucleon", &Nucleon_PdgCode);
+            CurrentTree->SetBranchAddress("Px_Nucleon", &Nucleon_Px);
+            CurrentTree->SetBranchAddress("Py_Nucleon", &Nucleon_Py);
+            CurrentTree->SetBranchAddress("Pz_Nucleon", &Nucleon_Pz);
 
-        for (Int_t i = 0; i < CurrentTree->GetEntries(); i++) {
-            CurrentTree->GetEntry(i);
+            /* Fill histograms */
 
-            Sexaquark.SetXYZM(Injected_Px, Injected_Py, Injected_Pz, Injected_M);
+            for (Int_t i = 0; i < CurrentTree->GetEntries(); i++) {
+                CurrentTree->GetEntry(i);
 
-            Nucleon_M = DB_PDG.GetParticle(Nucleon_PdgCode)->Mass();
-            Nucleon.SetXYZM(Nucleon_Px, Nucleon_Py, Nucleon_Pz, Nucleon_M);
+                Sexaquark.SetXYZM(Injected_Px, Injected_Py, Injected_Pz, Injected_M);
 
-            hInjected_Pt->Fill(Sexaquark.Pt());
-            hInjected_Phi->Fill(Sexaquark.Phi());
-            hInjected_Rapidity->Fill(Sexaquark.Rapidity());
+                Nucleon_M = DB_PDG.GetParticle(Nucleon_PdgCode)->Mass();
+                Nucleon.SetXYZM(Nucleon_Px, Nucleon_Py, Nucleon_Pz, Nucleon_M);
 
-            hNucleon_P->Fill(Nucleon.P());
-            hNucleon_Phi->Fill(Nucleon.Phi());
-            hNucleon_Theta->Fill(Nucleon.Theta());
-            hNucleon_Px->Fill(Nucleon.Px());
-            hNucleon_Py->Fill(Nucleon.Py());
-            hNucleon_Pz->Fill(Nucleon.Pz());
+                hInjected_Pt->Fill(Sexaquark.Pt());
+                hInjected_Phi->Fill(Sexaquark.Phi());
+                hInjected_Rapidity->Fill(Sexaquark.Rapidity());
+
+                hNucleon_P->Fill(Nucleon.P());
+                hNucleon_Phi->Fill(Nucleon.Phi());
+                hNucleon_Theta->Fill(Nucleon.Theta());
+                hNucleon_Px->Fill(Nucleon.Px());
+                hNucleon_Py->Fill(Nucleon.Py());
+                hNucleon_Pz->Fill(Nucleon.Pz());
+            }
         }
+
+        /* Save histograms */
+
+        OutputList_QA_Hists->Add(hInjected_Pt);
+        OutputList_QA_Hists->Add(hInjected_Phi);
+        OutputList_QA_Hists->Add(hInjected_Rapidity);
+
+        OutputList_QA_Hists->Add(hNucleon_P);
+        OutputList_QA_Hists->Add(hNucleon_Phi);
+        OutputList_QA_Hists->Add(hNucleon_Theta);
+        OutputList_QA_Hists->Add(hNucleon_Px);
+        OutputList_QA_Hists->Add(hNucleon_Py);
+        OutputList_QA_Hists->Add(hNucleon_Pz);
     }
-
-    /* Save histograms */
-
-    OutputList_QA_Hists->Add(hInjected_Pt);
-    OutputList_QA_Hists->Add(hInjected_Phi);
-    OutputList_QA_Hists->Add(hInjected_Rapidity);
-
-    OutputList_QA_Hists->Add(hNucleon_P);
-    OutputList_QA_Hists->Add(hNucleon_Phi);
-    OutputList_QA_Hists->Add(hNucleon_Theta);
-    OutputList_QA_Hists->Add(hNucleon_Px);
-    OutputList_QA_Hists->Add(hNucleon_Py);
-    OutputList_QA_Hists->Add(hNucleon_Pz);
 
     /***                       ***/
     /*** Case 2: QA Hists (1D) ***/
@@ -136,7 +146,7 @@ void Merger_QA(TString input_dir = "/home/ceres/borquez/some/output/A1.73_15o_la
         ThisHistName = InputHistNames[i];
         ListOfHists = new TList();
 
-        HistPath = input_dir + "/" + FilenamesPattern + "/" + InputListName + "/" + ThisHistName;
+        HistPath = input_dir + "/" + pattern + "/" + InputListName + "/" + ThisHistName;
         AddObjects(ListOfHists, HistPath.Data());
 
         /* Add up histograms */
@@ -185,7 +195,7 @@ void Merger_QA(TString input_dir = "/home/ceres/borquez/some/output/A1.73_15o_la
         ThisHistName = InputHistNames[i];
         ListOfHists = new TList();
 
-        HistPath = input_dir + "/" + FilenamesPattern + "/" + InputListName + "/" + ThisHistName;
+        HistPath = input_dir + "/" + pattern + "/" + InputListName + "/" + ThisHistName;
         AddObjects(ListOfHists, HistPath.Data());
 
         /* Add up histograms */
@@ -227,8 +237,7 @@ void Merger_QA(TString input_dir = "/home/ceres/borquez/some/output/A1.73_15o_la
     /* Close file */
 
     OutputFile->Close();
-    std::cout << ".. Output file " << output_dir + DirBaseName + ".root"
-              << " has been created ." << std::endl;
+    std::cout << ".. Output file " << OutputFilename << " has been created ." << std::endl;
 
     /* Clean memory */
 

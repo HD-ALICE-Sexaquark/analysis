@@ -4,15 +4,16 @@
 /*
  *
  */
-void Merger_ChannelA(TString input_dir = "/home/ceres/borquez/some/output/A1.73_15o_latest", TString output_dir = "output/") {
+void Merger_ChannelA(TString input_dir = "/home/ceres/borquez/some/output/A1.73_15o_latest", TString output_dir = "output") {
 
-    TString FilenamesPattern = input_dir.Contains("15o") ? "AnalysisResults_246991*.root" : "AnalysisResults_29759*.root";
+    TString FilenamesPattern = "AnalysisResults_2*.root";
     TString DirBaseName = gSystem->BaseName(input_dir);
 
     /* Prepare output */
 
     system("mkdir -p " + output_dir);
-    TFile *OutputFile = new TFile(output_dir + DirBaseName + ".root", "RECREATE");
+    TString OutputFilename = output_dir + "/" + DirBaseName + ".root";
+    TFile *OutputFile = new TFile(OutputFilename, "RECREATE");
 
     TList *OutputList_V0s_Hists = new TList();
     TList *OutputList_Sexaquarks_Hists = new TList();
@@ -72,8 +73,8 @@ void Merger_ChannelA(TString input_dir = "/home/ceres/borquez/some/output/A1.73_
 
     InputListName = "Sexaquarks_Hists";
 
-    InputHistNames = {"AntiSexaquarks_Bookkeep"};
-    InputHistXAxisTitle = {""};
+    InputHistNames = {"MCGen_All_AntiSexaquark_Radius", "AntiSexaquarks_Bookkeep"};
+    InputHistXAxisTitle = {"Radius (cm)", ""};
 
     for (Int_t i = 0; i < (Int_t)InputHistNames.size(); i++) {
 
@@ -121,8 +122,7 @@ void Merger_ChannelA(TString input_dir = "/home/ceres/borquez/some/output/A1.73_
     /* Close file */
 
     OutputFile->Close();
-    std::cout << ".. Output file " << output_dir + DirBaseName + ".root"
-              << " has been created ." << std::endl;
+    std::cout << ".. Output file " << OutputFilename << " has been created ." << std::endl;
 
     /* Clean memory */
 
