@@ -22,6 +22,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TLegend.h"
+#include "TLegendEntry.h"
 #include "TLine.h"
 #include "TLorentzVector.h"
 #include "TObjString.h"

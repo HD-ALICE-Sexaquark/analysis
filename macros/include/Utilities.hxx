@@ -157,7 +157,7 @@ void AddObjects(TList *list, const char *name) {
                 if (filename != one_file && s.Index(re) == kNPOS) {
                     continue;
                 }
-                printf("AddObjects :: >> one_file = %s\n", one_file);
+                // printf("AddObjects :: >> one_file = %s\n", one_file);
                 file_list.Add(new TObjString(one_file));
             }
             gSystem->FreeDirectory(dir);

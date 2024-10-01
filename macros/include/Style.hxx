@@ -6,16 +6,27 @@
 /*  */
 
 // colors based on matplotlib main colors
-TColor myBlue(TColor::GetFreeColorIndex(), 31, 119, 180);
-TColor myOrange(TColor::GetFreeColorIndex(), 255, 127, 14);
-TColor myGreen(TColor::GetFreeColorIndex(), 44, 160, 44);
-TColor myRed(TColor::GetFreeColorIndex(), 214, 39, 40);
-TColor myPurple(TColor::GetFreeColorIndex(), 148, 103, 189);
-TColor myBrown(TColor::GetFreeColorIndex(), 140, 86, 75);
-TColor myPink(TColor::GetFreeColorIndex(), 227, 119, 194);
-TColor myGray(TColor::GetFreeColorIndex(), 127, 127, 127);
-TColor myOlive(TColor::GetFreeColorIndex(), 188, 189, 34);
-TColor myCyan(TColor::GetFreeColorIndex(), 23, 190, 207);
+TColor myBlue(TColor::GetFreeColorIndex(), 31. / 255., 119. / 255., 180. / 255., "myBlue");
+TColor myOrange(TColor::GetFreeColorIndex(), 255. / 255., 127. / 255., 14. / 255., "myOrange");
+TColor myGreen(TColor::GetFreeColorIndex(), 44. / 255., 160. / 255., 44. / 255., "myGreen");
+TColor myRed(TColor::GetFreeColorIndex(), 214. / 255., 39. / 255., 40. / 255., "myRed");
+TColor myPurple(TColor::GetFreeColorIndex(), 148. / 255., 103. / 255., 189. / 255., "myPurple");
+TColor myBrown(TColor::GetFreeColorIndex(), 140. / 255., 86. / 255., 75. / 255., "myBrown");
+TColor myPink(TColor::GetFreeColorIndex(), 227. / 255., 119. / 255., 194. / 255., "myPink");
+TColor myGray(TColor::GetFreeColorIndex(), 127. / 255., 127. / 255., 127. / 255., "myGray");
+TColor myOlive(TColor::GetFreeColorIndex(), 188. / 255., 189. / 255., 34. / 255., "myOlive");
+TColor myCyan(TColor::GetFreeColorIndex(), 23. / 255., 190. / 255., 207. / 255., "myCyan");
+
+TColor myTransparentBlue(TColor::GetFreeColorIndex(), 31. / 255., 119. / 255., 180. / 255., "myTransparentBlue", 0.5);
+TColor myTransparentOrange(TColor::GetFreeColorIndex(), 255. / 255., 127. / 255., 14. / 255., "myTransparentOrange", 0.5);
+TColor myTransparentGreen(TColor::GetFreeColorIndex(), 44. / 255., 160. / 255., 44. / 255., "myTransparentGreen", 0.5);
+TColor myTransparentRed(TColor::GetFreeColorIndex(), 214. / 255., 39. / 255., 40. / 255., "myTransparentRed", 0.5);
+TColor myTransparentPurple(TColor::GetFreeColorIndex(), 148. / 255., 103. / 255., 189. / 255., "myTransparentPurple", 0.5);
+TColor myTransparentBrown(TColor::GetFreeColorIndex(), 140. / 255., 86. / 255., 75. / 255., "myTransparentBrown", 0.5);
+TColor myTransparentPink(TColor::GetFreeColorIndex(), 227. / 255., 119. / 255., 194. / 255., "myTransparentPink", 0.5);
+TColor myTransparentGray(TColor::GetFreeColorIndex(), 127. / 255., 127. / 255., 127. / 255., "myTransparentGray", 0.5);
+TColor myTransparentOlive(TColor::GetFreeColorIndex(), 188. / 255., 189. / 255., 34. / 255., "myTransparentOlive", 0.5);
+TColor myTransparentCyan(TColor::GetFreeColorIndex(), 23. / 255., 190. / 255., 207. / 255., "myTransparentCyan", 0.5);
 
 /*  */
 void DrawVerticalLine(Double_t x, Color_t color = kBlack, Style_t style = kDashed, Int_t width = 3) {
@@ -35,11 +46,15 @@ void SetMyHistStyle(TH1 *theHist) {
     theHist->SetTitle("");
     theHist->SetLineWidth(2);
     theHist->SetFillStyle(0);
+
     theHist->GetYaxis()->SetTitleSize(0.04);
-    theHist->GetYaxis()->SetTitleOffset(1.2);
+    theHist->GetYaxis()->SetTitleOffset(1.4);
     theHist->GetYaxis()->SetMaxDigits(3);
+    theHist->GetYaxis()->SetTitleFont(62);
+
     theHist->GetXaxis()->SetTitleSize(0.04);
     theHist->GetXaxis()->SetTitleOffset(1.2);
+    theHist->GetXaxis()->SetTitleFont(62);
 }
 
 /*  */
