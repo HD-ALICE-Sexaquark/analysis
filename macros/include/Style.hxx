@@ -1,5 +1,5 @@
-#ifndef Macros_Style_Hxx
-#define Macros_Style_Hxx
+#ifndef Macros_Style_hxx
+#define Macros_Style_hxx
 
 #include "Headers.hxx"
 
