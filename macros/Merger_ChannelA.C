@@ -5,7 +5,7 @@
  *
  */
 void Merger_ChannelA(TString input_dir = "/home/ceres/borquez/some/output/A1.8_18qr",  //
-                     TString pattern = "AnalysisResults_29759*.root",                  //
+                     TString pattern = "AnalysisResults_2*.root",                      //
                      TString output_dir = "output_new") {
 
     TString DirBaseName = gSystem->BaseName(input_dir);
@@ -26,33 +26,25 @@ void Merger_ChannelA(TString input_dir = "/home/ceres/borquez/some/output/A1.8_1
 
     TString InputListName = "Trees";
 
-    std::vector<TString> InputTreesNames = {"Injected"};
+    std::vector<TString> InputTreesNames = {"Injected", "Sexaquarks"};
 
     TString TreePath;
 
-    TList *ListOfTrees = nullptr;
-    TTree *ThisTree = nullptr;
+    TList *AuxList_Trees = nullptr;
+    TTree *ThisTree = new TTree();
 
     for (TString &tree_name : InputTreesNames) {
 
-        ListOfTrees = new TList();
+        AuxList_Trees = new TList();
+
+        /* Get all trees and load them into the new list */
 
         TreePath = input_dir + "/" + pattern + "/" + InputListName + "/" + tree_name;
-        AddObjects(ListOfTrees, TreePath.Data());
+        AddObjects(AuxList_Trees, TreePath.Data());
 
-        /* Add up trees */
+        /* Add up all trees that belong to the new list */
 
-        ThisTree = new TTree(tree_name, tree_name);
-
-        TIter next(ListOfTrees);
-        while (TObject *obj = next()) {
-            TTree *CurrentTree = (TTree *)obj;
-            if (ThisTree->GetEntries() == 0) {
-                ThisTree = CurrentTree->CloneTree(0);
-            } else {
-                ThisTree->CopyEntries(CurrentTree);
-            }
-        }
+        ThisTree = TTree::MergeTrees(AuxList_Trees);
 
         /* Save tree */
 
@@ -60,7 +52,7 @@ void Merger_ChannelA(TString input_dir = "/home/ceres/borquez/some/output/A1.8_1
 
         /* Clean memory */
 
-        delete ListOfTrees;
+        delete AuxList_Trees;
     }
 
     /***                   ***/
