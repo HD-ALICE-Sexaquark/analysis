@@ -6,7 +6,7 @@
  */
 void Merger_ChannelA(TString input_dir = "/home/ceres/borquez/some/output/A1.8_18qr",  //
                      TString pattern = "AnalysisResults_2*.root",                      //
-                     TString output_dir = "output_new") {
+                     TString output_dir = "output_test") {
 
     TString DirBaseName = gSystem->BaseName(input_dir);
 
@@ -26,7 +26,8 @@ void Merger_ChannelA(TString input_dir = "/home/ceres/borquez/some/output/A1.8_1
 
     TString InputListName = "Trees";
 
-    std::vector<TString> InputTreesNames = {"Injected", "Sexaquarks"};
+    std::vector<TString> InputTreesNames = {"Injected",    "Events",      "PiPluses",       "PiMinuses",
+                                            "AntiProtons", "AntiLambdas", "KaonsZeroShort", "Sexaquarks"};
 
     TString TreePath;
 

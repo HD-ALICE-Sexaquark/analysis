@@ -46,14 +46,28 @@ void AddSingleObject(TList *list, const char *name) {
     TString dirname, filename, listname, objname;
     ParseObjectPath(name, dirname, filename, listname, objname);
 
-    TFile *input_file = new TFile(dirname + "/" + filename, "READ");
+    TFile *input_file = TFile::Open(dirname + "/" + filename, "READ");
+    if (!input_file || input_file->IsZombie()) {
+        std::cerr << "!! Utilities :: AddSingleObject :: Couldn't open file " << filename << " !!" << std::endl;
+        return;
+    }
+
     TList *input_list = (TList *)input_file->Get(listname);
+    if (!input_list || input_file->IsZombie()) {
+        std::cerr << "!! Utilities :: AddSingleObject :: Couldn't find TList " << listname << " in " << filename << " !!" << std::endl;
+        input_file->Close();
+        return;
+    }
 
     TObject *obj = input_list->FindObject(objname);
+    if (!obj || obj->IsZombie()) {
+        std::cerr << "!! Utilities :: AddSingleObject :: Object " << objname << " not found !!" << std::endl;
+        return;
+    }
 
     TString ClassName = obj->ClassName();
 
-    // std::cout << ".. Utilities :: AddSingleObject :: Adding " << name << " .." << std::endl;
+    std::cout << ".. Utilities :: AddSingleObject :: Adding " << name << " .." << std::endl;
 
     if (ClassName == "TH1F") {
         TH1F *input_hist = (TH1F *)input_list->FindObject(objname);
@@ -72,6 +86,7 @@ void AddSingleObject(TList *list, const char *name) {
         list->Add(cloned_hist);
     } else if (ClassName == "TTree") {
         TTree *input_tree = (TTree *)input_list->FindObject(objname);
+        input_tree->SetTreeIndex(0);
         TTree *cloned_tree = input_tree->CloneTree();
         cloned_tree->SetDirectory(0);
         list->Add(cloned_tree);
