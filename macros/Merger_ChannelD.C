@@ -4,9 +4,10 @@
 /*
  *
  */
-void Merger_ChannelD(TString input_dir = "/home/ceres/borquez/some/output/D1.73_15o_latest", TString output_dir = "output") {
+void Merger_ChannelD(TString input_dir = "/home/ceres/borquez/some/output/D1.73_18qr",  //
+                     TString pattern = "AnalysisResults_29759*.root",                   //
+                     TString output_dir = "output_new") {
 
-    TString FilenamesPattern = "AnalysisResults_2*.root";
     TString DirBaseName = gSystem->BaseName(input_dir);
 
     /* Prepare output */
@@ -18,51 +19,58 @@ void Merger_ChannelD(TString input_dir = "/home/ceres/borquez/some/output/D1.73_
     TList *OutputList_V0s_Hists = new TList();
     TList *OutputList_Sexaquarks_Hists = new TList();
 
-    /***                  ***/
-    /*** Case 1: V0 Hists ***/
-    /***                  ***/
+    /***                   ***/
+    /*** Case 1: V0s Hists ***/
+    /***                   ***/
 
     TString InputListName = "V0s_Hists";
 
-    std::vector<TString> InputHistNames = {"Found_All_AntiLambda_Mass", "Found_Signal_AntiLambda_Mass"};
-    std::vector<TString> InputHistXAxisTitle = {"m(#bar{p} #pi^{+}) (GeV/c^{2})", "m(#bar{p} #pi^{+}) (GeV/c^{2})"};
+    std::vector<TString> InputV0s_V0sStageNames = {"Found"};
+    std::vector<TString> InputV0s_V0sSetNames = {"All", "Signal"};
+    std::vector<TString> InputV0s_V0sNames = {"AntiLambda"};
+    std::vector<TString> InputV0s_VarNames = {"Mass", "Pt", "DecayRadius", "OpeningAngle", "CPAwrtPV", "DCAwrtPV", "DCAbtwDau"};
 
     TString ThisHistName;
     TString HistPath;
 
-    TList *ListOfHists;
-    TH1F *ThisHist;
+    TList *ListOfHists = nullptr;
+    TH1F *ThisHist = nullptr;
 
-    for (Int_t i = 0; i < (Int_t)InputHistNames.size(); i++) {
+    for (TString &stage_name : InputV0s_V0sStageNames) {
+        for (TString &set_name : InputV0s_V0sSetNames) {
+            for (TString &v0_name : InputV0s_V0sNames) {
+                for (TString &var_name : InputV0s_VarNames) {
 
-        ThisHistName = InputHistNames[i];
-        ListOfHists = new TList();
+                    ThisHistName = stage_name + "_" + set_name + "_" + v0_name + "_" + var_name;
+                    ListOfHists = new TList();
 
-        HistPath = input_dir + "/" + FilenamesPattern + "/" + InputListName + "/" + ThisHistName;
-        AddObjects(ListOfHists, HistPath.Data());
+                    HistPath = input_dir + "/" + pattern + "/" + InputListName + "/" + ThisHistName;
+                    AddObjects(ListOfHists, HistPath.Data());
 
-        /* Add up histograms */
+                    /* Add up histograms */
 
-        ThisHist = new TH1F("ThisHist", ";;Counts", 1, 0, 1);  // dummy binning, replaced by first hist binning
-        ThisHist->SetName(ThisHistName.Data());
-        ThisHist->GetXaxis()->SetTitle(InputHistXAxisTitle[i].Data());
+                    ThisHist = new TH1F("ThisHist", ";;", 1, 0, 1);  // dummy binning, replaced by first hist binning
+                    ThisHist->SetName(ThisHistName.Data());
 
-        TIter next(ListOfHists);
-        while (TObject *obj = next()) {
-            TH1F *CurrentHist = (TH1F *)obj;
-            if (!ThisHist->GetEntries()) {
-                ThisHist->SetBins(CurrentHist->GetNbinsX(), CurrentHist->GetXaxis()->GetXmin(), CurrentHist->GetXaxis()->GetXmax());
+                    TIter next(ListOfHists);
+                    while (TObject *obj = next()) {
+                        TH1F *CurrentHist = (TH1F *)obj;
+                        if (!ThisHist->GetEntries()) {
+                            ThisHist->SetBins(CurrentHist->GetNbinsX(), CurrentHist->GetXaxis()->GetXmin(), CurrentHist->GetXaxis()->GetXmax());
+                        }
+                        ThisHist->Add(CurrentHist);
+                    }
+
+                    /* Save histogram */
+
+                    OutputList_V0s_Hists->Add(ThisHist);
+
+                    /* Clean memory */
+
+                    delete ListOfHists;
+                }
             }
-            ThisHist->Add(CurrentHist);
         }
-
-        /* Save histogram */
-
-        OutputList_V0s_Hists->Add(ThisHist);
-
-        /* Clean memory */
-
-        delete ListOfHists;
     }
 
     /***                          ***/
@@ -71,22 +79,20 @@ void Merger_ChannelD(TString input_dir = "/home/ceres/borquez/some/output/D1.73_
 
     InputListName = "Sexaquarks_Hists";
 
-    InputHistNames = {"MCGen_All_AntiSexaquark_Radius", "AntiSexaquarks_Bookkeep"};
-    InputHistXAxisTitle = {"Radius (cm)", ""};
+    std::vector<TString> InputHistNames = {"MCGen_All_AntiSexaquark_Radius", "AntiSexaquarks_Bookkeep"};
 
     for (Int_t i = 0; i < (Int_t)InputHistNames.size(); i++) {
 
         ThisHistName = InputHistNames[i];
         ListOfHists = new TList();
 
-        HistPath = input_dir + "/" + FilenamesPattern + "/" + InputListName + "/" + ThisHistName;
+        HistPath = input_dir + "/" + pattern + "/" + InputListName + "/" + ThisHistName;
         AddObjects(ListOfHists, HistPath.Data());
 
         /* Add up histograms */
 
-        ThisHist = new TH1F("ThisHist", ";;Counts", 1, 0, 1);  // dummy binning, replaced by first hist binning
+        ThisHist = new TH1F("ThisHist", ";;", 1, 0, 1);  // dummy binning, replaced by first hist binning
         ThisHist->SetName(ThisHistName.Data());
-        ThisHist->GetXaxis()->SetTitle(InputHistXAxisTitle[i].Data());
 
         TIter next(ListOfHists);
         while (TObject *obj = next()) {
