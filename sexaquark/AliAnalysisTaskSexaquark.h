@@ -101,6 +101,21 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void EndOfEvent();
     virtual Bool_t UserNotify();
 
+    /* Trees */
+    void PrepareEventsTree();
+    void PrepareMCParticlesTree();
+    void PrepareTracksTree();
+
+    void PrepareAntiLambdasTree();
+    void PrepareKaonsZeroShortTree();
+    void PreparePionPairsTree();
+    void PrepareKaonPairsTree();
+    void PrepareSexaquarksTree();
+
+    void ClearEventsTree();
+    void ClearMCParticlesTree();
+    void ClearTracksTree();
+
     /* Histograms */
     void PrepareQAHistograms();
     void PrepareTracksHistograms();
@@ -242,13 +257,52 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /*** Trees ***/
 
-    TTree* fTree_Events;          //!
-    TTree* fTree_Injected;        //! is filled only when ReadSignalLogs (protection PENDING!)
-    TTree* fTree_MC;              //!
-    TTree* fTree_PiPluses;        //!
-    TTree* fTree_PiMinuses;       //!
-    TTree* fTree_PosKaons;        //!
-    TTree* fTree_AntiProtons;     //!
+    TTree* fTree_Events;           //!
+    Float_t tEvents_PV_TrueXv;     //!
+    Float_t tEvents_PV_TrueYv;     //!
+    Float_t tEvents_PV_TrueZv;     //!
+    Float_t tEvents_PV_RecXv;      //!
+    Float_t tEvents_PV_RecYv;      //!
+    Float_t tEvents_PV_RecZv;      //!
+    Bool_t tEvents_IsMB;           //!
+    Bool_t tEvents_IsCentral;      //!
+    Bool_t tEvents_IsSemiCentral;  //!
+
+    TTree* fTree_Injected;  //! is filled only when ReadSignalLogs (protection PENDING!)
+
+    TTree* fTree_MC;         //!
+    Int_t tMC_Idx;           //!
+    Int_t tMC_PdgCode;       //!
+    Int_t tMC_Idx_Mother;    //!
+    Int_t tMC_NDaughters;    //!
+    Int_t tMC_Idx_FirstDau;  //!
+    Int_t tMC_Idx_LastDau;   //!
+    Int_t tMC_ReactionID;    //!
+    Float_t tMC_Px;          //!
+    Float_t tMC_Py;          //!
+    Float_t tMC_Pz;          //!
+    Float_t tMC_Xv_i;        //!
+    Float_t tMC_Yv_i;        //!
+    Float_t tMC_Zv_i;        //!
+    Int_t tMC_Status;        //!
+    Bool_t tMC_IsSecondary;  //!
+    Bool_t tMC_IsSignal;     //!
+
+    TTree* fTree_Tracks;          //!
+    Int_t tTrack_Idx;             //!
+    Int_t tTrack_Idx_True;        //!
+    Float_t tTrack_Px;            //!
+    Float_t tTrack_Py;            //!
+    Float_t tTrack_Pz;            //!
+    Int_t tTrack_Charge;          //!
+    Float_t tTrack_NSigmaPion;    //!
+    Float_t tTrack_NSigmaKaon;    //!
+    Float_t tTrack_NSigmaProton;  //!
+    Bool_t tTrack_IsTrue;         //!
+    Bool_t tTrack_IsSecondary;    //!
+    Bool_t tTrack_IsSignal;       //!
+    Int_t tTrack_ReactionID;      //!
+
     TTree* fTree_AntiLambdas;     //!
     TTree* fTree_KaonsZeroShort;  //!
     TTree* fTree_PionPairs;       //!
