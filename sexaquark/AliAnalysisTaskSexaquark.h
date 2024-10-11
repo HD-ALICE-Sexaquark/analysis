@@ -103,18 +103,20 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* Trees */
     void PrepareEventsTree();
+    void PrepareInjectedTree();
     void PrepareMCParticlesTree();
     void PrepareTracksTree();
-
-    void PrepareAntiLambdasTree();
-    void PrepareKaonsZeroShortTree();
-    void PreparePionPairsTree();
-    void PrepareKaonPairsTree();
+    void PrepareV0sTree();
     void PrepareSexaquarksTree();
+    void PrepareKaonPairsTree();
 
     void ClearEventsTree();
+    void ClearInjectedTree();
     void ClearMCParticlesTree();
     void ClearTracksTree();
+    void ClearV0sTree();
+    void ClearSexaquarksTree();
+    void ClearKaonPairsTree();
 
     /* Histograms */
     void PrepareQAHistograms();
@@ -268,7 +270,20 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tEvents_IsCentral;      //!
     Bool_t tEvents_IsSemiCentral;  //!
 
-    TTree* fTree_Injected;  //! is filled only when ReadSignalLogs (protection PENDING!)
+    TTree* fTree_Injected;             //! is filled only when ReadSignalLogs (protection PENDING!)
+    Int_t tInjected_RunNumber;         //!
+    Int_t tInjected_DirNumber;         //!
+    Int_t tInjected_EventNumber;       //!
+    Int_t tInjected_ReactionID;        //!
+    Float_t tInjected_Px;              //!
+    Float_t tInjected_Py;              //!
+    Float_t tInjected_Pz;              //!
+    Float_t tInjected_Mass;            //!
+    Int_t tInjected_Nucleon_PdgCode;   //!
+    Float_t tInjected_Nucleon_Px;      //!
+    Float_t tInjected_Nucleon_Py;      //!
+    Float_t tInjected_Nucleon_Pz;      //!
+    Char_t tInjected_ReactionChannel;  //!
 
     TTree* fTree_MC;         //!
     Int_t tMC_Idx;           //!
@@ -303,11 +318,106 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tTrack_IsSignal;       //!
     Int_t tTrack_ReactionID;      //!
 
-    TTree* fTree_AntiLambdas;     //!
-    TTree* fTree_KaonsZeroShort;  //!
-    TTree* fTree_PionPairs;       //!
-    TTree* fTree_KaonPairs;       //!
-    TTree* fTree_Sexaquarks;      //!
+    TTree* fTree_V0s;        //!
+    Int_t tV0_Idx;           //!
+    Int_t tV0_Idx_Pos;       //!
+    Int_t tV0_Idx_Neg;       //!
+    Int_t tV0_Idx_True;      //!
+    Int_t tV0_PID;           //!
+    Float_t tV0_Px;          //!
+    Float_t tV0_Py;          //!
+    Float_t tV0_Pz;          //!
+    Float_t tV0_E;           //!
+    Float_t tV0_Xv_f;        //!
+    Float_t tV0_Yv_f;        //!
+    Float_t tV0_Zv_f;        //!
+    Float_t tV0_Neg_Px;      //!
+    Float_t tV0_Neg_Py;      //!
+    Float_t tV0_Neg_Pz;      //!
+    Float_t tV0_Pos_Px;      //!
+    Float_t tV0_Pos_Py;      //!
+    Float_t tV0_Pos_Pz;      //!
+    Bool_t tV0_IsTrue;       //!
+    Bool_t tV0_IsSecondary;  //!
+    Bool_t tV0_IsSignal;     //!
+    Int_t tV0_ReactionID;    //!
+
+    TTree* fTree_Sexaquarks;         //!
+    Int_t tSexaquark_Idx_AL;         //!
+    Int_t tSexaquark_Idx_AL_Neg;     //!
+    Int_t tSexaquark_Idx_AL_Pos;     //!
+    Float_t tSexaquark_Px;           //!
+    Float_t tSexaquark_Py;           //!
+    Float_t tSexaquark_Pz;           //!
+    Float_t tSexaquark_E;            //!
+    Float_t tSexaquark_SV_Xv;        //!
+    Float_t tSexaquark_SV_Yv;        //!
+    Float_t tSexaquark_SV_Zv;        //!
+    Float_t tSexaquark_DecayLength;  //!
+    Float_t tSexaquark_CPAwrtPV;     //!
+    Float_t tSexaquark_DCAwrtPV;     //!
+    Float_t tSexaquark_Chi2ndf;      //!
+    Bool_t tSexaquark_IsHybrid;      //!
+    Bool_t tSexaquark_IsSignal;      //!
+    Int_t tSexaquark_ReactionID;     //!
+
+    Int_t tSexaquarkA_Idx_K0S;        //!
+    Int_t tSexaquarkA_Idx_K0S_Neg;    //!
+    Int_t tSexaquarkA_Idx_K0S_Pos;    //!
+    Float_t tSexaquarkA_DCAbtwV0s;    //!
+    Float_t tSexaquarkA_DCAV0aSV;     //!
+    Float_t tSexaquarkA_DCAV0bSV;     //!
+    Float_t tSexaquarkA_DCAV0anegSV;  //!
+    Float_t tSexaquarkA_DCAV0aposSV;  //!
+    Float_t tSexaquarkA_DCAV0bnegSV;  //!
+    Float_t tSexaquarkA_DCAV0bposSV;  //!
+
+    Int_t tSexaquarkD_Idx_PosKaon;   //!
+    Float_t tSexaquarkD_DCAV0Ba;     //!
+    Float_t tSexaquarkD_DCAV0negBa;  //!
+    Float_t tSexaquarkD_DCAV0posBa;  //!
+    Float_t tSexaquarkD_DCAV0SV;     //!
+    Float_t tSexaquarkD_DCABaSV;     //!
+    Float_t tSexaquarkD_DCAV0negSV;  //!
+    Float_t tSexaquarkD_DCAV0posSV;  //!
+
+    Int_t tSexaquarkE_Idx_PP;        //!
+    Int_t tSexaquarkE_Idx_PP_Neg;    //!
+    Int_t tSexaquarkE_Idx_PP_Pos;    //!
+    Int_t tSexaquarkE_Idx_PosKaon;   //!
+    Float_t tSexaquarkE_DCAV0SV;     //!
+    Float_t tSexaquarkE_DCAV0negSV;  //!
+    Float_t tSexaquarkE_DCAV0posSV;  //!
+    Float_t tSexaquarkE_DCApkSV;     //!
+    Float_t tSexaquarkE_DCApmSV;     //!
+    Float_t tSexaquarkE_DCAppSV;     //!
+    Float_t tSexaquarkE_DCApkV0;     //!
+    Float_t tSexaquarkE_DCApmV0;     //!
+    Float_t tSexaquarkE_DCAppV0;     //!
+    Float_t tSexaquarkE_DCApmPK;     //!
+    Float_t tSexaquarkE_DCAppPK;     //!
+
+    TTree* fTree_KaonPairs;          //!
+    Int_t tKaonPair_Idx;             //!
+    Int_t tKaonPair_Idx_KaonA;       //!
+    Int_t tKaonPair_Idx_KaonB;       //!
+    Float_t tKaonPair_Px;            //!
+    Float_t tKaonPair_Py;            //!
+    Float_t tKaonPair_Pz;            //!
+    Float_t tKaonPair_E;             //!
+    Float_t tKaonPair_SV_Xv;         //!
+    Float_t tKaonPair_SV_Yv;         //!
+    Float_t tKaonPair_SV_Zv;         //!
+    Float_t tKaonPair_DecayLength;   //!
+    Float_t tKaonPair_DCAwrtPV;      //!
+    Float_t tKaonPair_DCAbtwKaons;   //!
+    Float_t tKaonPair_DCAkaSV;       //!
+    Float_t tKaonPair_DCAkbSV;       //!
+    Float_t tKaonPair_OpeningAngle;  //!
+    Float_t tKaonPair_Chi2ndf;       //!
+    Bool_t tKaonPair_IsHybrid;       //!
+    Bool_t tKaonPair_IsSignal;       //!
+    Int_t tKaonPair_ReactionID;      //!
 
     /*** Histograms ***/
 
