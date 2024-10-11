@@ -1,6 +1,7 @@
 #include <fstream>
 
 #include "TChain.h"
+#include "TGrid.h"
 #include "TROOT.h"
 #include "TSystem.h"
 
@@ -15,7 +16,7 @@
 
 #include "AliAnalysisTaskSexaquark.h"
 
-void runAnalysis(TString Mode,            // "local", "grid"
+void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
                  TString LocalInputPath,  // (only valid when Mode == "local") dir that contains ProductionName dirs
                  Bool_t GridTestMode,     // (only valid when Mode == "grid")
                  Bool_t IsMC,             //
@@ -28,16 +29,17 @@ void runAnalysis(TString Mode,            // "local", "grid"
                  TString StopAfter,       // "MC", "Tracks", "Findables", "V0s"
                  Bool_t DoQA,             //
                  Bool_t ReadSignalLogs,   // (only valid when analyzing signal MC)
-                 Int_t ChooseNEvents = 0) {
+                 Int_t ChooseNEvents = 0  // (only valid when Mode == "local" or Mode == "hybrid") 0 means all events
+) {
 
     /* Check for Input Errors */
 
-    if (Mode != "local" && Mode != "grid") {
+    if (Mode != "local" && Mode != "grid" && Mode != "hybrid") {
         std::cerr << "!! runAnalysis.C !! Error !! Invalid mode " << Mode << " !!" << std::endl;
         return;
     }
 
-    if (Mode == "local") {
+    if (Mode == "local" || Mode == "hybrid") {
         if (LocalInputPath == "") {
             std::cerr << "!! runAnalysis.C !! Error !! LocalInputPath cannot be empty on local mode !!" << std::endl;
             return;
@@ -95,6 +97,9 @@ void runAnalysis(TString Mode,            // "local", "grid"
     TString LocalDataDir = Form("%s/%s", LocalInputPath.Data(), ProductionName.Data());
     if (ProductionName.Contains("23l1")) LocalDataDir += Form("/%s", SimulationSet.Data());  // signal MC
 
+    Int_t LocalNDirs = 2;  // hardcoded
+    if (Mode == "hybrid") LocalNDirs = 110;
+
     TString GridDataDir = Form("/alice/sim/%s/%s", ProductionYear.Data(), ProductionName.Data());
     if (ProductionName.Contains("23l1")) GridDataDir += Form("/%s", SimulationSet.Data());  // signal MC
     TString GridDataPattern = "/*/AliESDs.root";
@@ -108,14 +113,14 @@ void runAnalysis(TString Mode,            // "local", "grid"
         GridWorkingDir += Form("_MC_%s_Channel%c", ProductionName.Data(), ReactionID);
     TString GridOutputDir = "output";
 
-    std::vector<Int_t> GridRunNumbers;
+    std::vector<Int_t> RunNumbersFromList;
     std::ifstream RunNumbersFile(RunNumbersList);
     if (!RunNumbersFile.is_open()) {
         std::cerr << "!! runAnalysis.C !! Error !! Unable to open file " << RunNumbersList << " !!" << std::endl;
         return;
     }
     Int_t SingleRN;
-    while (RunNumbersFile >> SingleRN) GridRunNumbers.push_back(SingleRN);
+    while (RunNumbersFile >> SingleRN) RunNumbersFromList.push_back(SingleRN);
     RunNumbersFile.close();
 
     std::cout << "!! runAnalysis.C !! Passed further options !!" << std::endl;
@@ -147,10 +152,11 @@ void runAnalysis(TString Mode,            // "local", "grid"
         alienHandler->SetExecutableCommand("aliroot -l -q -b");
         alienHandler->SetGridDataDir(GridDataDir);
         if (!IsMC) alienHandler->SetRunPrefix("000");
-        for (Int_t &RN : GridRunNumbers) alienHandler->AddRunNumber(RN);
+        for (Int_t &RN : RunNumbersFromList) alienHandler->AddRunNumber(RN);
         alienHandler->SetDataPattern(GridDataPattern);
         alienHandler->SetTTL(3600);
         alienHandler->SetOutputToRunNo(kTRUE);
+        alienHandler->SetDefaultOutputs(kFALSE);
         alienHandler->SetOutputFiles("AnalysisResults.root");
         alienHandler->SetKeepLogs(kTRUE);
         alienHandler->SetMergeViaJDL(kFALSE);
@@ -163,6 +169,15 @@ void runAnalysis(TString Mode,            // "local", "grid"
         mgr->SetGridHandler(alienHandler);
 
         std::cout << "!! runAnalysis.C !! Passed grid connection !!" << std::endl;
+    }
+
+    TGrid *grid_connection = nullptr;
+
+    if (Mode == "hybrid") {
+        if (!gGrid) {
+            grid_connection = TGrid::Connect("alien://");
+            if (!grid_connection) return;
+        }
     }
 
     /* Input Handlers */
@@ -220,23 +235,25 @@ void runAnalysis(TString Mode,            // "local", "grid"
 
     /* Start Analysis */
 
+    TChain *chain = nullptr;
+    TString FilePath = "";
+    TString Prefix = "";
+    if (Mode == "hybrid") Prefix = "alien://";
+
     if (Mode == "grid") {
         if (GridTestMode) {
-            alienHandler->SetNtestFiles(5);
+            alienHandler->SetNtestFiles(5);  // hardcoded
             alienHandler->SetRunMode("test");
         } else {
-            // alienHandler->SetNtestFiles(5);               // TEST
-            // alienHandler->SetSplitMaxInputFileNumber(5);  // TEST
-            alienHandler->SetSplitMaxInputFileNumber(35);
+            alienHandler->SetSplitMaxInputFileNumber(35);  // hardcoded
             alienHandler->SetRunMode("full");
         }
         mgr->StartAnalysis("grid");
-    } else {  // local mode
-        TChain *chain = new TChain("esdTree");
-        TString FilePath;
-        for (Int_t &RN : GridRunNumbers) {
-            for (Int_t DN = 0; DN < 6; DN++) {  // local directories (hardcoded)
-                FilePath = Form("%s/%i/%03i/AliESDs.root", LocalDataDir.Data(), RN, DN);
+    } else {  // "local" or "hybrid" mode
+        chain = new TChain("esdTree");
+        for (Int_t &RN : RunNumbersFromList) {
+            for (Int_t DN = 1; DN <= LocalNDirs; DN++) {
+                FilePath = Form("%s%s/%i/%03i/AliESDs.root", Prefix.Data(), LocalDataDir.Data(), RN, DN);
                 chain->AddFile(FilePath);
             }
         }
