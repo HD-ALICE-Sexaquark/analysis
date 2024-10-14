@@ -97,7 +97,7 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
     TString LocalDataDir = Form("%s/%s", LocalInputPath.Data(), ProductionName.Data());
     if (ProductionName.Contains("23l1")) LocalDataDir += Form("/%s", SimulationSet.Data());  // signal MC
 
-    Int_t LocalNDirs = 2;  // hardcoded
+    Int_t LocalNDirs = 6;  // hardcoded
     if (Mode == "hybrid") LocalNDirs = 110;
 
     TString GridDataDir = Form("/alice/sim/%s/%s", ProductionYear.Data(), ProductionName.Data());
