@@ -270,7 +270,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tEvents_IsCentral;      //!
     Bool_t tEvents_IsSemiCentral;  //!
 
-    TTree* fTree_Injected;             //! is filled only when ReadSignalLogs (protection PENDING!)
+    TTree* fTree_Injected;             //!
     Int_t tInjected_RunNumber;         //!
     Int_t tInjected_DirNumber;         //!
     Int_t tInjected_EventNumber;       //!
@@ -292,7 +292,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Int_t tMC_NDaughters;    //!
     Int_t tMC_Idx_FirstDau;  //!
     Int_t tMC_Idx_LastDau;   //!
-    Int_t tMC_ReactionID;    //!
     Float_t tMC_Px;          //!
     Float_t tMC_Py;          //!
     Float_t tMC_Pz;          //!
@@ -302,6 +301,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Int_t tMC_Status;        //!
     Bool_t tMC_IsSecondary;  //!
     Bool_t tMC_IsSignal;     //!
+    Int_t tMC_ReactionID;    //!
 
     TTree* fTree_Tracks;          //!
     Int_t tTrack_Idx;             //!
