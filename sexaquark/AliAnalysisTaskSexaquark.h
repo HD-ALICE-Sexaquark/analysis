@@ -102,21 +102,21 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     virtual Bool_t UserNotify();
 
     /* Trees */
-    void PrepareEventsTree();
-    void PrepareInjectedTree();
-    void PrepareMCParticlesTree();
-    void PrepareTracksTree();
-    void PrepareV0sTree();
-    void PrepareSexaquarksTree();
-    void PrepareKaonPairsTree();
+    void PrepareEventsBranches();
+    void PrepareInjectedBranches();
+    void PrepareMCParticlesBranches();
+    void PrepareTracksBranches();
+    void PrepareV0sBranches();
+    void PrepareSexaquarksBranches();
+    void PrepareKaonPairsBranches();
 
-    void ClearEventsTree();
-    void ClearInjectedTree();
-    void ClearMCParticlesTree();
-    void ClearTracksTree();
-    void ClearV0sTree();
-    void ClearSexaquarksTree();
-    void ClearKaonPairsTree();
+    void ClearEventsBranches();
+    void ClearInjectedBranches();
+    void ClearMCParticlesBranches();
+    void ClearTracksBranches();
+    void ClearV0sBranches();
+    void ClearSexaquarksBranches();
+    void ClearKaonPairsBranches();
 
     /* Histograms */
     void PrepareQAHistograms();
@@ -220,9 +220,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t fIsMC;            // kTRUE if MC simulation, kFALSE if data
     TString fSourceOfV0s;    // choose V0 finder: "kalman", "custom", "on-the-fly", "offline"
     Char_t fReactionID;      // reaction channel identifier, could be: 'A', 'D', 'E', 'H'
-    Bool_t fDoQA;            //
+    Bool_t fDoQA;            // kTRUE to do QA
     TString fStopAfter;      // "MC", "Tracks", "Findables", "V0s" (default: "")
-    Bool_t fReadSignalLogs;  //
+    Bool_t fReadSignalLogs;  // kTRUE to read and load signal logs
 
     /* AliRoot Objects */
     AliMCEvent* fMC;                //! MC event
@@ -239,7 +239,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* ROOT Objects */
     TDatabasePDG fPDG;                //!
-    TList* fList_Trees;               //!
     TList* fList_QA_Hists;            //!
     TList* fList_Tracks_Hists;        //!
     TList* fList_V0s_Hists;           //!
@@ -251,15 +250,23 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t fIsFirstEvent;  //!
 
     /* Filled at Initialize() ~ persistent */
-    std::vector<Int_t> fProductsPDG;                               //
-    std::vector<Int_t> fFinalStateProductsPDG;                     //
-    Int_t fStruckNucleonPDG;                                       // PDG Code of the struck nucleon, could be: 2112 o 2212
-    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;  //
-    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;  //
+    std::vector<Int_t> fProductsPDG;                               // PDG codes if the immediate products of the reaction
+    std::vector<Int_t> fFinalStateProductsPDG;                     // PDG codes of the final state products
+    Int_t fStruckNucleonPDG;                                       // PDG code of the struck nucleon, could be: 2112 o 2212
+    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;  // PDG code of the negative daughter from the V0 PDG code
+    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;  // PDG code of the positive daughter from the V0 PDG code
 
     /*** Trees ***/
+    TTree* fTree_Events;      //!
+    TTree* fTree_Injected;    //!
+    TTree* fTree_MC;          //!
+    TTree* fTree_Tracks;      //!
+    TTree* fTree_V0s;         //!
+    TTree* fTree_Sexaquarks;  //!
+    TTree* fTree_KaonPairs;   //!
 
-    TTree* fTree_Events;           //!
+    /** Branches **/
+
     Float_t tEvents_PV_TrueXv;     //!
     Float_t tEvents_PV_TrueYv;     //!
     Float_t tEvents_PV_TrueZv;     //!
@@ -270,7 +277,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tEvents_IsCentral;      //!
     Bool_t tEvents_IsSemiCentral;  //!
 
-    TTree* fTree_Injected;             //!
     Int_t tInjected_RunNumber;         //!
     Int_t tInjected_DirNumber;         //!
     Int_t tInjected_EventNumber;       //!
@@ -283,9 +289,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tInjected_Nucleon_Px;      //!
     Float_t tInjected_Nucleon_Py;      //!
     Float_t tInjected_Nucleon_Pz;      //!
-    Char_t tInjected_ReactionChannel;  //!
+    UInt_t tInjected_ReactionChannel;  //! char -> ASCII -> uint
 
-    TTree* fTree_MC;         //!
     Int_t tMC_Idx;           //!
     Int_t tMC_PdgCode;       //!
     Int_t tMC_Idx_Mother;    //!
@@ -303,7 +308,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tMC_IsSignal;     //!
     Int_t tMC_ReactionID;    //!
 
-    TTree* fTree_Tracks;          //!
     Int_t tTrack_Idx;             //!
     Int_t tTrack_Idx_True;        //!
     Float_t tTrack_Px;            //!
@@ -318,7 +322,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tTrack_IsSignal;       //!
     Int_t tTrack_ReactionID;      //!
 
-    TTree* fTree_V0s;        //!
     Int_t tV0_Idx;           //!
     Int_t tV0_Idx_Pos;       //!
     Int_t tV0_Idx_Neg;       //!
@@ -342,7 +345,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tV0_IsSignal;     //!
     Int_t tV0_ReactionID;    //!
 
-    TTree* fTree_Sexaquarks;         //!
     Int_t tSexaquark_Idx_AL;         //!
     Int_t tSexaquark_Idx_AL_Neg;     //!
     Int_t tSexaquark_Idx_AL_Pos;     //!
@@ -397,7 +399,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tSexaquarkE_DCApmPK;     //!
     Float_t tSexaquarkE_DCAppPK;     //!
 
-    TTree* fTree_KaonPairs;          //!
     Int_t tKaonPair_Idx;             //!
     Int_t tKaonPair_Idx_KaonA;       //!
     Int_t tKaonPair_Idx_KaonB;       //!
@@ -603,7 +604,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMin_Sexa_DCAwrtPV;     //
     Float_t kMax_Sexa_DCAwrtPV;     //
     Float_t kMax_Sexa_Chi2ndf;      //
-    // channel A
+    /* Channel A */
     Float_t kMax_Sexa_DCAbtwV0s;    //
     Float_t kMax_Sexa_DCAv0aSV;     //
     Float_t kMax_Sexa_DCAv0bSV;     //
@@ -611,12 +612,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMax_Sexa_DCAv0aposSV;  //
     Float_t kMax_Sexa_DCAv0bnegSV;  //
     Float_t kMax_Sexa_DCAv0bposSV;  //
-    // channel D
+    /* Channel D */
     Float_t kMax_Sexa_DCAbaSV;     //
     Float_t kMax_Sexa_DCAv0ba;     //
     Float_t kMax_Sexa_DCAv0negba;  //
     Float_t kMax_Sexa_DCAv0posba;  //
-    // channel E
+    /* Channel E */
     Float_t kMax_Sexa_DCAv0SV;     //
     Float_t kMax_Sexa_DCAv0negSV;  //
     Float_t kMax_Sexa_DCAv0posSV;  //
@@ -642,7 +643,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
 
     /// \cond CLASSDEF
-    ClassDef(AliAnalysisTaskSexaquark, 84);
+    ClassDef(AliAnalysisTaskSexaquark, 81);
     /// \endcond
 };
 
