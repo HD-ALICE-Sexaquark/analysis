@@ -303,7 +303,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tMC_Xv_i;        //!
     Float_t tMC_Yv_i;        //!
     Float_t tMC_Zv_i;        //!
-    Int_t tMC_Status;        //!
+    UInt_t tMC_Status;       //!
     Bool_t tMC_IsSecondary;  //!
     Bool_t tMC_IsSignal;     //!
     Int_t tMC_ReactionID;    //!
@@ -313,7 +313,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tTrack_Px;            //!
     Float_t tTrack_Py;            //!
     Float_t tTrack_Pz;            //!
-    Int_t tTrack_Charge;          //!
+    Short_t tTrack_Charge;        //!
     Float_t tTrack_NSigmaPion;    //!
     Float_t tTrack_NSigmaKaon;    //!
     Float_t tTrack_NSigmaProton;  //!

@@ -2040,6 +2040,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
     Int_t pdg_mc;
     Int_t mother_idx;
 
+    TString generator_name;
+
     AliMCParticle* mcDaughter;
     Int_t pdg_dau;
 
@@ -2071,6 +2073,14 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
     for (mcIdx = 0; mcIdx < fMC->GetNumberOfTracks(); mcIdx++) {
 
+        /* Protection: exclude particles from the anti-neutron injector */
+
+        // `GetCocktailGenerator` not only considers primaries, but subsequent daughters/secondaries all the way down, as well
+        fMC->GetCocktailGenerator(mcIdx, generator_name);
+        if (generator_name.Contains("Injector (Anti-Neutron)")) continue;
+
+        /* Get MC particle info */
+
         mcPart = (AliMCParticle*)fMC->GetTrack(mcIdx);
 
         pdg_mc = mcPart->PdgCode();
@@ -2084,11 +2094,11 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         originVertex.SetXYZ(mcPart->Xv(), mcPart->Yv(), mcPart->Zv());
 
         /* Check if particle is signal */
-        /* - It should be produced by the AliGenSexaquarkReaction generator */
+        /* - It should be produced by the "Anti-Sexaquark Interaction (Channel %c)" generator */
         /* - Then, the unique reaction ID is provided by MCStatusCode of the injected signal particles */
 
         getReactionIdx_fromMcIdx[mcIdx] = 0;
-        isMcIdxSignal[mcIdx] = mcPart->GetGeneratorIndex() == 2;  // PENDING: should be the generator name!!
+        isMcIdxSignal[mcIdx] = generator_name.Contains("Anti-Sexaquark Interaction");
         if (isMcIdxSignal[mcIdx]) {
             getReactionIdx_fromMcIdx[mcIdx] = mother_idx < 0 ? mcPart->MCStatusCode() : getReactionIdx_fromMcIdx[mother_idx];
             getMcIdx_fromReactionIdx[getReactionIdx_fromMcIdx[mcIdx]].push_back(mcIdx);
@@ -2106,12 +2116,12 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         tMC_NDaughters = n_daughters;
         tMC_Idx_FirstDau = idx_first_dau;
         tMC_Idx_LastDau = idx_last_dau;
-        tMC_Px = mcPart->Px();
-        tMC_Py = mcPart->Py();
-        tMC_Pz = mcPart->Pz();
-        tMC_Xv_i = originVertex.X();
-        tMC_Yv_i = originVertex.Y();
-        tMC_Zv_i = originVertex.Z();
+        tMC_Px = (Float_t)mcPart->Px();
+        tMC_Py = (Float_t)mcPart->Py();
+        tMC_Pz = (Float_t)mcPart->Pz();
+        tMC_Xv_i = (Float_t)originVertex.X();
+        tMC_Yv_i = (Float_t)originVertex.Y();
+        tMC_Zv_i = (Float_t)originVertex.Z();
         tMC_Status = mcPart->MCStatusCode();
         tMC_IsSecondary = isMcIdxSecondary[mcIdx];
         tMC_IsSignal = isMcIdxSignal[mcIdx];
@@ -2489,6 +2499,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
     Int_t mcPdgCode;
     Int_t motherMcIdx;
 
+    TString generator_name;
+
     Float_t dca_wrt_pv, dca_xy_wrt_pv, dca_z_wrt_pv;
     Float_t n_tpc_clusters;
     Float_t n_crossed_rows;
@@ -2515,14 +2527,20 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         /* Get track */
 
         track = fESD->GetTrack(esdIdxTrack);
+        mcIdx = TMath::Abs(track->GetLabel());
 
         /* Sanity check */
 
         if (track->Pt() < 1E-3 || track->Pt() > 1E3) continue;
 
+        /* Protection: exclude particles from the anti-neutron injector */
+
+        // `GetCocktailGenerator` not only considers primaries, but subsequent daughters/secondaries all the way down, as well
+        fMC->GetCocktailGenerator(mcIdx, generator_name);
+        if (generator_name.Contains("Injector (Anti-Neutron)")) continue;
+
         /* Get MC info */
 
-        mcIdx = TMath::Abs(track->GetLabel());
         getMcIdx_fromEsdIdx[esdIdxTrack] = mcIdx;
         mcPdgCode = getPdgCode_fromMcIdx[mcIdx];
 
@@ -2639,9 +2657,9 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
                 tTrack_Idx = esdIdxTrack;
                 tTrack_Idx_True = mcIdx;
-                tTrack_Px = track->Px();
-                tTrack_Py = track->Py();
-                tTrack_Pz = track->Pz();
+                tTrack_Px = (Float_t)track->Px();
+                tTrack_Py = (Float_t)track->Py();
+                tTrack_Pz = (Float_t)track->Pz();
                 tTrack_Charge = track->Charge();
                 tTrack_NSigmaPion = n_sigma_pion;
                 tTrack_NSigmaKaon = n_sigma_kaon;
@@ -4604,19 +4622,19 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             tV0_Idx_Neg = esdIdxNeg;
             tV0_Idx_True = getMotherMcIdx_fromEsdIdx[esdIdxNeg];
             tV0_PID = pdgV0;
-            tV0_Px = lvV0.Px();
-            tV0_Py = lvV0.Py();
-            tV0_Pz = lvV0.Pz();
-            tV0_E = lvV0.E();
-            tV0_Xv_f = kfV0.GetX();
-            tV0_Yv_f = kfV0.GetY();
-            tV0_Zv_f = kfV0.GetZ();
-            tV0_Neg_Px = lvTrackNeg.Px();
-            tV0_Neg_Py = lvTrackNeg.Py();
-            tV0_Neg_Pz = lvTrackNeg.Pz();
-            tV0_Pos_Px = lvTrackPos.Px();
-            tV0_Pos_Py = lvTrackPos.Py();
-            tV0_Pos_Pz = lvTrackPos.Pz();
+            tV0_Px = (Float_t)lvV0.Px();
+            tV0_Py = (Float_t)lvV0.Py();
+            tV0_Pz = (Float_t)lvV0.Pz();
+            tV0_E = (Float_t)lvV0.E();
+            tV0_Xv_f = (Float_t)kfV0.GetX();
+            tV0_Yv_f = (Float_t)kfV0.GetY();
+            tV0_Zv_f = (Float_t)kfV0.GetZ();
+            tV0_Neg_Px = (Float_t)lvTrackNeg.Px();
+            tV0_Neg_Py = (Float_t)lvTrackNeg.Py();
+            tV0_Neg_Pz = (Float_t)lvTrackNeg.Pz();
+            tV0_Pos_Px = (Float_t)lvTrackPos.Px();
+            tV0_Pos_Py = (Float_t)lvTrackPos.Py();
+            tV0_Pos_Pz = (Float_t)lvTrackPos.Pz();
             tV0_IsTrue = is_true;
             tV0_IsSecondary = is_secondary;
             tV0_IsSignal = is_signal;
@@ -4902,13 +4920,13 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             tSexaquark_Idx_AL = idxAntiLambda;
             tSexaquark_Idx_AL_Neg = esdIdxNeg_AntiLambda;
             tSexaquark_Idx_AL_Pos = esdIdxPos_AntiLambda;
-            tSexaquark_Px = lvAntiSexaquark.Px();
-            tSexaquark_Py = lvAntiSexaquark.Py();
-            tSexaquark_Pz = lvAntiSexaquark.Pz();
-            tSexaquark_E = lvAntiSexaquark.E();
-            tSexaquark_SV_Xv = kfAntiSexaquark.GetX();
-            tSexaquark_SV_Yv = kfAntiSexaquark.GetY();
-            tSexaquark_SV_Zv = kfAntiSexaquark.GetZ();
+            tSexaquark_Px = (Float_t)lvAntiSexaquark.Px();
+            tSexaquark_Py = (Float_t)lvAntiSexaquark.Py();
+            tSexaquark_Pz = (Float_t)lvAntiSexaquark.Pz();
+            tSexaquark_E = (Float_t)lvAntiSexaquark.E();
+            tSexaquark_SV_Xv = (Float_t)kfAntiSexaquark.GetX();
+            tSexaquark_SV_Yv = (Float_t)kfAntiSexaquark.GetY();
+            tSexaquark_SV_Zv = (Float_t)kfAntiSexaquark.GetZ();
             tSexaquark_DecayLength = decay_length;
             tSexaquark_CPAwrtPV = cpa_wrt_pv;
             tSexaquark_DCAwrtPV = dca_wrt_pv;
@@ -5254,13 +5272,13 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
             tSexaquark_Idx_AL = idxAntiLambda;
             tSexaquark_Idx_AL_Neg = esdIdxNeg_AntiLambda;
             tSexaquark_Idx_AL_Pos = esdIdxPos_AntiLambda;
-            tSexaquark_Px = lvAntiSexaquark.Px();
-            tSexaquark_Py = lvAntiSexaquark.Py();
-            tSexaquark_Pz = lvAntiSexaquark.Pz();
-            tSexaquark_E = lvAntiSexaquark.E();
-            tSexaquark_SV_Xv = kfAntiSexaquark.GetX();
-            tSexaquark_SV_Yv = kfAntiSexaquark.GetY();
-            tSexaquark_SV_Zv = kfAntiSexaquark.GetZ();
+            tSexaquark_Px = (Float_t)lvAntiSexaquark.Px();
+            tSexaquark_Py = (Float_t)lvAntiSexaquark.Py();
+            tSexaquark_Pz = (Float_t)lvAntiSexaquark.Pz();
+            tSexaquark_E = (Float_t)lvAntiSexaquark.E();
+            tSexaquark_SV_Xv = (Float_t)kfAntiSexaquark.GetX();
+            tSexaquark_SV_Yv = (Float_t)kfAntiSexaquark.GetY();
+            tSexaquark_SV_Zv = (Float_t)kfAntiSexaquark.GetZ();
             tSexaquark_DecayLength = decay_length;
             tSexaquark_CPAwrtPV = cpa_wrt_pv;
             tSexaquark_DCAwrtPV = dca_wrt_pv;
@@ -5620,13 +5638,13 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                 tSexaquark_Idx_AL = idxAntiLambda;
                 tSexaquark_Idx_AL_Neg = esdIdxNeg_AntiLambda;
                 tSexaquark_Idx_AL_Pos = esdIdxPos_AntiLambda;
-                tSexaquark_Px = lvAntiSexaquark.Px();
-                tSexaquark_Py = lvAntiSexaquark.Py();
-                tSexaquark_Pz = lvAntiSexaquark.Pz();
-                tSexaquark_E = lvAntiSexaquark.E();
-                tSexaquark_SV_Xv = kfAntiSexaquark.GetX();
-                tSexaquark_SV_Yv = kfAntiSexaquark.GetY();
-                tSexaquark_SV_Zv = kfAntiSexaquark.GetZ();
+                tSexaquark_Px = (Float_t)lvAntiSexaquark.Px();
+                tSexaquark_Py = (Float_t)lvAntiSexaquark.Py();
+                tSexaquark_Pz = (Float_t)lvAntiSexaquark.Pz();
+                tSexaquark_E = (Float_t)lvAntiSexaquark.E();
+                tSexaquark_SV_Xv = (Float_t)kfAntiSexaquark.GetX();
+                tSexaquark_SV_Yv = (Float_t)kfAntiSexaquark.GetY();
+                tSexaquark_SV_Zv = (Float_t)kfAntiSexaquark.GetZ();
                 tSexaquark_DecayLength = decay_length;
                 tSexaquark_CPAwrtPV = cpa_wrt_pv;
                 tSexaquark_DCAwrtPV = dca_wrt_pv;
@@ -5962,13 +5980,13 @@ void AliAnalysisTaskSexaquark::KalmanPosKaonPairFinder() {
             tKaonPair_Idx = idxKaonPair;
             tKaonPair_Idx_KaonA = esdIdxPosKaonA;
             tKaonPair_Idx_KaonB = esdIdxPosKaonB;
-            tKaonPair_Px = lvPosKaonPair.Px();
-            tKaonPair_Py = lvPosKaonPair.Py();
-            tKaonPair_Pz = lvPosKaonPair.Pz();
-            tKaonPair_E = lvPosKaonPair.E();
-            tKaonPair_SV_Xv = kfPosKaonPair.GetX();
-            tKaonPair_SV_Yv = kfPosKaonPair.GetY();
-            tKaonPair_SV_Zv = kfPosKaonPair.GetZ();
+            tKaonPair_Px = (Float_t)lvPosKaonPair.Px();
+            tKaonPair_Py = (Float_t)lvPosKaonPair.Py();
+            tKaonPair_Pz = (Float_t)lvPosKaonPair.Pz();
+            tKaonPair_E = (Float_t)lvPosKaonPair.E();
+            tKaonPair_SV_Xv = (Float_t)kfPosKaonPair.GetX();
+            tKaonPair_SV_Yv = (Float_t)kfPosKaonPair.GetY();
+            tKaonPair_SV_Zv = (Float_t)kfPosKaonPair.GetZ();
             tKaonPair_DecayLength = decay_length;
             tKaonPair_DCAwrtPV = dca_wrt_pv;
             tKaonPair_DCAbtwKaons = dca_btw_kaons;
