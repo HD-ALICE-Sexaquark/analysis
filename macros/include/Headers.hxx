@@ -7,7 +7,10 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <tuple>
 #include <vector>
+
+#include "TROOT.h"
 
 #include "TCanvas.h"
 #include "TChain.h"
@@ -29,7 +32,6 @@
 #include "TPaletteAxis.h"
 #include "TPaveStats.h"
 #include "TPaveText.h"
-#include "TROOT.h"
 #include "TRegexp.h"
 #include "TString.h"
 #include "TStyle.h"
@@ -38,5 +40,7 @@
 #include "TTree.h"
 #include "TTreeIndex.h"
 #include "TVector3.h"
+
+#include "ROOT/RDataFrame.hxx"
 
 #endif
