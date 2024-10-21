@@ -1981,7 +1981,6 @@ void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
             kMax_Sexa_DCAv0bposSV = 10.;
             // kMax_Sexa_Chi2ndf = 0.5;
         } else if (fReactionID == 'D') {
-            kMin_Sexa_Mass = 0.;
             kMin_Sexa_Radius = 30;
             kMax_Sexa_Rapidity = 0.8;
             kMin_Sexa_CPAwrtPV = 0.99;
