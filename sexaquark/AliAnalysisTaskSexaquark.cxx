@@ -58,7 +58,10 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tEvents_PV_RecXv(0),
       tEvents_PV_RecYv(0),
       tEvents_PV_RecZv(0),
+      tEvents_NTracks(0),
       tEvents_IsMB(0),
+      tEvents_IsHighMultV0(0),
+      tEvents_IsHighMultSPD(0),
       tEvents_IsCentral(0),
       tEvents_IsSemiCentral(0),
       /*  */
@@ -392,7 +395,10 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tEvents_PV_RecXv(0),
       tEvents_PV_RecYv(0),
       tEvents_PV_RecZv(0),
+      tEvents_NTracks(0),
       tEvents_IsMB(0),
+      tEvents_IsHighMultV0(0),
+      tEvents_IsHighMultSPD(0),
       tEvents_IsCentral(0),
       tEvents_IsSemiCentral(0),
       /*  */
@@ -809,7 +815,10 @@ void AliAnalysisTaskSexaquark::PrepareEventsBranches() {
     fTree_Events->Branch("PV_RecXv", &tEvents_PV_RecXv);
     fTree_Events->Branch("PV_RecYv", &tEvents_PV_RecYv);
     fTree_Events->Branch("PV_RecZv", &tEvents_PV_RecZv);
+    fTree_Events->Branch("NTracks", &tEvents_NTracks);
     fTree_Events->Branch("IsMB", &tEvents_IsMB);
+    fTree_Events->Branch("IsHighMultV0", &tEvents_IsHighMultV0);
+    fTree_Events->Branch("tEvents_IsHighMultSPD", &tEvents_IsHighMultSPD);
     fTree_Events->Branch("IsCentral", &tEvents_IsCentral);
     fTree_Events->Branch("IsSemiCentral", &tEvents_IsSemiCentral);
 }
@@ -1003,7 +1012,10 @@ void AliAnalysisTaskSexaquark::ClearEventsBranches() {
     tEvents_PV_RecXv = 0.;
     tEvents_PV_RecYv = 0.;
     tEvents_PV_RecZv = 0.;
+    tEvents_NTracks = 0;
     tEvents_IsMB = kFALSE;
+    tEvents_IsHighMultV0 = kFALSE;
+    tEvents_IsHighMultSPD = kFALSE;
     tEvents_IsCentral = kFALSE;
     tEvents_IsSemiCentral = kFALSE;
 }
@@ -1612,7 +1624,10 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     tEvents_PV_RecXv = fPrimaryVertex->GetX();
     tEvents_PV_RecYv = fPrimaryVertex->GetY();
     tEvents_PV_RecZv = fPrimaryVertex->GetZ();
+    tEvents_NTracks = fESD->GetNumberOfTracks();
     tEvents_IsMB = fInputHandler->IsEventSelected() & AliVEvent::kINT7;
+    tEvents_IsHighMultV0 = fInputHandler->IsEventSelected() & AliVEvent::kHighMultV0;
+    tEvents_IsHighMultSPD = fInputHandler->IsEventSelected() & AliVEvent::AliVEvent::kHighMultSPD;
     tEvents_IsCentral = fInputHandler->IsEventSelected() & AliVEvent::kCentral;
     tEvents_IsSemiCentral = fInputHandler->IsEventSelected() & AliVEvent::kSemiCentral;
 
@@ -2429,10 +2444,19 @@ Bool_t AliAnalysisTaskSexaquark::PassesEventSelection() {
 
     /* Trigger Selection */
 
-    Bool_t IsMB = (fInputHandler->IsEventSelected() & AliVEvent::kINT7);
-    Bool_t IsCentral = (fInputHandler->IsEventSelected() & AliVEvent::kCentral);
-    Bool_t IsSemiCentral = (fInputHandler->IsEventSelected() & AliVEvent::kSemiCentral);
-    if (!IsMB && !IsCentral && !IsSemiCentral) {
+    Bool_t IsMB = kFALSE;
+    Bool_t IsHighMultV0 = kFALSE;
+    Bool_t IsHighMultSPD = kFALSE;
+    Bool_t IsCentral = kFALSE;
+    Bool_t IsSemiCentral = kFALSE;
+
+    if (fInputHandler->IsEventSelected() & AliVEvent::kINT7) IsMB = kTRUE;
+    if (fInputHandler->IsEventSelected() & AliVEvent::kHighMultV0) IsHighMultV0 = kTRUE;
+    if (fInputHandler->IsEventSelected() & AliVEvent::kHighMultSPD) IsHighMultSPD = kTRUE;
+    if (fInputHandler->IsEventSelected() & AliVEvent::kCentral) IsCentral = kTRUE;
+    if (fInputHandler->IsEventSelected() & AliVEvent::kSemiCentral) IsSemiCentral = kTRUE;
+
+    if (!IsMB && !IsHighMultV0 && !IsHighMultSPD && !IsCentral && !IsSemiCentral) {
         AliInfoF("!! Event Rejected -- %u %u %u %u !!", fInputHandler->IsEventSelected(), AliVEvent::kINT7, AliVEvent::kCentral,
                  AliVEvent::kSemiCentral);  // DEBUG
         return kFALSE;

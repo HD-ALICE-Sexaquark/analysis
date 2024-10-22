@@ -273,7 +273,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tEvents_PV_RecXv;      //!
     Float_t tEvents_PV_RecYv;      //!
     Float_t tEvents_PV_RecZv;      //!
+    UInt_t tEvents_NTracks;        //!
     Bool_t tEvents_IsMB;           //!
+    Bool_t tEvents_IsHighMultV0;   //!
+    Bool_t tEvents_IsHighMultSPD;  //!
     Bool_t tEvents_IsCentral;      //!
     Bool_t tEvents_IsSemiCentral;  //!
 
