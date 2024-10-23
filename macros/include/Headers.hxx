@@ -41,6 +41,9 @@
 #include "TTreeIndex.h"
 #include "TVector3.h"
 
+#include "Math/Functor.h"
+#include "Math/Integrator.h"
+
 #include "ROOT/RDataFrame.hxx"
 
 #endif
