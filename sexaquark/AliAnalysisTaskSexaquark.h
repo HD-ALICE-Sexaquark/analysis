@@ -324,6 +324,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tTrack_IsSecondary;    //!
     Bool_t tTrack_IsSignal;       //!
     Int_t tTrack_ReactionID;      //!
+    TBits tTrack_TPCFitMap;       //!
+    TBits tTrack_TPCClusterMap;   //!
+    TBits tTrack_TPCSharedMap;    //!
 
     Int_t tV0_Idx;           //!
     Int_t tV0_Idx_Pos;       //!

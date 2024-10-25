@@ -109,6 +109,9 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tTrack_IsSecondary(0),
       tTrack_IsSignal(0),
       tTrack_ReactionID(0),
+      tTrack_TPCFitMap(0),
+      tTrack_TPCClusterMap(0),
+      tTrack_TPCSharedMap(0),
       /*  */
       tV0_Idx(0),
       tV0_Idx_Pos(0),
@@ -446,6 +449,9 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tTrack_IsSecondary(0),
       tTrack_IsSignal(0),
       tTrack_ReactionID(0),
+      tTrack_TPCFitMap(0),
+      tTrack_TPCClusterMap(0),
+      tTrack_TPCSharedMap(0),
       /*  */
       tV0_Idx(0),
       tV0_Idx_Pos(0),
@@ -818,7 +824,7 @@ void AliAnalysisTaskSexaquark::PrepareEventsBranches() {
     fTree_Events->Branch("NTracks", &tEvents_NTracks);
     fTree_Events->Branch("IsMB", &tEvents_IsMB);
     fTree_Events->Branch("IsHighMultV0", &tEvents_IsHighMultV0);
-    fTree_Events->Branch("tEvents_IsHighMultSPD", &tEvents_IsHighMultSPD);
+    fTree_Events->Branch("IsHighMultSPD", &tEvents_IsHighMultSPD);
     fTree_Events->Branch("IsCentral", &tEvents_IsCentral);
     fTree_Events->Branch("IsSemiCentral", &tEvents_IsSemiCentral);
 }
@@ -869,6 +875,9 @@ void AliAnalysisTaskSexaquark::PrepareTracksBranches() {
     fTree_Tracks->Branch("IsSecondary", &tTrack_IsSecondary);
     fTree_Tracks->Branch("IsSignal", &tTrack_IsSignal);
     fTree_Tracks->Branch("ReactionID", &tTrack_ReactionID);
+    fTree_Tracks->Branch("TPCFitMap", &tTrack_TPCFitMap);
+    fTree_Tracks->Branch("TPCClusterMap", &tTrack_TPCClusterMap);
+    fTree_Tracks->Branch("TPCSharedMap", &tTrack_TPCSharedMap);
 }
 
 /*
@@ -1059,6 +1068,9 @@ void AliAnalysisTaskSexaquark::ClearTracksBranches() {
     tTrack_IsSecondary = kFALSE;
     tTrack_IsSignal = kFALSE;
     tTrack_ReactionID = 0;
+    tTrack_TPCFitMap.ResetAllBits();
+    tTrack_TPCClusterMap.ResetAllBits();
+    tTrack_TPCSharedMap.ResetAllBits();
 }
 
 /*
@@ -2691,6 +2703,9 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
                 tTrack_IsSecondary = is_secondary;
                 tTrack_IsSignal = is_signal;
                 tTrack_ReactionID = getReactionIdx_fromEsdIdx[esdIdxTrack];
+                tTrack_TPCFitMap = track->GetTPCFitMap();
+                tTrack_TPCClusterMap = track->GetTPCClusterMap();
+                tTrack_TPCSharedMap = track->GetTPCSharedMap();
 
                 fTree_Tracks->Fill();
                 ClearTracksBranches();
