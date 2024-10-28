@@ -12,8 +12,10 @@
 **/.vscode/
 **/test/
 *.svg
+**/output/
 **/output*/
 **/test*/
 **/__pycache__/
 **.out
 **/attempts/
+**/slurm_logs/
