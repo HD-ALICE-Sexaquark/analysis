@@ -89,7 +89,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Settings ~ stored in Analysis Manager */
     void IsMC(Bool_t IsMC) { fIsMC = IsMC; };
     void SetSourceOfV0s(TString SourceOfV0s) { fSourceOfV0s = SourceOfV0s; };
-    void SetReactionID(Char_t ReactionID) { fReactionID = ReactionID; };
+    void SetReactionChannel(Char_t ReactionChannel) { fReactionChannel = ReactionChannel; };
     void DoQA(Bool_t DoQA) { fDoQA = DoQA; };
     void StopAfter(TString StopAfter) { fStopAfter = StopAfter; };
     void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
@@ -123,13 +123,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void PrepareTracksHistograms();
     void PrepareV0Histograms();
     void PrepareSexaquarkHistograms();
-    void PreparePosKaonPairHistograms();
+    void PrepareKaonPairHistograms();
 
     /* Cuts */
     void DefineTracksCuts(TString cuts_option);
     void DefineV0Cuts(TString cuts_option);
     void DefineSexaquarkCuts(TString cuts_option);
-    void DefinePosKaonPairCuts(TString cuts_option);
+    void DefineKaonPairCuts(TString cuts_option);
 
     /* MC Generated */
     void ProcessMCGen();
@@ -145,7 +145,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void ProcessFindableV0s();
     void ProcessFindablePionPairs();
     void ProcessFindableSexaquarks();
-    void ProcessFindablePosKaonPairs();
+    void ProcessFindableKaonPairs();
 
     /* V0s */
     void GetV0sFromESD(Bool_t onTheFly);
@@ -180,9 +180,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                         KFParticle kfPiPlus);
 
     /* Channel H */
-    void KalmanPosKaonPairFinder();
-    Bool_t PassesPosKaonPairCuts(Bool_t isSignal, KFParticleMother kfPosKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB,
-                                 TLorentzVector lvPosKaonPair, TLorentzVector lvPosKaonA, TLorentzVector lvPosKaonB);
+    void KalmanKaonPairFinder();
+    Bool_t PassesKaonPairCuts(Bool_t isSignal, KFParticleMother kfKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB, TLorentzVector lvKaonPair,
+                              TLorentzVector lvPosKaonA, TLorentzVector lvPosKaonB);
 
     /* Utilities */
     void ClearContainers();
@@ -217,12 +217,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    private:
     /* Settings ~ stored in Analysis Manager ~ all persistent */
-    Bool_t fIsMC;            // kTRUE if MC simulation, kFALSE if data
-    TString fSourceOfV0s;    // choose V0 finder: "kalman", "custom", "on-the-fly", "offline"
-    Char_t fReactionID;      // reaction channel identifier, could be: 'A', 'D', 'E', 'H'
-    Bool_t fDoQA;            // kTRUE to do QA
-    TString fStopAfter;      // "MC", "Tracks", "Findables", "V0s" (default: "")
-    Bool_t fReadSignalLogs;  // kTRUE to read and load signal logs
+    Bool_t fIsMC;             // kTRUE if MC simulation, kFALSE if data
+    TString fSourceOfV0s;     // choose V0 finder: "kalman", "custom", "on-the-fly", "offline"
+    Char_t fReactionChannel;  // reaction channel identifier, could be: 'A', 'D', 'E', 'H'
+    Bool_t fDoQA;             // kTRUE to do QA
+    TString fStopAfter;       // "MC", "Tracks", "Findables", "V0s" (default: "")
+    Bool_t fReadSignalLogs;   // kTRUE to read and load signal logs
 
     /* AliRoot Objects */
     AliMCEvent* fMC;                //! MC event
@@ -238,12 +238,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t fCentrality;            //! centrality percentile
 
     /* ROOT Objects */
-    TDatabasePDG fPDG;                //!
-    TList* fList_QA_Hists;            //!
-    TList* fList_Tracks_Hists;        //!
-    TList* fList_V0s_Hists;           //!
-    TList* fList_Sexaquarks_Hists;    //!
-    TList* fList_PosKaonPairs_Hists;  //!
+    TDatabasePDG fPDG;              //!
+    TList* fList_QA_Hists;          //!
+    TList* fList_Tracks_Hists;      //!
+    TList* fList_V0s_Hists;         //!
+    TList* fList_Sexaquarks_Hists;  //!
+    TList* fList_KaonPairs_Hists;   //!
 
     /* External Files */
     TString fAliEnPath;    //!
@@ -257,6 +257,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;  // PDG code of the positive daughter from the V0 PDG code
 
     /*** Trees ***/
+
     TTree* fTree_Events;      //!
     TTree* fTree_Injected;    //!
     TTree* fTree_MC;          //!
@@ -265,8 +266,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TTree* fTree_Sexaquarks;  //!
     TTree* fTree_KaonPairs;   //!
 
-    /** Branches **/
+    /*** Branches ***/
 
+    /** Events **/
     Float_t tEvents_PV_TrueXv;     //!
     Float_t tEvents_PV_TrueYv;     //!
     Float_t tEvents_PV_TrueZv;     //!
@@ -280,6 +282,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tEvents_IsCentral;      //!
     Bool_t tEvents_IsSemiCentral;  //!
 
+    /** Injected Sexaquarks **/
     Int_t tInjected_RunNumber;         //!
     Int_t tInjected_DirNumber;         //!
     Int_t tInjected_EventNumber;       //!
@@ -294,6 +297,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tInjected_Nucleon_Pz;      //!
     UInt_t tInjected_ReactionChannel;  //! char -> ASCII -> uint
 
+    /** MC Particles **/
     Int_t tMC_Idx;           //!
     Int_t tMC_PdgCode;       //!
     Int_t tMC_Idx_Mother;    //!
@@ -303,14 +307,15 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tMC_Px;          //!
     Float_t tMC_Py;          //!
     Float_t tMC_Pz;          //!
-    Float_t tMC_Xv_i;        //!
-    Float_t tMC_Yv_i;        //!
-    Float_t tMC_Zv_i;        //!
+    Float_t tMC_Xv;          //! origin x-vertex
+    Float_t tMC_Yv;          //! origin y-vertex
+    Float_t tMC_Zv;          //! origin z-vertex
     UInt_t tMC_Status;       //!
     Bool_t tMC_IsSecondary;  //!
     Bool_t tMC_IsSignal;     //!
     Int_t tMC_ReactionID;    //!
 
+    /** Tracks **/
     Int_t tTrack_Idx;             //!
     Int_t tTrack_Idx_True;        //!
     Float_t tTrack_Px;            //!
@@ -328,6 +333,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TBits tTrack_TPCClusterMap;   //!
     TBits tTrack_TPCSharedMap;    //!
 
+    /** V0s **/
     Int_t tV0_Idx;           //!
     Int_t tV0_Idx_Pos;       //!
     Int_t tV0_Idx_Neg;       //!
@@ -337,9 +343,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tV0_Py;          //!
     Float_t tV0_Pz;          //!
     Float_t tV0_E;           //!
-    Float_t tV0_Xv_f;        //!
-    Float_t tV0_Yv_f;        //!
-    Float_t tV0_Zv_f;        //!
+    Float_t tV0_Xv;          //! V0 x-vertex
+    Float_t tV0_Yv;          //! V0 y-vertex
+    Float_t tV0_Zv;          //! V0 z-vertex
     Float_t tV0_Neg_Px;      //!
     Float_t tV0_Neg_Py;      //!
     Float_t tV0_Neg_Pz;      //!
@@ -351,6 +357,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tV0_IsSignal;     //!
     Int_t tV0_ReactionID;    //!
 
+    /** Anti-Sexaquark Candidates **/
     Int_t tSexaquark_Idx_AL;         //!
     Int_t tSexaquark_Idx_AL_Neg;     //!
     Int_t tSexaquark_Idx_AL_Pos;     //!
@@ -358,9 +365,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tSexaquark_Py;           //!
     Float_t tSexaquark_Pz;           //!
     Float_t tSexaquark_E;            //!
-    Float_t tSexaquark_SV_Xv;        //!
-    Float_t tSexaquark_SV_Yv;        //!
-    Float_t tSexaquark_SV_Zv;        //!
+    Float_t tSexaquark_Xv;           //! secondary x-vertex
+    Float_t tSexaquark_Yv;           //! secondary y-vertex
+    Float_t tSexaquark_Zv;           //! secondary z-vertex
     Float_t tSexaquark_DecayLength;  //!
     Float_t tSexaquark_CPAwrtPV;     //!
     Float_t tSexaquark_DCAwrtPV;     //!
@@ -368,7 +375,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tSexaquark_IsHybrid;      //!
     Bool_t tSexaquark_IsSignal;      //!
     Int_t tSexaquark_ReactionID;     //!
-
+    /* Channel A */
     Int_t tSexaquarkA_Idx_K0S;        //!
     Int_t tSexaquarkA_Idx_K0S_Neg;    //!
     Int_t tSexaquarkA_Idx_K0S_Pos;    //!
@@ -379,7 +386,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tSexaquarkA_DCAV0aposSV;  //!
     Float_t tSexaquarkA_DCAV0bnegSV;  //!
     Float_t tSexaquarkA_DCAV0bposSV;  //!
-
+    /* Channel D */
     Int_t tSexaquarkD_Idx_PosKaon;   //!
     Float_t tSexaquarkD_DCAV0Ba;     //!
     Float_t tSexaquarkD_DCAV0negBa;  //!
@@ -388,7 +395,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tSexaquarkD_DCABaSV;     //!
     Float_t tSexaquarkD_DCAV0negSV;  //!
     Float_t tSexaquarkD_DCAV0posSV;  //!
-
+    /* Channel E */
     Int_t tSexaquarkE_Idx_PP;        //!
     Int_t tSexaquarkE_Idx_PP_Neg;    //!
     Int_t tSexaquarkE_Idx_PP_Pos;    //!
@@ -405,6 +412,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tSexaquarkE_DCApmPK;     //!
     Float_t tSexaquarkE_DCAppPK;     //!
 
+    /** Secondary K+K+ Pairs **/
     Int_t tKaonPair_Idx;             //!
     Int_t tKaonPair_Idx_KaonA;       //!
     Int_t tKaonPair_Idx_KaonB;       //!
@@ -412,9 +420,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tKaonPair_Py;            //!
     Float_t tKaonPair_Pz;            //!
     Float_t tKaonPair_E;             //!
-    Float_t tKaonPair_SV_Xv;         //!
-    Float_t tKaonPair_SV_Yv;         //!
-    Float_t tKaonPair_SV_Zv;         //!
+    Float_t tKaonPair_Xv;            //! secondary x-vertex
+    Float_t tKaonPair_Yv;            //! secondary y-vertex
+    Float_t tKaonPair_Zv;            //! secondary z-vertex
     Float_t tKaonPair_DecayLength;   //!
     Float_t tKaonPair_DCAwrtPV;      //!
     Float_t tKaonPair_DCAbtwKaons;   //!
@@ -499,8 +507,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      - `60+` : effect of cuts on SIGNAL candidates
      - `90`  : found SIGNAL candidates that passed all cuts
     */
-    TH1D* fHist_PosKaonPairs_Bookkeep;                                          //!
-    std::map<std::tuple<TString, TString, TString>, TH1D*> fHist_PosKaonPairs;  //! key: `stage, set, property`
+    TH1D* fHist_KaonPairs_Bookkeep;                                          //!
+    std::map<std::tuple<TString, TString, TString>, TH1D*> fHist_KaonPairs;  //! key: `stage, set, property`
 
     /*** Containers -- vectors and hash tables ***/
     // NOTE: when adding a new one, don't forget to clear it on ClearContainers()!
@@ -637,13 +645,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMax_Sexa_DCApkpp;     //
 
     /** Secondary K+K+ Pairs **/
-    Float_t kMin_PosKaonPair_Radius;       //
-    Float_t kMin_PosKaonPair_Pt;           //
-    Float_t kMin_PosKaonPair_DCAwrtPV;     //
-    Float_t kMax_PosKaonPair_DCAbtwKaons;  //
-    Float_t kMax_PosKaonPair_DCApkaSV;     //
-    Float_t kMax_PosKaonPair_DCApkbSV;     //
-    Float_t kMax_PosKaonPair_Chi2ndf;      //
+    Float_t kMin_KaonPair_Radius;       //
+    Float_t kMin_KaonPair_Pt;           //
+    Float_t kMin_KaonPair_DCAwrtPV;     //
+    Float_t kMax_KaonPair_DCAbtwKaons;  //
+    Float_t kMax_KaonPair_DCApkaSV;     //
+    Float_t kMax_KaonPair_DCApkbSV;     //
+    Float_t kMax_KaonPair_Chi2ndf;      //
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
