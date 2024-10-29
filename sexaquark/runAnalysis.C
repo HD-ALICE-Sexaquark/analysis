@@ -18,6 +18,7 @@
 
 void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
                  TString LocalInputPath,  // (only valid when Mode == "local") dir that contains ProductionName dirs
+                 Int_t LocalNDirs,        // (only valid when Mode == "local" or Mode == "hybrid") number of subdirs per run
                  Bool_t GridTestMode,     // (only valid when Mode == "grid")
                  Bool_t IsMC,             //
                  TString ProductionName,  // for data: "LHC15o", "LHC18q", "LHC18r"
@@ -96,9 +97,6 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
 
     TString LocalDataDir = Form("%s/%s", LocalInputPath.Data(), ProductionName.Data());
     if (ProductionName.Contains("23l1")) LocalDataDir += Form("/%s", SimulationSet.Data());  // signal MC
-
-    Int_t LocalNDirs = 6;  // hardcoded
-    if (Mode == "hybrid") LocalNDirs = 110;
 
     TString GridDataDir = Form("/alice/sim/%s/%s", ProductionYear.Data(), ProductionName.Data());
     if (ProductionName.Contains("23l1")) GridDataDir += Form("/%s", SimulationSet.Data());  // signal MC
@@ -197,7 +195,8 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
 
     /* Add Helper Tasks */
 
-    TString TaskPhysicsSelection_Options = Form("(%i)", (Int_t)IsMC);
+    Bool_t applyPileupCuts = kFALSE;  // kFALSE in Pb-Pb (as recommended in: https://twiki.cern.ch/twiki/bin/view/ALICE/AliDPGtoolsPhysSel)
+    TString TaskPhysicsSelection_Options = Form("(%i, %i)", (Int_t)IsMC, (Int_t)applyPileupCuts);
     AliPhysicsSelectionTask *TaskPhysicsSelection = reinterpret_cast<AliPhysicsSelectionTask *>(
         gInterpreter->ExecuteMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C" + TaskPhysicsSelection_Options));
     if (!TaskPhysicsSelection) return;
