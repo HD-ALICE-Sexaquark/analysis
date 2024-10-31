@@ -23,6 +23,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fEventCuts(),
       fMagneticField(0.),
       /*  */
+      fPeriodNumber(0),
       fRunNumber(0),
       fDirNumber(0),
       fEventNumber(0),
@@ -55,10 +56,19 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tEvents_PV_TrueXv(0),
       tEvents_PV_TrueYv(0),
       tEvents_PV_TrueZv(0),
+      tEvents_IsGenPileup(0),
+      tEvents_IsSBCPileup(0),
       tEvents_PV_RecXv(0),
       tEvents_PV_RecYv(0),
       tEvents_PV_RecZv(0),
+      tEvents_PV_NContributors(0),
+      tEvents_PV_ZvErr_FromSPD(0),
+      tEvents_PV_ZvErr_FromTracks(0),
+      tEvents_PV_Zv_FromSPD(0),
+      tEvents_PV_Zv_FromTracks(0),
+      tEvents_PV_Dispersion(0),
       tEvents_NTracks(0),
+      tEvents_NTPCClusters(0),
       tEvents_IsMB(0),
       tEvents_IsHighMultV0(0),
       tEvents_IsHighMultSPD(0),
@@ -93,6 +103,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tMC_Yv(0),
       tMC_Zv(0),
       tMC_Status(0),
+      tMC_IsOOBPileup(0),
       tMC_IsSecondary(0),
       tMC_IsSignal(0),
       /*  */
@@ -101,6 +112,18 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tTrack_Px(0),
       tTrack_Py(0),
       tTrack_Pz(0),
+      tTrack_Px_Inner(0),
+      tTrack_Py_Inner(0),
+      tTrack_Pz_Inner(0),
+      tTrack_Px_TPCInner(0),
+      tTrack_Py_TPCInner(0),
+      tTrack_Pz_TPCInner(0),
+      tTrack_Px_Constrained(0),
+      tTrack_Py_Constrained(0),
+      tTrack_Pz_Constrained(0),
+      tTrack_Px_Outer(0),
+      tTrack_Py_Outer(0),
+      tTrack_Pz_Outer(0),
       tTrack_Charge(0),
       tTrack_NSigmaPion(0),
       tTrack_NSigmaKaon(0),
@@ -363,6 +386,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fPIDResponse(0),
       fEventCuts(),
       fMagneticField(0.),
+      fPeriodNumber(0),
       fRunNumber(0),
       fDirNumber(0),
       fEventNumber(0),
@@ -395,10 +419,19 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tEvents_PV_TrueXv(0),
       tEvents_PV_TrueYv(0),
       tEvents_PV_TrueZv(0),
+      tEvents_IsGenPileup(0),
+      tEvents_IsSBCPileup(0),
       tEvents_PV_RecXv(0),
       tEvents_PV_RecYv(0),
       tEvents_PV_RecZv(0),
+      tEvents_PV_NContributors(0),
+      tEvents_PV_ZvErr_FromSPD(0),
+      tEvents_PV_ZvErr_FromTracks(0),
+      tEvents_PV_Zv_FromSPD(0),
+      tEvents_PV_Zv_FromTracks(0),
+      tEvents_PV_Dispersion(0),
       tEvents_NTracks(0),
+      tEvents_NTPCClusters(0),
       tEvents_IsMB(0),
       tEvents_IsHighMultV0(0),
       tEvents_IsHighMultSPD(0),
@@ -433,6 +466,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tMC_Yv(0),
       tMC_Zv(0),
       tMC_Status(0),
+      tMC_IsOOBPileup(0),
       tMC_IsSecondary(0),
       tMC_IsSignal(0),
       /*  */
@@ -441,6 +475,18 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tTrack_Px(0),
       tTrack_Py(0),
       tTrack_Pz(0),
+      tTrack_Px_Inner(0),
+      tTrack_Py_Inner(0),
+      tTrack_Pz_Inner(0),
+      tTrack_Px_TPCInner(0),
+      tTrack_Py_TPCInner(0),
+      tTrack_Pz_TPCInner(0),
+      tTrack_Px_Constrained(0),
+      tTrack_Py_Constrained(0),
+      tTrack_Pz_Constrained(0),
+      tTrack_Px_Outer(0),
+      tTrack_Py_Outer(0),
+      tTrack_Pz_Outer(0),
       tTrack_Charge(0),
       tTrack_NSigmaPion(0),
       tTrack_NSigmaKaon(0),
@@ -812,15 +858,26 @@ void AliAnalysisTaskSexaquark::PrepareEventsBranches() {
     fTree_Events->Branch("EventNumber", &fEventNumber);
     fTree_Events->Branch("DirNumber", &fDirNumber);
     fTree_Events->Branch("RunNumber", &fRunNumber);
+    fTree_Events->Branch("PeriodNumber", &fPeriodNumber);
     fTree_Events->Branch("Centrality", &fCentrality);
 
     fTree_Events->Branch("PV_TrueXv", &tEvents_PV_TrueXv);
     fTree_Events->Branch("PV_TrueYv", &tEvents_PV_TrueYv);
     fTree_Events->Branch("PV_TrueZv", &tEvents_PV_TrueZv);
+    fTree_Events->Branch("IsGenPileup", &tEvents_IsGenPileup);
+    fTree_Events->Branch("IsSBCPileup", &tEvents_IsSBCPileup);
+
     fTree_Events->Branch("PV_RecXv", &tEvents_PV_RecXv);
     fTree_Events->Branch("PV_RecYv", &tEvents_PV_RecYv);
     fTree_Events->Branch("PV_RecZv", &tEvents_PV_RecZv);
+    fTree_Events->Branch("PV_NContributors", &tEvents_PV_NContributors);
+    fTree_Events->Branch("PV_ZvErr_FromSPD", &tEvents_PV_ZvErr_FromSPD);
+    fTree_Events->Branch("PV_ZvErr_FromTracks", &tEvents_PV_ZvErr_FromTracks);
+    fTree_Events->Branch("PV_Zv_FromSPD", &tEvents_PV_Zv_FromSPD);
+    fTree_Events->Branch("PV_Zv_FromTracks", &tEvents_PV_Zv_FromTracks);
+    fTree_Events->Branch("PV_Dispersion", &tEvents_PV_Dispersion);
     fTree_Events->Branch("NTracks", &tEvents_NTracks);
+    fTree_Events->Branch("NTPCClusters", &tEvents_NTPCClusters);
     fTree_Events->Branch("IsMB", &tEvents_IsMB);
     fTree_Events->Branch("IsHighMultV0", &tEvents_IsHighMultV0);
     fTree_Events->Branch("IsHighMultSPD", &tEvents_IsHighMultSPD);
@@ -849,6 +906,7 @@ void AliAnalysisTaskSexaquark::PrepareMCParticlesBranches() {
     fTree_MC->Branch("Yv", &tMC_Yv);
     fTree_MC->Branch("Zv", &tMC_Zv);
     fTree_MC->Branch("Status", &tMC_Status);
+    fTree_MC->Branch("IsOOBPileup", &tMC_IsOOBPileup);
     fTree_MC->Branch("IsSecondary", &tMC_IsSecondary);
     fTree_MC->Branch("IsSignal", &tMC_IsSignal);
 }
@@ -860,11 +918,24 @@ void AliAnalysisTaskSexaquark::PrepareTracksBranches() {
     fTree_Tracks->Branch("EventNumber", &fEventNumber);
     fTree_Tracks->Branch("DirNumber", &fDirNumber);
     fTree_Tracks->Branch("RunNumber", &fRunNumber);
+
     fTree_Tracks->Branch("Idx", &tTrack_Idx);
     fTree_Tracks->Branch("Idx_True", &tTrack_Idx_True);
     fTree_Tracks->Branch("Px", &tTrack_Px);
     fTree_Tracks->Branch("Py", &tTrack_Py);
     fTree_Tracks->Branch("Pz", &tTrack_Pz);
+    fTree_Tracks->Branch("Px_Inner", &tTrack_Px_Inner);
+    fTree_Tracks->Branch("Py_Inner", &tTrack_Py_Inner);
+    fTree_Tracks->Branch("Pz_Inner", &tTrack_Pz_Inner);
+    fTree_Tracks->Branch("Px_TPCInner", &tTrack_Px_TPCInner);
+    fTree_Tracks->Branch("Py_TPCInner", &tTrack_Py_TPCInner);
+    fTree_Tracks->Branch("Pz_TPCInner", &tTrack_Pz_TPCInner);
+    fTree_Tracks->Branch("Px_Constrained", &tTrack_Px_Constrained);
+    fTree_Tracks->Branch("Py_Constrained", &tTrack_Py_Constrained);
+    fTree_Tracks->Branch("Pz_Constrained", &tTrack_Pz_Constrained);
+    fTree_Tracks->Branch("Px_Outer", &tTrack_Px_Outer);
+    fTree_Tracks->Branch("Py_Outer", &tTrack_Py_Outer);
+    fTree_Tracks->Branch("Pz_Outer", &tTrack_Pz_Outer);
     fTree_Tracks->Branch("Charge", &tTrack_Charge);
     fTree_Tracks->Branch("NSigmaPion", &tTrack_NSigmaPion);
     fTree_Tracks->Branch("NSigmaKaon", &tTrack_NSigmaKaon);
@@ -1007,16 +1078,26 @@ void AliAnalysisTaskSexaquark::PrepareKaonPairsBranches() {
  */
 void AliAnalysisTaskSexaquark::ClearEventsBranches() {
     // not clearing fRunNumber nor fDirNumber
+    fPeriodNumber = 0;
     fEventNumber = 0;
     fCentrality = 0;
 
     tEvents_PV_TrueXv = -999.;
     tEvents_PV_TrueYv = -999.;
     tEvents_PV_TrueZv = -999.;
+    tEvents_IsGenPileup = kFALSE;
+    tEvents_IsSBCPileup = kFALSE;
     tEvents_PV_RecXv = 0.;
     tEvents_PV_RecYv = 0.;
     tEvents_PV_RecZv = 0.;
+    tEvents_PV_NContributors = 0;
+    tEvents_PV_ZvErr_FromSPD = 0.;
+    tEvents_PV_ZvErr_FromTracks = 0.;
+    tEvents_PV_Zv_FromSPD = 0.;
+    tEvents_PV_Zv_FromTracks = 0.;
+    tEvents_PV_Dispersion = 0;
     tEvents_NTracks = 0;
+    tEvents_NTPCClusters = 0;
     tEvents_IsMB = kFALSE;
     tEvents_IsHighMultV0 = kFALSE;
     tEvents_IsHighMultSPD = kFALSE;
@@ -1042,6 +1123,7 @@ void AliAnalysisTaskSexaquark::ClearMCParticlesBranches() {
     tMC_Yv = 0.;
     tMC_Zv = 0.;
     tMC_Status = 0;
+    tMC_IsOOBPileup = kFALSE;
     tMC_IsSecondary = kFALSE;
     tMC_IsSignal = kFALSE;
 }
@@ -1055,6 +1137,18 @@ void AliAnalysisTaskSexaquark::ClearTracksBranches() {
     tTrack_Px = 0.;
     tTrack_Py = 0.;
     tTrack_Pz = 0.;
+    tTrack_Px_Inner = 0.;
+    tTrack_Py_Inner = 0.;
+    tTrack_Pz_Inner = 0.;
+    tTrack_Px_TPCInner = 0.;
+    tTrack_Py_TPCInner = 0.;
+    tTrack_Pz_TPCInner = 0.;
+    tTrack_Px_Constrained = 0.;
+    tTrack_Py_Constrained = 0.;
+    tTrack_Pz_Constrained = 0.;
+    tTrack_Px_Outer = 0.;
+    tTrack_Py_Outer = 0.;
+    tTrack_Pz_Outer = 0.;
     tTrack_Charge = 0;
     tTrack_NSigmaPion = 0.;
     tTrack_NSigmaKaon = 0.;
@@ -1613,20 +1707,41 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     fMagneticField = fESD->GetMagneticField();
 
+    fPeriodNumber = fESD->GetPeriodNumber();
     fRunNumber = fESD->GetRunNumber();
     fEventNumber = fESD->GetEventNumberInFile();
 
-    // print event centrality class
+    /* Centrality */
+
     AliMultSelection* MultSelection = dynamic_cast<AliMultSelection*>(fESD->FindListObject("MultSelection"));
     if (!MultSelection) AliFatal("ERROR: AliMultSelection couldn't be found.");
     fCentrality = MultSelection->GetMultiplicityPercentile("V0M");
-    // AliInfoF("!! fCentrality = %f !!", fCentrality); // DEBUG
+    AliInfoF("Centrality (from MultSelection) = %.2f", fCentrality);  // DEBUG
 
     fHist_QA["Centrality"]->Fill(fCentrality);
     fHist_QA["NTracks"]->Fill(fESD->GetNumberOfTracks());
 
     // init KFparticle
     KFParticle::SetField(fMagneticField);
+
+    /* Primary Vertex Reconstruction */
+
+    Double_t PV_CovMatrix[6];
+    fPrimaryVertex->GetCovarianceMatrix(PV_CovMatrix);
+
+    AliESDVertex* PrimaryVertex_SPD = const_cast<AliESDVertex*>(fESD->GetPrimaryVertexSPD());
+    Double_t PV_SPD_CovMatrix[6];
+    PrimaryVertex_SPD->GetCovarianceMatrix(PV_SPD_CovMatrix);
+
+    // -- DEBUG -- //
+
+    AliGenCocktailEventHeader* cocktailHeader = dynamic_cast<AliGenCocktailEventHeader*>(fMC->GenEventHeader());
+    if (cocktailHeader) {
+        TList* lgen = cocktailHeader->GetHeaders();
+        lgen->Print();
+    }
+
+    // END -- OF -- DEBUG //
 
     /* Event */
 
@@ -1640,14 +1755,23 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     /* Assign branches and fill tree */
 
     if (fMC_PrimaryVertex) {
-        tEvents_PV_TrueXv = fMC_PrimaryVertex->GetX();
-        tEvents_PV_TrueYv = fMC_PrimaryVertex->GetY();
-        tEvents_PV_TrueZv = fMC_PrimaryVertex->GetZ();
+        tEvents_PV_TrueXv = (Float_t)fMC_PrimaryVertex->GetX();
+        tEvents_PV_TrueYv = (Float_t)fMC_PrimaryVertex->GetY();
+        tEvents_PV_TrueZv = (Float_t)fMC_PrimaryVertex->GetZ();
+        tEvents_IsGenPileup = AliAnalysisUtils::IsPileupInGeneratedEvent(fMC, "Hijing");
+        tEvents_IsSBCPileup = AliAnalysisUtils::IsSameBunchPileupInGeneratedEvent(fMC, "Hijing");
     }
-    tEvents_PV_RecXv = fPrimaryVertex->GetX();
-    tEvents_PV_RecYv = fPrimaryVertex->GetY();
-    tEvents_PV_RecZv = fPrimaryVertex->GetZ();
+    tEvents_PV_RecXv = (Float_t)fPrimaryVertex->GetX();
+    tEvents_PV_RecYv = (Float_t)fPrimaryVertex->GetY();
+    tEvents_PV_RecZv = (Float_t)fPrimaryVertex->GetZ();
+    tEvents_PV_NContributors = fPrimaryVertex->GetNContributors();
+    tEvents_PV_ZvErr_FromSPD = (Float_t)PV_SPD_CovMatrix[5];
+    tEvents_PV_ZvErr_FromTracks = (Float_t)PV_CovMatrix[5];
+    tEvents_PV_Zv_FromSPD = (Float_t)PrimaryVertex_SPD->GetZ();
+    tEvents_PV_Zv_FromTracks = (Float_t)fPrimaryVertex->GetZ();
+    tEvents_PV_Dispersion = (Float_t)fPrimaryVertex->GetDispersion();
     tEvents_NTracks = fESD->GetNumberOfTracks();
+    tEvents_NTPCClusters = fESD->GetNumberOfTPCClusters();
     tEvents_IsMB = fInputHandler->IsEventSelected() & AliVEvent::kINT7;
     tEvents_IsHighMultV0 = fInputHandler->IsEventSelected() & AliVEvent::kHighMultV0;
     tEvents_IsHighMultSPD = fInputHandler->IsEventSelected() & AliVEvent::AliVEvent::kHighMultSPD;
@@ -1880,8 +2004,8 @@ void AliAnalysisTaskSexaquark::DefineTracksCuts(TString cuts_option) {
     kMin_Track_NTPCClusters = 50;
     kMax_Track_Chi2PerNTPCClusters = 2.;
     kTurnedOn_Track_StatusCuts = kTRUE;
-    kTurnedOn_Track_RejectKinks = kFALSE;  // PENDING: need to study further
-    kMin_Track_DCAxy_wrtPV = 2.;           // PENDING: could be improved for pions with DCAxy > 4 ??
+    kTurnedOn_Track_RejectKinks = kTRUE;
+    kMin_Track_DCAxy_wrtPV = 2.;  // PENDING: could be improved for pions with DCAxy > 4 ??
 
     kMin_Track_Pt[2212] = 0.2;
     kMin_Track_Pt[321] = 0.0;  // PENDING: to check when analyzing the next reaction channels
@@ -2107,6 +2231,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         // `GetCocktailGenerator` not only considers primaries, but subsequent daughters/secondaries all the way down, as well
         fMC->GetCocktailGenerator(mcIdx, generator_name);
         if (generator_name.Contains("Injector (Anti-Neutron)")) continue;
+        // AliInfoF("MC: %i, Generator: %s", mcIdx, generator_name.Data()); // DEBUG
 
         /* Get MC particle info */
 
@@ -2454,7 +2579,6 @@ Bool_t AliAnalysisTaskSexaquark::PassesEventSelection() {
         fEventCuts.UseTimeRangeCut();
         fEventCuts.OverrideAutomaticTriggerSelection(AliVEvent::kAny);  // PENDING: remove kAny!
         if (!fEventCuts.AcceptEvent(fESD)) return kFALSE;
-        AliInfo("!! MC Event Passed z-vertex range on PV !!");  // DEBUG
     }
 
     /* Trigger Selection */
@@ -2483,8 +2607,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesEventSelection() {
 
     /* rec. PV z-vertex range */
 
-    if (TMath::Abs(fPrimaryVertex->GetZ()) > 10.) return kFALSE;
-    AliInfo("!! Event Passed z-vertex range on PV !!");  // DEBUG
+    if (TMath::Abs(fPrimaryVertex->GetZ()) > 12.) return kFALSE;  // PENDING: hardcoded? not a good idea
+    AliInfo("!! Event Passed z-vertex range on PV !!");           // DEBUG
 
     if (fDoQA) {
         fHist_QA["Events_Bookkeep"]->Fill(2);
@@ -2691,6 +2815,11 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
             /* Assign branches and fill tree */
 
+            AliExternalTrackParam* inner_param = const_cast<AliExternalTrackParam*>(track->GetInnerParam());
+            AliExternalTrackParam* tpc_inner_param = const_cast<AliExternalTrackParam*>(track->GetTPCInnerParam());
+            AliExternalTrackParam* constrained_param = const_cast<AliExternalTrackParam*>(track->GetConstrainedParam());
+            AliExternalTrackParam* outer_param = const_cast<AliExternalTrackParam*>(track->GetOuterParam());
+
             if (!already_in_tree) {
 
                 tTrack_Idx = esdIdxTrack;
@@ -2698,6 +2827,18 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
                 tTrack_Px = (Float_t)track->Px();
                 tTrack_Py = (Float_t)track->Py();
                 tTrack_Pz = (Float_t)track->Pz();
+                tTrack_Px_Inner = inner_param ? (Float_t)track->GetInnerParam()->Px() : -9999.;
+                tTrack_Py_Inner = inner_param ? (Float_t)track->GetInnerParam()->Py() : -9999.;
+                tTrack_Pz_Inner = inner_param ? (Float_t)track->GetInnerParam()->Pz() : -9999.;
+                tTrack_Px_TPCInner = tpc_inner_param ? (Float_t)track->GetTPCInnerParam()->Px() : -9999.;
+                tTrack_Py_TPCInner = tpc_inner_param ? (Float_t)track->GetTPCInnerParam()->Py() : -9999.;
+                tTrack_Pz_TPCInner = tpc_inner_param ? (Float_t)track->GetTPCInnerParam()->Pz() : -9999.;
+                tTrack_Px_Constrained = constrained_param ? (Float_t)track->GetConstrainedParam()->Px() : -9999.;
+                tTrack_Py_Constrained = constrained_param ? (Float_t)track->GetConstrainedParam()->Py() : -9999.;
+                tTrack_Pz_Constrained = constrained_param ? (Float_t)track->GetConstrainedParam()->Pz() : -9999.;
+                tTrack_Px_Outer = outer_param ? (Float_t)track->GetOuterParam()->Px() : -9999.;
+                tTrack_Py_Outer = outer_param ? (Float_t)track->GetOuterParam()->Py() : -9999.;
+                tTrack_Pz_Outer = outer_param ? (Float_t)track->GetOuterParam()->Pz() : -9999.;
                 tTrack_Charge = track->Charge();
                 tTrack_NSigmaPion = n_sigma_pion;
                 tTrack_NSigmaKaon = n_sigma_kaon;
@@ -2886,8 +3027,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelectionAs(Int_t HypothesisPID, Boo
     if (is_secondary) fHist_Tracks_Bookkeep[HypothesisPID]->Fill(96);
     if (is_signal) fHist_Tracks_Bookkeep[HypothesisPID]->Fill(126);
 
-    // >> reject kinks // !! PENDING !!
-    if (kTurnedOn_Track_RejectKinks && track->GetKinkIndex(0) != 0) return kFALSE;
+    if (kTurnedOn_Track_RejectKinks && track->GetKinkIndex(0) > 0) return kFALSE;
     fHist_Tracks_Bookkeep[HypothesisPID]->Fill(37);
     if (is_true) fHist_Tracks_Bookkeep[HypothesisPID]->Fill(67);
     if (is_secondary) fHist_Tracks_Bookkeep[HypothesisPID]->Fill(97);

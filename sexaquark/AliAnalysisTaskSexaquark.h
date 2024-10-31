@@ -31,12 +31,11 @@
 #include "TVector3.h"
 
 #include "AliAnalysisManager.h"
-#include "AliEventCuts.h"
 #include "AliExternalTrackParam.h"
+#include "AliGenCocktailEventHeader.h"  // DEBUG
 #include "AliHelix.h"
 #include "AliInputEventHandler.h"
 #include "AliLog.h"
-#include "AliMultSelection.h"
 #include "AliPIDResponse.h"
 #include "AliVEvent.h"
 #include "AliVVertex.h"
@@ -46,11 +45,16 @@
 #include "AliESDInputHandler.h"
 #include "AliESDVertex.h"
 #include "AliESDtrack.h"
+#include "AliESDtrackCuts.h"
 #include "AliESDv0.h"
 
 #include "AliMCEvent.h"
 #include "AliMCEventHandler.h"
 #include "AliMCParticle.h"
+
+#include "AliAnalysisUtils.h"
+#include "AliEventCuts.h"
+#include "AliMultSelection.h"
 
 #include "Math/Factory.h"
 #include "Math/Functor.h"
@@ -232,6 +236,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliPIDResponse* fPIDResponse;   //! pid response object
     AliEventCuts fEventCuts;        //! event cuts
     Double_t fMagneticField;        //! magnetic field
+    UInt_t fPeriodNumber;           //! period number
     Int_t fRunNumber;               //! run number
     Int_t fDirNumber;               //! directory number
     Int_t fEventNumber;             //! event number
@@ -269,18 +274,27 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /*** Branches ***/
 
     /** Events **/
-    Float_t tEvents_PV_TrueXv;     //!
-    Float_t tEvents_PV_TrueYv;     //!
-    Float_t tEvents_PV_TrueZv;     //!
-    Float_t tEvents_PV_RecXv;      //!
-    Float_t tEvents_PV_RecYv;      //!
-    Float_t tEvents_PV_RecZv;      //!
-    UInt_t tEvents_NTracks;        //!
-    Bool_t tEvents_IsMB;           //!
-    Bool_t tEvents_IsHighMultV0;   //!
-    Bool_t tEvents_IsHighMultSPD;  //!
-    Bool_t tEvents_IsCentral;      //!
-    Bool_t tEvents_IsSemiCentral;  //!
+    Float_t tEvents_PV_TrueXv;            //!
+    Float_t tEvents_PV_TrueYv;            //!
+    Float_t tEvents_PV_TrueZv;            //!
+    Bool_t tEvents_IsGenPileup;           //!
+    Bool_t tEvents_IsSBCPileup;           //!
+    Float_t tEvents_PV_RecXv;             //!
+    Float_t tEvents_PV_RecYv;             //!
+    Float_t tEvents_PV_RecZv;             //!
+    Int_t tEvents_PV_NContributors;       //!
+    Float_t tEvents_PV_ZvErr_FromSPD;     //!
+    Float_t tEvents_PV_ZvErr_FromTracks;  //!
+    Float_t tEvents_PV_Zv_FromSPD;        //!
+    Float_t tEvents_PV_Zv_FromTracks;     //!
+    Float_t tEvents_PV_Dispersion;        //!
+    Int_t tEvents_NTracks;                //!
+    Int_t tEvents_NTPCClusters;           //!
+    Bool_t tEvents_IsMB;                  //!
+    Bool_t tEvents_IsHighMultV0;          //!
+    Bool_t tEvents_IsHighMultSPD;         //!
+    Bool_t tEvents_IsCentral;             //!
+    Bool_t tEvents_IsSemiCentral;         //!
 
     /** Injected Sexaquarks **/
     Int_t tInjected_RunNumber;         //!
@@ -311,27 +325,40 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tMC_Yv;          //! origin y-vertex
     Float_t tMC_Zv;          //! origin z-vertex
     UInt_t tMC_Status;       //!
+    Bool_t tMC_IsOOBPileup;  //!
     Bool_t tMC_IsSecondary;  //!
     Bool_t tMC_IsSignal;     //!
     Int_t tMC_ReactionID;    //!
 
     /** Tracks **/
-    Int_t tTrack_Idx;             //!
-    Int_t tTrack_Idx_True;        //!
-    Float_t tTrack_Px;            //!
-    Float_t tTrack_Py;            //!
-    Float_t tTrack_Pz;            //!
-    Short_t tTrack_Charge;        //!
-    Float_t tTrack_NSigmaPion;    //!
-    Float_t tTrack_NSigmaKaon;    //!
-    Float_t tTrack_NSigmaProton;  //!
-    Bool_t tTrack_IsTrue;         //!
-    Bool_t tTrack_IsSecondary;    //!
-    Bool_t tTrack_IsSignal;       //!
-    Int_t tTrack_ReactionID;      //!
-    TBits tTrack_TPCFitMap;       //!
-    TBits tTrack_TPCClusterMap;   //!
-    TBits tTrack_TPCSharedMap;    //!
+    Int_t tTrack_Idx;               //!
+    Int_t tTrack_Idx_True;          //!
+    Float_t tTrack_Px;              //! from main parametrization
+    Float_t tTrack_Py;              //! from main parametrization
+    Float_t tTrack_Pz;              //! from main parametrization
+    Float_t tTrack_Px_Inner;        //!
+    Float_t tTrack_Py_Inner;        //!
+    Float_t tTrack_Pz_Inner;        //!
+    Float_t tTrack_Px_TPCInner;     //!
+    Float_t tTrack_Py_TPCInner;     //!
+    Float_t tTrack_Pz_TPCInner;     //!
+    Float_t tTrack_Px_Constrained;  //!
+    Float_t tTrack_Py_Constrained;  //!
+    Float_t tTrack_Pz_Constrained;  //!
+    Float_t tTrack_Px_Outer;        //!
+    Float_t tTrack_Py_Outer;        //!
+    Float_t tTrack_Pz_Outer;        //!
+    Short_t tTrack_Charge;          //!
+    Float_t tTrack_NSigmaPion;      //!
+    Float_t tTrack_NSigmaKaon;      //!
+    Float_t tTrack_NSigmaProton;    //!
+    Bool_t tTrack_IsTrue;           //!
+    Bool_t tTrack_IsSecondary;      //!
+    Bool_t tTrack_IsSignal;         //!
+    Int_t tTrack_ReactionID;        //!
+    TBits tTrack_TPCFitMap;         //!
+    TBits tTrack_TPCClusterMap;     //!
+    TBits tTrack_TPCSharedMap;      //!
 
     /** V0s **/
     Int_t tV0_Idx;           //!

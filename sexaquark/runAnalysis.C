@@ -3,7 +3,6 @@
 #include "TChain.h"
 #include "TGrid.h"
 #include "TROOT.h"
-#include "TSystem.h"
 
 #include "AliAnalysisAlien.h"
 #include "AliAnalysisManager.h"
