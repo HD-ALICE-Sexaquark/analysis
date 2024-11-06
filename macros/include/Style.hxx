@@ -1,7 +1,9 @@
 #ifndef Macros_Style_hxx
 #define Macros_Style_hxx
 
+#ifndef Macros_Headers_hxx
 #include "Headers.hxx"
+#endif
 
 /*  */
 
@@ -103,7 +105,7 @@ void SetMy2DHistStyle(TH2F *theHist) {
 
 /*  */
 void SetMy2DStyle() {
-    gStyle->SetOptStat(0);
+    // gStyle->SetOptStat(0);
 
     gStyle->SetLineWidth(2);
 
