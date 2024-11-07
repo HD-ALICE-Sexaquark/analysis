@@ -32,6 +32,7 @@
 #include "TPaletteAxis.h"
 #include "TPaveStats.h"
 #include "TPaveText.h"
+#include "TRandom3.h"
 #include "TRegexp.h"
 #include "TString.h"
 #include "TStyle.h"

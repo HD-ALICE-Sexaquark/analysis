@@ -3,10 +3,15 @@
 
 using namespace ROOT;
 
+/*
+ *
+ */
 void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_A1.8_local.root",         //
                              TString OutputFileName = "output_rdf/EfficiencyResults_A1.8.root",           //
                              TString Path_PhotonConvRadius = "../radius-weights/output_bkg/merged.root",  //
                              TString Path_BlastWave = "blastwave.root") {
+
+    std::cout << "!! Trees_RDF_GetEfficiency !! Starting !!" << std::endl;
 
     /*** Input ***/
 
@@ -306,4 +311,6 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
     std::cout << "fRDF_Sexaquarks   = " << fRDF_Sexaquarks.GetNRuns() << std::endl;
     std::cout << "feRDF_Sexaquarks  = " << feRDF_Sexaquarks.GetNRuns() << std::endl;
     std::cout << "fefRDF_Sexaquarks = " << fefRDF_Sexaquarks.GetNRuns() << std::endl;
+
+    std::cout << "!! Trees_RDF_GetEfficiency !! Finished !!" << std::endl;
 }
