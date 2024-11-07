@@ -6790,36 +6790,43 @@ void AliAnalysisTaskSexaquark::Evaluate(const Double_t* h, Double_t t, Double_t 
  * Correct initialization of a KFParticle.
  * (Copied from `AliPhysics/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.cxx`)
  */
-KFParticle AliAnalysisTaskSexaquark::CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge) {
+KFParticle AliAnalysisTaskSexaquark::CreateKFParticle(AliESDtrack& track, Double_t mass, Int_t charge, Bool_t inner) {
+
+    AliExternalTrackParam* track_param;
+    if (inner) {
+        track_param = const_cast<AliExternalTrackParam*>(track.GetInnerParam());
+    } else {
+        track_param = &track;
+    }
 
     Double_t fP[6];
-    track.GetXYZ(fP);
-    track.PxPyPz(fP + 3);
+    track_param->GetXYZ(fP);
+    track_param->PxPyPz(fP + 3);
 
-    Int_t fQ = track.Charge() * TMath::Abs(charge);
+    Int_t fQ = track_param->Charge() * TMath::Abs(charge);
     fP[3] *= TMath::Abs(charge);
     fP[4] *= TMath::Abs(charge);
     fP[5] *= TMath::Abs(charge);
 
-    Double_t pt = 1. / TMath::Abs(track.GetParameter()[4]) * TMath::Abs(charge);
-    Double_t cs = TMath::Cos(track.GetAlpha());
-    Double_t sn = TMath::Sin(track.GetAlpha());
-    Double_t r = TMath::Sqrt((1. - track.GetParameter()[2]) * (1. + track.GetParameter()[2]));
+    Double_t pt = 1. / TMath::Abs(track_param->GetParameter()[4]) * TMath::Abs(charge);
+    Double_t cs = TMath::Cos(track_param->GetAlpha());
+    Double_t sn = TMath::Sin(track_param->GetAlpha());
+    Double_t r = TMath::Sqrt((1. - track_param->GetParameter()[2]) * (1. + track_param->GetParameter()[2]));
 
     Double_t m00 = -sn;
     Double_t m10 = cs;
-    Double_t m23 = -pt * (sn + track.GetParameter()[2] * cs / r);
-    Double_t m43 = -pt * pt * (r * cs - track.GetParameter()[2] * sn);
+    Double_t m23 = -pt * (sn + track_param->GetParameter()[2] * cs / r);
+    Double_t m43 = -pt * pt * (r * cs - track_param->GetParameter()[2] * sn);
     Double_t m24 = pt * (cs - track.GetParameter()[2] * sn / r);
-    Double_t m44 = -pt * pt * (r * sn + track.GetParameter()[2] * cs);
+    Double_t m44 = -pt * pt * (r * sn + track_param->GetParameter()[2] * cs);
     Double_t m35 = pt;
-    Double_t m45 = -pt * pt * track.GetParameter()[3];
+    Double_t m45 = -pt * pt * track_param->GetParameter()[3];
 
-    m43 *= track.GetSign();
-    m44 *= track.GetSign();
-    m45 *= track.GetSign();
+    m43 *= track_param->GetSign();
+    m44 *= track_param->GetSign();
+    m45 *= track_param->GetSign();
 
-    const Double_t* cTr = track.GetCovariance();
+    const Double_t* cTr = track_param->GetCovariance();
     Double_t fC[21];
     fC[0] = cTr[0] * m00 * m00;
     fC[1] = cTr[0] * m00 * m10;

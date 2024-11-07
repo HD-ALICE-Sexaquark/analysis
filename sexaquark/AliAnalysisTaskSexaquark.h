@@ -210,7 +210,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Double_t Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
 
     /* Kalman Filter Utilities */
-    KFParticle CreateKFParticle(AliExternalTrackParam& track, Double_t mass, Int_t charge);
+    KFParticle CreateKFParticle(AliESDtrack& track, Double_t mass, Int_t charge, Bool_t inner = kTRUE);
     KFVertex CreateKFVertex(const AliVVertex& vertex);
     KFParticle TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis);
     void GetDStoParticleBz(float Bz, const KFParticleBase& p, const KFParticleBase& q, float dS[2], float dsdr[4][6], const float* param1 = 0,
