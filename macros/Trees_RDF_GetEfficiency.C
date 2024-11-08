@@ -1,5 +1,5 @@
 #include "include/Headers.hxx"
-#include "include/Style.hxx"
+#include "include/Style.cxx"
 
 using namespace ROOT;
 
@@ -13,23 +13,7 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
 
     std::cout << "!! Trees_RDF_GetEfficiency !! Starting !!" << std::endl;
 
-    /*** Input ***/
-
-    /* Input: Get trees */
-
-    RDataFrame RDF_Events("Events", InputFileName);
-    RDataFrame RDF_MCParticles("MCParticles", InputFileName);
-    RDataFrame RDF_Injected("Injected", InputFileName);
-    RDataFrame RDF_Sexaquarks("Sexaquarks", InputFileName);
-
-    const Float_t SexaquarkMass = RDF_Injected.Take<Float_t>("Mass").GetValue()[0];
-
-    /* Filter trees (1) */
-
-    auto fRDF_MCParticles = RDF_MCParticles.Filter("IsSignal").Filter("Idx_Mother == -1");
-    auto fRDF_Sexaquarks = RDF_Sexaquarks.Filter("IsSignal");
-
-    /* Input: Get Radius weights */
+    /*** Radius weights ***/
 
     TFile* File_PhotonConvRadius = TFile::Open(Path_PhotonConvRadius, "READ");
     if (!File_PhotonConvRadius || File_PhotonConvRadius->IsZombie()) {
@@ -52,11 +36,11 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
 
     File_PhotonConvRadius->Close();
 
-    auto Lambda_GetRadiusWeight = [&Hist_RadiusWeights](Float_t RadiusTrue) {  //
+    auto Lambda_GetRadiusWeight = [&Hist_RadiusWeights](Float_t RadiusTrue) -> Double_t {  //
         return Hist_RadiusWeights->GetBinContent(Hist_RadiusWeights->FindBin(RadiusTrue));
     };
 
-    /* Input: Get (Pt, Centrality) weights */
+    /*** (Pt, Centrality) weights ***/
 
     TFile* File_BlastWave = TFile::Open(Path_BlastWave, "READ");
     const Int_t NCentralityClasses = 10;
@@ -65,7 +49,7 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
     TString Name_Hist_BlastWave;
 
     for (Int_t cc = 0; cc < NCentralityClasses; cc++) {
-        Name_Hist_BlastWave = Form("Hist_BlastWave_%.2f_%s", SexaquarkMass, CentralityClasses[cc].Data());
+        Name_Hist_BlastWave = Form("Hist_BlastWave_%.2f_%s", SexaquarkMass, CentralityClasses[cc].Data());  // PENDING
         TH1D* Hist_BlastWave = dynamic_cast<TH1D*>(File_BlastWave->Get(Name_Hist_BlastWave));
         if (!Hist_BlastWave) {
             std::cout << "!! ERROR !! Trees_RDF_GetEfficiency !! Couldn't find TH1D " << Name_Hist_BlastWave << " in TFile " << Path_BlastWave
@@ -81,23 +65,39 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
 
     File_BlastWave->Close();
 
-    auto Lambda_GetCentralityBin = [](Float_t Centrality) {  //
+    auto Lambda_GetCentralityBin = [](Float_t Centrality) -> Int_t {  //
         return Centrality >= 5. ? static_cast<Int_t>(TMath::Floor(0.1 * Centrality + 1)) : 0;
     };
 
-    auto Lambda_GetPtWeight = [&HistsVec_PtWeights](Float_t PtTrue, Int_t CentralityBin) {
+    auto Lambda_GetPtWeight = [&HistsVec_PtWeights](Float_t PtTrue, Int_t CentralityBin) -> Double_t {
         return HistsVec_PtWeights[CentralityBin]->GetBinContent(HistsVec_PtWeights[CentralityBin]->FindBin(PtTrue));
     };
 
-    /*** Preparation ***/
+    /*** Input ***/
 
-    /* Preparation: same-size vectors */
+    /* Input: Get events tree */
+
+    RDataFrame RDF_Events("Events", InputFileName);
 
     std::vector<Int_t> Events_RunNumber = RDF_Events.Take<Int_t>("RunNumber").GetValue();
     std::vector<Int_t> Events_DirNumber = RDF_Events.Take<Int_t>("DirNumber").GetValue();
     std::vector<Int_t> Events_EventNumber = RDF_Events.Take<Int_t>("EventNumber").GetValue();
     std::vector<Float_t> Events_Centrality = RDF_Events.Take<Float_t>("Centrality").GetValue();
     const Int_t N_Events = (Int_t)Events_RunNumber.size();
+
+    std::map<std::tuple<Int_t, Int_t, Int_t>, Float_t> Map_Centrality;
+    for (Int_t i = 0; i < N_Events; i++) {
+        Map_Centrality[std::make_tuple(Events_RunNumber[i], Events_DirNumber[i], Events_EventNumber[i])] = Events_Centrality[i];
+    }
+
+    auto Lambda_GetCentrality = [&Map_Centrality](Int_t RunNumber, Int_t DirNumber, Int_t EventNumber) -> Float_t {
+        return Map_Centrality[std::make_tuple(RunNumber, DirNumber, EventNumber)];
+    };
+
+    /* Input: Get MC particles tree */
+
+    RDataFrame RDF_MCParticles("MCParticles", InputFileName);
+    auto fRDF_MCParticles = RDF_MCParticles.Filter("IsSignal").Filter("Idx_Mother == -1");
 
     std::vector<Int_t> MCParticles_RunNumber = fRDF_MCParticles.Take<Int_t>("RunNumber").GetValue();
     std::vector<Int_t> MCParticles_DirNumber = fRDF_MCParticles.Take<Int_t>("DirNumber").GetValue();
@@ -107,37 +107,6 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
     std::vector<Float_t> MCParticles_Yv_i = fRDF_MCParticles.Take<Float_t>("Yv_i").GetValue();
     const Int_t N_MCParticles = (Int_t)MCParticles_RunNumber.size();
 
-    std::vector<Int_t> Injected_RunNumber = RDF_Injected.Take<Int_t>("RunNumber").GetValue();
-    std::vector<Int_t> Injected_DirNumber = RDF_Injected.Take<Int_t>("DirNumber").GetValue();
-    std::vector<Int_t> Injected_EventNumber = RDF_Injected.Take<Int_t>("EventNumber").GetValue();
-    std::vector<Int_t> Injected_ReactionID = RDF_Injected.Take<Int_t>("ReactionID").GetValue();
-    std::vector<Float_t> Injected_Px = RDF_Injected.Take<Float_t>("Px").GetValue();
-    std::vector<Float_t> Injected_Py = RDF_Injected.Take<Float_t>("Py").GetValue();
-    const Int_t N_Injected = (Int_t)Injected_ReactionID.size();
-
-    std::vector<Int_t> Sexaquark_RunNumber = fRDF_Sexaquarks.Take<Int_t>("RunNumber").GetValue();
-    std::vector<Int_t> Sexaquark_DirNumber = fRDF_Sexaquarks.Take<Int_t>("DirNumber").GetValue();
-    std::vector<Int_t> Sexaquark_EventNumber = fRDF_Sexaquarks.Take<Int_t>("EventNumber").GetValue();
-    std::vector<Int_t> Sexaquark_ReactionID = fRDF_Sexaquarks.Take<Int_t>("ReactionID").GetValue();
-    std::vector<Float_t> Sexaquark_Px = fRDF_Sexaquarks.Take<Float_t>("Px").GetValue();
-    std::vector<Float_t> Sexaquark_Py = fRDF_Sexaquarks.Take<Float_t>("Py").GetValue();
-    std::vector<Float_t> Sexaquark_SV_Xv = fRDF_Sexaquarks.Take<Float_t>("SV_Xv").GetValue();
-    std::vector<Float_t> Sexaquark_SV_Yv = fRDF_Sexaquarks.Take<Float_t>("SV_Yv").GetValue();
-    const Int_t N_Sexaquarks = (Int_t)Sexaquark_ReactionID.size();
-
-    /* Preparation: Centrality maps */
-
-    std::map<std::tuple<Int_t, Int_t, Int_t>, Float_t> Map_Centrality;
-    for (Int_t i = 0; i < N_Events; i++) {
-        Map_Centrality[std::make_tuple(Events_RunNumber[i], Events_DirNumber[i], Events_EventNumber[i])] = Events_Centrality[i];
-    }
-
-    auto Lambda_GetCentrality = [&Map_Centrality](Int_t RunNumber, Int_t DirNumber, Int_t EventNumber) {
-        return Map_Centrality[std::make_tuple(RunNumber, DirNumber, EventNumber)];
-    };
-
-    /* Preparation: True Radius maps */
-
     std::map<std::tuple<Int_t, Int_t, Int_t, Int_t>, Float_t> Map_RadiusTrue;
     for (Int_t i = 0; i < N_MCParticles; i++) {
         Map_RadiusTrue[std::make_tuple(MCParticles_RunNumber[i], MCParticles_DirNumber[i], MCParticles_EventNumber[i], MCParticles_ReactionID[i])] =
@@ -145,11 +114,34 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
                                  (Double_t)MCParticles_Yv_i[i] * (Double_t)MCParticles_Yv_i[i]);
     }
 
-    auto Lambda_GetRadiusTrue = [&Map_RadiusTrue](Int_t RunNumber, Int_t DirNumber, Int_t EventNumber, Int_t ReactionID) {
+    auto Lambda_GetRadiusTrue = [&Map_RadiusTrue](Int_t RunNumber, Int_t DirNumber, Int_t EventNumber, Int_t ReactionID) -> Float_t {
         return Map_RadiusTrue[std::make_tuple(RunNumber, DirNumber, EventNumber, ReactionID)];
     };
 
-    /* Preparation: True Pt maps */
+    /* Input: get injected tree */
+
+    RDataFrame RDF_Injected("Injected", InputFileName);
+    auto fRDF_Injected = RDF_Injected  //
+                             .Define("Centrality", Lambda_GetCentrality, {"RunNumber", "DirNumber", "EventNumber"})
+                             .Define("CentralityBin", Lambda_GetCentralityBin, {"Centrality"})
+                             .Define("PtTrue", "static_cast<Float_t>(TMath::Sqrt(Px * Px + Py * Py))")
+                             //  .Define("PtReco", Lambda_GetPtReco, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})
+                             .Define("PtWeights", Lambda_GetPtWeight, {"PtTrue", "CentralityBin"})
+                             .Define("RadiusTrue", Lambda_GetRadiusTrue, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})
+                             //  .Define("RadiusReco", Lambda_GetRadiusReco, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})
+                             .Define("RadiusWeights", Lambda_GetRadiusWeight, {"RadiusTrue"})
+                             .Define("BothWeights", "PtWeights * RadiusWeights")
+                             .Filter("Centrality < 90.");
+
+    const Float_t SexaquarkMass = fRDF_Injected.Take<Float_t>("Mass").GetValue()[0];
+
+    std::vector<Int_t> Injected_RunNumber = fRDF_Injected.Take<Int_t>("RunNumber").GetValue();
+    std::vector<Int_t> Injected_DirNumber = fRDF_Injected.Take<Int_t>("DirNumber").GetValue();
+    std::vector<Int_t> Injected_EventNumber = fRDF_Injected.Take<Int_t>("EventNumber").GetValue();
+    std::vector<Int_t> Injected_ReactionID = fRDF_Injected.Take<Int_t>("ReactionID").GetValue();
+    std::vector<Float_t> Injected_Px = fRDF_Injected.Take<Float_t>("Px").GetValue();
+    std::vector<Float_t> Injected_Py = fRDF_Injected.Take<Float_t>("Py").GetValue();
+    const Int_t N_Injected = (Int_t)Injected_ReactionID.size();
 
     std::map<std::tuple<Int_t, Int_t, Int_t, Int_t>, Float_t> Map_PtTrue;
     for (Int_t i = 0; i < N_Injected; i++) {
@@ -157,78 +149,75 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
             (Float_t)TMath::Sqrt((Double_t)Injected_Px[i] * (Double_t)Injected_Px[i] + (Double_t)Injected_Py[i] * (Double_t)Injected_Py[i]);
     }
 
-    auto Lambda_GetPtTrue = [&Map_PtTrue](Int_t RunNumber, Int_t DirNumber, Int_t EventNumber, Int_t ReactionID) {
+    auto Lambda_GetPtTrue = [&Map_PtTrue](Int_t RunNumber, Int_t DirNumber, Int_t EventNumber, Int_t ReactionID) -> Float_t {
         return Map_PtTrue[std::make_tuple(RunNumber, DirNumber, EventNumber, ReactionID)];
     };
 
-    /* Preparation: Reconstructed Pt and Radius mapss */
+    /* Input: get sexaquarks tree */
 
-    std::map<std::tuple<Int_t, Int_t, Int_t, Int_t>, Float_t> Map_PtReco;
-    std::map<std::tuple<Int_t, Int_t, Int_t, Int_t>, Float_t> Map_RadiusReco;
-    for (Int_t i = 0; i < N_Sexaquarks; i++) {
-        Map_PtReco[std::make_tuple(Sexaquark_RunNumber[i], Sexaquark_DirNumber[i], Sexaquark_EventNumber[i], Sexaquark_ReactionID[i])] =
-            (Float_t)TMath::Sqrt((Double_t)Sexaquark_Px[i] * (Double_t)Sexaquark_Px[i] + (Double_t)Sexaquark_Py[i] * (Double_t)Sexaquark_Py[i]);
-        Map_RadiusReco[std::make_tuple(Sexaquark_RunNumber[i], Sexaquark_DirNumber[i], Sexaquark_EventNumber[i], Sexaquark_ReactionID[i])] =
-            (Float_t)TMath::Sqrt((Double_t)Sexaquark_SV_Xv[i] * (Double_t)Sexaquark_SV_Xv[i] +
-                                 (Double_t)Sexaquark_SV_Yv[i] * (Double_t)Sexaquark_SV_Yv[i]);
-    }
+    RDataFrame RDF_Sexaquarks("Sexaquarks", InputFileName);
+    auto fRDF_Sexaquarks = RDF_Sexaquarks  //
+                               .Define("Centrality", Lambda_GetCentrality, {"RunNumber", "DirNumber", "EventNumber"})
+                               .Define("CentralityBin", Lambda_GetCentralityBin, {"Centrality"})
+                               .Define("PtReco", "static_cast<Float_t>(TMath::Sqrt(Px * Px + Py * Py))")
+                               .Define("PtTrue", Lambda_GetPtTrue, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})
+                               .Define("PtWeights", Lambda_GetPtWeight, {"PtTrue", "CentralityBin"})
+                               .Define("RadiusReco", "TMath::Sqrt(SV_Xv * SV_Xv + SV_Yv * SV_Yv)")
+                               .Define("RadiusTrue", Lambda_GetRadiusTrue, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})
+                               .Define("RadiusWeights", Lambda_GetRadiusWeight, {"RadiusTrue"})
+                               .Define("BothWeights", "PtWeights * RadiusWeights")
+                               .Filter("Centrality < 90.")
+                               .Filter("IsSignal");
 
-    auto Lambda_GetPtReco = [&Map_PtReco](Int_t RunNumber, Int_t DirNumber, Int_t EventNumber, Int_t ReactionID) {
-        return Map_PtReco[std::make_tuple(RunNumber, DirNumber, EventNumber, ReactionID)];
-    };
-    auto Lambda_GetRadiusReco = [&Map_RadiusReco](Int_t RunNumber, Int_t DirNumber, Int_t EventNumber, Int_t ReactionID) {
-        return Map_RadiusReco[std::make_tuple(RunNumber, DirNumber, EventNumber, ReactionID)];
-    };
+    /*
+        std::vector<Int_t> Sexaquark_RunNumber = fRDF_Sexaquarks.Take<Int_t>("RunNumber").GetValue();
+        std::vector<Int_t> Sexaquark_DirNumber = fRDF_Sexaquarks.Take<Int_t>("DirNumber").GetValue();
+        std::vector<Int_t> Sexaquark_EventNumber = fRDF_Sexaquarks.Take<Int_t>("EventNumber").GetValue();
+        std::vector<Int_t> Sexaquark_ReactionID = fRDF_Sexaquarks.Take<Int_t>("ReactionID").GetValue();
+        std::vector<Float_t> Sexaquark_Px = fRDF_Sexaquarks.Take<Float_t>("Px").GetValue();
+        std::vector<Float_t> Sexaquark_Py = fRDF_Sexaquarks.Take<Float_t>("Py").GetValue();
+        std::vector<Float_t> Sexaquark_SV_Xv = fRDF_Sexaquarks.Take<Float_t>("SV_Xv").GetValue();
+        std::vector<Float_t> Sexaquark_SV_Yv = fRDF_Sexaquarks.Take<Float_t>("SV_Yv").GetValue();
+        const Int_t N_Sexaquarks = (Int_t)Sexaquark_ReactionID.size();
 
-    /* Extend trees */
+        std::map<std::tuple<Int_t, Int_t, Int_t, Int_t>, Float_t> Map_PtReco;
+        std::map<std::tuple<Int_t, Int_t, Int_t, Int_t>, Float_t> Map_RadiusReco;
+        for (Int_t i = 0; i < N_Sexaquarks; i++) {
+            Map_PtReco[std::make_tuple(Sexaquark_RunNumber[i], Sexaquark_DirNumber[i], Sexaquark_EventNumber[i], Sexaquark_ReactionID[i])] =
+                (Float_t)TMath::Sqrt((Double_t)Sexaquark_Px[i] * (Double_t)Sexaquark_Px[i] + (Double_t)Sexaquark_Py[i] * (Double_t)Sexaquark_Py[i]);
+            Map_RadiusReco[std::make_tuple(Sexaquark_RunNumber[i], Sexaquark_DirNumber[i], Sexaquark_EventNumber[i], Sexaquark_ReactionID[i])] =
+                (Float_t)TMath::Sqrt((Double_t)Sexaquark_SV_Xv[i] * (Double_t)Sexaquark_SV_Xv[i] +
+                                    (Double_t)Sexaquark_SV_Yv[i] * (Double_t)Sexaquark_SV_Yv[i]);
+        }
 
-    auto eRDF_Injected = RDF_Injected
-                             .Define("Centrality", Lambda_GetCentrality, {"RunNumber", "DirNumber", "EventNumber"})                //
-                             .Define("CentralityBin", Lambda_GetCentralityBin, {"Centrality"})                                     //
-                             .Define("PtTrue", "static_cast<Float_t>(TMath::Sqrt(Px * Px + Py * Py))")                             //
-                             .Define("PtReco", Lambda_GetPtReco, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})          //
-                             .Define("PtWeights", Lambda_GetPtWeight, {"PtTrue", "CentralityBin"})                                 //
-                             .Define("RadiusTrue", Lambda_GetRadiusTrue, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})  //
-                             .Define("RadiusReco", Lambda_GetRadiusReco, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})  //
-                             .Define("RadiusWeights", Lambda_GetRadiusWeight, {"RadiusTrue"})                                      //
-                             .Define("BothWeights", "PtWeights * RadiusWeights");
-
-    auto feRDF_Sexaquarks = fRDF_Sexaquarks
-                                .Define("Centrality", Lambda_GetCentrality, {"RunNumber", "DirNumber", "EventNumber"})                //
-                                .Define("CentralityBin", Lambda_GetCentralityBin, {"Centrality"})                                     //
-                                .Define("PtReco", "static_cast<Float_t>(TMath::Sqrt(Px * Px + Py * Py))")                             //
-                                .Define("PtTrue", Lambda_GetPtTrue, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})          //
-                                .Define("PtWeights", Lambda_GetPtWeight, {"PtTrue", "CentralityBin"})                                 //
-                                .Define("RadiusReco", "TMath::Sqrt(SV_Xv * SV_Xv + SV_Yv * SV_Yv)")                                   //
-                                .Define("RadiusTrue", Lambda_GetRadiusTrue, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})  //
-                                .Define("RadiusWeights", Lambda_GetRadiusWeight, {"RadiusTrue"})                                      //
-                                .Define("BothWeights", "PtWeights * RadiusWeights");
-
-    /* Filter trees (2) */
-
-    auto fRDF_Injected = eRDF_Injected.Filter("Centrality < 90.");
-    auto fefRDF_Sexaquarks = feRDF_Sexaquarks.Filter("Centrality < 90.").Filter("IsSignal");
+        auto Lambda_GetPtReco = [&Map_PtReco](Int_t RunNumber, Int_t DirNumber, Int_t EventNumber, Int_t ReactionID) {
+            return Map_PtReco[std::make_tuple(RunNumber, DirNumber, EventNumber, ReactionID)];
+        };
+        auto Lambda_GetRadiusReco = [&Map_RadiusReco](Int_t RunNumber, Int_t DirNumber, Int_t EventNumber, Int_t ReactionID) {
+            return Map_RadiusReco[std::make_tuple(RunNumber, DirNumber, EventNumber, ReactionID)];
+        };
+    */
 
     /*** Histograms ***/
 
     /* Histograms: Distributions (with and without weights) */
 
-    auto HistFound_PtReco = fefRDF_Sexaquarks.Histo1D({"Found_PtReco", ";;", 100, 0., 10.}, "PtReco");
-    auto HistFound_PtReco_wPtWeights = fefRDF_Sexaquarks.Histo1D({"Found_PtReco_wPtWeights", ";;", 100, 0., 10.}, "PtReco", "PtWeights");
-    auto HistFound_PtReco_wRadiusWeights = fefRDF_Sexaquarks.Histo1D({"Found_PtReco_wRadiusWeights", ";;", 100, 0., 10.}, "PtReco", "RadiusWeights");
-    auto HistFound_PtReco_wBothWeights = fefRDF_Sexaquarks.Histo1D({"Found_PtReco_wBothWeights", ";;", 100, 0., 10.}, "PtReco", "BothWeights");
+    auto HistFound_PtReco = fRDF_Sexaquarks.Histo1D({"Found_PtReco", ";;", 100, 0., 10.}, "PtReco");
+    auto HistFound_PtReco_wPtWeights = fRDF_Sexaquarks.Histo1D({"Found_PtReco_wPtWeights", ";;", 100, 0., 10.}, "PtReco", "PtWeights");
+    auto HistFound_PtReco_wRadiusWeights = fRDF_Sexaquarks.Histo1D({"Found_PtReco_wRadiusWeights", ";;", 100, 0., 10.}, "PtReco", "RadiusWeights");
+    auto HistFound_PtReco_wBothWeights = fRDF_Sexaquarks.Histo1D({"Found_PtReco_wBothWeights", ";;", 100, 0., 10.}, "PtReco", "BothWeights");
 
     auto HistInj_PtReco = fRDF_Injected.Histo1D({"Injected_PtReco", ";;", 100, 0., 10.}, "PtReco");
     auto HistInj_PtReco_wPtWeights = fRDF_Injected.Histo1D({"Injected_PtReco_wPtWeights", ";;", 100, 0., 10.}, "PtReco", "PtWeights");
     auto HistInj_PtReco_wRadiusWeights = fRDF_Injected.Histo1D({"Injected_PtReco_wRadiusWeights", ";;", 100, 0., 10.}, "PtReco", "RadiusWeights");
     auto HistInj_PtReco_wBothWeights = fRDF_Injected.Histo1D({"Injected_PtReco_wBothWeights", ";;", 100, 0., 10.}, "PtReco", "BothWeights");
 
-    auto HistFound_RadiusReco = fefRDF_Sexaquarks.Histo1D({"Found_RadiusReco", ";;", 100, 0., 200.}, "RadiusReco");
-    auto HistFound_RadiusReco_wPtWeights = fefRDF_Sexaquarks.Histo1D({"Found_RadiusReco_wPtWeights", ";;", 100, 0., 200.}, "RadiusReco", "PtWeights");
+    auto HistFound_RadiusReco = fRDF_Sexaquarks.Histo1D({"Found_RadiusReco", ";;", 100, 0., 200.}, "RadiusReco");
+    auto HistFound_RadiusReco_wPtWeights = fRDF_Sexaquarks.Histo1D({"Found_RadiusReco_wPtWeights", ";;", 100, 0., 200.}, "RadiusReco", "PtWeights");
     auto HistFound_RadiusReco_wRadiusWeights =
-        fefRDF_Sexaquarks.Histo1D({"Found_RadiusReco_wRadiusWeights", ";;", 100, 0., 200.}, "RadiusReco", "RadiusWeights");
+        fRDF_Sexaquarks.Histo1D({"Found_RadiusReco_wRadiusWeights", ";;", 100, 0., 200.}, "RadiusReco", "RadiusWeights");
     auto HistFound_RadiusReco_wBothWeights =
-        fefRDF_Sexaquarks.Histo1D({"Found_RadiusReco_wBothWeights", ";;", 100, 0., 200.}, "RadiusReco", "BothWeights");
+        fRDF_Sexaquarks.Histo1D({"Found_RadiusReco_wBothWeights", ";;", 100, 0., 200.}, "RadiusReco", "BothWeights");
 
     auto HistInj_RadiusReco = fRDF_Injected.Histo1D({"Injected_RadiusReco", ";;", 100, 0., 200.}, "RadiusReco");
     auto HistInj_RadiusReco_wPtWeights = fRDF_Injected.Histo1D({"Injected_RadiusReco_wPtWeights", ";;", 100, 0., 200.}, "RadiusReco", "PtWeights");
@@ -300,17 +289,15 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
 
     /* Print how many event-loops were executed */
 
-    std::cout << "NRuns" << std::endl;
-    std::cout << "=====" << std::endl;
-    std::cout << "RDF_Events        = " << RDF_Events.GetNRuns() << std::endl;
-    std::cout << "RDF_MCParticles   = " << RDF_MCParticles.GetNRuns() << std::endl;
-    std::cout << "fRDF_MCParticles  = " << fRDF_MCParticles.GetNRuns() << std::endl;
-    std::cout << "RDF_Injected      = " << RDF_Injected.GetNRuns() << std::endl;
-    std::cout << "eRDF_Injected     = " << eRDF_Injected.GetNRuns() << std::endl;
-    std::cout << "RDF_Sexaquarks    = " << RDF_Sexaquarks.GetNRuns() << std::endl;
-    std::cout << "fRDF_Sexaquarks   = " << fRDF_Sexaquarks.GetNRuns() << std::endl;
-    std::cout << "feRDF_Sexaquarks  = " << feRDF_Sexaquarks.GetNRuns() << std::endl;
-    std::cout << "fefRDF_Sexaquarks = " << fefRDF_Sexaquarks.GetNRuns() << std::endl;
+    std::cout << "!! Trees_RDF_GetEfficiency !! NRuns !!" << std::endl;
+    std::cout << "!! Trees_RDF_GetEfficiency !! ===== !!" << std::endl;
+    std::cout << "!! Trees_RDF_GetEfficiency !! RDF_Events       = " << RDF_Events.GetNRuns() << " !!" << std::endl;
+    std::cout << "!! Trees_RDF_GetEfficiency !! RDF_MCParticles  = " << RDF_MCParticles.GetNRuns() << " !!" << std::endl;
+    std::cout << "!! Trees_RDF_GetEfficiency !! fRDF_MCParticles = " << fRDF_MCParticles.GetNRuns() << " !!" << std::endl;
+    std::cout << "!! Trees_RDF_GetEfficiency !! RDF_Injected     = " << RDF_Injected.GetNRuns() << " !!" << std::endl;
+    std::cout << "!! Trees_RDF_GetEfficiency !! fRDF_Injected    = " << fRDF_Injected.GetNRuns() << " !!" << std::endl;
+    std::cout << "!! Trees_RDF_GetEfficiency !! RDF_Sexaquarks   = " << RDF_Sexaquarks.GetNRuns() << " !!" << std::endl;
+    std::cout << "!! Trees_RDF_GetEfficiency !! fRDF_Sexaquarks  = " << fRDF_Sexaquarks.GetNRuns() << " !!" << std::endl;
 
     std::cout << "!! Trees_RDF_GetEfficiency !! Finished !!" << std::endl;
 }
