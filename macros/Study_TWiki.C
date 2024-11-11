@@ -1,10 +1,10 @@
 #include "include/Headers.hxx"
-#include "include/Style.hxx"
+#include "include/Style.cxx"
 
 using namespace ROOT;
 
 /*
- * Trying to make sense of all the information that appears on the AliDPG TWiki (https://twiki.cern.ch/twiki/bin/view/ALICE/AliceDPG).
+ * Trying to make sense of all the information that appears on the AliDPG TWiki (https://twiki.cern.ch/twiki/bin/view/ALICE/AliceDPG)
  */
 void Study_TWiki() {
     std::cout << "!! Study_TWiki !! Started !!" << std::endl;
@@ -98,10 +98,10 @@ void Study_TWiki() {
 
     /* Tracks: hists */
 
-    auto Hist_Res_Pt_Main = feRDF_Tracks.Histo1D({"Res_Pt_Main", ";;Counts", 200, -10., 10.}, "Res_Pt_Main");
-    auto Hist_Res_Pt_Inner = feRDF_Tracks.Histo1D({"Res_Pt_Inner", ";;Counts", 200, -10., 10.}, "Res_Pt_Inner");
-    auto Hist_Res_Pt_TPCInner = feRDF_Tracks.Histo1D({"Res_Pt_TPCInner", ";;Counts", 200, -10., 10.}, "Res_Pt_TPCInner");
-    auto Hist_Res_Pt_Outer = feRDF_Tracks.Histo1D({"Res_Pt_Outer", ";;Counts", 200, -10., 10.}, "Res_Pt_Outer");
+    auto Hist_Res_Pt_Main = feRDF_Tracks.Histo1D({"Res_Pt_Main", ";;Counts", 200, -0.5, 0.5}, "Res_Pt_Main");
+    auto Hist_Res_Pt_Inner = feRDF_Tracks.Histo1D({"Res_Pt_Inner", ";;Counts", 200, -0.5, 0.5}, "Res_Pt_Inner");
+    auto Hist_Res_Pt_TPCInner = feRDF_Tracks.Histo1D({"Res_Pt_TPCInner", ";;Counts", 200, -0.5, 0.5}, "Res_Pt_TPCInner");
+    auto Hist_Res_Pt_Outer = feRDF_Tracks.Histo1D({"Res_Pt_Outer", ";;Counts", 200, -0.5, 0.5}, "Res_Pt_Outer");
     auto Hist_Res_Pt_Constrained = feRDF_Tracks.Histo1D({"Res_Pt_Constrained", ";;Counts", 200, -10., 10.}, "Res_Pt_Constrained");
 
     /***** Draw *****/

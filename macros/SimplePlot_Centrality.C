@@ -1,8 +1,11 @@
 #include "include/Headers.hxx"
-#include "include/Style.hxx"
+#include "include/Style.cxx"
 
 using namespace ROOT;
 
+/*
+ *
+ */
 void SimplePlot_Centrality() {
 
     /** Input **/

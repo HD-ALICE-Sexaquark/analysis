@@ -13,7 +13,9 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
 
     std::cout << "!! Trees_RDF_GetEfficiency !! Starting !!" << std::endl;
 
-    /*** Radius weights ***/
+    /*** Input ***/
+
+    /* Input: get radius weights */
 
     TFile* File_PhotonConvRadius = TFile::Open(Path_PhotonConvRadius, "READ");
     if (!File_PhotonConvRadius || File_PhotonConvRadius->IsZombie()) {
@@ -30,7 +32,7 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
     }
 
     // clone the histogram, so I can close the file without any problem
-    TH1F* Hist_RadiusWeights = dynamic_cast<TH1F*>(Hist_PhotonConv->Clone());
+    TH1D* Hist_RadiusWeights = dynamic_cast<TH1D*>(Hist_PhotonConv->Clone());
     Hist_RadiusWeights->SetDirectory(0);                             // detach from current directory
     Hist_RadiusWeights->Scale(1. / Hist_RadiusWeights->Integral());  // normalize it
 
@@ -40,40 +42,43 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
         return Hist_RadiusWeights->GetBinContent(Hist_RadiusWeights->FindBin(RadiusTrue));
     };
 
-    /*** (Pt, Centrality) weights ***/
+    /* Input: get (pT, centrality) weights */
 
     TFile* File_BlastWave = TFile::Open(Path_BlastWave, "READ");
+
     const Int_t NCentralityClasses = 10;
     TString CentralityClasses[NCentralityClasses] = {"0-5", "5-10", "10-20", "20-30", "30-40", "40-50", "50-60", "60-70", "70-80", "80-90"};
-    std::vector<TH1D*> HistsVec_PtWeights;
+
+    const Int_t NSexaquarkMasses = 5;
+    Float_t SexaquarkMasses[NSexaquarkMasses] = {1.73, 1.8, 1.87, 1.94, 2.01};
+
+    std::map<std::tuple<Float_t, Int_t>, TH1D*> HistsMap_PtWeights;
     TString Name_Hist_BlastWave;
 
-    for (Int_t cc = 0; cc < NCentralityClasses; cc++) {
-        Name_Hist_BlastWave = Form("Hist_BlastWave_%.2f_%s", SexaquarkMass, CentralityClasses[cc].Data());  // PENDING
-        TH1D* Hist_BlastWave = dynamic_cast<TH1D*>(File_BlastWave->Get(Name_Hist_BlastWave));
-        if (!Hist_BlastWave) {
-            std::cout << "!! ERROR !! Trees_RDF_GetEfficiency !! Couldn't find TH1D " << Name_Hist_BlastWave << " in TFile " << Path_BlastWave
-                      << " !!" << std::endl;
-            return;
+    for (Int_t ss = 0; ss < NSexaquarkMasses; ss++) {
+        for (Int_t cc = 0; cc < NCentralityClasses; cc++) {
+            Name_Hist_BlastWave = Form("Hist_BlastWave_%.2f_%s", SexaquarkMasses[ss], CentralityClasses[cc].Data());
+            TH1D* Hist_BlastWave = dynamic_cast<TH1D*>(File_BlastWave->Get(Name_Hist_BlastWave));
+            if (!Hist_BlastWave) {
+                std::cout << "!! ERROR !! Trees_RDF_GetEfficiency !! Couldn't find TH1D " << Name_Hist_BlastWave << " in TFile " << Path_BlastWave
+                          << " !!" << std::endl;
+                return;
+            }
+            // clone the histograms, so I can close the file without any problem
+            TH1D* AuxHist_PtWeights = dynamic_cast<TH1D*>(Hist_BlastWave->Clone());
+            AuxHist_PtWeights->SetDirectory(0);                            // detach from current directory
+            AuxHist_PtWeights->Scale(1. / AuxHist_PtWeights->Integral());  // normalize
+            HistsMap_PtWeights[std::make_tuple(SexaquarkMasses[ss], cc)] = AuxHist_PtWeights;
         }
-        // clone the histograms, so I can close the file without any problem
-        TH1D* AuxHist_PtWeights = dynamic_cast<TH1D*>(Hist_BlastWave->Clone());
-        AuxHist_PtWeights->SetDirectory(0);                            // detach from current directory
-        AuxHist_PtWeights->Scale(1. / AuxHist_PtWeights->Integral());  // normalize
-        HistsVec_PtWeights.push_back(AuxHist_PtWeights);
     }
 
     File_BlastWave->Close();
 
-    auto Lambda_GetCentralityBin = [](Float_t Centrality) -> Int_t {  //
-        return Centrality >= 5. ? static_cast<Int_t>(TMath::Floor(0.1 * Centrality + 1)) : 0;
+    auto Lambda_GetPtWeight = [&HistsMap_PtWeights](Float_t SexaquarkMass, Float_t PtTrue, Float_t Centrality) -> Double_t {
+        Int_t Bin_Centrality = Centrality >= 5. ? static_cast<Int_t>(TMath::Floor(0.1 * Centrality + 1)) : 0;
+        Int_t Bin_PtWeights = HistsMap_PtWeights[std::make_tuple(SexaquarkMass, Bin_Centrality)]->FindBin(PtTrue);
+        return HistsMap_PtWeights[std::make_tuple(SexaquarkMass, Bin_Centrality)]->GetBinContent(Bin_PtWeights);
     };
-
-    auto Lambda_GetPtWeight = [&HistsVec_PtWeights](Float_t PtTrue, Int_t CentralityBin) -> Double_t {
-        return HistsVec_PtWeights[CentralityBin]->GetBinContent(HistsVec_PtWeights[CentralityBin]->FindBin(PtTrue));
-    };
-
-    /*** Input ***/
 
     /* Input: Get events tree */
 
@@ -118,15 +123,14 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
         return Map_RadiusTrue[std::make_tuple(RunNumber, DirNumber, EventNumber, ReactionID)];
     };
 
-    /* Input: get injected tree */
+    /* Input: get injected sexaquarks tree */
 
     RDataFrame RDF_Injected("Injected", InputFileName);
     auto fRDF_Injected = RDF_Injected  //
                              .Define("Centrality", Lambda_GetCentrality, {"RunNumber", "DirNumber", "EventNumber"})
-                             .Define("CentralityBin", Lambda_GetCentralityBin, {"Centrality"})
                              .Define("PtTrue", "static_cast<Float_t>(TMath::Sqrt(Px * Px + Py * Py))")
                              //  .Define("PtReco", Lambda_GetPtReco, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})
-                             .Define("PtWeights", Lambda_GetPtWeight, {"PtTrue", "CentralityBin"})
+                             .Define("PtWeights", Lambda_GetPtWeight, {"Mass", "PtTrue", "Centrality"})
                              .Define("RadiusTrue", Lambda_GetRadiusTrue, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})
                              //  .Define("RadiusReco", Lambda_GetRadiusReco, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})
                              .Define("RadiusWeights", Lambda_GetRadiusWeight, {"RadiusTrue"})
@@ -134,6 +138,7 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
                              .Filter("Centrality < 90.");
 
     const Float_t SexaquarkMass = fRDF_Injected.Take<Float_t>("Mass").GetValue()[0];
+    auto Lambda_GetInjectedMass = [&SexaquarkMass]() -> Float_t { return SexaquarkMass; };
 
     std::vector<Int_t> Injected_RunNumber = fRDF_Injected.Take<Int_t>("RunNumber").GetValue();
     std::vector<Int_t> Injected_DirNumber = fRDF_Injected.Take<Int_t>("DirNumber").GetValue();
@@ -158,10 +163,10 @@ void Trees_RDF_GetEfficiency(TString InputFileName = "../output/AnalysisResults_
     RDataFrame RDF_Sexaquarks("Sexaquarks", InputFileName);
     auto fRDF_Sexaquarks = RDF_Sexaquarks  //
                                .Define("Centrality", Lambda_GetCentrality, {"RunNumber", "DirNumber", "EventNumber"})
-                               .Define("CentralityBin", Lambda_GetCentralityBin, {"Centrality"})
+                               .Define("MassTrue", Lambda_GetInjectedMass)
                                .Define("PtReco", "static_cast<Float_t>(TMath::Sqrt(Px * Px + Py * Py))")
                                .Define("PtTrue", Lambda_GetPtTrue, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})
-                               .Define("PtWeights", Lambda_GetPtWeight, {"PtTrue", "CentralityBin"})
+                               .Define("PtWeights", Lambda_GetPtWeight, {"MassTrue", "PtTrue", "Centrality"})
                                .Define("RadiusReco", "TMath::Sqrt(SV_Xv * SV_Xv + SV_Yv * SV_Yv)")
                                .Define("RadiusTrue", Lambda_GetRadiusTrue, {"RunNumber", "DirNumber", "EventNumber", "ReactionID"})
                                .Define("RadiusWeights", Lambda_GetRadiusWeight, {"RadiusTrue"})

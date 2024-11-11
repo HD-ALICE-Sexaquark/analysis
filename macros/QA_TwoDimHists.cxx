@@ -1,5 +1,5 @@
 #include "include/Headers.hxx"
-#include "include/Style.hxx"
+#include "include/Style.cxx"
 
 /*
  *

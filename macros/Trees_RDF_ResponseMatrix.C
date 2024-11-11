@@ -4,7 +4,8 @@
 using namespace ROOT;
 
 /*
- *
+ * Build a Response Matrix based on Stefan Schmitt's definition
+ * (https://arxiv.org/pdf/1611.01927)
  */
 void Trees_RDF_ResponseMatrix(TString InputFileName = "../output/local_signalMC_15o_full_kalmanA1.8/AnalysisResults_merged.root",  //
                               TString OutputFilename = "output_rdf/ResponseMatrix_local_signalMC_15o_full_kalmanA1.8.root") {

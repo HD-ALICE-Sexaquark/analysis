@@ -1,8 +1,10 @@
 #include "include/Headers.hxx"
-#include "include/Style.hxx"
+#include "include/Style.cxx"
 
 /*
- *
+ * QA, Initial checks:
+ * - Injected: Pt, Phi, Rapidity
+ * - Struck Nucleon: Pt, Phi, Theta, Px, Py, Pz
  */
 void QA_InitialChecks(TString input_dir = "output", TString output_dir = "gfx") {
 

@@ -1,6 +1,6 @@
 #include "include/Headers.hxx"
 
-/*!
+/*
  * Define blast-wave function.
  */
 Double_t BlastWaveFcn(Double_t *x, Double_t *par) {
@@ -26,7 +26,7 @@ Double_t BlastWaveFcn(Double_t *x, Double_t *par) {
     return pt * mt * integrator.Integral(0., 1.);
 }
 
-/*!
+/*
  * Main.
  */
 void GenerateBlastWaveTF1s() {
@@ -93,7 +93,7 @@ void GenerateBlastWaveTF1s() {
 
     file->Close();
 
-    std::cout << "!! INFO !! GenerateBlastWaveTF1s !! TFile " << output_filename << " has been created !!" << std::endl;
+    std::cout << "!! GenerateBlastWaveTF1s !! TFile " << output_filename << " has been created !!" << std::endl;
 
     delete rnd;
 }

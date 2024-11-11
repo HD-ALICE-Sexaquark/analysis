@@ -1,5 +1,5 @@
 #include "include/Headers.hxx"
-#include "include/Style.hxx"
+#include "include/Style.cxx"
 
 /*
  *
@@ -72,10 +72,7 @@ void QA_OneDimHists(TString input_dir = "output", TString output_dir = "gfx") {
 
             ThisHist->GetYaxis()->SetTitle("Normalized Counts");
             ThisHist->GetXaxis()->SetLabelSize(0.03);
-            if (InputHistNames[hh].Contains("QA_NTracks"))
-                ThisHist->Scale(1.0 / ThisHist->GetMaximum());
-            else
-                ThisHist->Scale(1.0 / ThisHist->Integral());
+            ThisHist->Scale(1.0 / ThisHist->Integral());
 
             ThisHist->Draw("SAME");
 

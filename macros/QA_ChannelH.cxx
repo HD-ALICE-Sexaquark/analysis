@@ -1,8 +1,8 @@
 #include "include/Headers.hxx"
-#include "include/Style.hxx"
+#include "include/Style.cxx"
 
 /*
- *
+ * QA, Channel H
  */
 void QA_ChannelH(TString input_dir = "output", TString output_dir = "gfx") {
 
