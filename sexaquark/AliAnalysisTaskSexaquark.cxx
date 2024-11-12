@@ -1697,6 +1697,12 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         fMC = MCEvent();
         if (!fMC) AliFatal("ERROR: AliMCEvent couldn't be found.");
         fMC_PrimaryVertex = const_cast<AliVVertex*>(fMC->GetPrimaryVertex());
+
+        if (fDoQA) {
+            fHist_QA["MCGen_VertexX"]->Fill(fMC_PrimaryVertex->GetX());
+            fHist_QA["MCGen_VertexY"]->Fill(fMC_PrimaryVertex->GetY());
+            fHist_QA["MCGen_VertexZ"]->Fill(fMC_PrimaryVertex->GetZ());
+        }
     }
 
     /* Load Reconstructed Event, PV and Magnetic Field */
@@ -2195,6 +2201,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
     TString generator_name;
 
+    /* V0 properties */
+
     AliMCParticle* mcDaughter;
     Int_t pdg_dau;
 
@@ -2207,20 +2215,12 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
     Int_t mcIdxNegDaughter = 0;
     Int_t mcIdxPosDaughter = 0;
 
-    TVector3 originVertex;
-    TVector3 decayVertex;
+    Math::XYZPoint OriginVertex;
+    Math::XYZPoint DecayVertex;
 
-    Float_t decay_length;
-    Float_t opening_angle;
     Float_t dca_wrt_pv, cpa_wrt_pv;
     Float_t armenteros_alpha, armenteros_qt;
     Bool_t reconstructable_v0;
-
-    if (fDoQA) {
-        fHist_QA["MCGen_VertexX"]->Fill(fMC_PrimaryVertex->GetX());
-        fHist_QA["MCGen_VertexY"]->Fill(fMC_PrimaryVertex->GetY());
-        fHist_QA["MCGen_VertexZ"]->Fill(fMC_PrimaryVertex->GetZ());
-    }
 
     /* Loop over MC gen. particles in this event */
 
@@ -2244,8 +2244,6 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         n_daughters = mcPart->GetNDaughters();
         idx_first_dau = mcPart->GetDaughterFirst();
         idx_last_dau = mcPart->GetDaughterLast();
-
-        originVertex.SetXYZ(mcPart->Xv(), mcPart->Yv(), mcPart->Zv());
 
         /* Check if particle is signal */
         /* - It should be produced by the "Anti-Sexaquark Interaction (Channel %c)" generator */
@@ -2273,9 +2271,9 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         tMC_Px = (Float_t)mcPart->Px();
         tMC_Py = (Float_t)mcPart->Py();
         tMC_Pz = (Float_t)mcPart->Pz();
-        tMC_Xv = (Float_t)originVertex.X();
-        tMC_Yv = (Float_t)originVertex.Y();
-        tMC_Zv = (Float_t)originVertex.Z();
+        tMC_Xv = (Float_t)mcPart->Xv();
+        tMC_Yv = (Float_t)mcPart->Yv();
+        tMC_Zv = (Float_t)mcPart->Zv();
         tMC_Status = mcPart->MCStatusCode();
         tMC_IsSecondary = isMcIdxSecondary[mcIdx];
         tMC_IsSignal = isMcIdxSignal[mcIdx];
@@ -2385,22 +2383,19 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             mcNegDau = (AliMCParticle*)fMC->GetTrack(mcIdxNegDaughter);
             mcPosDau = (AliMCParticle*)fMC->GetTrack(mcIdxPosDaughter);
 
+            Math::XYZVector neg(mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz());
+            Math::XYZVector pos(mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz());
+
+            OriginVertex.SetXYZ(mcPart->Xv(), mcPart->Yv(), mcPart->Zv());
+            DecayVertex.SetXYZ(mcNegDau->Xv(), mcNegDau->Yv(), mcNegDau->Zv());
+
+            cpa_wrt_pv = CosinePointingAngle(mcPart->Px(), mcPart->Py(), mcPart->Pz(), DecayVertex.X(), DecayVertex.Y(), DecayVertex.Z(),
+                                             fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+            dca_wrt_pv = LinePointDCA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), DecayVertex.X(), DecayVertex.Y(), DecayVertex.Z(),
+                                      fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
             armenteros_qt = ArmenterosQt(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz());
             armenteros_alpha = ArmenterosAlpha(mcPart->Px(), mcPart->Py(), mcPart->Pz(), mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz(),
                                                mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz());
-
-            decayVertex.SetXYZ(mcNegDau->Xv(), mcNegDau->Yv(), mcNegDau->Zv());
-            cpa_wrt_pv = CosinePointingAngle(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decayVertex.X(), decayVertex.Y(), decayVertex.Z(),
-                                             fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
-            dca_wrt_pv = LinePointDCA(mcPart->Px(), mcPart->Py(), mcPart->Pz(), decayVertex.X(), decayVertex.Y(), decayVertex.Z(),
-                                      fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
-
-            originVertex.SetXYZ(mcPart->Xv(), mcPart->Yv(), mcPart->Zv());
-            decay_length = (originVertex - decayVertex).Mag();
-
-            TVector3 neg(mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz());
-            TVector3 pos(mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz());
-            opening_angle = neg.Angle(pos);
 
             /* Fill histograms (reconstructables only) */
 
@@ -2411,13 +2406,13 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Py")]->Fill(mcPart->Py());
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Pz")]->Fill(mcPart->Pz());
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Phi")]->Fill(mcPart->Phi());
-            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "OriginRadius")]->Fill(originVertex.Perp());
-            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DecayRadius")]->Fill(decayVertex.Perp());
-            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Zv")]->Fill(decayVertex.Z());
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "OriginRadius")]->Fill(OriginVertex.Rho());
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DecayRadius")]->Fill(DecayVertex.Rho());
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Zv")]->Fill(DecayVertex.Z());
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
-            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DecayLength")]->Fill(decay_length);
-            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "OpeningAngle")]->Fill(opening_angle);
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2432,13 +2427,13 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Py")]->Fill(mcPart->Py());
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pz")]->Fill(mcPart->Pz());
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Phi")]->Fill(mcPart->Phi());
-            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OriginRadius")]->Fill(originVertex.Perp());
-            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DecayRadius")]->Fill(decayVertex.Perp());
-            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Zv")]->Fill(decayVertex.Z());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OriginRadius")]->Fill(OriginVertex.Rho());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DecayRadius")]->Fill(DecayVertex.Rho());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Zv")]->Fill(DecayVertex.Z());
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Eta")]->Fill(mcPart->Eta());
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
-            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DecayLength")]->Fill(decay_length);
-            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OpeningAngle")]->Fill(opening_angle);
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2453,13 +2448,13 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Py")]->Fill(mcPart->Py());
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Pz")]->Fill(mcPart->Pz());
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Phi")]->Fill(mcPart->Phi());
-            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OriginRadius")]->Fill(originVertex.Perp());
-            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DecayRadius")]->Fill(decayVertex.Perp());
-            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Zv")]->Fill(decayVertex.Z());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OriginRadius")]->Fill(OriginVertex.Rho());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DecayRadius")]->Fill(DecayVertex.Rho());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Zv")]->Fill(DecayVertex.Z());
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Eta")]->Fill(mcPart->Eta());
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
-            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DecayLength")]->Fill(decay_length);
-            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OpeningAngle")]->Fill(opening_angle);
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2469,7 +2464,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 }
 
 /*
- * Loop over generated antisexaquark-nucleon reactions.
+ * Loop over generated antisexaquark-nucleon reactions and fill histograms with information after their interaction.
  * - Uses: `fMC`, `fPDG`, `fStruckNucleonPDG`
  * - Containers: `getMcIdx_fromReactionIdx`
  */
@@ -2477,21 +2472,21 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
     AliMCParticle* mcProduct;
 
-    /** Declare TLorentzVectors **/
+    /*** Declare vectors ***/
 
-    TLorentzVector lvProduct;
-    TLorentzVector lvStruckNucleon;
-    TLorentzVector lvAntiSexaquark;
+    Math::PxPyPzEVector lvProduct;
+    Math::PxPyPzEVector lvStruckNucleon;
+    Math::PxPyPzEVector lvAntiSexaquark;
 
-    /** Declare variables **/
+    Math::XYZPoint PrimaryVertex(fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+    Math::XYZPoint SecondaryVertex;
 
-    TVector3 secondary_vertex(0., 0., 0.);
-    Float_t radius;
-    Float_t decay_length;
-    Float_t cpa_wrt_pv;
-    Float_t dca_wrt_pv;
+    /*** Declare auxiliary variables ***/
 
-    /* Loop over reactions */
+    Double_t cpa_wrt_pv;
+    Double_t dca_wrt_pv;
+
+    /*** Loop over reactions ***/
 
     for (UInt_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
 
@@ -2501,7 +2496,7 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
         /** Reset vectors **/
 
-        secondary_vertex.SetXYZ(0., 0., 0.);
+        SecondaryVertex.SetXYZ(0., 0., 0.);
         lvAntiSexaquark.SetPxPyPzE(0., 0., 0., 0.);
 
         /** Loop over reaction products **/
@@ -2520,7 +2515,7 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
             /* Get sec. vertex (if it hasn't been defined yet)*/
 
-            if (secondary_vertex.Mag() < 1E-6) secondary_vertex.SetXYZ(mcProduct->Xv(), mcProduct->Yv(), mcProduct->Zv());
+            if (SecondaryVertex.R() < 1E-6) SecondaryVertex.SetXYZ(mcProduct->Xv(), mcProduct->Yv(), mcProduct->Zv());
         }
 
         lvStruckNucleon.SetPxPyPzE(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());  // assume struck nucleon at rest
@@ -2528,20 +2523,14 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
         /** Get properties **/
 
-        radius = secondary_vertex.Perp();
-        getRadius_fromReactionIdx[reactionIdx] = radius;
+        getRadius_fromReactionIdx[reactionIdx] = SecondaryVertex.Rho();
 
-        decay_length = TMath::Sqrt(TMath::Power(secondary_vertex.X() - fMC_PrimaryVertex->GetX(), 2) +
-                                   TMath::Power(secondary_vertex.Y() - fMC_PrimaryVertex->GetY(), 2) +
-                                   TMath::Power(secondary_vertex.Z() - fMC_PrimaryVertex->GetZ(), 2));
-        cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, secondary_vertex.X(), secondary_vertex.Y(), secondary_vertex.Z(), fMC_PrimaryVertex->GetX(),
+        cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMC_PrimaryVertex->GetX(),
                                          fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
-        dca_wrt_pv = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), secondary_vertex.X(), secondary_vertex.Y(),
-                                  secondary_vertex.Z(), fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+        dca_wrt_pv = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), SecondaryVertex.X(), SecondaryVertex.Y(),
+                                  SecondaryVertex.Z(), fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
 
         /** Fill histograms **/
-
-        /* With information A.I. -- After Interaction  */
 
         if (fReactionChannel == 'H') fHist_KaonPairs_Bookkeep->Fill(0);
 
@@ -2554,9 +2543,9 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Zv")]->Fill(secondary_vertex.Z());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Radius")]->Fill(radius);  // interaction radius
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "DecayLength")]->Fill(decay_length);
+        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Zv")]->Fill(SecondaryVertex.Z());
+        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Radius")]->Fill(SecondaryVertex.Rho());
+        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "DecayLength")]->Fill((SecondaryVertex - PrimaryVertex).R());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
     }  // end of loop over reactions
@@ -2696,8 +2685,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         if (track->Pt() < 1E-3 || track->Pt() > 1E3) continue;
 
         /* Protection: exclude particles from the anti-neutron injector */
-
-        // Note: `GetCocktailGenerator` not only considers primaries, but subsequent daughters/secondaries all the way down, as well
+        /* - `GetCocktailGenerator` considers subsequent daughters/secondaries all the way down, too */
         fMC->GetCocktailGenerator(mcIdx, generator_name);
         if (generator_name.Contains("Injector (Anti-Neutron)")) continue;
 
@@ -3084,9 +3072,7 @@ void AliAnalysisTaskSexaquark::PlotStatus(AliESDtrack* track, TString set, Int_t
 /*** ============================================================= ***/
 
 /*
- * Find all true V0s that both of their daughters passed track selection.
- * Variables are true MC vertexing & kinematics.
- * - Uses: `fMC`, `fMC_PrimaryVertex`, `fHist_V0s`, `fHist_V0s_Bookkeep`
+ * Find all true (primary, secondary, signal) V0s for which both of their daughters were reconstructed and passed track selection.
  */
 void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
@@ -3094,17 +3080,22 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
     AliMCParticle* mcNegDaughter;
     AliMCParticle* mcPosDaughter;
 
+    /* Declare vectors */
+
+    Math::XYZPoint OriginVertex;
+    Math::XYZPoint DecayVertex;
+
+    Math::XYZVector neg;
+    Math::XYZVector pos;
+
+    /* Declare auxiliary variables */
+
+    Int_t pdg_code;
     Bool_t is_signal;
     Bool_t is_secondary;
 
-    TVector3 neg, pos;
-
-    Int_t pdg_code;
-    Float_t origin_radius, decay_radius;
-    Float_t decay_length;
-    Float_t opening_angle;
-    Float_t arm_qt, arm_alpha;
-    Float_t cpa_wrt_pv, dca_wrt_pv;
+    Double_t arm_qt, arm_alpha;
+    Double_t cpa_wrt_pv, dca_wrt_pv;
 
     /* Loop over true V0s */
 
@@ -3112,7 +3103,12 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
         mcV0 = (AliMCParticle*)fMC->GetTrack(mcIdxOfTrueV0);
 
-        /* Check if both daughters were reconstructed */
+        /* Is a V0 of interest? */
+
+        pdg_code = mcV0->PdgCode();
+        if (pdg_code != -3122 && pdg_code != 310) continue;
+
+        /* Check if both daughters were reconstructed and passed track selection */
 
         if (!getNegDauEsdIdx_fromMcIdx[mcIdxOfTrueV0] || !getPosDauEsdIdx_fromMcIdx[mcIdxOfTrueV0]) {
             continue;
@@ -3131,12 +3127,9 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
         /* Get V0 properties */
 
-        pdg_code = mcV0->PdgCode();
-        origin_radius = TMath::Sqrt(mcV0->Xv() * mcV0->Xv() + mcV0->Yv() * mcV0->Yv());
-        decay_radius = TMath::Sqrt(mcNegDaughter->Xv() * mcNegDaughter->Xv() + mcNegDaughter->Yv() * mcNegDaughter->Yv());
-        decay_length = TMath::Sqrt(TMath::Power(mcNegDaughter->Xv() - mcV0->Xv(), 2) + TMath::Power(mcNegDaughter->Yv() - mcV0->Yv(), 2) +
-                                   TMath::Power(mcNegDaughter->Zv() - mcV0->Zv(), 2));
-        opening_angle = neg.Angle(pos);
+        OriginVertex.SetXYZ(mcV0->Xv(), mcV0->Yv(), mcV0->Zv());
+        DecayVertex.SetXYZ(mcNegDaughter->Xv(), mcNegDaughter->Yv(), mcNegDaughter->Zv());
+
         arm_qt = ArmenterosQt(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz());
         arm_alpha = ArmenterosAlpha(mcV0->Px(), mcV0->Py(), mcV0->Pz(), mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz(),
                                     mcPosDaughter->Px(), mcPosDaughter->Py(), mcPosDaughter->Pz());
@@ -3147,69 +3140,66 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
         /* Fill bookkeeping histograms */
 
-        if (pdg_code == -3122 || pdg_code == 310) {
+        fHist_V0s_Bookkeep[pdg_code]->Fill(30);
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Mass")]->Fill(mcV0->M());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Pt")]->Fill(mcV0->Pt());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Px")]->Fill(mcV0->Px());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Py")]->Fill(mcV0->Py());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Pz")]->Fill(mcV0->Pz());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Phi")]->Fill(mcV0->Phi());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "OriginRadius")]->Fill(OriginVertex.Rho());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "DecayRadius")]->Fill(DecayVertex.Rho());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Zv")]->Fill(mcNegDaughter->Zv());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Eta")]->Fill(mcV0->Eta());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Rapidity")]->Fill(mcV0->Y());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "ArmQt")]->Fill(arm_qt);
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "DCAwrtPV")]->Fill(dca_wrt_pv);
 
-            fHist_V0s_Bookkeep[pdg_code]->Fill(30);
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Mass")]->Fill(mcV0->M());
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Pt")]->Fill(mcV0->Pt());
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Px")]->Fill(mcV0->Px());
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Py")]->Fill(mcV0->Py());
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Pz")]->Fill(mcV0->Pz());
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Phi")]->Fill(mcV0->Phi());
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "OriginRadius")]->Fill(origin_radius);
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "DecayRadius")]->Fill(decay_radius);
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Zv")]->Fill(mcNegDaughter->Zv());
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Eta")]->Fill(mcV0->Eta());
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Rapidity")]->Fill(mcV0->Y());
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "DecayLength")]->Fill(decay_length);
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "OpeningAngle")]->Fill(opening_angle);
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "ArmQt")]->Fill(arm_qt);
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "DCAwrtPV")]->Fill(dca_wrt_pv);
+        if (!is_secondary) continue;
 
-            if (!is_secondary) continue;
+        fHist_V0s_Bookkeep[pdg_code]->Fill(40);
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Mass")]->Fill(mcV0->M());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Pt")]->Fill(mcV0->Pt());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Px")]->Fill(mcV0->Px());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Py")]->Fill(mcV0->Py());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Pz")]->Fill(mcV0->Pz());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Phi")]->Fill(mcV0->Phi());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "OriginRadius")]->Fill(OriginVertex.Rho());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "DecayRadius")]->Fill(DecayVertex.Rho());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Zv")]->Fill(mcNegDaughter->Zv());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Eta")]->Fill(mcV0->Eta());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Rapidity")]->Fill(mcV0->Y());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "ArmQt")]->Fill(arm_qt);
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "DCAwrtPV")]->Fill(dca_wrt_pv);
 
-            fHist_V0s_Bookkeep[pdg_code]->Fill(40);
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Mass")]->Fill(mcV0->M());
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Pt")]->Fill(mcV0->Pt());
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Px")]->Fill(mcV0->Px());
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Py")]->Fill(mcV0->Py());
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Pz")]->Fill(mcV0->Pz());
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Phi")]->Fill(mcV0->Phi());
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "OriginRadius")]->Fill(origin_radius);
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "DecayRadius")]->Fill(decay_radius);
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Zv")]->Fill(mcNegDaughter->Zv());
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Eta")]->Fill(mcV0->Eta());
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Rapidity")]->Fill(mcV0->Y());
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "DecayLength")]->Fill(decay_length);
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "OpeningAngle")]->Fill(opening_angle);
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "ArmQt")]->Fill(arm_qt);
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "DCAwrtPV")]->Fill(dca_wrt_pv);
+        if (!is_signal) continue;
 
-            if (!is_signal) continue;
-
-            fHist_V0s_Bookkeep[pdg_code]->Fill(50);
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Mass")]->Fill(mcV0->M());
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Pt")]->Fill(mcV0->Pt());
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Px")]->Fill(mcV0->Px());
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Py")]->Fill(mcV0->Py());
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Pz")]->Fill(mcV0->Pz());
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Phi")]->Fill(mcV0->Phi());
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "OriginRadius")]->Fill(origin_radius);
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "DecayRadius")]->Fill(decay_radius);
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Zv")]->Fill(mcNegDaughter->Zv());
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Eta")]->Fill(mcV0->Eta());
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Rapidity")]->Fill(mcV0->Y());
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "DecayLength")]->Fill(decay_length);
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "OpeningAngle")]->Fill(opening_angle);
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "ArmQt")]->Fill(arm_qt);
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "DCAwrtPV")]->Fill(dca_wrt_pv);
-        }
+        fHist_V0s_Bookkeep[pdg_code]->Fill(50);
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Mass")]->Fill(mcV0->M());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Pt")]->Fill(mcV0->Pt());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Px")]->Fill(mcV0->Px());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Py")]->Fill(mcV0->Py());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Pz")]->Fill(mcV0->Pz());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Phi")]->Fill(mcV0->Phi());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "OriginRadius")]->Fill(OriginVertex.Rho());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "DecayRadius")]->Fill(DecayVertex.Rho());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Zv")]->Fill(mcNegDaughter->Zv());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Eta")]->Fill(mcV0->Eta());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Rapidity")]->Fill(mcV0->Y());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "ArmQt")]->Fill(arm_qt);
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "DCAwrtPV")]->Fill(dca_wrt_pv);
     }  // end of loop over true V0s
 }
 
@@ -3222,22 +3212,22 @@ void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
     Int_t single_pion_pdg_code;
     Int_t single_pion_mother_pdg_code;
 
-    Int_t mcIdxPiPlus = -1;
-    Int_t mcIdxPiMinus = -1;
+    Int_t mcIdxPiPlus;
+    Int_t mcIdxPiMinus;
     AliMCParticle* mcPiPlus;
     AliMCParticle* mcPiMinus;
 
-    /* Declare TLorentzVectors and TVector3 */
+    /* Declare vectors */
 
-    TLorentzVector lvPiPlus, lvPiMinus;
-    TLorentzVector lvPionPair;
-    TVector3 secondary_vertex(0., 0., 0.);
+    Math::PxPyPzEVector lvPiPlus;
+    Math::PxPyPzEVector lvPiMinus;
+    Math::PxPyPzEVector lvPionPair;
+
+    Math::XYZVector PrimaryVertex(fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+    Math::XYZVector SecondaryVertex(0., 0., 0.);
 
     /* Declare properties */
 
-    Float_t origin_radius;
-    Float_t decay_length;
-    Float_t opening_angle;
     Float_t arm_qt;
     Float_t arm_alpha;
     Float_t cpa_wrt_pv;
@@ -3246,6 +3236,9 @@ void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
     /* Loop over interactions */
 
     for (UInt_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
+
+        mcIdxPiPlus = -1;
+        mcIdxPiMinus = -1;
 
         /* Protection against general-purpose simulations */
         // There should be tracks that belong to the interaction //
@@ -3280,28 +3273,23 @@ void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
 
         /* Get true momentum */
 
-        lvPiPlus.SetXYZM(mcPiPlus->Px(), mcPiPlus->Py(), mcPiPlus->Pz(), fPDG.GetParticle(211)->Mass());
-        lvPiMinus.SetXYZM(mcPiMinus->Px(), mcPiMinus->Py(), mcPiMinus->Pz(), fPDG.GetParticle(211)->Mass());
+        lvPiPlus.SetPxPyPzE(mcPiPlus->Px(), mcPiPlus->Py(), mcPiPlus->Pz(), mcPiPlus->E());
+        lvPiMinus.SetPxPyPzE(mcPiMinus->Px(), mcPiMinus->Py(), mcPiMinus->Pz(), mcPiMinus->E());
 
         lvPionPair = lvPiPlus + lvPiMinus;
 
-        /* Get sec. vertex */
+        /* Get secondary vertex */
 
-        secondary_vertex.SetXYZ(mcPiPlus->Xv(), mcPiPlus->Yv(), mcPiPlus->Zv());
+        SecondaryVertex.SetXYZ(mcPiPlus->Xv(), mcPiPlus->Yv(), mcPiPlus->Zv());
 
         /* Get properties */
 
-        origin_radius = TMath::Sqrt(TMath::Power(secondary_vertex.X(), 2) + TMath::Power(secondary_vertex.Y(), 2));
-        decay_length = TMath::Sqrt(TMath::Power(secondary_vertex.X() - fMC_PrimaryVertex->GetX(), 2) +
-                                   TMath::Power(secondary_vertex.Y() - fMC_PrimaryVertex->GetY(), 2) +
-                                   TMath::Power(secondary_vertex.Z() - fMC_PrimaryVertex->GetZ(), 2));
-        opening_angle = lvPionPair.Vect().Angle(lvPiMinus.Vect());
         arm_qt = ArmenterosQt(lvPionPair.Px(), lvPionPair.Py(), lvPionPair.Pz(), lvPiMinus.Px(), lvPiMinus.Py(), lvPiMinus.Pz());
         arm_alpha = ArmenterosAlpha(lvPionPair.Px(), lvPionPair.Py(), lvPionPair.Pz(), lvPiMinus.Px(), lvPiMinus.Py(), lvPiMinus.Pz(), lvPiPlus.Px(),
                                     lvPiPlus.Py(), lvPiPlus.Pz());
-        cpa_wrt_pv = CosinePointingAngle(lvPiPlus, secondary_vertex.X(), secondary_vertex.Y(), secondary_vertex.Z(), fMC_PrimaryVertex->GetX(),
+        cpa_wrt_pv = CosinePointingAngle(lvPiPlus, SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMC_PrimaryVertex->GetX(),
                                          fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
-        dca_wrt_pv = LinePointDCA(lvPiPlus.Px(), lvPiPlus.Py(), lvPiPlus.Pz(), secondary_vertex.X(), secondary_vertex.Y(), secondary_vertex.Z(),
+        dca_wrt_pv = LinePointDCA(lvPiPlus.Px(), lvPiPlus.Py(), lvPiPlus.Pz(), SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(),
                                   fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
 
         /* Fill histograms  */
@@ -3313,13 +3301,13 @@ void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
         fHist_V0s[std::make_tuple("Findable", "Signal", 422, "Py")]->Fill(lvPionPair.Py());
         fHist_V0s[std::make_tuple("Findable", "Signal", 422, "Pz")]->Fill(lvPionPair.Pz());
         fHist_V0s[std::make_tuple("Findable", "Signal", 422, "Phi")]->Fill(lvPionPair.Phi());
-        fHist_V0s[std::make_tuple("Findable", "Signal", 422, "OriginRadius")]->Fill(origin_radius);
-        fHist_V0s[std::make_tuple("Findable", "Signal", 422, "DecayRadius")]->Fill(origin_radius);  // NOTE: is the same on purpose
-        fHist_V0s[std::make_tuple("Findable", "Signal", 422, "Zv")]->Fill(secondary_vertex.Z());
+        fHist_V0s[std::make_tuple("Findable", "Signal", 422, "OriginRadius")]->Fill(SecondaryVertex.Rho());
+        fHist_V0s[std::make_tuple("Findable", "Signal", 422, "DecayRadius")]->Fill(-9999.);
+        fHist_V0s[std::make_tuple("Findable", "Signal", 422, "Zv")]->Fill(SecondaryVertex.Z());
         fHist_V0s[std::make_tuple("Findable", "Signal", 422, "Eta")]->Fill(lvPionPair.Eta());
         fHist_V0s[std::make_tuple("Findable", "Signal", 422, "Rapidity")]->Fill(lvPionPair.Rapidity());
-        fHist_V0s[std::make_tuple("Findable", "Signal", 422, "DecayLength")]->Fill(decay_length);
-        fHist_V0s[std::make_tuple("Findable", "Signal", 422, "OpeningAngle")]->Fill(opening_angle);
+        fHist_V0s[std::make_tuple("Findable", "Signal", 422, "DecayLength")]->Fill((SecondaryVertex - PrimaryVertex).R());
+        fHist_V0s[std::make_tuple("Findable", "Signal", 422, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(lvPionPair, lvPiMinus));
         fHist_V0s[std::make_tuple("Findable", "Signal", 422, "ArmQt")]->Fill(arm_qt);
         fHist_V0s[std::make_tuple("Findable", "Signal", 422, "ArmAlpha")]->Fill(arm_alpha);
         fHist_V0s[std::make_tuple("Findable", "Signal", 422, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -3340,19 +3328,19 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
     AliMCParticle* mcFGPart;  // FG: first gen.
     Int_t motherMcIdx;
 
-    /* Declare TLorentzVectors */
+    /* Declare vectors */
 
-    TLorentzVector lvFinalStateParticle;
-    TLorentzVector lvStruckNucleon;
-    TLorentzVector lvAntiSexaquark;
+    Math::PxPyPzEVector lvFinalStateParticle;
+    Math::PxPyPzEVector lvStruckNucleon;
+    Math::PxPyPzEVector lvAntiSexaquark;
+
+    Math::XYZPoint PrimaryVertex(fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+    Math::XYZPoint SecondaryVertex;
 
     /* Declare variables */
 
-    TVector3 secondary_vertex(0., 0., 0.);
-    Float_t radius;
-    Float_t decay_length;
-    Float_t cpa_wrt_pv;
-    Float_t dca_wrt_pv;
+    Double_t cpa_wrt_pv;
+    Double_t dca_wrt_pv;
 
     /* Loop over interactions */
 
@@ -3376,7 +3364,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
         /* Reset vectors */
 
-        secondary_vertex.SetXYZ(0., 0., 0.);
+        SecondaryVertex.SetXYZ(0., 0., 0.);
         lvAntiSexaquark.SetPxPyPzE(0., 0., 0., 0.);
 
         /* Loop, to get the reconstructed final-state particles info */
@@ -3392,13 +3380,13 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
             /* Get sec. vertex from the origin of the first-generation products of the reaction */
 
-            if (secondary_vertex.Mag() < 1E-6) {
+            if (SecondaryVertex.R() < 1E-6) {
                 if (mcFSPart->MCStatusCode() == reactionIdx) {
-                    secondary_vertex.SetXYZ(mcFSPart->Xv(), mcFSPart->Yv(), mcFSPart->Zv());
+                    SecondaryVertex.SetXYZ(mcFSPart->Xv(), mcFSPart->Yv(), mcFSPart->Zv());
                 } else if (doesMcIdxHaveMother[mcIdx]) {
                     motherMcIdx = getMotherMcIdx_fromMcIdx[mcIdx];
                     mcFGPart = (AliMCParticle*)fMC->GetTrack(motherMcIdx);
-                    if (mcFGPart->MCStatusCode() == reactionIdx) secondary_vertex.SetXYZ(mcFGPart->Xv(), mcFGPart->Yv(), mcFGPart->Zv());
+                    if (mcFGPart->MCStatusCode() == reactionIdx) SecondaryVertex.SetXYZ(mcFGPart->Xv(), mcFGPart->Yv(), mcFGPart->Zv());
                 }
             }
         }
@@ -3408,37 +3396,32 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
         /* Get properties */
 
-        radius = TMath::Sqrt(TMath::Power(secondary_vertex.X(), 2) + TMath::Power(secondary_vertex.Y(), 2));
-        decay_length = TMath::Sqrt(TMath::Power(secondary_vertex.X() - fMC_PrimaryVertex->GetX(), 2) +
-                                   TMath::Power(secondary_vertex.Y() - fMC_PrimaryVertex->GetY(), 2) +
-                                   TMath::Power(secondary_vertex.Z() - fMC_PrimaryVertex->GetZ(), 2));
-        cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, secondary_vertex.X(), secondary_vertex.Y(), secondary_vertex.Z(), fMC_PrimaryVertex->GetX(),
+        cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMC_PrimaryVertex->GetX(),
                                          fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
-        dca_wrt_pv = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), secondary_vertex.X(), secondary_vertex.Y(),
-                                  secondary_vertex.Z(), fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+        dca_wrt_pv = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), SecondaryVertex.X(), SecondaryVertex.Y(),
+                                  SecondaryVertex.Z(), fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
 
         /* Fill histograms  */
 
         fHist_AntiSexaquarks_Bookkeep->Fill(10);
-        if (fReactionChannel == 'H') fHist_KaonPairs_Bookkeep->Fill(1);  // PENDING: should be ~ 0, because it's a channel so difficult to rec.
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Mass")]->Fill(lvAntiSexaquark.M());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Px")]->Fill(lvAntiSexaquark.Px());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Py")]->Fill(lvAntiSexaquark.Py());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Radius")]->Fill(radius);
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Zv")]->Fill(secondary_vertex.Z());
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Radius")]->Fill(SecondaryVertex.Rho());
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Zv")]->Fill(SecondaryVertex.Z());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "DecayLength")]->Fill(decay_length);
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "DecayLength")]->Fill((SecondaryVertex - PrimaryVertex).R());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
     }
 }
 
 /*
- * Find the anti-sexaquarks that have two K+s reconstructed.
+ * Find findable signal K+K+.
  * Valid for Reaction Channel H: 1 anti-proton, 2 K+, 1 pi0
  */
 void AliAnalysisTaskSexaquark::ProcessFindableKaonPairs() {
@@ -3446,26 +3429,28 @@ void AliAnalysisTaskSexaquark::ProcessFindableKaonPairs() {
     AliMCParticle* mcPosKaonA;
     AliMCParticle* mcPosKaonB;
 
-    /* Declare TLorentzVectors */
+    /* Declare vectors */
 
-    TLorentzVector lvPosKaonA, lvPosKaonB;
-    TLorentzVector lvKaonPair;
+    Math::PxPyPzEVector lvPosKaonA;
+    Math::PxPyPzEVector lvPosKaonB;
+    Math::PxPyPzEVector lvKaonPair;
 
-    /* Declare vertices */
-
-    TVector3 primary_vertex(fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
-    TVector3 secondary_vertex(0., 0., 0.);
+    Math::XYZPoint PrimaryVertex(fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
+    Math::XYZPoint SecondaryVertex;
 
     /* Auxiliary variables */
 
     Int_t pdgCode;
-    Int_t mcIdxPosKaonA = -1;
-    Int_t mcIdxPosKaonB = -1;
+    Int_t mcIdxPosKaonA;
+    Int_t mcIdxPosKaonB;
     Int_t motherMcIdx;
 
     /* Loop over interactions */
 
     for (UInt_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
+
+        mcIdxPosKaonA = -1;
+        mcIdxPosKaonB = -1;
 
         /* Protection in case of general-purpose simulations */
 
@@ -3495,34 +3480,34 @@ void AliAnalysisTaskSexaquark::ProcessFindableKaonPairs() {
         mcPosKaonA = (AliMCParticle*)fMC->GetTrack(mcIdxPosKaonA);
         mcPosKaonB = (AliMCParticle*)fMC->GetTrack(mcIdxPosKaonB);
 
-        /* Get true momentum */
+        /* Get true 4-momentum */
 
-        lvPosKaonA.SetXYZM(mcPosKaonA->Px(), mcPosKaonA->Py(), mcPosKaonA->Pz(), fPDG.GetParticle(321)->Mass());
-        lvPosKaonB.SetXYZM(mcPosKaonB->Px(), mcPosKaonB->Py(), mcPosKaonB->Pz(), fPDG.GetParticle(321)->Mass());
+        lvPosKaonA.SetPxPyPzE(mcPosKaonA->Px(), mcPosKaonA->Py(), mcPosKaonA->Pz(), mcPosKaonA->E());
+        lvPosKaonB.SetPxPyPzE(mcPosKaonB->Px(), mcPosKaonB->Py(), mcPosKaonB->Pz(), mcPosKaonB->E());
 
         lvKaonPair = lvPosKaonA + lvPosKaonB;
 
-        /* Get sec. vertex */
+        /* Get secondary vertex */
 
-        secondary_vertex.SetXYZ(mcPosKaonA->Xv(), mcPosKaonA->Yv(), mcPosKaonA->Zv());
+        SecondaryVertex.SetXYZ(mcPosKaonA->Xv(), mcPosKaonA->Yv(), mcPosKaonA->Zv());
     }
 
     /* Fill histograms  */
 
     fHist_KaonPairs_Bookkeep->Fill(10);
     fHist_KaonPairs[std::make_tuple("Findable", "All", "Mass")]->Fill(lvKaonPair.M());
-    fHist_KaonPairs[std::make_tuple("Findable", "All", "OriginRadius")]->Fill(secondary_vertex.Perp());
-    fHist_KaonPairs[std::make_tuple("Findable", "All", "DecayLength")]->Fill((secondary_vertex - primary_vertex).Mag());
-    fHist_KaonPairs[std::make_tuple("Findable", "All", "Xv")]->Fill(secondary_vertex.X());
-    fHist_KaonPairs[std::make_tuple("Findable", "All", "Yv")]->Fill(secondary_vertex.Y());
-    fHist_KaonPairs[std::make_tuple("Findable", "All", "Zv")]->Fill(secondary_vertex.Z());
+    fHist_KaonPairs[std::make_tuple("Findable", "All", "OriginRadius")]->Fill(SecondaryVertex.Rho());
+    fHist_KaonPairs[std::make_tuple("Findable", "All", "DecayLength")]->Fill((SecondaryVertex - PrimaryVertex).R());
+    fHist_KaonPairs[std::make_tuple("Findable", "All", "Xv")]->Fill(SecondaryVertex.X());
+    fHist_KaonPairs[std::make_tuple("Findable", "All", "Yv")]->Fill(SecondaryVertex.Y());
+    fHist_KaonPairs[std::make_tuple("Findable", "All", "Zv")]->Fill(SecondaryVertex.Z());
     fHist_KaonPairs[std::make_tuple("Findable", "All", "Eta")]->Fill(lvKaonPair.Eta());
     fHist_KaonPairs[std::make_tuple("Findable", "All", "Rapidity")]->Fill(lvKaonPair.Rapidity());
     fHist_KaonPairs[std::make_tuple("Findable", "All", "Px")]->Fill(lvKaonPair.Px());
     fHist_KaonPairs[std::make_tuple("Findable", "All", "Py")]->Fill(lvKaonPair.Py());
     fHist_KaonPairs[std::make_tuple("Findable", "All", "Pz")]->Fill(lvKaonPair.Pz());
     fHist_KaonPairs[std::make_tuple("Findable", "All", "Pt")]->Fill(lvKaonPair.Pt());
-    fHist_KaonPairs[std::make_tuple("Findable", "All", "OpeningAngle")]->Fill(lvPosKaonA.Vect().Angle(lvPosKaonB.Vect()));
+    fHist_KaonPairs[std::make_tuple("Findable", "All", "OpeningAngle")]->Fill(Math::VectorUtil::Angle(lvPosKaonA, lvPosKaonB));
 }
 
 /*                             */
@@ -3547,8 +3532,8 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
     AliESDtrack* pos_track;
 
     Double_t V0_X, V0_Y, V0_Z;
-    Double_t N_Px, N_Py, N_Pz;
-    Double_t P_Px, P_Py, P_Pz;
+    Double_t N_Px, N_Py, N_Pz, N_E;
+    Double_t P_Px, P_Py, P_Pz, P_E;
 
     Float_t decay_radius;
     Float_t decay_length;  // decay vertex - primary vertex, could be useful
@@ -3561,13 +3546,13 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
     Double_t xthiss, xpp;
     Float_t impar_neg_v0[2], impar_pos_v0[2];
 
-    /* Declare TLorentzVectors */
+    /* Declare vectors */
 
-    TLorentzVector lvTrackNeg;
-    TLorentzVector lvTrackPos;
-    TLorentzVector lvV0;
+    Math::PxPyPzEVector lvTrackNeg;
+    Math::PxPyPzEVector lvTrackPos;
+    Math::PxPyPzEVector lvV0;
 
-    /* Auxiliary containers */
+    /* Auxiliary variables */
 
     Bool_t is_true;
     Bool_t is_secondary;
@@ -3575,6 +3560,8 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 
     Bool_t passes_cuts_as_antilambda;
     Bool_t passes_cuts_as_kaonzero;
+
+    /* Auxiliary containers */
 
     std::vector<AliESDv0>* esdFoundV0s;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfNegDau_fromFoundV0Idx;
@@ -3667,13 +3654,21 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 
         for (Int_t& v0PdgCode : possiblePID) {
 
-            /* Update TLorentzVectors to get reconstructed mass */
+            /* Update vectors to get reconstructed mass */
 
-            lvTrackNeg.SetXYZM(N_Px, N_Py, N_Pz, fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[v0PdgCode])->Mass());
-            lvTrackPos.SetXYZM(P_Px, P_Py, P_Pz, fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[v0PdgCode])->Mass());
+            N_E = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz +
+                              fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[v0PdgCode])->Mass() *
+                                  fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[v0PdgCode])->Mass());
+            lvTrackNeg.SetPxPyPzE(N_Px, N_Py, N_Pz, fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[v0PdgCode])->Mass());
+
+            P_E = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz +
+                              fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[v0PdgCode])->Mass() *
+                                  fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[v0PdgCode])->Mass());
+            lvTrackPos.SetPxPyPzE(P_Px, P_Py, P_Pz, fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[v0PdgCode])->Mass());
+
             lvV0 = lvTrackNeg + lvTrackPos;
 
-            opening_angle = lvTrackNeg.Angle(lvTrackPos.Vect());
+            opening_angle = (Float_t)Math::VectorUtil::Angle(lvTrackNeg, lvTrackPos);
 
             /* Determine containers to use */
 
@@ -3815,14 +3810,14 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
     AliESDtrack* pos_track;
 
     Double_t V0_X, V0_Y, V0_Z;
-    Double_t N_Px, N_Py, N_Pz;
-    Double_t P_Px, P_Py, P_Pz;
+    Double_t N_Px, N_Py, N_Pz, N_E;
+    Double_t P_Px, P_Py, P_Pz, P_E;
 
-    /* Declare TLorentzVectors */
+    /* Declare 4-momentum vectors */
 
-    TLorentzVector lvTrackNeg;
-    TLorentzVector lvTrackPos;
-    TLorentzVector lvV0;
+    Math::PxPyPzEVector lvTrackNeg;
+    Math::PxPyPzEVector lvTrackPos;
+    Math::PxPyPzEVector lvV0;
 
     /* Auxiliary variables */
 
@@ -3933,8 +3928,16 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             vertex.GetNPxPyPz(N_Px, N_Py, N_Pz);
             vertex.GetPPxPyPz(P_Px, P_Py, P_Pz);
 
-            lvTrackNeg.SetXYZM(N_Px, N_Py, N_Pz, fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[pdgV0])->Mass());
-            lvTrackPos.SetXYZM(P_Px, P_Py, P_Pz, fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[pdgV0])->Mass());
+            N_E = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz +
+                              fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[pdgV0])->Mass() *
+                                  fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[pdgV0])->Mass());
+            P_E = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz +
+                              fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[pdgV0])->Mass() *
+                                  fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[pdgV0])->Mass());
+
+            lvTrackNeg.SetPxPyPzE(N_Px, N_Py, N_Pz, N_E);
+            lvTrackPos.SetPxPyPzE(P_Px, P_Py, P_Pz, P_E);
+
             lvV0 = lvTrackNeg + lvTrackPos;
 
             decay_radius = TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y);
@@ -3955,7 +3958,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             decay_length = TMath::Sqrt((V0_X - fPrimaryVertex->GetX()) * (V0_X - fPrimaryVertex->GetX()) +
                                        (V0_Y - fPrimaryVertex->GetY()) * (V0_Y - fPrimaryVertex->GetY()) +
                                        (V0_Z - fPrimaryVertex->GetZ()) * (V0_Z - fPrimaryVertex->GetZ()));
-            opening_angle = lvTrackNeg.Angle(lvTrackPos.Vect());
+            opening_angle = Math::VectorUtil::Angle(lvTrackNeg, lvTrackPos);
 
             /* Store V0 */
 
@@ -4088,14 +4091,17 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool
     Double_t V0_X, V0_Y, V0_Z;
     v0->GetXYZ(V0_X, V0_Y, V0_Z);
 
-    Double_t N_Px, N_Py, N_Pz;
-    Double_t P_Px, P_Py, P_Pz;
+    Double_t N_Px, N_Py, N_Pz, N_E;
+    Double_t P_Px, P_Py, P_Pz, P_E;
     v0->GetNPxPyPz(N_Px, N_Py, N_Pz);
     v0->GetPPxPyPz(P_Px, P_Py, P_Pz);
-    TLorentzVector lvTrackNeg, lvTrackPos;
-    lvTrackNeg.SetXYZM(N_Px, N_Py, N_Pz, fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[pdgV0])->Mass());
-    lvTrackPos.SetXYZM(P_Px, P_Py, P_Pz, fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[pdgV0])->Mass());
-    TLorentzVector lvV0 = lvTrackNeg + lvTrackPos;
+    N_E = TMath::Sqrt(N_Px * N_Px + N_Py * N_Py + N_Pz * N_Pz +
+                      fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[pdgV0])->Mass() * fPDG.GetParticle(getNegPdgCode_fromV0PdgCode[pdgV0])->Mass());
+    P_E = TMath::Sqrt(P_Px * P_Px + P_Py * P_Py + P_Pz * P_Pz +
+                      fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[pdgV0])->Mass() * fPDG.GetParticle(getPosPdgCode_fromV0PdgCode[pdgV0])->Mass());
+    Math::PxPyPzEVector lvTrackNeg(N_Px, N_Py, N_Pz, N_E);
+    Math::PxPyPzEVector lvTrackPos(P_Px, P_Py, P_Pz, P_E);
+    Math::PxPyPzEVector lvV0 = lvTrackNeg + lvTrackPos;
 
     Double_t Radius = TMath::Sqrt(V0_X * V0_X + V0_Y * V0_Y);
     if (kMin_V0_Radius[pdgV0] && Radius < kMin_V0_Radius[pdgV0]) return kFALSE;
@@ -4211,8 +4217,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool
  * - Return: `kTRUE` if the V0 candidate passes the cuts, `kFALSE` otherwise
  */
 Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, KFParticleMother kfV0,
-                                                KFParticle kfDaughterNeg, KFParticle kfDaughterPos, TLorentzVector lvV0, TLorentzVector lvTrackNeg,
-                                                TLorentzVector lvTrackPos) {
+                                                KFParticle kfDaughterNeg, KFParticle kfDaughterPos, Math::PxPyPzEVector lvV0,
+                                                Math::PxPyPzEVector lvTrackNeg, Math::PxPyPzEVector lvTrackPos) {
 
     fHist_V0s_Bookkeep[pdgV0]->Fill(60);
     if (IsTrue) fHist_V0s_Bookkeep[pdgV0]->Fill(90);
@@ -4338,27 +4344,27 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
     AliESDtrack* KaonZeroShort_NegDau;
     AliESDtrack* KaonZeroShort_PosDau;
 
-    /* Declare TVector3s  */
+    /* Declare vectors  */
 
-    TVector3 AntiLambda_momentum, KaonZeroShort_momentum;
-    TVector3 AntiLambda_vertex, KaonZeroShort_vertex;
+    Math::XYZVector AntiLambda_momentum;
+    Math::XYZVector KaonZeroShort_momentum;
+    Math::XYZPoint AntiLambda_vertex;
+    Math::XYZPoint KaonZeroShort_vertex;
 
-    TVector3 SecondaryVertex;
+    Math::XYZPoint SecondaryVertex;
 
-    /* Declare TLorentzVectors */
+    Math::PxPyPzEVector lvAntiLambda;
+    Math::PxPyPzEVector lvKaonZeroShort;
 
-    TLorentzVector lvAntiLambda;
-    TLorentzVector lvKaonZeroShort;
-
-    TLorentzVector lvStruckNucleon;
-    TLorentzVector lvAntiSexaquark;
+    Math::PxPyPzEVector lvStruckNucleon;
+    Math::PxPyPzEVector lvAntiSexaquark;
 
     /* Declare auxiliar variables */
 
     Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
     Int_t esdIdxNeg_KaonZeroShort, esdIdxPos_KaonZeroShort;
 
-    TVector3 pca1, pca2;
+    Math::XYZPoint pca1, pca2;
     Float_t radius;
     Float_t decay_length;
     Float_t dca_wrt_pv;
@@ -4411,8 +4417,7 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
             KaonZeroShort_vertex.SetXYZ(KaonZeroShort.Xv(), KaonZeroShort.Yv(), KaonZeroShort.Zv());
 
             dca_btw_v0s = Calculate_TwoLinesDCA_v2(AntiLambda_vertex, AntiLambda_momentum, KaonZeroShort_vertex, KaonZeroShort_momentum, pca1, pca2);
-
-            SecondaryVertex = 0.5 * (pca1 + pca2);  // middle point between the two points of closest approach
+            SecondaryVertex.SetXYZ(0.5 * (pca1.X() + pca2.X()), 0.5 * (pca1.Y() + pca2.Y()), 0.5 * (pca1.Z() + pca2.Z()));
 
             /* Reconstruct anti-sexaquark candidate */
 
@@ -4525,7 +4530,7 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
  * `esdKaonZeroShortPos`
  * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
  */
-Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark,
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark,
                                                               AliESDv0 esdAntiLambda, AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg,
                                                               AliESDtrack* esdAntiLambdaPos, AliESDtrack* esdKaonZeroShortNeg,
                                                               AliESDtrack* esdKaonZeroShortPos) {
@@ -4580,11 +4585,11 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, T
     fHist_AntiSexaquarks_Bookkeep->Fill(28);
     if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(68);
 
-    TVector3 AntiLambda_vertex(esdAntiLambda.Xv(), esdAntiLambda.Yv(), esdAntiLambda.Zv());
-    TVector3 AntiLambda_momentum(esdAntiLambda.Px(), esdAntiLambda.Py(), esdAntiLambda.Pz());
-    TVector3 KaonZeroShort_vertex(esdKaonZeroShort.Xv(), esdKaonZeroShort.Yv(), esdKaonZeroShort.Zv());
-    TVector3 KaonZeroShort_momentum(esdKaonZeroShort.Px(), esdKaonZeroShort.Py(), esdKaonZeroShort.Pz());
-    TVector3 pca1, pca2;
+    Math::XYZPoint AntiLambda_vertex(esdAntiLambda.Xv(), esdAntiLambda.Yv(), esdAntiLambda.Zv());
+    Math::XYZPoint KaonZeroShort_vertex(esdKaonZeroShort.Xv(), esdKaonZeroShort.Yv(), esdKaonZeroShort.Zv());
+    Math::XYZVector AntiLambda_momentum(esdAntiLambda.Px(), esdAntiLambda.Py(), esdAntiLambda.Pz());
+    Math::XYZVector KaonZeroShort_momentum(esdKaonZeroShort.Px(), esdKaonZeroShort.Py(), esdKaonZeroShort.Pz());
+    Math::XYZPoint pca1, pca2;
     Double_t dca_btw_v0s = Calculate_TwoLinesDCA_v2(AntiLambda_vertex, AntiLambda_momentum, KaonZeroShort_vertex, KaonZeroShort_momentum, pca1, pca2);
     if (kMax_Sexa_DCAbtwV0s && dca_btw_v0s > kMax_Sexa_DCAbtwV0s) return kFALSE;
     fHist_AntiSexaquarks_Bookkeep->Fill(29);
@@ -4680,11 +4685,11 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
     KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
 
-    /* Declare TLorentzVectors */
+    /* Declare 4-momentum vectors */
 
-    TLorentzVector lvTrackNeg;
-    TLorentzVector lvTrackPos;
-    TLorentzVector lvV0;
+    Math::PxPyPzEVector lvTrackNeg;
+    Math::PxPyPzEVector lvTrackPos;
+    Math::PxPyPzEVector lvV0;
 
     /* Choose between anti-lambda, K0S or just pion pairs */
 
@@ -4746,8 +4751,14 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             /* Reconstruct V0 */
 
-            lvTrackNeg.SetXYZM(kfTransportedNeg.Px(), kfTransportedNeg.Py(), kfTransportedNeg.Pz(), fPDG.GetParticle(pdgTrackNeg)->Mass());
-            lvTrackPos.SetXYZM(kfTransportedPos.Px(), kfTransportedPos.Py(), kfTransportedPos.Pz(), fPDG.GetParticle(pdgTrackPos)->Mass());
+            lvTrackNeg.SetPxPyPzE(kfTransportedNeg.Px(), kfTransportedNeg.Py(), kfTransportedNeg.Pz(),
+                                  TMath::Sqrt(kfTransportedNeg.Px() * kfTransportedNeg.Px() + kfTransportedNeg.Py() * kfTransportedNeg.Py() +
+                                              kfTransportedNeg.Pz() * kfTransportedNeg.Pz() +
+                                              fPDG.GetParticle(pdgTrackNeg)->Mass() * fPDG.GetParticle(pdgTrackNeg)->Mass()));
+            lvTrackPos.SetPxPyPzE(kfTransportedPos.Px(), kfTransportedPos.Py(), kfTransportedPos.Pz(),
+                                  TMath::Sqrt(kfTransportedPos.Px() * kfTransportedPos.Px() + kfTransportedPos.Py() * kfTransportedPos.Py() +
+                                              kfTransportedPos.Pz() * kfTransportedPos.Pz() +
+                                              fPDG.GetParticle(pdgTrackPos)->Mass() * fPDG.GetParticle(pdgTrackPos)->Mass()));
             lvV0 = lvTrackNeg + lvTrackPos;
 
             /* Apply cuts */
@@ -4773,7 +4784,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             decay_length = TMath::Sqrt((kfV0.GetX() - fPrimaryVertex->GetX()) * (kfV0.GetX() - fPrimaryVertex->GetX()) +
                                        (kfV0.GetY() - fPrimaryVertex->GetY()) * (kfV0.GetY() - fPrimaryVertex->GetY()) +
                                        (kfV0.GetZ() - fPrimaryVertex->GetZ()) * (kfV0.GetZ() - fPrimaryVertex->GetZ()));
-            opening_angle = lvTrackNeg.Angle(lvTrackPos.Vect());
+            opening_angle = Math::VectorUtil::Angle(lvTrackNeg, lvTrackPos);
 
             arm_qt = ArmenterosQt(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz());
             arm_alpha = ArmenterosAlpha(lvV0.Px(), lvV0.Py(), lvV0.Pz(), lvTrackNeg.Px(), lvTrackNeg.Py(), lvTrackNeg.Pz(), lvTrackPos.Px(),
@@ -4944,22 +4955,25 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
     AliESDtrack *esdAntiLambdaNegDau, *esdAntiLambdaPosDau;
     AliESDtrack *esdKaonZeroShortNegDau, *esdKaonZeroShortPosDau;
 
-    /* Declare TLorentzVectors */
+    /* Declare 4-momentum vectors */
 
-    TLorentzVector lvAntiLambdaNegDau, lvAntiLambdaPosDau;
-    TLorentzVector lvKaonZeroShortNegDau, lvKaonZeroShortPosDau;
+    Math::PxPyPzEVector lvAntiLambdaNegDau, lvAntiLambdaPosDau;
+    Math::PxPyPzEVector lvKaonZeroShortNegDau, lvKaonZeroShortPosDau;
 
-    TLorentzVector lvAntiLambda;
-    TLorentzVector lvKaonZeroShort;
+    Math::PxPyPzEVector lvAntiLambda;
+    Math::PxPyPzEVector lvKaonZeroShort;
 
-    TLorentzVector lvStruckNucleon;
-    TLorentzVector lvAntiSexaquark;
+    Math::PxPyPzEVector lvStruckNucleon;
+    Math::PxPyPzEVector lvAntiSexaquark;
 
     /* Define primary vertex as a KFVertex */
 
     KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
 
     /* Auxiliary variables */
+
+    Float_t AntiLambdaNegDau_E, AntiLambdaPosDau_E;
+    Float_t KaonZeroShortNegDau_E, KaonZeroShortPosDau_E;
 
     Float_t radius;
     Float_t decay_length;
@@ -5041,14 +5055,29 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
                 TransportKFParticle(kfKaonZeroShortPosDau, kfKaonZeroShortNegDau, fPDG.GetParticle(fFinalStateProductsPDG[3])->PdgCode(),
                                     (Int_t)esdKaonZeroShortPosDau->Charge());
 
-            lvAntiLambdaNegDau.SetXYZM(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(),
-                                       fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass());
-            lvAntiLambdaPosDau.SetXYZM(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(),
-                                       fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass());
-            lvKaonZeroShortNegDau.SetXYZM(kfKaonZeroShortNegDau.Px(), kfKaonZeroShortNegDau.Py(), kfKaonZeroShortNegDau.Pz(),
-                                          fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass());
-            lvKaonZeroShortPosDau.SetXYZM(kfKaonZeroShortPosDau.Px(), kfKaonZeroShortPosDau.Py(), kfKaonZeroShortPosDau.Pz(),
-                                          fPDG.GetParticle(fFinalStateProductsPDG[3])->Mass());
+            AntiLambdaNegDau_E =
+                TMath::Sqrt(kfAntiLambdaNegDau.Px() * kfAntiLambdaNegDau.Px() + kfAntiLambdaNegDau.Py() * kfAntiLambdaNegDau.Py() +
+                            kfAntiLambdaNegDau.Pz() * kfAntiLambdaNegDau.Pz() +
+                            fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass());
+            AntiLambdaPosDau_E =
+                TMath::Sqrt(kfAntiLambdaPosDau.Px() * kfAntiLambdaPosDau.Px() + kfAntiLambdaPosDau.Py() * kfAntiLambdaPosDau.Py() +
+                            kfAntiLambdaPosDau.Pz() * kfAntiLambdaPosDau.Pz() +
+                            fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass());
+            KaonZeroShortNegDau_E =
+                TMath::Sqrt(kfKaonZeroShortNegDau.Px() * kfKaonZeroShortNegDau.Px() + kfKaonZeroShortNegDau.Py() * kfKaonZeroShortNegDau.Py() +
+                            kfKaonZeroShortNegDau.Pz() * kfKaonZeroShortNegDau.Pz() +
+                            fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass());
+            KaonZeroShortPosDau_E =
+                TMath::Sqrt(kfKaonZeroShortPosDau.Px() * kfKaonZeroShortPosDau.Px() + kfKaonZeroShortPosDau.Py() * kfKaonZeroShortPosDau.Py() +
+                            kfKaonZeroShortPosDau.Pz() * kfKaonZeroShortPosDau.Pz() +
+                            fPDG.GetParticle(fFinalStateProductsPDG[3])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[3])->Mass());
+
+            lvAntiLambdaNegDau.SetPxPyPzE(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(), AntiLambdaNegDau_E);
+            lvAntiLambdaPosDau.SetPxPyPzE(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(), AntiLambdaPosDau_E);
+            lvKaonZeroShortNegDau.SetPxPyPzE(kfKaonZeroShortNegDau.Px(), kfKaonZeroShortNegDau.Py(), kfKaonZeroShortNegDau.Pz(),
+                                             KaonZeroShortNegDau_E);
+            lvKaonZeroShortPosDau.SetPxPyPzE(kfKaonZeroShortPosDau.Px(), kfKaonZeroShortPosDau.Py(), kfKaonZeroShortPosDau.Pz(),
+                                             KaonZeroShortPosDau_E);
 
             /* Reconstruct anti-sexaquark candidate */
 
@@ -5207,7 +5236,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
  * - Input: `kf[AntiSexaquark|AntiLambda|KaonZeroShort|AntiLambdaNeg|AntiLambdaPos|KaonZeroShortNeg|KaonZeroShortPos]`, `lvAntiSexaquark`
  * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
  */
-Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark,
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
                                                               KFParticle kfAntiLambda, KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg,
                                                               KFParticle kfAntiLambdaPos, KFParticle kfKaonZeroShortNeg,
                                                               KFParticle kfKaonZeroShortPos) {
@@ -5315,20 +5344,23 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
     AliESDtrack *esdAntiLambdaNegDau, *esdAntiLambdaPosDau;
     AliESDtrack* esdPosKaon;
 
-    /* Declare TLorentzVectors */
+    /* Declare 4-momentum vectors */
 
-    TLorentzVector lvAntiLambda;
-    TLorentzVector lvAntiLambdaNegDau, lvAntiLambdaPosDau;
-    TLorentzVector lvPosKaon;
+    Math::PxPyPzEVector lvAntiLambda;
+    Math::PxPyPzEVector lvAntiLambdaNegDau, lvAntiLambdaPosDau;
+    Math::PxPyPzEVector lvPosKaon;
 
-    TLorentzVector lvStruckNucleon;
-    TLorentzVector lvAntiSexaquark;
+    Math::PxPyPzEVector lvStruckNucleon;
+    Math::PxPyPzEVector lvAntiSexaquark;
 
     /* Define primary vertex as a KFVertex */
 
     KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
 
     /* Auxiliary variables */
+
+    Float_t AntiLambdaNegDau_E, AntiLambdaPosDau_E;
+    Float_t PosKaon_E;
 
     Float_t radius;
     Float_t decay_length;
@@ -5400,11 +5432,20 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
             kfPosKaon =
                 TransportKFParticle(kfPosKaon, kfAntiLambda, fPDG.GetParticle(fFinalStateProductsPDG[2])->PdgCode(), (Int_t)esdPosKaon->Charge());
 
-            lvAntiLambdaNegDau.SetXYZM(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(),
-                                       fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass());
-            lvAntiLambdaPosDau.SetXYZM(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(),
-                                       fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass());
-            lvPosKaon.SetXYZM(kfPosKaon.Px(), kfPosKaon.Py(), kfPosKaon.Pz(), fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass());
+            AntiLambdaNegDau_E =
+                TMath::Sqrt(kfAntiLambdaNegDau.Px() * kfAntiLambdaNegDau.Px() + kfAntiLambdaNegDau.Py() * kfAntiLambdaNegDau.Py() +
+                            kfAntiLambdaNegDau.Pz() * kfAntiLambdaNegDau.Pz() +
+                            fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass());
+            AntiLambdaPosDau_E =
+                TMath::Sqrt(kfAntiLambdaPosDau.Px() * kfAntiLambdaPosDau.Px() + kfAntiLambdaPosDau.Py() * kfAntiLambdaPosDau.Py() +
+                            kfAntiLambdaPosDau.Pz() * kfAntiLambdaPosDau.Pz() +
+                            fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass());
+            PosKaon_E = TMath::Sqrt(kfPosKaon.Px() * kfPosKaon.Px() + kfPosKaon.Py() * kfPosKaon.Py() + kfPosKaon.Pz() * kfPosKaon.Pz() +
+                                    fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass());
+
+            lvAntiLambdaNegDau.SetPxPyPzE(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(), AntiLambdaNegDau_E);
+            lvAntiLambdaPosDau.SetPxPyPzE(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(), AntiLambdaPosDau_E);
+            lvPosKaon.SetPxPyPzE(kfPosKaon.Px(), kfPosKaon.Py(), kfPosKaon.Pz(), PosKaon_E);
 
             /* Reconstruct anti-sexaquark candidate */
 
@@ -5539,7 +5580,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
  * - Input: `kf[AntiSexaquark|AntiLambda|KaonZeroShort|AntiLambdaNeg|AntiLambdaPos|KaonZeroShortNeg|KaonZeroShortPos]`, `lvAntiSexaquark`
  * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
  */
-Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelD(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark,
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelD(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
                                                               KFParticle kfAntiLambda, KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg,
                                                               KFParticle kfAntiLambdaPos) {
 
@@ -5645,23 +5686,26 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
     AliESDtrack *esdPiMinus, *esdPiPlus;
     AliESDtrack* esdPosKaon;
 
-    /* Declare TLorentzVectors */
+    /* Declare 4-momentum vectors */
 
-    TLorentzVector lvAntiLambda;
-    TLorentzVector lvAntiLambdaNegDau, lvAntiLambdaPosDau;
+    Math::PxPyPzEVector lvAntiLambda;
+    Math::PxPyPzEVector lvAntiLambdaNegDau, lvAntiLambdaPosDau;
 
-    TLorentzVector lvPiMinus;
-    TLorentzVector lvPiPlus;
-    TLorentzVector lvPosKaon;
+    Math::PxPyPzEVector lvPiMinus;
+    Math::PxPyPzEVector lvPiPlus;
+    Math::PxPyPzEVector lvPosKaon;
 
-    TLorentzVector lvStruckNucleon;
-    TLorentzVector lvAntiSexaquark;
+    Math::PxPyPzEVector lvStruckNucleon;
+    Math::PxPyPzEVector lvAntiSexaquark;
 
     /* Define primary vertex as a KFVertex */
 
     KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
 
     /* Auxiliary variables */
+
+    Float_t AntiLambdaNegDau_E, AntiLambdaPosDau_E;
+    Float_t PosKaon_E, PiMinus_E, PiPlus_E;
 
     Float_t radius;
     Float_t decay_length;
@@ -5755,13 +5799,29 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                 kfPiPlus =
                     TransportKFParticle(kfPiPlus, kfAntiLambda, fPDG.GetParticle(fFinalStateProductsPDG[4])->PdgCode(), (Int_t)esdPiPlus->Charge());
 
-                lvAntiLambdaNegDau.SetXYZM(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(),
-                                           fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass());
-                lvAntiLambdaPosDau.SetXYZM(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(),
-                                           fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass());
-                lvPosKaon.SetXYZM(kfPosKaon.Px(), kfPosKaon.Py(), kfPosKaon.Pz(), fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass());
-                lvPiMinus.SetXYZM(kfPiMinus.Px(), kfPiMinus.Py(), kfPiMinus.Pz(), fPDG.GetParticle(fFinalStateProductsPDG[3])->Mass());
-                lvPiPlus.SetXYZM(kfPiPlus.Px(), kfPiPlus.Py(), kfPiPlus.Pz(), fPDG.GetParticle(fFinalStateProductsPDG[4])->Mass());
+                AntiLambdaNegDau_E =
+                    TMath::Sqrt(kfAntiLambdaNegDau.GetPx() * kfAntiLambdaNegDau.GetPx() + kfAntiLambdaNegDau.GetPy() * kfAntiLambdaNegDau.GetPy() +
+                                kfAntiLambdaNegDau.GetPz() * kfAntiLambdaNegDau.GetPz() +
+                                fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass());
+                AntiLambdaPosDau_E =
+                    TMath::Sqrt(kfAntiLambdaPosDau.GetPx() * kfAntiLambdaPosDau.GetPx() + kfAntiLambdaPosDau.GetPy() * kfAntiLambdaPosDau.GetPy() +
+                                kfAntiLambdaPosDau.GetPz() * kfAntiLambdaPosDau.GetPz() +
+                                fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass());
+                PosKaon_E = TMath::Sqrt(kfPosKaon.GetPx() * kfPosKaon.GetPx() + kfPosKaon.GetPy() * kfPosKaon.GetPy() +
+                                        kfPosKaon.GetPz() * kfPosKaon.GetPz() +
+                                        fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass());
+                PiMinus_E = TMath::Sqrt(kfPiMinus.GetPx() * kfPiMinus.GetPx() + kfPiMinus.GetPy() * kfPiMinus.GetPy() +
+                                        kfPiMinus.GetPz() * kfPiMinus.GetPz() +
+                                        fPDG.GetParticle(fFinalStateProductsPDG[3])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[3])->Mass());
+                PiPlus_E =
+                    TMath::Sqrt(kfPiPlus.GetPx() * kfPiPlus.GetPx() + kfPiPlus.GetPy() * kfPiPlus.GetPy() + kfPiPlus.GetPz() * kfPiPlus.GetPz() +
+                                fPDG.GetParticle(fFinalStateProductsPDG[4])->Mass() * fPDG.GetParticle(fFinalStateProductsPDG[4])->Mass());
+
+                lvAntiLambdaNegDau.SetPxPyPzE(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(), AntiLambdaNegDau_E);
+                lvAntiLambdaPosDau.SetPxPyPzE(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(), AntiLambdaPosDau_E);
+                lvPosKaon.SetPxPyPzE(kfPosKaon.Px(), kfPosKaon.Py(), kfPosKaon.Pz(), PosKaon_E);
+                lvPiMinus.SetPxPyPzE(kfPiMinus.Px(), kfPiMinus.Py(), kfPiMinus.Pz(), PiMinus_E);
+                lvPiPlus.SetPxPyPzE(kfPiPlus.Px(), kfPiPlus.Py(), kfPiPlus.Pz(), PiPlus_E);
 
                 /* Reconstruct anti-sexaquark candidate */
 
@@ -5937,7 +5997,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
  * Apply anti-sexaquark candidate cuts via channel E reconstruction.
  * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
  */
-Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelE(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark,
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelE(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
                                                               KFParticle kfAntiLambda, KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau,
                                                               KFParticle kfPosKaon, KFParticle kfPiMinus, KFParticle kfPiPlus) {
 
@@ -6065,16 +6125,19 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
     AliESDtrack* esdPosKaonA;
     AliESDtrack* esdPosKaonB;
 
-    /* Declare TLorentzVectors */
+    /* Declare 4-momentum vectors */
 
-    TLorentzVector lvPosKaonA, lvPosKaonB;
-    TLorentzVector lvKaonPair;
+    Math::PxPyPzEVector lvPosKaonA, lvPosKaonB;
+    Math::PxPyPzEVector lvKaonPair;
 
     /* Define primary vertex as a KFVertex */
 
     KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
 
     /* Auxiliary variables */
+
+    Float_t PosKaonA_E;
+    Float_t PosKaonB_E;
 
     Float_t origin_radius;
     Float_t decay_length;  // origin radius - primary vertex, i.e., the decay length of the mother particle
@@ -6127,8 +6190,16 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
 
             /* Reconstruct V0 */
 
-            lvPosKaonA.SetXYZM(kfTransportedPosKaonA.Px(), kfTransportedPosKaonA.Py(), kfTransportedPosKaonA.Pz(), kKaonMass);
-            lvPosKaonB.SetXYZM(kfTransportedPosKaonB.Px(), kfTransportedPosKaonB.Py(), kfTransportedPosKaonB.Pz(), kKaonMass);
+            PosKaonA_E =
+                TMath::Sqrt(kfTransportedPosKaonA.Px() * kfTransportedPosKaonA.Px() + kfTransportedPosKaonA.Py() * kfTransportedPosKaonA.Py() +
+                            kfTransportedPosKaonA.Pz() * kfTransportedPosKaonA.Pz() + kKaonMass * kKaonMass);
+            PosKaonB_E =
+                TMath::Sqrt(kfTransportedPosKaonB.Px() * kfTransportedPosKaonB.Px() + kfTransportedPosKaonB.Py() * kfTransportedPosKaonB.Py() +
+                            kfTransportedPosKaonB.Pz() * kfTransportedPosKaonB.Pz() + kKaonMass * kKaonMass);
+
+            lvPosKaonA.SetPxPyPzE(kfTransportedPosKaonA.Px(), kfTransportedPosKaonA.Py(), kfTransportedPosKaonA.Pz(), PosKaonA_E);
+            lvPosKaonB.SetPxPyPzE(kfTransportedPosKaonB.Px(), kfTransportedPosKaonB.Py(), kfTransportedPosKaonB.Pz(), PosKaonB_E);
+
             lvKaonPair = lvPosKaonA + lvPosKaonB;
 
             /* Apply cuts */
@@ -6144,7 +6215,6 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
             /* Calculate variables */
 
             origin_radius = TMath::Sqrt(kfKaonPair.GetX() * kfKaonPair.GetX() + kfKaonPair.GetY() * kfKaonPair.GetY());
-
             dca_wrt_pv = TMath::Abs(kfKaonPair.GetDistanceFromVertex(kfPrimaryVertex));
             dca_btw_kaons = TMath::Abs(kfPosKaonA.GetDistanceFromParticle(kfPosKaonB));
             dca_ka_sv = TMath::Abs(kfPosKaonA.GetDistanceFromVertex(kfKaonPair));
@@ -6152,7 +6222,7 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
             decay_length = TMath::Sqrt((kfKaonPair.GetX() - fPrimaryVertex->GetX()) * (kfKaonPair.GetX() - fPrimaryVertex->GetX()) +
                                        (kfKaonPair.GetY() - fPrimaryVertex->GetY()) * (kfKaonPair.GetY() - fPrimaryVertex->GetY()) +
                                        (kfKaonPair.GetZ() - fPrimaryVertex->GetZ()) * (kfKaonPair.GetZ() - fPrimaryVertex->GetZ()));
-            opening_angle = lvPosKaonA.Angle(lvPosKaonB.Vect());
+            opening_angle = Math::VectorUtil::Angle(lvPosKaonA, lvPosKaonB);
 
             chi2_ndf = (Double_t)kfKaonPair.GetChi2() / (Double_t)kfKaonPair.GetNDF();
 
@@ -6238,7 +6308,7 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
  * - Return: `kTRUE` if the K+K+ pair passes the cuts, `kFALSE` otherwise
  */
 Bool_t AliAnalysisTaskSexaquark::PassesKaonPairCuts(Bool_t isSignal, KFParticleMother kfKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB,
-                                                    TLorentzVector lvKaonPair, TLorentzVector lvPosKaonA, TLorentzVector lvPosKaonB) {
+                                                    Math::PxPyPzEVector lvKaonPair, Math::PxPyPzEVector lvPosKaonA, Math::PxPyPzEVector lvPosKaonB) {
 
     fHist_KaonPairs_Bookkeep->Fill(20);
     if (isSignal) fHist_KaonPairs_Bookkeep->Fill(60);
@@ -6292,20 +6362,20 @@ Bool_t AliAnalysisTaskSexaquark::PassesKaonPairCuts(Bool_t isSignal, KFParticleM
  * - Return: `cos(theta)`
  * (Based on `AliRoot/STEER/ESD/AliESDv0::GetV0CosineOfPointingAngle()`)
  */
-Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(TLorentzVector lvParticle, Double_t X, Double_t Y, Double_t Z, Double_t refPointX,
+Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(Math::PxPyPzEVector lvParticle, Double_t X, Double_t Y, Double_t Z, Double_t refPointX,
                                                        Double_t refPointY, Double_t refPointZ) {
-    TVector3 posRelativeToRef(X - refPointX, Y - refPointY, Z - refPointZ);
-    return TMath::Cos(lvParticle.Angle(posRelativeToRef));
+    Math::XYZVector posRelativeToRef(X - refPointX, Y - refPointY, Z - refPointZ);
+    return TMath::Cos(Math::VectorUtil::Angle(lvParticle, posRelativeToRef));
 }
 
 /*
- * Overload of `CosinePointingAngle(...)`, using Px, Py, Pz instead of the particle's TLorentzVector.
+ * Overload of `CosinePointingAngle(...)`, using Px, Py, Pz instead of the particle's 4-momentum.
  */
 Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(Double_t Px, Double_t Py, Double_t Pz, Double_t X, Double_t Y, Double_t Z, Double_t refPointX,
                                                        Double_t refPointY, Double_t refPointZ) {
-    TVector3 posRelativeToRef(X - refPointX, Y - refPointY, Z - refPointZ);
-    TVector3 momParticle(Px, Py, Pz);
-    return TMath::Cos(momParticle.Angle(posRelativeToRef));
+    Math::XYZVector posRelativeToRef(X - refPointX, Y - refPointY, Z - refPointZ);
+    Math::XYZVector momParticle(Px, Py, Pz);
+    return TMath::Cos(Math::VectorUtil::Angle(momParticle, posRelativeToRef));
 }
 
 /*
@@ -6314,17 +6384,15 @@ Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(Double_t Px, Double_t Py,
  */
 Double_t AliAnalysisTaskSexaquark::ArmenterosAlpha(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz,
                                                    Double_t Pos_Px, Double_t Pos_Py, Double_t Pos_Pz) {
-    TVector3 momTot(V0_Px, V0_Py, V0_Pz);
-    TVector3 momNeg(Neg_Px, Neg_Py, Neg_Pz);
-    TVector3 momPos(Pos_Px, Pos_Py, Pos_Pz);
+    Math::XYZVector momTot(V0_Px, V0_Py, V0_Pz);
+    Math::XYZVector momNeg(Neg_Px, Neg_Py, Neg_Pz);
+    Math::XYZVector momPos(Pos_Px, Pos_Py, Pos_Pz);
 
-    Double_t lQlNeg = momNeg.Dot(momTot) / momTot.Mag();
-    Double_t lQlPos = momPos.Dot(momTot) / momTot.Mag();
+    Double_t lQlNeg = momNeg.Dot(momTot) / momTot.R();
+    Double_t lQlPos = momPos.Dot(momTot) / momTot.R();
 
-    // (protection)
-    if (lQlPos + lQlNeg == 0.) {
-        return 2;
-    }  // closure
+    if (TMath::Abs(lQlPos + lQlNeg) < 1E-6) return 2.;  // protection
+
     return (lQlPos - lQlNeg) / (lQlPos + lQlNeg);
 }
 
@@ -6333,10 +6401,10 @@ Double_t AliAnalysisTaskSexaquark::ArmenterosAlpha(Double_t V0_Px, Double_t V0_P
  * (Based on `AliRoot/STEER/ESD/AliESDv0::PtArmV0()`)
  */
 Double_t AliAnalysisTaskSexaquark::ArmenterosQt(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t Neg_Px, Double_t Neg_Py, Double_t Neg_Pz) {
-    TVector3 momTot(V0_Px, V0_Py, V0_Pz);
-    TVector3 momNeg(Neg_Px, Neg_Py, Neg_Pz);
+    Math::XYZVector momTot(V0_Px, V0_Py, V0_Pz);
+    Math::XYZVector momNeg(Neg_Px, Neg_Py, Neg_Pz);
 
-    return momNeg.Perp(momTot);
+    return Math::VectorUtil::Perp(momTot, momNeg);
 }
 
 /*
@@ -6349,13 +6417,13 @@ Double_t AliAnalysisTaskSexaquark::ArmenterosQt(Double_t V0_Px, Double_t V0_Py, 
 Double_t AliAnalysisTaskSexaquark::LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t V0_X, Double_t V0_Y, Double_t V0_Z,
                                                 Double_t refPointX, Double_t refPointY, Double_t refPointZ) {
 
-    TVector3 V0Momentum(V0_Px, V0_Py, V0_Pz);
-    TVector3 V0Vertex(V0_X, V0_Y, V0_Z);
-    TVector3 RefVertex(refPointX, refPointY, refPointZ);
+    Math::XYZVector V0Momentum(V0_Px, V0_Py, V0_Pz);
+    Math::XYZPoint V0Vertex(V0_X, V0_Y, V0_Z);
+    Math::XYZPoint RefVertex(refPointX, refPointY, refPointZ);
 
-    TVector3 CrossProduct = (RefVertex - V0Vertex).Cross(V0Momentum);
+    Math::XYZVector CrossProduct = (RefVertex - V0Vertex).Cross(V0Momentum);
 
-    return CrossProduct.Mag() / V0Momentum.Mag();
+    return CrossProduct.R() / V0Momentum.R();
 
     /*
     // convert input vectors to arrays
@@ -6365,10 +6433,10 @@ Double_t AliAnalysisTaskSexaquark::LinePointDCA(Double_t V0_Px, Double_t V0_Py, 
 
     // lambda function
     auto func = [this, &ref, &pos0, &dir0](const Double_t* t) { return SquaredDistancePointToLine(t, ref, pos0, dir0); };
-    ROOT::Math::Functor f(func, 1);
+    Math::Functor f(func, 1);
 
     // initialize minimizer
-    ROOT::Math::Minimizer* min = ROOT::Math::Factory::CreateMinimizer("Minuit", "Migrad");
+    Math::Minimizer* min = Math::Factory::CreateMinimizer("Minuit", "Migrad");
     min->SetFunction(f);
     min->SetVariable(0, "t", 0., 0.01);
     min->Minimize();
@@ -6395,42 +6463,33 @@ Float_t AliAnalysisTaskSexaquark::MCRec_GetImpactParameter(AliESDtrack* track) {
  * If a common vertex cannot be found, then return the DCA between the two lines.
  * (Based on Marty Cohen's answer in https://math.stackexchange.com/questions/2213165/find-shortest-distance-between-lines-in-3d)
  */
-Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v1(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0,
-                                                            TVector3& PCA1) {
+Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v1(Math::XYZPoint v3_pos0, Math::XYZVector v3_dir0, Math::XYZPoint v3_pos1,
+                                                            Math::XYZVector v3_dir1, Math::XYZPoint& PCA0, Math::XYZPoint& PCA1) {
 
-    if (v3_dir0.Mag() == 0. || v3_dir1.Mag() == 0.) {
+    if (v3_dir0.R() < 1E-6 || v3_dir1.R() < 1E-6) {
         AliWarning("One of the directions is null!");
         return -1.;
     }
 
     /* Require perpendicularity, that means both lines must intersect eventually */
 
-    if (v3_dir0.Cross(v3_dir1).Mag() <= 0.) {
-        AliWarning("TwoLinesDCA :: Not possible to intersect!");
+    if (v3_dir0.Cross(v3_dir1).R() < 1E-6) {
+        AliWarning("Not possible to intersect!");
         return -1.;
     }
 
-    TVector3 diff = v3_pos0 - v3_pos1;
+    Math::XYZVector diff = v3_pos0 - v3_pos1;
     Double_t determinant = v3_dir0.Dot(v3_dir1) * v3_dir0.Dot(v3_dir1) - v3_dir0.Mag2() * v3_dir1.Mag2();
-    if (determinant == 0.) {
-        AliWarning("TwoLinesDCA :: Lines are parallel!");
+    if (TMath::Abs(determinant) < 1E-6) {
+        AliWarning("Lines are parallel!");
         return -1.;
     }
     Double_t t0 = (v3_dir1.Mag2() * v3_dir0.Dot(diff) - v3_dir1.Dot(diff) * v3_dir1.Dot(v3_dir0)) / determinant;
     Double_t t1 = (-1 * v3_dir0.Mag2() * v3_dir1.Dot(diff) + v3_dir0.Dot(diff) * v3_dir1.Dot(v3_dir0)) / determinant;
 
-    TString aux = "";
-    if (t0 >= 0. || t1 >= 0.) {
-        aux = "*";
-    }
-
-    Double_t dca = (diff + v3_dir0 * t0 - v3_dir1 * t1).Mag();
+    Double_t dca = (diff + v3_dir0 * t0 - v3_dir1 * t1).R();
     PCA0 = v3_pos0 + t0 * v3_dir0;
     PCA1 = v3_pos1 + t1 * v3_dir1;
-    TVector3 middle_point((PCA0.X() + PCA1.X()) * 0.5, (PCA0.Y() + PCA1.Y()) * 0.5, (PCA0.Z() + PCA1.Z()) * 0.5);
-
-    AliInfoF("dca pca1 pca2 radius = %f (%f, %f, %f) (%f, %f, %f) %f %s", dca, PCA0.X(), PCA0.Y(), PCA0.Z(), PCA1.X(), PCA1.Y(), PCA1.Z(),
-             middle_point.Perp(), aux.Data());
 
     return dca;
 }
@@ -6443,8 +6502,7 @@ Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v1(TVector3 v3_pos0, TV
  * - Return: the square of the distance between the point and the line.
  */
 Double_t AliAnalysisTaskSexaquark::SquaredDistancePointToLine(const Double_t* t, Double_t point[], Double_t linePoint[], Double_t lineDir[]) {
-    return TMath::Power(point[0] - linePoint[0] - t[0] * lineDir[0], 2) +  //
-           TMath::Power(point[1] - linePoint[1] - t[0] * lineDir[1], 2) +  //
+    return TMath::Power(point[0] - linePoint[0] - t[0] * lineDir[0], 2) + TMath::Power(point[1] - linePoint[1] - t[0] * lineDir[1], 2) +
            TMath::Power(point[2] - linePoint[2] - t[0] * lineDir[2], 2);
 }
 
@@ -6467,8 +6525,8 @@ Double_t AliAnalysisTaskSexaquark::SquaredDistanceBetweenLines(const Double_t* t
  * - Output: `CPA0`, `CPA1`, the closest point of approach for the two lines.
  * - Return: the distance of closest approach between the two lines.
  */
-Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0,
-                                                            TVector3& PCA1) {
+Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v2(Math::XYZPoint v3_pos0, Math::XYZVector v3_dir0, Math::XYZPoint v3_pos1,
+                                                            Math::XYZVector v3_dir1, Math::XYZPoint& PCA0, Math::XYZPoint& PCA1) {
 
     // convert input vectors to arrays
     Double_t pos0[3] = {v3_pos0.X(), v3_pos0.Y(), v3_pos0.Z()};
@@ -6478,11 +6536,11 @@ Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TV
     Double_t dir1[3] = {v3_dir1.X(), v3_dir1.Y(), v3_dir1.Z()};
 
     // lambda function
-    auto func = [this, &pos0, &dir0, &pos1, &dir1](const Double_t* t) { return SquaredDistanceBetweenLines(t, pos0, dir0, pos1, dir1); };
-    ROOT::Math::Functor f(func, 2);
+    auto func = [this, &pos0, &dir0, &pos1, &dir1](const Double_t* t) -> Double_t { return SquaredDistanceBetweenLines(t, pos0, dir0, pos1, dir1); };
+    Math::Functor f(func, 2);
 
     // initialize minimizer
-    ROOT::Math::Minimizer* min = ROOT::Math::Factory::CreateMinimizer("Minuit", "Migrad");
+    Math::Minimizer* min = Math::Factory::CreateMinimizer("Minuit", "Migrad");
     min->SetFunction(f);
     min->SetLimitedVariable(0, "t0", 0.0, 0.1, -999., 0.);
     min->SetLimitedVariable(1, "t1", 0.0, 0.1, -999., 0.);

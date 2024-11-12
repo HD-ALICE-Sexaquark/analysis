@@ -21,14 +21,12 @@
 #include "TGrid.h"
 #include "TH1.h"
 #include "TList.h"
-#include "TLorentzVector.h"
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TROOT.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TTree.h"
-#include "TVector3.h"
 
 #include "AliAnalysisManager.h"
 #include "AliExternalTrackParam.h"
@@ -59,6 +57,10 @@
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 #include "Math/Minimizer.h"
+#include "Math/Point3D.h"   // because "TVector3.h" is deprecated
+#include "Math/Vector3D.h"  // because "TVector3.h" is deprecated
+#include "Math/Vector4D.h"  // because "TLorentzVector.h" is deprecated
+#include "Math/VectorUtil.h"
 
 #define HomogeneousField  // homogeneous field in z direction, required by KFParticle
 #include "KFPTrack.h"
@@ -66,6 +68,8 @@
 #include "KFParticle.h"
 #include "KFParticleBase.h"
 #include "KFVertex.h"
+
+using namespace ROOT;
 
 class AliPIDResponse;
 class KFParticle;
@@ -158,7 +162,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, AliESDv0* v0, AliESDtrack* neg_track,
                           AliESDtrack* pos_track);
     Bool_t PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, KFParticleMother kfV0, KFParticle kfDaughterNeg,
-                          KFParticle kfDaughterPos, TLorentzVector lvV0, TLorentzVector lvTrackNeg, TLorentzVector lvTrackPos);
+                          KFParticle kfDaughterPos, Math::PxPyPzEVector lvV0, Math::PxPyPzEVector lvTrackNeg, Math::PxPyPzEVector lvTrackPos);
 
     /* Sexaquark */
     void GeoSexaquarkFinder_ChannelA();
@@ -167,26 +171,26 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void KalmanSexaquarkFinder_ChannelA();
     void KalmanSexaquarkFinder_ChannelD();
     void KalmanSexaquarkFinder_ChannelE();
-    Bool_t PassesSexaquarkCuts_ChannelA(Bool_t isSignal, TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda,
+    Bool_t PassesSexaquarkCuts_ChannelA(Bool_t isSignal, Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda,
                                         AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos,
                                         AliESDtrack* esdKaonZeroShortNeg, AliESDtrack* esdKaonZeroShortPos);
-    Bool_t PassesSexaquarkCuts_ChannelA(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
-                                        KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos,
+    Bool_t PassesSexaquarkCuts_ChannelA(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
+                                        KFParticle kfAntiLambda, KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos,
                                         KFParticle kfKaonZeroShortNeg, KFParticle kfKaonZeroShortPos);
-    // Bool_t PassesSexaquarkCuts_ChannelD(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack* esdPosKaon,
-    // AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
-    Bool_t PassesSexaquarkCuts_ChannelD(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
-                                        KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
-    // Bool_t PassesSexaquarkCuts_ChannelE(TVector3 SecondaryVertex, TLorentzVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack* esdPosKaon,
-    // AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
-    Bool_t PassesSexaquarkCuts_ChannelE(Bool_t isSignal, KFParticleMother kfAntiSexaquark, TLorentzVector lvAntiSexaquark, KFParticle kfAntiLambda,
-                                        KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfPosKaon, KFParticle kfPiMinus,
-                                        KFParticle kfPiPlus);
+    // Bool_t PassesSexaquarkCuts_ChannelD(Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack*
+    // esdPosKaon, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
+    Bool_t PassesSexaquarkCuts_ChannelD(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
+                                        KFParticle kfAntiLambda, KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
+    // Bool_t PassesSexaquarkCuts_ChannelE(Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack*
+    // esdPosKaon, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
+    Bool_t PassesSexaquarkCuts_ChannelE(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
+                                        KFParticle kfAntiLambda, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfPosKaon,
+                                        KFParticle kfPiMinus, KFParticle kfPiPlus);
 
     /* Channel H */
     void KalmanKaonPairFinder();
-    Bool_t PassesKaonPairCuts(Bool_t isSignal, KFParticleMother kfKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB, TLorentzVector lvKaonPair,
-                              TLorentzVector lvPosKaonA, TLorentzVector lvPosKaonB);
+    Bool_t PassesKaonPairCuts(Bool_t isSignal, KFParticleMother kfKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB,
+                              Math::PxPyPzEVector lvKaonPair, Math::PxPyPzEVector lvPosKaonA, Math::PxPyPzEVector lvPosKaonB);
 
     /* Utilities */
     void ClearContainers();
@@ -195,7 +199,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void GetHelixCenter(const AliExternalTrackParam* track, Double_t center[2], const Double_t b);
     void Evaluate(const Double_t* h, Double_t t, Double_t r[3], Double_t g[3], Double_t gg[3]);
     Float_t MCRec_GetImpactParameter(AliESDtrack* track);
-    Double_t CosinePointingAngle(TLorentzVector lvParticle, Double_t X, Double_t Y, Double_t Z, Double_t refPointX, Double_t refPointY,
+    Double_t CosinePointingAngle(Math::PxPyPzEVector lvParticle, Double_t X, Double_t Y, Double_t Z, Double_t refPointX, Double_t refPointY,
                                  Double_t refPointZ);
     Double_t CosinePointingAngle(Double_t Px, Double_t Py, Double_t Pz, Double_t X, Double_t Y, Double_t Z, Double_t refPointX, Double_t refPointY,
                                  Double_t refPointZ);
@@ -206,8 +210,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                           Double_t refPointY, Double_t refPointZ);
     Double_t SquaredDistancePointToLine(const Double_t* t, Double_t point[], Double_t linePoint[], Double_t lineDir[]);
     Double_t SquaredDistanceBetweenLines(const Double_t* t, Double_t pos0[], Double_t dir0[], Double_t pos1[], Double_t dir1[]);
-    Double_t Calculate_TwoLinesDCA_v1(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
-    Double_t Calculate_TwoLinesDCA_v2(TVector3 v3_pos0, TVector3 v3_dir0, TVector3 v3_pos1, TVector3 v3_dir1, TVector3& PCA0, TVector3& PCA1);
+    Double_t Calculate_TwoLinesDCA_v1(Math::XYZPoint v3_pos0, Math::XYZVector v3_dir0, Math::XYZPoint v3_pos1, Math::XYZVector v3_dir1,
+                                      Math::XYZPoint& PCA0, Math::XYZPoint& PCA1);
+    Double_t Calculate_TwoLinesDCA_v2(Math::XYZPoint v3_pos0, Math::XYZVector v3_dir0, Math::XYZPoint v3_pos1, Math::XYZVector v3_dir1,
+                                      Math::XYZPoint& PCA0, Math::XYZPoint& PCA1);
 
     /* Kalman Filter Utilities */
     KFParticle CreateKFParticle(AliESDtrack& track, Double_t mass, Int_t charge, Bool_t inner = kTRUE);
