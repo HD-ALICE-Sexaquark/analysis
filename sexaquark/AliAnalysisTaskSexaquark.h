@@ -76,9 +76,9 @@ class KFParticle;
 class KFVertex;
 
 /*
- Auxiliary class to make use of protected function KFParticleBase::GetMeasurement()
- (Copied from `/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.h`)
-*/
+ * Auxiliary class to make use of protected function `KFParticleBase::GetMeasurement()`
+ * (Copied from `/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.h`)
+ */
 class KFParticleMother : public KFParticle {
    public:
     Bool_t CheckDaughter(KFParticle daughter) {
@@ -391,34 +391,36 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Int_t tV0_ReactionID;    //!
 
     /** Anti-Sexaquark Candidates **/
-    Int_t tSexaquark_Idx_AL;         //!
-    Int_t tSexaquark_Idx_AL_Neg;     //!
-    Int_t tSexaquark_Idx_AL_Pos;     //!
-    Float_t tSexaquark_Px;           //!
-    Float_t tSexaquark_Py;           //!
-    Float_t tSexaquark_Pz;           //!
-    Float_t tSexaquark_E;            //!
-    Float_t tSexaquark_Xv;           //! secondary x-vertex
-    Float_t tSexaquark_Yv;           //! secondary y-vertex
-    Float_t tSexaquark_Zv;           //! secondary z-vertex
-    Float_t tSexaquark_DecayLength;  //!
-    Float_t tSexaquark_CPAwrtPV;     //!
-    Float_t tSexaquark_DCAwrtPV;     //!
-    Float_t tSexaquark_Chi2ndf;      //!
-    Bool_t tSexaquark_IsHybrid;      //!
-    Bool_t tSexaquark_IsSignal;      //!
-    Int_t tSexaquark_ReactionID;     //!
+    Int_t tSexaquark_Idx_AL;            //!
+    Int_t tSexaquark_Idx_AL_Neg;        //!
+    Int_t tSexaquark_Idx_AL_Pos;        //!
+    Float_t tSexaquark_Px;              //!
+    Float_t tSexaquark_Py;              //!
+    Float_t tSexaquark_Pz;              //!
+    Float_t tSexaquark_E;               //!
+    Float_t tSexaquark_Xv;              //! secondary x-vertex
+    Float_t tSexaquark_Yv;              //! secondary y-vertex
+    Float_t tSexaquark_Zv;              //! secondary z-vertex
+    Float_t tSexaquark_DistFromPV;      //!
+    Float_t tSexaquark_CPAwrtPV;        //!
+    Float_t tSexaquark_DCAwrtPV;        //!
+    Float_t tSexaquark_Chi2ndf;         //!
+    Bool_t tSexaquark_IsHybrid;         //!
+    Bool_t tSexaquark_IsSignal;         //!
+    Int_t tSexaquark_ReactionID;        //!
+    Float_t tSexaquark_AL_DecayLength;  //!
     /* Channel A */
-    Int_t tSexaquarkA_Idx_K0S;        //!
-    Int_t tSexaquarkA_Idx_K0S_Neg;    //!
-    Int_t tSexaquarkA_Idx_K0S_Pos;    //!
-    Float_t tSexaquarkA_DCAbtwV0s;    //!
-    Float_t tSexaquarkA_DCAV0aSV;     //!
-    Float_t tSexaquarkA_DCAV0bSV;     //!
-    Float_t tSexaquarkA_DCAV0anegSV;  //!
-    Float_t tSexaquarkA_DCAV0aposSV;  //!
-    Float_t tSexaquarkA_DCAV0bnegSV;  //!
-    Float_t tSexaquarkA_DCAV0bposSV;  //!
+    Int_t tSexaquarkA_Idx_K0S;            //!
+    Int_t tSexaquarkA_Idx_K0S_Neg;        //!
+    Int_t tSexaquarkA_Idx_K0S_Pos;        //!
+    Float_t tSexaquarkA_DCAbtwV0s;        //!
+    Float_t tSexaquarkA_DCAV0aSV;         //!
+    Float_t tSexaquarkA_DCAV0bSV;         //!
+    Float_t tSexaquarkA_DCAV0anegSV;      //!
+    Float_t tSexaquarkA_DCAV0aposSV;      //!
+    Float_t tSexaquarkA_DCAV0bnegSV;      //!
+    Float_t tSexaquarkA_DCAV0bposSV;      //!
+    Float_t tSexaquarkA_K0S_DecayLength;  //!
     /* Channel D */
     Int_t tSexaquarkD_Idx_PosKaon;   //!
     Float_t tSexaquarkD_DCAV0Ba;     //!
@@ -456,7 +458,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tKaonPair_Xv;            //! secondary x-vertex
     Float_t tKaonPair_Yv;            //! secondary y-vertex
     Float_t tKaonPair_Zv;            //! secondary z-vertex
-    Float_t tKaonPair_DecayLength;   //!
+    Float_t tKaonPair_DistFromPV;    //!
     Float_t tKaonPair_DCAwrtPV;      //!
     Float_t tKaonPair_DCAbtwKaons;   //!
     Float_t tKaonPair_DCAkaSV;       //!
@@ -626,8 +628,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Float_t> kMax_V0_ArmPtOverAlpha;  //
     std::unordered_map<Int_t, Float_t> kMin_V0_Pt;              //
     std::unordered_map<Int_t, Float_t> kMin_V0_Radius;          //
-    std::unordered_map<Int_t, Float_t> kMin_V0_DecayLength;     //
-    std::unordered_map<Int_t, Float_t> kMax_V0_DecayLength;     //
+    std::unordered_map<Int_t, Float_t> kMin_V0_DistFromPV;      //
+    std::unordered_map<Int_t, Float_t> kMax_V0_DistFromPV;      //
     std::unordered_map<Int_t, Float_t> kMin_V0_CPAwrtPV;        //
     std::unordered_map<Int_t, Float_t> kMax_V0_CPAwrtPV;        //
     std::unordered_map<Int_t, Float_t> kMin_V0_DCAwrtPV;        //
@@ -639,18 +641,16 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Float_t> kMax_V0_Chi2ndf;         //
 
     /** Anti-Sexaquark Candidates **/
-    Float_t kMin_Sexa_Mass;         //
-    Float_t kMax_Sexa_Mass;         //
-    Float_t kMin_Sexa_Pt;           //
-    Float_t kMax_Sexa_Eta;          //
-    Float_t kMax_Sexa_Rapidity;     //
-    Float_t kMin_Sexa_DecayLength;  //
-    Float_t kMin_Sexa_Radius;       //
-    Float_t kMin_Sexa_CPAwrtPV;     //
-    Float_t kMax_Sexa_CPAwrtPV;     //
-    Float_t kMin_Sexa_DCAwrtPV;     //
-    Float_t kMax_Sexa_DCAwrtPV;     //
-    Float_t kMax_Sexa_Chi2ndf;      //
+    Float_t kMin_Sexa_Pt;          //
+    Float_t kMax_Sexa_Eta;         //
+    Float_t kMax_Sexa_Rapidity;    //
+    Float_t kMin_Sexa_DistFromPV;  //
+    Float_t kMin_Sexa_Radius;      //
+    Float_t kMin_Sexa_CPAwrtPV;    //
+    Float_t kMax_Sexa_CPAwrtPV;    //
+    Float_t kMin_Sexa_DCAwrtPV;    //
+    Float_t kMax_Sexa_DCAwrtPV;    //
+    Float_t kMax_Sexa_Chi2ndf;     //
     /* Channel A */
     Float_t kMax_Sexa_DCAbtwV0s;    //
     Float_t kMax_Sexa_DCAv0aSV;     //
