@@ -23,7 +23,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fEventCuts(),
       fMagneticField(0.),
       /*  */
-      fPeriodNumber(0),
       fRunNumber(0),
       fDirNumber(0),
       fEventNumber(0),
@@ -112,18 +111,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tTrack_Px(0),
       tTrack_Py(0),
       tTrack_Pz(0),
-      tTrack_Px_Inner(0),
-      tTrack_Py_Inner(0),
-      tTrack_Pz_Inner(0),
-      tTrack_Px_TPCInner(0),
-      tTrack_Py_TPCInner(0),
-      tTrack_Pz_TPCInner(0),
-      tTrack_Px_Constrained(0),
-      tTrack_Py_Constrained(0),
-      tTrack_Pz_Constrained(0),
-      tTrack_Px_Outer(0),
-      tTrack_Py_Outer(0),
-      tTrack_Pz_Outer(0),
       tTrack_Charge(0),
       tTrack_NSigmaPion(0),
       tTrack_NSigmaKaon(0),
@@ -386,7 +373,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fPIDResponse(0),
       fEventCuts(),
       fMagneticField(0.),
-      fPeriodNumber(0),
       fRunNumber(0),
       fDirNumber(0),
       fEventNumber(0),
@@ -475,18 +461,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tTrack_Px(0),
       tTrack_Py(0),
       tTrack_Pz(0),
-      tTrack_Px_Inner(0),
-      tTrack_Py_Inner(0),
-      tTrack_Pz_Inner(0),
-      tTrack_Px_TPCInner(0),
-      tTrack_Py_TPCInner(0),
-      tTrack_Pz_TPCInner(0),
-      tTrack_Px_Constrained(0),
-      tTrack_Py_Constrained(0),
-      tTrack_Pz_Constrained(0),
-      tTrack_Px_Outer(0),
-      tTrack_Py_Outer(0),
-      tTrack_Pz_Outer(0),
       tTrack_Charge(0),
       tTrack_NSigmaPion(0),
       tTrack_NSigmaKaon(0),
@@ -747,7 +721,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
 
 /*
  * Destructor.
- * - Note: if `TList::SetOwner(kTRUE)` was called, the TList destructor should delete all objects added to it
+ * Note: if `TList::SetOwner(kTRUE)` was called, the TList destructor should delete all objects added to it
  */
 AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
     if (fTree_Events) delete fTree_Events;
@@ -766,7 +740,7 @@ AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
 }
 
 /*
- * Create output objects, called once at RUNTIME ~ execution on Grid
+ * Create output objects, called once at RUNTIME ~ execution on Grid.
  */
 void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
@@ -852,13 +826,12 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 }
 
 /*
- *
+ * Add branches to `fTree_Events`.
  */
 void AliAnalysisTaskSexaquark::PrepareEventsBranches() {
     fTree_Events->Branch("EventNumber", &fEventNumber);
     fTree_Events->Branch("DirNumber", &fDirNumber);
     fTree_Events->Branch("RunNumber", &fRunNumber);
-    fTree_Events->Branch("PeriodNumber", &fPeriodNumber);
     fTree_Events->Branch("Centrality", &fCentrality);
 
     fTree_Events->Branch("PV_TrueXv", &tEvents_PV_TrueXv);
@@ -886,7 +859,7 @@ void AliAnalysisTaskSexaquark::PrepareEventsBranches() {
 }
 
 /*
- *
+ * Add branches to `fTree_MC`.
  */
 void AliAnalysisTaskSexaquark::PrepareMCParticlesBranches() {
     fTree_MC->Branch("EventNumber", &fEventNumber);
@@ -912,7 +885,7 @@ void AliAnalysisTaskSexaquark::PrepareMCParticlesBranches() {
 }
 
 /*
- *
+ * Add branches to `fTree_Tracks`.
  */
 void AliAnalysisTaskSexaquark::PrepareTracksBranches() {
     fTree_Tracks->Branch("EventNumber", &fEventNumber);
@@ -924,18 +897,6 @@ void AliAnalysisTaskSexaquark::PrepareTracksBranches() {
     fTree_Tracks->Branch("Px", &tTrack_Px);
     fTree_Tracks->Branch("Py", &tTrack_Py);
     fTree_Tracks->Branch("Pz", &tTrack_Pz);
-    fTree_Tracks->Branch("Px_Inner", &tTrack_Px_Inner);
-    fTree_Tracks->Branch("Py_Inner", &tTrack_Py_Inner);
-    fTree_Tracks->Branch("Pz_Inner", &tTrack_Pz_Inner);
-    fTree_Tracks->Branch("Px_TPCInner", &tTrack_Px_TPCInner);
-    fTree_Tracks->Branch("Py_TPCInner", &tTrack_Py_TPCInner);
-    fTree_Tracks->Branch("Pz_TPCInner", &tTrack_Pz_TPCInner);
-    fTree_Tracks->Branch("Px_Constrained", &tTrack_Px_Constrained);
-    fTree_Tracks->Branch("Py_Constrained", &tTrack_Py_Constrained);
-    fTree_Tracks->Branch("Pz_Constrained", &tTrack_Pz_Constrained);
-    fTree_Tracks->Branch("Px_Outer", &tTrack_Px_Outer);
-    fTree_Tracks->Branch("Py_Outer", &tTrack_Py_Outer);
-    fTree_Tracks->Branch("Pz_Outer", &tTrack_Pz_Outer);
     fTree_Tracks->Branch("Charge", &tTrack_Charge);
     fTree_Tracks->Branch("NSigmaPion", &tTrack_NSigmaPion);
     fTree_Tracks->Branch("NSigmaKaon", &tTrack_NSigmaKaon);
@@ -950,7 +911,7 @@ void AliAnalysisTaskSexaquark::PrepareTracksBranches() {
 }
 
 /*
- *
+ * Add branches to `fTree_V0s`.
  */
 void AliAnalysisTaskSexaquark::PrepareV0sBranches() {
     fTree_V0s->Branch("EventNumber", &fEventNumber);
@@ -981,7 +942,7 @@ void AliAnalysisTaskSexaquark::PrepareV0sBranches() {
 }
 
 /*
- *
+ * Add branches to `fTree_Sexaquarks`.
  */
 void AliAnalysisTaskSexaquark::PrepareSexaquarksBranches() {
     fTree_Sexaquarks->Branch("EventNumber", &fEventNumber);
@@ -1047,7 +1008,7 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarksBranches() {
 }
 
 /*
- *
+ * Add branches to `fTree_KaonPairs`.
  */
 void AliAnalysisTaskSexaquark::PrepareKaonPairsBranches() {
     fTree_KaonPairs->Branch("EventNumber", &fEventNumber);
@@ -1080,7 +1041,6 @@ void AliAnalysisTaskSexaquark::PrepareKaonPairsBranches() {
  */
 void AliAnalysisTaskSexaquark::ClearEventsBranches() {
     // not clearing fRunNumber nor fDirNumber
-    fPeriodNumber = 0;
     fEventNumber = 0;
     fCentrality = 0;
 
@@ -1139,18 +1099,6 @@ void AliAnalysisTaskSexaquark::ClearTracksBranches() {
     tTrack_Px = 0.;
     tTrack_Py = 0.;
     tTrack_Pz = 0.;
-    tTrack_Px_Inner = 0.;
-    tTrack_Py_Inner = 0.;
-    tTrack_Pz_Inner = 0.;
-    tTrack_Px_TPCInner = 0.;
-    tTrack_Py_TPCInner = 0.;
-    tTrack_Pz_TPCInner = 0.;
-    tTrack_Px_Constrained = 0.;
-    tTrack_Py_Constrained = 0.;
-    tTrack_Pz_Constrained = 0.;
-    tTrack_Px_Outer = 0.;
-    tTrack_Py_Outer = 0.;
-    tTrack_Pz_Outer = 0.;
     tTrack_Charge = 0;
     tTrack_NSigmaPion = 0.;
     tTrack_NSigmaKaon = 0.;
@@ -1283,7 +1231,6 @@ void AliAnalysisTaskSexaquark::ClearKaonPairsBranches() {
 
 /*
  * Define and add QA histograms to the histograms output list.
- * - Uses: `fHist_QA`, `f2DHist_QA`
  */
 void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
 
@@ -1296,24 +1243,24 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
                                      "Centrality",      "Centrality_AfterCuts",
                                      "Tracks_DCAxy",    "Tracks_DCAz",          "Tracks_Pt",
                                      "SPD_NTracklets",  "TPC_NClusters"};
-    std::vector<Int_t> QA_nbins = {100, 100, 200,
-                                   5, 100, 100, 200,
+    std::vector<Int_t> QA_nbins = {100,  100,  200,
+                                   5,    100,  100, 200,
                                    2000, 2000, 2000,
-                                   22, 22,
-                                   100, 100, 200,
-                                   60, 200};
-    std::vector<Float_t> QA_min = {-1, -1, -50,
-                                   0., -1, -1, -50,
-                                   0., 0., 0.,
-                                   0., 0.,
+                                   22,   22,
+                                   100,  100, 200,
+                                   60,   200};
+    std::vector<Float_t> QA_min = {-1,  -1,  -50,
+                                   0.,  -1,  -1,  -50,
+                                   0.,  0.,  0.,
+                                   0.,  0.,
                                    -5., -5., 0.,
                                    0., 0.};
-    std::vector<Float_t> QA_max = {1, 1, 50,
-                                   5., 1, 1, 50,
+    std::vector<Float_t> QA_max = {1,      1,      50,
+                                   5.,     1,      1,      50,
                                    35000., 35000., 35000.,
-                                   110., 110.,
-                                   5., 5., 100.,
-                                   6000, 5000000.};
+                                   110.,   110.,
+                                   5.,     5.,     100.,
+                                   6000,   5000000.};
     // clang-format on
 
     TString histKey;
@@ -1368,7 +1315,6 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
 
 /*
  * Define and add tracks' histograms to the histograms output list.
- * - Uses: `fHist_Tracks_Bookkeep`, `fHist_Tracks`, `fOutputListOfHists`
  */
 void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
 
@@ -1433,7 +1379,6 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
 
 /*
  * Define and add V0s' histograms to the histograms output list.
- * - Uses: `fSourceOfV0s`, `fOutputListOfHists`
  */
 void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
 
@@ -1529,7 +1474,6 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
 
 /*
  * Define and add anti-sexaquark histograms to the histograms output list.
- * - Uses: `fHist_AntiSexaquarks_Bookkeep`, `fList_Sexaquarks_Hists`, `fHist_AntiSexaquarks`, `fOutputListOfHists`
  */
 void AliAnalysisTaskSexaquark::PrepareSexaquarkHistograms() {
 
@@ -1543,56 +1487,56 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarkHistograms() {
 
     // clang-format off
     if (fReactionChannel == 'A') {
-        SQ_props = {"Mass",     "Pt",       "Px",          "Py",          "Pz",          "Phi",         "Radius",
+        SQ_props = {"Mass2",    "Pt",       "Px",          "Py",          "Pz",          "Phi",         "Radius",
                     "Zv",       "Eta",      "Rapidity",    "DistFromPV",  "CPAwrtPV",    "DCAwrtPV",    "DCAbtwV0s",
                     "DCAV0aSV", "DCAV0bSV", "DCAV0anegSV", "DCAV0aposSV", "DCAV0bnegSV", "DCAV0bposSV", "Chi2ndf"};
         SQ_nbins = {100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100, 100, 100};
-        SQ_min = {-10., -10., -10., -10., -50., -2 * TMath::Pi(), 0.,
+        SQ_min = {0.,   -10., -10., -10., -50., -2 * TMath::Pi(), 0.,
                   -50., -2.,  -5.,  0.,   0.,   0.,               0.,
                   0.,   0.,   0.,   0.,   0.,   0.,               0.};
-        SQ_max = {10., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
+        SQ_max = {20., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
                   50., 2.,  5.,  500., 1.,  10.,             2.,
                   2.,  2.,  10., 10.,  10., 10.,             1.};
     } else if (fReactionChannel == 'D') {
-        SQ_props = {"Mass",       "Pt",         "Px",       "Py",          "Pz",         "Phi",        "Radius",
+        SQ_props = {"Mass2",      "Pt",         "Px",       "Py",          "Pz",         "Phi",        "Radius",
                     "Zv",         "Eta",        "Rapidity", "DistFromPV",  "CPAwrtPV",   "DCAwrtPV",   "DCAV0Ba",
                     "DCAV0negBa", "DCAV0posBa", "DCAV0SV",  "DCABaSV",     "DCAV0negSV", "DCAV0posSV", "Chi2ndf"};
         SQ_nbins = {100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100, 100, 100};
-        SQ_min = {-10., -10., -10., -10., -50., 0., 0.,
+        SQ_min = {0.,   -10., -10., -10., -50., 0., 0.,
                   -50., -2.,  -5.,  0.,   0.,   0., 0.,
                   0.,   0.,   0.,   0.,   0.,   0., 0.};
-        SQ_max = {10., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
+        SQ_max = {20., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
                   50., 2.,  5.,  500., 1.,  10.,             10.,
                   10., 10., 10., 10.,  10., 10.,             1.};
     } else if (fReactionChannel == 'E') {
-        SQ_props = {"Mass",    "Pt",       "Px",          "Py",       "Pz",       "Phi",     "Radius",     "Zv",
-                    "Eta",     "Rapidity", "DistFromPV",  "CPAwrtPV", "DCAwrtPV", "DCAV0SV", "DCAV0negSV", "DCAV0posSV",
-                    "DCApkSV", "DCApmSV",  "DCAppSV",     "DCApkV0",  "DCApmV0",  "DCAppV0", "DCApmPK",    "DCAppPK",
+        SQ_props = {"Mass2",   "Pt",       "Px",         "Py",       "Pz",       "Phi",     "Radius",     "Zv",
+                    "Eta",     "Rapidity", "DistFromPV", "CPAwrtPV", "DCAwrtPV", "DCAV0SV", "DCAV0negSV", "DCAV0posSV",
+                    "DCApkSV", "DCApmSV",  "DCAppSV",    "DCApkV0",  "DCApmV0",  "DCAppV0", "DCApmPK",    "DCAppPK",
                     "Chi2ndf"};
         SQ_nbins = {100, 100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100, 100, 100, 100,
                     100};
-        SQ_min = {-10., -10., -10., -10., -50., 0., 0., -50.,
-                  -2.,  -5.,  0.,   0.,   0.,   0., 0., 0.,
-                  0.,   0.,   0.,   0.,   0.,   0., 0., 0.,
+        SQ_min = {0.,  -10., -10., -10., -50., 0., 0., -50.,
+                  -2., -5.,  0.,   0.,   0.,   0., 0., 0.,
+                  0.,  0.,   0.,   0.,   0.,   0., 0., 0.,
                   0.};
-        SQ_max = {10., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
+        SQ_max = {20., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
                   2.,  5.,  500., 1.,  10., 10.,             10.,  10.,
                   10., 10., 10.,  10., 10., 10.,             10.,  1.,
                   30.};
     } else if (fReactionChannel == 'H') {
-        SQ_props = {"Mass", "Pt",       "Px",          "Py",       "Pz",       "Phi",   "Radius",   "Zv",
-                    "Eta",  "Rapidity", "DistFromPV",  "CPAwrtPV", "DCAwrtPV"};
+        SQ_props = {"Mass2", "Pt",       "Px",         "Py",       "Pz",        "Phi", "Radius", "Zv",
+                    "Eta",   "Rapidity", "DistFromPV", "CPAwrtPV", "DCAwrtPV"};
         SQ_nbins = {100, 100, 100, 100, 100, 100, 100, 100,
                     100, 100, 100, 100, 100};
-        SQ_min = {-10., -10., -10., -10., -50., 0., 0., -50.,
-                  -2.,  -5.,  0.,   0.,   0.};
-        SQ_max = {10., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
+        SQ_min = {0.,  -10., -10., -10., -50., 0., 0., -50.,
+                  -2., -5.,  0.,   0.,   0.};
+        SQ_max = {20., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
                   2.,  5.,  500., 1.,  10.};
     }
     // clang-format on
@@ -1627,7 +1571,6 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarkHistograms() {
 
 /*
  * Define and add histograms for the K+K+ pairs to the histograms output list.
- * - Uses: `fSourceOfV0s`, `fOutputListOfHists`
  */
 void AliAnalysisTaskSexaquark::PrepareKaonPairHistograms() {
 
@@ -1676,8 +1619,7 @@ void AliAnalysisTaskSexaquark::PrepareKaonPairHistograms() {
 }
 
 /*
- * Main function, called per each event at RUNTIME ~ execution on Grid
- * - Uses: `fIsMC`, `fMC_PrimaryVertex`, `fESD`, `fPrimaryVertex`, `fMagneticField`, `fSourceOfV0s`, `fOutputListOfHists`
+ * Main function, called per each event at RUNTIME ~ execution on Grid.
  */
 void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
@@ -1702,6 +1644,14 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
             fHist_QA["MCGen_VertexY"]->Fill(fMC_PrimaryVertex->GetY());
             fHist_QA["MCGen_VertexZ"]->Fill(fMC_PrimaryVertex->GetZ());
         }
+
+        ProcessMCGen();
+        ProcessSignalInteractions();
+
+        if (fStopAfter == "MC") {
+            EndOfEvent();
+            return;
+        }
     }
 
     /* Load Reconstructed Event, PV and Magnetic Field */
@@ -1712,7 +1662,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     fMagneticField = fESD->GetMagneticField();
 
-    fPeriodNumber = fESD->GetPeriodNumber();
     fRunNumber = fESD->GetRunNumber();
     fEventNumber = fESD->GetEventNumberInFile();
 
@@ -1737,16 +1686,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     AliESDVertex* PrimaryVertex_SPD = const_cast<AliESDVertex*>(fESD->GetPrimaryVertexSPD());
     Double_t PV_SPD_CovMatrix[6];
     PrimaryVertex_SPD->GetCovarianceMatrix(PV_SPD_CovMatrix);
-
-    // -- DEBUG -- //
-
-    AliGenCocktailEventHeader* cocktailHeader = dynamic_cast<AliGenCocktailEventHeader*>(fMC->GenEventHeader());
-    if (cocktailHeader) {
-        TList* lgen = cocktailHeader->GetHeaders();
-        lgen->Print();
-    }
-
-    // END -- OF -- DEBUG //
 
     /* Event */
 
@@ -1784,18 +1723,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     tEvents_IsSemiCentral = fInputHandler->IsEventSelected() & AliVEvent::kSemiCentral;
 
     fTree_Events->Fill();
-
-    /* MC */
-
-    if (fIsMC) {
-        ProcessMCGen();
-        ProcessSignalInteractions();
-    }
-
-    if (fStopAfter == "MC") {
-        EndOfEvent();
-        return;
-    }
 
     /* Tracks */
 
@@ -1920,7 +1847,7 @@ Bool_t AliAnalysisTaskSexaquark::UserNotify() {
 }
 
 /*
- * Initialize analysis task.
+ * Initialize analysis task. Needs to be called within an `AddTask.C` macro.
  */
 void AliAnalysisTaskSexaquark::Initialize() {
 
@@ -1997,7 +1924,6 @@ void AliAnalysisTaskSexaquark::Initialize() {
 
 /*
  * Define track selection cuts.
- * - Input: `cuts_option`
  */
 void AliAnalysisTaskSexaquark::DefineTracksCuts(TString cuts_option) {
 
@@ -2019,8 +1945,6 @@ void AliAnalysisTaskSexaquark::DefineTracksCuts(TString cuts_option) {
 
 /*
  * Define V0 selection cuts.
- * - Uses: `fSourceOfV0s`
- * - Input: `cuts_option`
  */
 void AliAnalysisTaskSexaquark::DefineV0Cuts(TString cuts_option) {
 
@@ -2044,14 +1968,12 @@ void AliAnalysisTaskSexaquark::DefineV0Cuts(TString cuts_option) {
     }
 
     if (fSourceOfV0s == "on-the-fly") {
-
         kMax_V0_ImprvDCAbtwDau[-3122] = 0.6;
 
         kMax_V0_ImprvDCAbtwDau[310] = 0.6;
     }
 
     if (fSourceOfV0s == "custom") {
-
         kMax_V0_CPAwrtPV[-3122] = 0.99;
         kMin_V0_DCAwrtPV[-3122] = 4.;
         kMax_V0_Chi2[-3122] = 0.3;
@@ -2065,7 +1987,6 @@ void AliAnalysisTaskSexaquark::DefineV0Cuts(TString cuts_option) {
     }
 
     if (fSourceOfV0s == "kalman") {
-
         kMax_V0_Eta[-3122] = 0.9;
         kMin_V0_Radius[-3122] = 20.;
         kMin_V0_DistFromPV[-3122] = 40.;
@@ -2104,8 +2025,6 @@ void AliAnalysisTaskSexaquark::DefineV0Cuts(TString cuts_option) {
 
 /*
  * Define anti-sexaquark candidates selection cuts.
- * - Uses: `fSourceOfV0s`
- * - Input: `cuts_option`
  */
 void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
 
@@ -2168,8 +2087,6 @@ void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
 
 /*
  * Define K+K+ pair selection cuts.
- * - Uses: `fSourceOfV0s`
- * - Input: `cuts_option`
  */
 void AliAnalysisTaskSexaquark::DefineKaonPairCuts(TString cuts_option) {
 
@@ -2189,55 +2106,61 @@ void AliAnalysisTaskSexaquark::DefineKaonPairCuts(TString cuts_option) {
 
 /*
  * Loop over MC particles in a single event. Store the indices of the signal particles.
- * - Uses: `fMC`, `fPDG`, `fMC_PrimaryVertex`
  */
 void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
     Int_t mcIdx;
     AliMCParticle* mcPart;
-    Int_t pdg_mc;
-    Int_t mother_idx;
+
+    /* Auxiliary variables */
 
     TString generator_name;
+    Int_t pdg_mc;
+
+    Int_t mother_idx;
+    Int_t n_daughters;
+    Int_t idx_first_dau;
+    Int_t idx_last_dau;
+
+    Bool_t is_signal;
+    Bool_t is_secondary;
+    Int_t reaction_id;
 
     /* V0 properties */
 
     AliMCParticle* mcDaughter;
     Int_t pdg_dau;
 
-    Int_t idx_first_dau;
-    Int_t idx_last_dau;
+    Int_t mcIdxNegDaughter;
     AliMCParticle* mcNegDau;
+
+    Int_t mcIdxPosDaughter;
     AliMCParticle* mcPosDau;
 
-    Int_t n_daughters = 0;
-    Int_t mcIdxNegDaughter = 0;
-    Int_t mcIdxPosDaughter = 0;
+    Math::XYZVector NegDaughter;
+    Math::XYZVector PosDaughter;
 
     Math::XYZPoint OriginVertex;
     Math::XYZPoint DecayVertex;
 
-    Float_t dca_wrt_pv, cpa_wrt_pv;
-    Float_t armenteros_alpha, armenteros_qt;
-    Bool_t reconstructable_v0;
+    Double_t dca_wrt_pv, cpa_wrt_pv;
+    Double_t armenteros_alpha, armenteros_qt;
 
     /* Loop over MC gen. particles in this event */
 
     for (mcIdx = 0; mcIdx < fMC->GetNumberOfTracks(); mcIdx++) {
 
         /* Protection: exclude particles from the anti-neutron injector */
+        /* Note: `GetCocktailGenerator` not only considers primaries, but subsequent daughters/secondaries all the way down, as well */
 
-        // `GetCocktailGenerator` not only considers primaries, but subsequent daughters/secondaries all the way down, as well
         fMC->GetCocktailGenerator(mcIdx, generator_name);
         if (generator_name.Contains("Injector (Anti-Neutron)")) continue;
-        // AliInfoF("MC: %i, Generator: %s", mcIdx, generator_name.Data()); // DEBUG
 
         /* Get MC particle info */
 
         mcPart = (AliMCParticle*)fMC->GetTrack(mcIdx);
 
         pdg_mc = mcPart->PdgCode();
-        getPdgCode_fromMcIdx[mcIdx] = pdg_mc;
 
         mother_idx = mcPart->GetMother();
         n_daughters = mcPart->GetNDaughters();
@@ -2248,16 +2171,22 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         /* - It should be produced by the "Anti-Sexaquark Interaction (Channel %c)" generator */
         /* - Then, the unique reaction ID is provided by MCStatusCode of the injected signal particles */
 
-        getReactionIdx_fromMcIdx[mcIdx] = 0;
-        isMcIdxSignal[mcIdx] = generator_name.Contains("Anti-Sexaquark Interaction");
-        if (isMcIdxSignal[mcIdx]) {
-            getReactionIdx_fromMcIdx[mcIdx] = mother_idx < 0 ? mcPart->MCStatusCode() : getReactionIdx_fromMcIdx[mother_idx];
-            getMcIdx_fromReactionIdx[getReactionIdx_fromMcIdx[mcIdx]].push_back(mcIdx);
-        }
+        is_signal = generator_name.Contains("Anti-Sexaquark Interaction");
+        reaction_id = is_signal ? (mother_idx < 0 ? mcPart->MCStatusCode() : getReactionIdx_fromMcIdx[mother_idx]) : -1;
 
         /* Check if particle is secondary */
         /* - It includes signal particles too, because despite they were injected as primaries, they are really not */
-        isMcIdxSecondary[mcIdx] = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay() || isMcIdxSignal[mcIdx];
+
+        is_secondary = mcPart->IsSecondaryFromMaterial() || mcPart->IsSecondaryFromWeakDecay();
+
+        /* Store info into containers */
+
+        getPdgCode_fromMcIdx[mcIdx] = pdg_mc;
+        isMcIdxSignal[mcIdx] = is_signal;
+        getReactionIdx_fromMcIdx[mcIdx] = reaction_id;
+        getMcIdx_fromReactionIdx[reaction_id].push_back(mcIdx);
+        isMcIdxSecondary[mcIdx] = is_secondary;
+        doesMcIdxHaveMother[mcIdx] = mother_idx >= 0;
 
         /* Assign branches */
 
@@ -2274,20 +2203,20 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         tMC_Yv = (Float_t)mcPart->Yv();
         tMC_Zv = (Float_t)mcPart->Zv();
         tMC_Status = mcPart->MCStatusCode();
-        tMC_IsSecondary = isMcIdxSecondary[mcIdx];
-        tMC_IsSignal = isMcIdxSignal[mcIdx];
-        tMC_ReactionID = isMcIdxSignal[mcIdx] ? getReactionIdx_fromMcIdx[mcIdx] : -1;
+        tMC_IsSecondary = is_secondary;
+        tMC_IsSignal = is_signal;
+        tMC_ReactionID = reaction_id;
 
-        /** Charged particles: anti-protons, pos. kaons, pions **/
+        /* Charged particles: anti-protons, pos. kaons, pions */
 
         if (std::find(fFinalStateProductsPDG.begin(), fFinalStateProductsPDG.end(), pdg_mc) != fFinalStateProductsPDG.end()) {
 
-            /* Fill MC tree */
+            /** Fill MC tree **/
 
             fTree_MC->Fill();
             ClearMCParticlesBranches();
 
-            /* Fill histograms */
+            /** Fill histograms **/
 
             fHist_Tracks_Bookkeep[pdg_mc]->Fill(0);
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Px")]->Fill(mcPart->Px());
@@ -2296,7 +2225,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Pz")]->Fill(mcPart->Pz());
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
 
-            if (isMcIdxSecondary[mcIdx]) {
+            if (is_secondary) {
                 fHist_Tracks_Bookkeep[pdg_mc]->Fill(10);
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Px")]->Fill(mcPart->Px());
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Py")]->Fill(mcPart->Py());
@@ -2305,7 +2234,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Eta")]->Fill(mcPart->Eta());
             }
 
-            if (isMcIdxSignal[mcIdx]) {
+            if (is_signal) {
                 fHist_Tracks_Bookkeep[pdg_mc]->Fill(20);
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Px")]->Fill(mcPart->Px());
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Py")]->Fill(mcPart->Py());
@@ -2315,65 +2244,56 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             }
         }  // end of anti-protons, kaons, pions condition
 
-        /** Neutral particles: anti-lambdas and K0S **/
+        /* Neutral particles: anti-lambdas and K0S */
 
         if (fReactionChannel != 'H' && (pdg_mc == -3122 || (fReactionChannel == 'A' && pdg_mc == 310))) {
 
-            /* Fill MC tree */
+            /** Fill MC tree **/
 
             fTree_MC->Fill();
             ClearMCParticlesBranches();
 
-            /* Fill histograms (reconstructable or not) */
+            /** Fill histograms (reconstructable or not) **/
 
             fHist_V0s_Bookkeep[pdg_mc]->Fill(0);
-            if (isMcIdxSecondary[mcIdx]) fHist_V0s_Bookkeep[pdg_mc]->Fill(10);
-            if (isMcIdxSignal[mcIdx]) fHist_V0s_Bookkeep[pdg_mc]->Fill(20);
+            if (is_secondary) fHist_V0s_Bookkeep[pdg_mc]->Fill(10);
+            if (is_signal) fHist_V0s_Bookkeep[pdg_mc]->Fill(20);
 
-            /* Check if V0 can be reconstructed */
-
-            // conditions:
-            // (1) has daughters
-            // (2) and they correspond to:
-            //     -- anti-lambdas -> anti-proton pi+
-            //     -- K0S -> pi+ pi-
+            /** Check if V0 can be reconstructed **/
+            /** i.e.: it decays (1) into their most probable decay charged channel (2) **/
 
             n_daughters = mcPart->GetNDaughters();
+            if (!n_daughters) continue;
+
             mcIdxNegDaughter = 0;
             mcIdxPosDaughter = 0;
 
             // loop over daughters and fill mcIdxNegDaughter and mcIdxPosDaughter in case of relevant decays
-            if (n_daughters) {
-                for (Int_t mcIdxDaughter = mcPart->GetDaughterFirst(); mcIdxDaughter <= mcPart->GetDaughterLast(); mcIdxDaughter++) {
+            for (Int_t mcIdxDaughter = mcPart->GetDaughterFirst(); mcIdxDaughter <= mcPart->GetDaughterLast(); mcIdxDaughter++) {
+                mcDaughter = (AliMCParticle*)fMC->GetTrack(mcIdxDaughter);
+                pdg_dau = mcDaughter->PdgCode();
 
-                    mcDaughter = (AliMCParticle*)fMC->GetTrack(mcIdxDaughter);
-                    pdg_dau = mcDaughter->PdgCode();
-
-                    if (pdg_mc == -3122) {
-                        if (pdg_dau == -2212) mcIdxNegDaughter = mcIdxDaughter;
-                        if (pdg_dau == 211) mcIdxPosDaughter = mcIdxDaughter;
-                    }
-                    if (pdg_mc == 310) {
-                        if (pdg_dau == -211) mcIdxNegDaughter = mcIdxDaughter;
-                        if (pdg_dau == 211) mcIdxPosDaughter = mcIdxDaughter;
-                    }
+                if (pdg_mc == -3122) {
+                    if (pdg_dau == -2212) mcIdxNegDaughter = mcIdxDaughter;
+                    if (pdg_dau == 211) mcIdxPosDaughter = mcIdxDaughter;
                 }
-            }  // end of n_daughters condition
+                if (pdg_mc == 3122) {
+                    if (pdg_dau == 2212) mcIdxPosDaughter = mcIdxDaughter;
+                    if (pdg_dau == -211) mcIdxNegDaughter = mcIdxDaughter;
+                }
+                if (pdg_mc == 310) {
+                    if (pdg_dau == -211) mcIdxNegDaughter = mcIdxDaughter;
+                    if (pdg_dau == 211) mcIdxPosDaughter = mcIdxDaughter;
+                }
+            }
 
-            /* In any case, get the decay vertex of the V0, which is the origin vertex of its daughters */
+            if (!mcIdxNegDaughter || !mcIdxPosDaughter) continue;
 
-            reconstructable_v0 = n_daughters && mcIdxNegDaughter && mcIdxPosDaughter;
-            if (!reconstructable_v0) continue;
-
-            /* Store true V0 and mother-daughter info into containers */
+            /* Store info into containers */
 
             mcIndicesOfTrueV0s.push_back(mcIdx);
-
-            doesMcIdxHaveMother[mcIdxNegDaughter] = kTRUE;
             getMotherMcIdx_fromMcIdx[mcIdxNegDaughter] = mcIdx;
             getNegDauMcIdx_fromMcIdx[mcIdx] = mcIdxNegDaughter;
-
-            doesMcIdxHaveMother[mcIdxPosDaughter] = kTRUE;
             getMotherMcIdx_fromMcIdx[mcIdxPosDaughter] = mcIdx;
             getPosDauMcIdx_fromMcIdx[mcIdx] = mcIdxPosDaughter;
 
@@ -2382,8 +2302,8 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             mcNegDau = (AliMCParticle*)fMC->GetTrack(mcIdxNegDaughter);
             mcPosDau = (AliMCParticle*)fMC->GetTrack(mcIdxPosDaughter);
 
-            Math::XYZVector neg(mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz());
-            Math::XYZVector pos(mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz());
+            NegDaughter.SetXYZ(mcNegDau->Px(), mcNegDau->Py(), mcNegDau->Pz());
+            PosDaughter.SetXYZ(mcPosDau->Px(), mcPosDau->Py(), mcPosDau->Pz());
 
             OriginVertex.SetXYZ(mcPart->Xv(), mcPart->Yv(), mcPart->Zv());
             DecayVertex.SetXYZ(mcNegDau->Xv(), mcNegDau->Yv(), mcNegDau->Zv());
@@ -2411,13 +2331,13 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
-            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
+            fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(NegDaughter, PosDaughter));
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("MCGen", "All", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
 
-            if (!isMcIdxSecondary[mcIdx]) continue;
+            if (!is_secondary) continue;
 
             fHist_V0s_Bookkeep[pdg_mc]->Fill(11);
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Mass")]->Fill(mcPart->M());
@@ -2432,13 +2352,13 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Eta")]->Fill(mcPart->Eta());
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
-            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
+            fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(NegDaughter, PosDaughter));
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
             fHist_V0s[std::make_tuple("MCGen", "Secondary", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
 
-            if (!isMcIdxSignal[mcIdx]) continue;
+            if (!is_signal) continue;
 
             fHist_V0s_Bookkeep[pdg_mc]->Fill(21);
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Mass")]->Fill(mcPart->M());
@@ -2453,7 +2373,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Eta")]->Fill(mcPart->Eta());
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "Rapidity")]->Fill(mcPart->Y());
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
-            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
+            fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(NegDaughter, PosDaughter));
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmQt")]->Fill(armenteros_qt);
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "ArmAlpha")]->Fill(armenteros_alpha);
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -2464,8 +2384,6 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
 /*
  * Loop over generated antisexaquark-nucleon reactions and fill histograms with information after their interaction.
- * - Uses: `fMC`, `fPDG`, `fStruckNucleonPDG`
- * - Containers: `getMcIdx_fromReactionIdx`
  */
 void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
@@ -2538,7 +2456,7 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
         if (fReactionChannel == 'H') fHist_KaonPairs_Bookkeep->Fill(0);
 
         fHist_AntiSexaquarks_Bookkeep->Fill(0);
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Mass")]->Fill(lvAntiSexaquark.M());
+        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Px")]->Fill(lvAntiSexaquark.Px());
         fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Py")]->Fill(lvAntiSexaquark.Py());
@@ -2649,18 +2567,16 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
     Int_t esdIdxTrack;
     AliESDtrack* track;
 
+    AliExternalTrackParam* trackInnerParam;
+
+    /* Auxiliary variables */
+
     Int_t mcIdx;
-    Int_t mcPdgCode;
     Int_t motherMcIdx;
 
     TString generator_name;
 
     Float_t dca_wrt_pv, dca_xy_wrt_pv, dca_z_wrt_pv;
-    Float_t n_tpc_clusters;
-    Float_t n_crossed_rows;
-    Float_t chi2_over_nclusters;
-    Float_t n_findable_clusters, n_shared_clusters;
-    Float_t chi2_over_ncls;
 
     Float_t n_sigma_pion;
     Float_t n_sigma_kaon;
@@ -2670,11 +2586,16 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
     Bool_t is_secondary;
     Bool_t is_signal;
 
-    Bool_t already_selected;  // as another species?
-    Bool_t already_in_tree;
+    /* QA variables */
+
+    Float_t n_tpc_clusters;
+    Float_t n_crossed_rows;
+    Float_t chi2_over_nclusters;
+    Float_t n_findable_clusters, n_shared_clusters;
+    Float_t chi2_over_ncls;
     UInt_t nSelectedTracks = 0;
 
-    /** Loop over tracks in a single event **/
+    /* Loop over tracks in a single event */
 
     for (esdIdxTrack = 0; esdIdxTrack < fESD->GetNumberOfTracks(); esdIdxTrack++) {
 
@@ -2683,50 +2604,68 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         track = fESD->GetTrack(esdIdxTrack);
         mcIdx = TMath::Abs(track->GetLabel());
 
-        /* Sanity check */
+        trackInnerParam = const_cast<AliExternalTrackParam*>(track->GetInnerParam());
 
-        if (track->Pt() < 1E-3 || track->Pt() > 1E3) continue;
+        /* Cuts (1) : Pre-Selection */
 
-        /* Protection: exclude particles from the anti-neutron injector */
-        /* - `GetCocktailGenerator` considers subsequent daughters/secondaries all the way down, too */
+        if (!trackInnerParam) continue;
+
+        if (trackInnerParam->Pt() < 1E-3 || trackInnerParam->Pt() > 1E3) continue;
+
+        /** Protection: exclude particles from the anti-neutron injector **/
+        /** Note: `GetCocktailGenerator` considers subsequent daughters/secondaries all the way down, too **/
+
         fMC->GetCocktailGenerator(mcIdx, generator_name);
         if (generator_name.Contains("Injector (Anti-Neutron)")) continue;
 
-        /* Get MC info */
+        /* Fill hists (1) */
 
-        getMcIdx_fromEsdIdx[esdIdxTrack] = mcIdx;
-        mcPdgCode = getPdgCode_fromMcIdx[mcIdx];
+        f2DHist_Tracks_TPCsignal["All"]->Fill(trackInnerParam->P() * track->GetSign(), track->GetTPCsignal());
 
-        /* Fill histograms before track selection */
-
-        f2DHist_Tracks_TPCsignal["All"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
-
-        /* QA : Tracks */
+        /* QA (1) */
 
         if (fDoQA) {
             const Int_t NITSLayers = 6;
             for (Int_t iLayer = 0; iLayer < NITSLayers; iLayer++) {
                 if (track->HasPointOnITSLayer(iLayer)) {
-                    f2DHist_QA["ITS_LayerNoVsPhi"]->Fill(track->Phi(), iLayer);
-                    f2DHist_QA["ITS_LayerNoVsEta"]->Fill(track->Eta(), iLayer);
+                    f2DHist_QA["ITS_LayerNoVsPhi"]->Fill(trackInnerParam->Phi(), iLayer);
+                    f2DHist_QA["ITS_LayerNoVsEta"]->Fill(trackInnerParam->Eta(), iLayer);
                 }
             }
-            if (TMath::Abs(track->Eta()) < kMax_Track_Eta) {
+            if (TMath::Abs(trackInnerParam->Eta()) < kMax_Track_Eta) {
                 track->GetImpactParameters(dca_xy_wrt_pv, dca_z_wrt_pv);  // pre-calculated DCA w.r.t. PV
                 fHist_QA["Tracks_DCAxy"]->Fill(dca_xy_wrt_pv);
                 fHist_QA["Tracks_DCAz"]->Fill(dca_z_wrt_pv);
-                fHist_QA["Tracks_Pt"]->Fill(track->Pt());
-                f2DHist_QA["Tracks_PhiVsEta"]->Fill(track->Eta(), track->Phi());
+                fHist_QA["Tracks_Pt"]->Fill(trackInnerParam->Pt());
+                f2DHist_QA["Tracks_PhiVsEta"]->Fill(trackInnerParam->Eta(), trackInnerParam->Phi());
             }
         }  // end of QA
 
-        /* Fill containers */
+        is_true = getPdgCode_fromMcIdx[mcIdx] == esdPdgCode;
+        is_secondary = isMcIdxSecondary[mcIdx] && is_true;
+        is_signal = isEsdIdxSignal[esdIdxTrack] && is_secondary;
 
+        /* Cuts (2) : Track Selection */
+
+        if (!PassesTrackSelectionAs(esdPdgCode, is_true, is_secondary, is_signal, track)) continue;
+
+        /* Fill hists (2) */
+
+        f2DHist_Tracks_TPCsignal["Selected"]->Fill(trackInnerParam->P() * track->GetSign(), track->GetTPCsignal());
+
+        /* QA (2) */
+
+        if (fDoQA) nSelectedTracks++;
+
+        /* Store info into containers (1) */
+
+        getMcIdx_fromEsdIdx[esdIdxTrack] = mcIdx;
         isEsdIdxSignal[esdIdxTrack] = isMcIdxSignal[mcIdx];
         if (isEsdIdxSignal[esdIdxTrack]) {
             getReactionIdx_fromEsdIdx[esdIdxTrack] = getReactionIdx_fromMcIdx[mcIdx];
             getEsdIdx_fromReactionIdx[getReactionIdx_fromEsdIdx[esdIdxTrack]].push_back(esdIdxTrack);
         }
+        getEsdIdx_fromMcIdx[mcIdx] = esdIdxTrack;  // purposefully done after selection
 
         doesEsdIdxHaveMother[esdIdxTrack] = doesMcIdxHaveMother[mcIdx];
         if (doesEsdIdxHaveMother[esdIdxTrack]) {
@@ -2752,110 +2691,86 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         n_shared_clusters = (Int_t)track->GetTPCnclsS();
         chi2_over_ncls = n_tpc_clusters > 1E-4 ? track->GetTPCchi2() / (Double_t)n_tpc_clusters : 999.;
 
-        /* Loop over PID hypotheses */
+        /* Assign branches and fill tree */
 
-        // get only the tracks that have a relevant PID for the chosen channel
-        // (note: fFinalStateProductsPDG is copied into a set to remove duplicates)
+        tTrack_Idx = esdIdxTrack;
+        tTrack_Idx_True = mcIdx;
+        tTrack_Px = trackInnerParam->Px();
+        tTrack_Py = trackInnerParam->Py();
+        tTrack_Pz = trackInnerParam->Pz();
+        tTrack_Charge = track->Charge();
+        tTrack_NSigmaPion = n_sigma_pion;
+        tTrack_NSigmaKaon = n_sigma_kaon;
+        tTrack_NSigmaProton = n_sigma_proton;
+        tTrack_IsTrue = is_true;
+        tTrack_IsSecondary = is_secondary;
+        tTrack_IsSignal = is_signal;
+        tTrack_ReactionID = getReactionIdx_fromEsdIdx[esdIdxTrack];
+        tTrack_TPCFitMap = track->GetTPCFitMap();
+        tTrack_TPCClusterMap = track->GetTPCClusterMap();
+        tTrack_TPCSharedMap = track->GetTPCSharedMap();
+
+        fTree_Tracks->Fill();
+        ClearTracksBranches();
+
+        /* Loop over PID hypotheses */
+        /* Note: get only the tracks that have a relevant PID for the chosen channel */
+        /* `fFinalStateProductsPDG` is copied into a set to remove duplicates        */
+
         std::set<Int_t> possiblePID(fFinalStateProductsPDG.begin(), fFinalStateProductsPDG.end());
-        already_selected = kFALSE;
-        already_in_tree = kFALSE;
 
         for (Int_t esdPdgCode : possiblePID) {
 
-            /* Apply track selection */
-
-            is_true = mcPdgCode == esdPdgCode;
-            is_secondary = isMcIdxSecondary[mcIdx] && is_true;
-            is_signal = isEsdIdxSignal[esdIdxTrack] && is_secondary;
-
-            if (!PassesTrackSelectionAs(esdPdgCode, is_true, is_secondary, is_signal, track)) continue;
-
-            if (esdPdgCode == 2212) esdIdxPassesTrackSelection_AsProton[esdIdxTrack] = kTRUE;
-            if (esdPdgCode == -2212) esdIdxPassesTrackSelection_AsAntiProton[esdIdxTrack] = kTRUE;
-            if (esdPdgCode == 321) esdIdxPassesTrackSelection_AsPosKaon[esdIdxTrack] = kTRUE;
-            if (esdPdgCode == -321) esdIdxPassesTrackSelection_AsNegKaon[esdIdxTrack] = kTRUE;
-            if (esdPdgCode == 211) esdIdxPassesTrackSelection_AsPiPlus[esdIdxTrack] = kTRUE;
-            if (esdPdgCode == -211) esdIdxPassesTrackSelection_AsPiMinus[esdIdxTrack] = kTRUE;
-
-            if (!already_selected) {
-                getEsdIdx_fromMcIdx[mcIdx] = esdIdxTrack;  // purposefully done after selection
-                f2DHist_Tracks_TPCsignal["Selected"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
-                if (fDoQA) nSelectedTracks++;
-                already_selected = kTRUE;
-            }
+            /* QA (3) */
 
             if (fDoQA) {
                 if (esdPdgCode == -2212) {
-                    f2DHist_QA["TPC_NSigmaProtonVsInnerParamP"]->Fill(track->GetInnerParam()->P(), n_sigma_proton);
-                    f2DHist_QA["TPC_NSigmaProtonVsEta"]->Fill(track->GetInnerParam()->Eta(), n_sigma_proton);
+                    f2DHist_QA["TPC_NSigmaProtonVsInnerParamP"]->Fill(trackInnerParam->P(), n_sigma_proton);
+                    f2DHist_QA["TPC_NSigmaProtonVsEta"]->Fill(trackInnerParam->Eta(), n_sigma_proton);
                 }
                 if (esdPdgCode == 321) {
-                    f2DHist_QA["TPC_NSigmaKaonVsInnerParamP"]->Fill(track->GetInnerParam()->P(), n_sigma_kaon);
-                    f2DHist_QA["TPC_NSigmaKaonVsEta"]->Fill(track->GetInnerParam()->Eta(), n_sigma_kaon);
+                    f2DHist_QA["TPC_NSigmaKaonVsInnerParamP"]->Fill(trackInnerParam->P(), n_sigma_kaon);
+                    f2DHist_QA["TPC_NSigmaKaonVsEta"]->Fill(trackInnerParam->Eta(), n_sigma_kaon);
                 }
                 if (TMath::Abs(esdPdgCode) == 211) {
-                    f2DHist_QA["TPC_NSigmaPionVsInnerParamP"]->Fill(track->GetInnerParam()->P(), n_sigma_pion);
-                    f2DHist_QA["TPC_NSigmaPionVsEta"]->Fill(track->GetInnerParam()->Eta(), n_sigma_pion);
+                    f2DHist_QA["TPC_NSigmaPionVsInnerParamP"]->Fill(trackInnerParam->P(), n_sigma_pion);
+                    f2DHist_QA["TPC_NSigmaPionVsEta"]->Fill(trackInnerParam->Eta(), n_sigma_pion);
                 }
             }
 
-            if (esdPdgCode == -2212) esdIndicesOfAntiProtonTracks.push_back(esdIdxTrack);
-            if (esdPdgCode == 321) esdIndicesOfPosKaonTracks.push_back(esdIdxTrack);
-            if (esdPdgCode == -211) esdIndicesOfPiMinusTracks.push_back(esdIdxTrack);
-            if (esdPdgCode == 211) esdIndicesOfPiPlusTracks.push_back(esdIdxTrack);
+            /* Store info into containers (2) */
 
-            /* Assign branches and fill tree */
-
-            AliExternalTrackParam* inner_param = const_cast<AliExternalTrackParam*>(track->GetInnerParam());
-            AliExternalTrackParam* tpc_inner_param = const_cast<AliExternalTrackParam*>(track->GetTPCInnerParam());
-            AliExternalTrackParam* constrained_param = const_cast<AliExternalTrackParam*>(track->GetConstrainedParam());
-            AliExternalTrackParam* outer_param = const_cast<AliExternalTrackParam*>(track->GetOuterParam());
-
-            if (!already_in_tree) {
-
-                tTrack_Idx = esdIdxTrack;
-                tTrack_Idx_True = mcIdx;
-                tTrack_Px = (Float_t)track->Px();
-                tTrack_Py = (Float_t)track->Py();
-                tTrack_Pz = (Float_t)track->Pz();
-                tTrack_Px_Inner = inner_param ? (Float_t)track->GetInnerParam()->Px() : -9999.;
-                tTrack_Py_Inner = inner_param ? (Float_t)track->GetInnerParam()->Py() : -9999.;
-                tTrack_Pz_Inner = inner_param ? (Float_t)track->GetInnerParam()->Pz() : -9999.;
-                tTrack_Px_TPCInner = tpc_inner_param ? (Float_t)track->GetTPCInnerParam()->Px() : -9999.;
-                tTrack_Py_TPCInner = tpc_inner_param ? (Float_t)track->GetTPCInnerParam()->Py() : -9999.;
-                tTrack_Pz_TPCInner = tpc_inner_param ? (Float_t)track->GetTPCInnerParam()->Pz() : -9999.;
-                tTrack_Px_Constrained = constrained_param ? (Float_t)track->GetConstrainedParam()->Px() : -9999.;
-                tTrack_Py_Constrained = constrained_param ? (Float_t)track->GetConstrainedParam()->Py() : -9999.;
-                tTrack_Pz_Constrained = constrained_param ? (Float_t)track->GetConstrainedParam()->Pz() : -9999.;
-                tTrack_Px_Outer = outer_param ? (Float_t)track->GetOuterParam()->Px() : -9999.;
-                tTrack_Py_Outer = outer_param ? (Float_t)track->GetOuterParam()->Py() : -9999.;
-                tTrack_Pz_Outer = outer_param ? (Float_t)track->GetOuterParam()->Pz() : -9999.;
-                tTrack_Charge = track->Charge();
-                tTrack_NSigmaPion = n_sigma_pion;
-                tTrack_NSigmaKaon = n_sigma_kaon;
-                tTrack_NSigmaProton = n_sigma_proton;
-                tTrack_IsTrue = is_true;
-                tTrack_IsSecondary = is_secondary;
-                tTrack_IsSignal = is_signal;
-                tTrack_ReactionID = is_signal ? getReactionIdx_fromEsdIdx[esdIdxTrack] : -1;
-                tTrack_TPCFitMap = track->GetTPCFitMap();
-                tTrack_TPCClusterMap = track->GetTPCClusterMap();
-                tTrack_TPCSharedMap = track->GetTPCSharedMap();
-
-                fTree_Tracks->Fill();
-                ClearTracksBranches();
-
-                already_in_tree = kTRUE;
+            if (esdPdgCode == 2212) {
+                esdIdxPassesTrackSelection_AsProton[esdIdxTrack] = kTRUE;
+            }
+            if (esdPdgCode == -2212) {
+                esdIdxPassesTrackSelection_AsAntiProton[esdIdxTrack] = kTRUE;
+                esdIndicesOfAntiProtonTracks.push_back(esdIdxTrack);
+            }
+            if (esdPdgCode == 321) {
+                esdIdxPassesTrackSelection_AsPosKaon[esdIdxTrack] = kTRUE;
+                esdIndicesOfPosKaonTracks.push_back(esdIdxTrack);
+            }
+            if (esdPdgCode == -321) {
+                esdIdxPassesTrackSelection_AsNegKaon[esdIdxTrack] = kTRUE;
+            }
+            if (esdPdgCode == 211) {
+                esdIdxPassesTrackSelection_AsPiPlus[esdIdxTrack] = kTRUE;
+                esdIndicesOfPiPlusTracks.push_back(esdIdxTrack);
+            }
+            if (esdPdgCode == -211) {
+                esdIdxPassesTrackSelection_AsPiMinus[esdIdxTrack] = kTRUE;
+                esdIndicesOfPiMinusTracks.push_back(esdIdxTrack);
             }
 
-            /* Fill histograms */
+            /* Fill histograms (3) */
 
             fHist_Tracks_Bookkeep[esdPdgCode]->Fill(50);
-            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Px")]->Fill(track->Px());
-            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Py")]->Fill(track->Py());
-            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pt")]->Fill(track->Pt());
-            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pz")]->Fill(track->Pz());
-            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Eta")]->Fill(track->Eta());
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Px")]->Fill(trackInnerParam->Px());
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Py")]->Fill(trackInnerParam->Py());
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pz")]->Fill(trackInnerParam->Pz());
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pt")]->Fill(trackInnerParam->Pt());
+            fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Eta")]->Fill(trackInnerParam->Eta());
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "DCA_wrtPV")]->Fill(dca_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "DCAxy_wrtPV")]->Fill(dca_xy_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "DCAz_wrtPV")]->Fill(dca_z_wrt_pv);
@@ -2872,11 +2787,11 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             if (!is_true) continue;
 
             fHist_Tracks_Bookkeep[esdPdgCode]->Fill(80);
-            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Px")]->Fill(track->Px());
-            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Py")]->Fill(track->Py());
-            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pt")]->Fill(track->Pt());
-            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pz")]->Fill(track->Pz());
-            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Eta")]->Fill(track->Eta());
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Px")]->Fill(trackInnerParam->Px());
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Py")]->Fill(trackInnerParam->Py());
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pz")]->Fill(trackInnerParam->Pz());
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pt")]->Fill(trackInnerParam->Pt());
+            fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Eta")]->Fill(trackInnerParam->Eta());
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "DCA_wrtPV")]->Fill(dca_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "DCAxy_wrtPV")]->Fill(dca_xy_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "DCAz_wrtPV")]->Fill(dca_z_wrt_pv);
@@ -2889,16 +2804,16 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
             PlotStatus(track, "True", esdPdgCode);
-            f2DHist_Tracks_TPCsignal["True"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
+            f2DHist_Tracks_TPCsignal["True"]->Fill(trackInnerParam->P() * track->GetSign(), track->GetTPCsignal());
 
             if (!is_secondary) continue;
 
             fHist_Tracks_Bookkeep[esdPdgCode]->Fill(110);
-            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Px")]->Fill(track->Px());
-            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Py")]->Fill(track->Py());
-            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pt")]->Fill(track->Pt());
-            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pz")]->Fill(track->Pz());
-            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Eta")]->Fill(track->Eta());
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Px")]->Fill(trackInnerParam->Px());
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Py")]->Fill(trackInnerParam->Py());
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pz")]->Fill(trackInnerParam->Pz());
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pt")]->Fill(trackInnerParam->Pt());
+            fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Eta")]->Fill(trackInnerParam->Eta());
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "DCA_wrtPV")]->Fill(dca_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "DCAxy_wrtPV")]->Fill(dca_xy_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "DCAz_wrtPV")]->Fill(dca_z_wrt_pv);
@@ -2911,16 +2826,16 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
             PlotStatus(track, "Secondary", esdPdgCode);
-            f2DHist_Tracks_TPCsignal["Secondary"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
+            f2DHist_Tracks_TPCsignal["Secondary"]->Fill(trackInnerParam->P() * track->GetSign(), track->GetTPCsignal());
 
             if (!is_signal) continue;
 
             fHist_Tracks_Bookkeep[esdPdgCode]->Fill(140);
-            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Px")]->Fill(track->Px());
-            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Py")]->Fill(track->Py());
-            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pt")]->Fill(track->Pt());
-            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pz")]->Fill(track->Pz());
-            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Eta")]->Fill(track->Eta());
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Px")]->Fill(trackInnerParam->Px());
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Py")]->Fill(trackInnerParam->Py());
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pz")]->Fill(trackInnerParam->Pz());
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pt")]->Fill(trackInnerParam->Pt());
+            fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Eta")]->Fill(trackInnerParam->Eta());
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "DCA_wrtPV")]->Fill(dca_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "DCAxy_wrtPV")]->Fill(dca_xy_wrt_pv);
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "DCAz_wrtPV")]->Fill(dca_z_wrt_pv);
@@ -2933,18 +2848,17 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
             PlotStatus(track, "Signal", esdPdgCode);
-            f2DHist_Tracks_TPCsignal["Signal"]->Fill(track->P() * track->GetSign(), track->GetTPCsignal());
+            f2DHist_Tracks_TPCsignal["Signal"]->Fill(trackInnerParam->P() * track->GetSign(), track->GetTPCsignal());
         }  // end of loop over PID hypotheses
     }      // end of loop over tracks
+
+    /* QA (4) */
 
     if (fDoQA) fHist_QA["NSelectedTracks"]->Fill(nSelectedTracks);
 }
 
 /*
- * Determine if current AliESDtrack passes track selection,
- * and fill the bookkeeping histograms to measure the effect of the cuts.
- * - Input: `track`
- * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
+ * Determine if current AliESDtrack passes track selection, and fill the bookkeeping histograms to measure the effect of the cuts.
  */
 Bool_t AliAnalysisTaskSexaquark::PassesTrackSelectionAs(Int_t HypothesisPID, Bool_t is_true, Bool_t is_secondary, Bool_t is_signal,
                                                         AliESDtrack* track) {
@@ -2965,9 +2879,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelectionAs(Int_t HypothesisPID, Boo
         kMax_NSigma = kMax_NSigma_Pion;
     }
 
-    Double_t charge = track->Charge();
-    if (chargeShouldBePositive && charge < 0.) return kFALSE;
-    if (!chargeShouldBePositive && charge > 0.) return kFALSE;
+    if (chargeShouldBePositive && track->Charge() < 0.) return kFALSE;
+    if (!chargeShouldBePositive && track->Charge() > 0.) return kFALSE;
     fHist_Tracks_Bookkeep[HypothesisPID]->Fill(30);
     if (is_true) fHist_Tracks_Bookkeep[HypothesisPID]->Fill(60);
     if (is_secondary) fHist_Tracks_Bookkeep[HypothesisPID]->Fill(90);
@@ -2980,8 +2893,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelectionAs(Int_t HypothesisPID, Boo
     if (is_secondary) fHist_Tracks_Bookkeep[HypothesisPID]->Fill(91);
     if (is_signal) fHist_Tracks_Bookkeep[HypothesisPID]->Fill(121);
 
-    Double_t Eta = TMath::Abs(track->Eta());
-    if (kMax_Track_Eta && Eta > kMax_Track_Eta) return kFALSE;
+    if (kMax_Track_Eta && TMath::Abs(track->Eta()) > kMax_Track_Eta) return kFALSE;
     fHist_Tracks_Bookkeep[HypothesisPID]->Fill(32);
     if (is_true) fHist_Tracks_Bookkeep[HypothesisPID]->Fill(62);
     if (is_secondary) fHist_Tracks_Bookkeep[HypothesisPID]->Fill(92);
@@ -3412,7 +3324,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
         /* Fill histograms  */
 
         fHist_AntiSexaquarks_Bookkeep->Fill(10);
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Mass")]->Fill(lvAntiSexaquark.M());
+        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Px")]->Fill(lvAntiSexaquark.Px());
         fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Py")]->Fill(lvAntiSexaquark.Py());
@@ -3524,7 +3436,6 @@ void AliAnalysisTaskSexaquark::ProcessFindableKaonPairs() {
 
 /*
  * Loop over all the V0s that were found and stored in the ESD file by the Official V0 Finders.
- * - Uses: `fESD`, `fMC`, `fPDG`, `fPrimaryVertex`
  * - Containers: `esdAntiLambdas`, `getEsdIdxOfNegDau_fromAntiLambdaIdx`, `getEsdIdxOfPosDau_fromAntiLambdaIdx`, `isAntiLambdaIdxATrueV0`,
  * `isEsdIdxDaughterOfTrueV0`, `getMcIdxOfTrueV0_fromEsdIdx`, `isMcIdxSignal`, `esdKaonsZeroShort`, `getEsdIdxOfNegDau_fromKaonZeroShortIdx`,
  * `getEsdIdxOfPosDau_fromKaonZeroShortIdx`, `isKaonZeroShortIdxATrueV0`
@@ -3794,7 +3705,6 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 /*
  * Custom V0 Finder.
  * (Adapted from `AliRoot/STEER/ESD/AliV0vertexer.cxx`)
- * - Uses: `fESD`, `fMC`, `fPDG`, `fPrimaryVertex`, `fMagneticField`
  * - Input: `pdgV0`
  */
 void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
@@ -4059,9 +3969,6 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
 /*
  * Apply cuts to a V0 candidate.
- * - Input: `pdgV0`, `v0`, `neg_track`, `pos_track`
- * - Uses: `fPrimaryVertex`
- * - Return: `kTRUE` if the V0 candidate passes the cuts, `kFALSE` otherwise
  */
 Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, AliESDv0* v0, AliESDtrack* neg_track,
                                                 AliESDtrack* pos_track) {
@@ -4186,9 +4093,6 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool
 
 /*
  * Apply cuts to a V0 candidate.
- * - Input: `pdgV0`, `kfV0`, `kfDaughterNeg`, `kfDaughterPos`, `lvV0`, `lvTrackNeg`, `lvTrackPos`
- * - Uses: `fPrimaryVertex`
- * - Return: `kTRUE` if the V0 candidate passes the cuts, `kFALSE` otherwise
  */
 Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, KFParticleMother kfV0,
                                                 KFParticle kfDaughterNeg, KFParticle kfDaughterPos, Math::PxPyPzEVector lvV0,
@@ -4448,7 +4352,7 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
             /* Fill histograms */
 
             fHist_AntiSexaquarks_Bookkeep->Fill(50);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass")]->Fill(lvAntiSexaquark.M());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
@@ -4472,7 +4376,7 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
             if (!is_signal) continue;
 
             fHist_AntiSexaquarks_Bookkeep->Fill(90);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvAntiSexaquark.M());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
@@ -4500,10 +4404,6 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
 
 /*
  * Apply anti-sexaquark candidate cuts. Exclusive to reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`.
- * - Use: `fPrimaryVertex`, `fMagneticField`
- * - Input: `SecondaryVertex`, `lvAntiSexaquark`, `esdAntiLambda`, `esdKaonZeroShort`, `esdAntiLambdaNeg`, `esdAntiLambdaPos`, `esdKaonZeroShortNeg`,
- * `esdKaonZeroShortPos`
- * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
  */
 Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark,
                                                               AliESDv0 esdAntiLambda, AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg,
@@ -4622,7 +4522,6 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelE() {
 
 /*
  * Find all V0s via Kalman Filter.
- * - Uses: `fESD`, `fMC`
  * - Input: `pdgV0`, `pdgTrackNeg`, `pdgTrackPos`
  * - Output: `kfV0s`, `idxDaughters`
  */
@@ -4907,7 +4806,6 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
 /*
  * Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`
- * - Uses: `fStruckNucleonPDG`, `fPDG`, `fPrimaryVertex`, `fESD`
  * - Containers: `kf[AntiLambdas|KaonsZeroShort]`, `getEsdIdxOf[Neg|Pos]Dau_from[AntiLambda|KaonZeroShort]Idx`
  */
 void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
@@ -4915,7 +4813,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
     AliESDtrack *esdAntiLambdaNegDau, *esdAntiLambdaPosDau;
     AliESDtrack *esdKaonZeroShortNegDau, *esdKaonZeroShortPosDau;
 
-    /* Declare 4-momentum vectors */
+    /* Declare vectors */
 
     Math::PxPyPzEVector lvAntiLambdaNegDau, lvAntiLambdaPosDau;
     Math::PxPyPzEVector lvKaonZeroShortNegDau, lvKaonZeroShortPosDau;
@@ -5087,6 +4985,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             tSexaquark_IsHybrid = is_hybrid;
             tSexaquark_IsSignal = is_signal;
             tSexaquark_ReactionID = is_signal ? getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda] : -1;
+            tSexaquark_AL_DecayLength = TMath::Abs(kfAntiLambda.GetDecayLength());
 
             tSexaquarkA_Idx_K0S = idxKaonZeroShort;
             tSexaquarkA_Idx_K0S_Neg = esdIdxNeg_KaonZeroShort;
@@ -5098,6 +4997,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             tSexaquarkA_DCAV0aposSV = dca_v0a_pos_sv;
             tSexaquarkA_DCAV0bnegSV = dca_v0b_neg_sv;
             tSexaquarkA_DCAV0bposSV = dca_v0b_pos_sv;
+            tSexaquarkA_K0S_DecayLength = TMath::Abs(kfKaonZeroShort.GetDecayLength());
 
             fTree_Sexaquarks->Fill();
             ClearSexaquarksBranches();
@@ -5105,7 +5005,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             /* Fill histograms */
 
             fHist_AntiSexaquarks_Bookkeep->Fill(50);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass")]->Fill(lvAntiSexaquark.M());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
@@ -5130,7 +5030,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             if (!is_signal) continue;
 
             fHist_AntiSexaquarks_Bookkeep->Fill(90);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvAntiSexaquark.M());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
@@ -5175,9 +5075,6 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
 
 /*
  * Apply anti-sexaquark candidate cuts. Exclusive to reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`.
- * - Use: `fPrimaryVertex`
- * - Input: `kf[AntiSexaquark|AntiLambda|KaonZeroShort|AntiLambdaNeg|AntiLambdaPos|KaonZeroShortNeg|KaonZeroShortPos]`, `lvAntiSexaquark`
- * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
  */
 Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
                                                               KFParticle kfAntiLambda, KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg,
@@ -5270,7 +5167,6 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, K
 
 /*
  * Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel D: `AntiSexaquark,P->AntiLambda,K+`
- * - Uses: `fStruckNucleonPDG`, `fPDG`, `fPrimaryVertex`, `fESD`
  * - Containers: `kfAntiLambdas`, `esdIndicesOfPosKaonTracks`, `getEsdIdxOf[Neg|Pos]Dau_fromAntiLambdaIdx`
  */
 void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
@@ -5431,6 +5327,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
             tSexaquark_IsHybrid = is_hybrid;
             tSexaquark_IsSignal = is_signal;
             tSexaquark_ReactionID = is_signal ? getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda] : -1;
+            tSexaquark_AL_DecayLength = TMath::Abs(kfAntiLambda.GetDecayLength());
 
             tSexaquarkD_Idx_PosKaon = esdIdxPosKaon;
             tSexaquarkD_DCAV0Ba = dca_v0_ba;
@@ -5447,7 +5344,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
             /* Fill histograms */
 
             fHist_AntiSexaquarks_Bookkeep->Fill(50);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass")]->Fill(lvAntiSexaquark.M());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
             fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
@@ -5472,7 +5369,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
             if (!is_signal) continue;
 
             fHist_AntiSexaquarks_Bookkeep->Fill(90);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvAntiSexaquark.M());
+            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
             fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
@@ -5499,9 +5396,6 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
 
 /*
  * Apply anti-sexaquark candidate cuts.
- * - Use: `fPrimaryVertex`
- * - Input: `kf[AntiSexaquark|AntiLambda|KaonZeroShort|AntiLambdaNeg|AntiLambdaPos|KaonZeroShortNeg|KaonZeroShortPos]`, `lvAntiSexaquark`
- * - Return: `kTRUE` if the candidate passes the cuts, `kFALSE` otherwise
  */
 Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelD(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
                                                               KFParticle kfAntiLambda, KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg,
@@ -5792,6 +5686,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                 tSexaquark_IsHybrid = is_hybrid;
                 tSexaquark_IsSignal = is_signal;
                 tSexaquark_ReactionID = is_signal ? getReactionIdx_fromEsdIdx[esdIdxNeg_AntiLambda] : -1;
+                tSexaquark_AL_DecayLength = TMath::Abs(kfAntiLambda.GetDecayLength());
 
                 tSexaquarkE_Idx_PP = idxPionPair;
                 tSexaquarkE_Idx_PP_Neg = esdIdxNeg_PionPair;
@@ -5815,7 +5710,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                 /* Fill histograms */
 
                 fHist_AntiSexaquarks_Bookkeep->Fill(50);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass")]->Fill(lvAntiSexaquark.M());
+                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
                 fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
                 fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
                 fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
@@ -5844,7 +5739,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                 if (!is_signal) continue;
 
                 fHist_AntiSexaquarks_Bookkeep->Fill(90);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass")]->Fill(lvAntiSexaquark.M());
+                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
                 fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
                 fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
                 fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
@@ -6004,7 +5899,6 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelE(Bool_t isSignal, K
 
 /*
  * Find all K+K+ pairs via Kalman Filter.
- * - Uses: `fESD`, `esdIndicesOfPosKaonTracks`, `fHist_KaonPairs`
  */
 void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
 
@@ -6182,9 +6076,6 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
 
 /*
  * Apply cuts to a K+K+ pair
- * - Input: `kfKaonPair`, `kfPosKaonA`, `kfPosKaonB`, `lvKaonPair`, `lvPosKaonA`, `lvPosKaonB`
- * - Uses: `fPrimaryVertex`
- * - Return: `kTRUE` if the K+K+ pair passes the cuts, `kFALSE` otherwise
  */
 Bool_t AliAnalysisTaskSexaquark::PassesKaonPairCuts(Bool_t isSignal, KFParticleMother kfKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB,
                                                     Math::PxPyPzEVector lvKaonPair, Math::PxPyPzEVector lvPosKaonA, Math::PxPyPzEVector lvPosKaonB) {
@@ -6237,8 +6128,6 @@ Bool_t AliAnalysisTaskSexaquark::PassesKaonPairCuts(Bool_t isSignal, KFParticleM
 
 /*
  * Calculate the cosine of the pointing angle of a particle with momentum Px,Py,Pz and vertex X,Y,Z w.r.t. to a reference point
- * - Input: `lvParticle`, `X`, `Y`, `Z`, `refPointX`, `refPointY`, `refPointZ`
- * - Return: `cos(theta)`
  * (Based on `AliRoot/STEER/ESD/AliESDv0::GetV0CosineOfPointingAngle()`)
  */
 Double_t AliAnalysisTaskSexaquark::CosinePointingAngle(Math::PxPyPzEVector lvParticle, Double_t X, Double_t Y, Double_t Z, Double_t refPointX,
@@ -6290,8 +6179,6 @@ Double_t AliAnalysisTaskSexaquark::ArmenterosQt(Double_t V0_Px, Double_t V0_Py, 
  * Find the distance of closest approach to the Primary Vertex, after backtracking a V0.
  * This function stores the point of closest approach, and returns its distance to the PV.
  * (PENDING: are we sure of that?)
- * - Input: `V0_Px`, `V0_Py`, `V0_Pz`, `V0_X`, `V0_Y`, `V0_Z`, `PV_X`, `PV_Y`, `PV_Z`
- * - Return: the distance of closest approach to the PV
  */
 Double_t AliAnalysisTaskSexaquark::LinePointDCA(Double_t V0_Px, Double_t V0_Py, Double_t V0_Pz, Double_t V0_X, Double_t V0_Y, Double_t V0_Z,
                                                 Double_t refPointX, Double_t refPointY, Double_t refPointZ) {
@@ -6378,7 +6265,6 @@ Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v1(Math::XYZPoint v3_po
  * - Variable: `t`, the parameter of the line.
  * - Parameters: `point`, the point to which we want to calculate the distance.
  * - Parameters: `linePoint`, `lineDir`, the position and direction of the line.
- * - Return: the square of the distance between the point and the line.
  */
 Double_t AliAnalysisTaskSexaquark::SquaredDistancePointToLine(const Double_t* t, Double_t point[], Double_t linePoint[], Double_t lineDir[]) {
     return TMath::Power(point[0] - linePoint[0] - t[0] * lineDir[0], 2) + TMath::Power(point[1] - linePoint[1] - t[0] * lineDir[1], 2) +
@@ -6386,10 +6272,9 @@ Double_t AliAnalysisTaskSexaquark::SquaredDistancePointToLine(const Double_t* t,
 }
 
 /*
- * Given the parametric form of two lines, find their distance.
+ * Given the parametric form of two lines, find the square of their distance.
  * - Variable: `t`, array of size 2, where `t[0]` and `t[1] are the parameters for the first and second line, respectively.
  * - Parameters: `pos0`, `dir0`, `pos1`, `dir1`, the position and direction of the two lines.
- * - Return: the square of the distance between the two lines.
  */
 Double_t AliAnalysisTaskSexaquark::SquaredDistanceBetweenLines(const Double_t* t, Double_t pos0[], Double_t dir0[], Double_t pos1[],
                                                                Double_t dir1[]) {
@@ -6402,7 +6287,6 @@ Double_t AliAnalysisTaskSexaquark::SquaredDistanceBetweenLines(const Double_t* t
  * Calculate the distance of closest approach between two lines, given their position and momentum, assuming they propagate in straight lines.
  * - Input: `pos0`, `dir0`, `pos1`, `dir1`, the position and direction of the two lines.
  * - Output: `CPA0`, `CPA1`, the closest point of approach for the two lines.
- * - Return: the distance of closest approach between the two lines.
  */
 Double_t AliAnalysisTaskSexaquark::Calculate_TwoLinesDCA_v2(Math::XYZPoint v3_pos0, Math::XYZVector v3_dir0, Math::XYZPoint v3_pos1,
                                                             Math::XYZVector v3_dir1, Math::XYZPoint& PCA0, Math::XYZPoint& PCA1) {
@@ -6818,9 +6702,6 @@ KFVertex AliAnalysisTaskSexaquark::CreateKFVertex(const AliVVertex& vertex) {
 
 /*
  * Transport a KFParticle to the point of closest approach w.r.t. another KFParticle.
- * - Uses: `fPDG`
- * - Input: `kfThis`, `kfOther`, `pdgThis`, `chargeThis`
- * - Return: `kfTransported`
  */
 KFParticle AliAnalysisTaskSexaquark::TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis) {
 

@@ -30,7 +30,6 @@
 
 #include "AliAnalysisManager.h"
 #include "AliExternalTrackParam.h"
-#include "AliGenCocktailEventHeader.h"  // DEBUG
 #include "AliHelix.h"
 #include "AliInputEventHandler.h"
 #include "AliLog.h"
@@ -242,7 +241,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliPIDResponse* fPIDResponse;   //! pid response object
     AliEventCuts fEventCuts;        //! event cuts
     Double_t fMagneticField;        //! magnetic field
-    UInt_t fPeriodNumber;           //! period number
     Int_t fRunNumber;               //! run number
     Int_t fDirNumber;               //! directory number
     Int_t fEventNumber;             //! event number
@@ -337,34 +335,22 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Int_t tMC_ReactionID;    //!
 
     /** Tracks **/
-    Int_t tTrack_Idx;               //!
-    Int_t tTrack_Idx_True;          //!
-    Float_t tTrack_Px;              //! from main parametrization
-    Float_t tTrack_Py;              //! from main parametrization
-    Float_t tTrack_Pz;              //! from main parametrization
-    Float_t tTrack_Px_Inner;        //!
-    Float_t tTrack_Py_Inner;        //!
-    Float_t tTrack_Pz_Inner;        //!
-    Float_t tTrack_Px_TPCInner;     //!
-    Float_t tTrack_Py_TPCInner;     //!
-    Float_t tTrack_Pz_TPCInner;     //!
-    Float_t tTrack_Px_Constrained;  //!
-    Float_t tTrack_Py_Constrained;  //!
-    Float_t tTrack_Pz_Constrained;  //!
-    Float_t tTrack_Px_Outer;        //!
-    Float_t tTrack_Py_Outer;        //!
-    Float_t tTrack_Pz_Outer;        //!
-    Short_t tTrack_Charge;          //!
-    Float_t tTrack_NSigmaPion;      //!
-    Float_t tTrack_NSigmaKaon;      //!
-    Float_t tTrack_NSigmaProton;    //!
-    Bool_t tTrack_IsTrue;           //!
-    Bool_t tTrack_IsSecondary;      //!
-    Bool_t tTrack_IsSignal;         //!
-    Int_t tTrack_ReactionID;        //!
-    TBits tTrack_TPCFitMap;         //!
-    TBits tTrack_TPCClusterMap;     //!
-    TBits tTrack_TPCSharedMap;      //!
+    Int_t tTrack_Idx;             //!
+    Int_t tTrack_Idx_True;        //!
+    Float_t tTrack_Px;            //! inner parametrization
+    Float_t tTrack_Py;            //! inner parametrization
+    Float_t tTrack_Pz;            //! inner parametrization
+    Short_t tTrack_Charge;        //!
+    Float_t tTrack_NSigmaPion;    //!
+    Float_t tTrack_NSigmaKaon;    //!
+    Float_t tTrack_NSigmaProton;  //!
+    Bool_t tTrack_IsTrue;         //!
+    Bool_t tTrack_IsSecondary;    //!
+    Bool_t tTrack_IsSignal;       //!
+    Int_t tTrack_ReactionID;      //!
+    TBits tTrack_TPCFitMap;       //!
+    TBits tTrack_TPCClusterMap;   //!
+    TBits tTrack_TPCSharedMap;    //!
 
     /** V0s **/
     Int_t tV0_Idx;           //!
