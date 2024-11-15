@@ -1,5 +1,5 @@
 AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s = "kalman", Char_t ReactionChannel = 'A', Float_t SexaquarkMass = 1.8,
-                                       TString StopAfter = "", Bool_t DoQA = kFALSE, Bool_t ReadSignalLogs = kTRUE) {
+                                       Bool_t DoQA = kFALSE, Bool_t ReadSignalLogs = kTRUE) {
 
     AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
     if (!mgr) return nullptr;
@@ -13,7 +13,6 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
     task->SetSourceOfV0s(SourceOfV0s);
     task->SetReactionChannel(ReactionChannel);
     task->DoQA(DoQA);
-    task->StopAfter(StopAfter);
     task->ReadSignalLogs(ReadSignalLogs);
     task->Initialize();
 

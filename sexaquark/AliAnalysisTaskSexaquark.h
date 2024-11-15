@@ -98,7 +98,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void SetSourceOfV0s(TString SourceOfV0s) { fSourceOfV0s = SourceOfV0s; };
     void SetReactionChannel(Char_t ReactionChannel) { fReactionChannel = ReactionChannel; };
     void DoQA(Bool_t DoQA) { fDoQA = DoQA; };
-    void StopAfter(TString StopAfter) { fStopAfter = StopAfter; };
     void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
     void Initialize();
 
@@ -231,7 +230,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TString fSourceOfV0s;     // choose V0 finder: "kalman", "custom", "on-the-fly", "offline"
     Char_t fReactionChannel;  // reaction channel identifier, could be: 'A', 'D', 'E', 'H'
     Bool_t fDoQA;             // kTRUE to do QA
-    TString fStopAfter;       // "MC", "Tracks", "Findables", "V0s" (default: "")
     Bool_t fReadSignalLogs;   // kTRUE to read and load signal logs
 
     /* AliRoot Objects */
@@ -672,7 +670,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
 
     /// \cond CLASSDEF
-    ClassDef(AliAnalysisTaskSexaquark, 81);
+    ClassDef(AliAnalysisTaskSexaquark, 80);  // = number of persistent members
     /// \endcond
 };
 

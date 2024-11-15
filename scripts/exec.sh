@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ $# -ne 3 ]]; then
-    echo "ERROR :: exec.sh :: USAGE is `./exec.sh <CONFIG_FILE> <SOURCE_OF_V0S> <SIMULATION_SET>`"
+    echo "ERROR :: exec.sh :: USAGE is \`./exec.sh <CONFIG_FILE> <SOURCE_OF_V0S> <SIMULATION_SET>\`"
     exit 1
 fi
 
@@ -21,7 +21,6 @@ echo "INFO :: exec.sh :: PRODUCTION_NAME  = ${PRODUCTION_NAME}"
 echo "INFO :: exec.sh :: RUN_NUMBERS_LIST = ${RUN_NUMBERS_LIST}"
 echo "INFO :: exec.sh :: SOURCE_OF_V0S    = ${SOURCE_OF_V0S}"
 echo "INFO :: exec.sh :: SIMULATION_SET   = ${SIMULATION_SET}"
-echo "INFO :: exec.sh :: STOP_AFTER       = ${STOP_AFTER}"
 echo "INFO :: exec.sh :: DO_QA            = ${DO_QA}"
 echo "INFO :: exec.sh :: READ_SIGNAL_LOGS = ${READ_SIGNAL_LOGS}"
 echo "INFO :: exec.sh :: CHOOSE_N_EVENTS  = ${CHOOSE_N_EVENTS}"
@@ -46,7 +45,6 @@ ANALYSIS_OPTIONS+="\"${PRODUCTION_NAME}\","
 ANALYSIS_OPTIONS+="\"${RUN_NUMBERS_LIST}\","
 ANALYSIS_OPTIONS+="\"${SOURCE_OF_V0S}\","
 ANALYSIS_OPTIONS+="\"${SIMULATION_SET}\","
-ANALYSIS_OPTIONS+="\"${STOP_AFTER}\","
 ANALYSIS_OPTIONS+="${DO_QA},"
 ANALYSIS_OPTIONS+="${READ_SIGNAL_LOGS}",
 ANALYSIS_OPTIONS+="${CHOOSE_N_EVENTS}"

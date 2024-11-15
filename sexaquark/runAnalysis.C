@@ -26,7 +26,6 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
                  TString RunNumbersList,  // path to file with run numbers
                  TString SourceOfV0s,     // "kalman", "custom", "on-the-fly", "offline"
                  TString SimulationSet,   // format: "<A,D,E,H><1.73,1.8,1.87,1.94,2.01>" e.g. "A1.73"
-                 TString StopAfter,       // "MC", "Tracks", "Findables", "V0s"
                  Bool_t DoQA,             //
                  Bool_t ReadSignalLogs,   // (only valid when analyzing signal MC)
                  Int_t ChooseNEvents = 0  // (only valid when Mode == "local" or Mode == "hybrid") 0 means all events
@@ -216,9 +215,8 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
 
     gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
 
-    TString TaskSexaquark_Options =
-        Form("(%i, \"%s\", \'%c\', %.2f, \"%s\", %i, %i)",  //
-             (Int_t)IsMC, SourceOfV0s.Data(), ReactionChannel, SexaquarkMass, StopAfter.Data(), (Int_t)DoQA, (Int_t)ReadSignalLogs);
+    TString TaskSexaquark_Options = Form("(%i, \"%s\", \'%c\', %.2f, %i, %i)",  //
+                                         (Int_t)IsMC, SourceOfV0s.Data(), ReactionChannel, SexaquarkMass, (Int_t)DoQA, (Int_t)ReadSignalLogs);
     AliAnalysisTaskSexaquark *TaskSexaquark =
         reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro("AddSexaquark.C" + TaskSexaquark_Options));
     if (!TaskSexaquark) return;

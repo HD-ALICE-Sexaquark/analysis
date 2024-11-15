@@ -12,7 +12,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fSourceOfV0s(),
       fReactionChannel(0),
       fDoQA(0),
-      fStopAfter(),
       fReadSignalLogs(0),
       /*  */
       fMC(0),
@@ -362,7 +361,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fSourceOfV0s(),
       fReactionChannel(0),
       fDoQA(0),
-      fStopAfter(),
       fReadSignalLogs(0),
       /*  */
       fMC(0),
@@ -1647,11 +1645,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
         ProcessMCGen();
         ProcessSignalInteractions();
-
-        if (fStopAfter == "MC") {
-            EndOfEvent();
-            return;
-        }
     }
 
     /* Load Reconstructed Event, PV and Magnetic Field */
@@ -1728,11 +1721,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
 
     ProcessTracks();
 
-    if (fStopAfter == "Tracks") {
-        EndOfEvent();
-        return;
-    }
-
     /* Findables */
 
     if (fIsMC) {
@@ -1743,11 +1731,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         } else {
             ProcessFindableKaonPairs();
         }
-    }
-
-    if (fStopAfter == "Findables") {
-        EndOfEvent();
-        return;
     }
 
     /* V0s */
@@ -1775,11 +1758,6 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         } else if (fReactionChannel == 'H') {  // "AntiSexaquark,P->AntiProton,K+,K+,pi0"
             KalmanKaonPairFinder();
         }
-    }
-
-    if (fStopAfter == "V0s") {
-        EndOfEvent();
-        return;
     }
 
     /* Sexaquarks */
@@ -1917,7 +1895,6 @@ void AliAnalysisTaskSexaquark::Initialize() {
     AliInfoF(">> IsMC             = %i", (Int_t)fIsMC);
     AliInfoF(">> Source of V0s    = \"%s\"", fSourceOfV0s.Data());
     AliInfoF(">> Reaction Channel = \'%c\' (\"%s\")", fReactionChannel, Detailed_ReactionChannel.Data());
-    AliInfoF(">> Stop After       = \"%s\"", fStopAfter.Data());
     AliInfoF(">> Do QA            = %i", (Int_t)fDoQA);
     AliInfoF(">> Read Signal Logs = %i", (Int_t)fReadSignalLogs);
 }
