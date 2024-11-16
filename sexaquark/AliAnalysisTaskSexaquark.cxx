@@ -10,7 +10,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       /*  */
       fIsMC(0),
       fSourceOfV0s(),
-      fReactionChannel(0),
       fDoQA(0),
       fReadSignalLogs(0),
       /*  */
@@ -31,15 +30,19 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fList_QA_Hists(0),
       fList_Tracks_Hists(0),
       fList_V0s_Hists(0),
-      fList_Sexaquarks_Hists(0),
       fList_KaonPairs_Hists(0),
+      fList_Sexaquarks_ALPK_Hists(0),
+      fList_Sexaquarks_ALK0_Hists(0),
+      fList_Sexaquarks_ALKKX_Hists(0),
+      fList_Sexaquarks_ALPKPP_Hists(0),
       /*  */
       fAliEnPath(),
       fIsFirstEvent(0),
       /*  */
-      fProductsPDG(),
-      fFinalStateProductsPDG(),
-      fStruckNucleonPDG(0),
+      kMass_Neutron(0.),
+      kMass_Proton(0.),
+      kMass_Kaon(0.),
+      kMass_Pion(0.),
       getNegPdgCode_fromV0PdgCode(),
       getPosPdgCode_fromV0PdgCode(),
       /*  */
@@ -49,7 +52,10 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fTree_Tracks(0),
       fTree_V0s(0),
       fTree_KaonPairs(0),
-      fTree_Sexaquarks(0),
+      fTree_Sexaquarks_ALPK(0),
+      fTree_Sexaquarks_ALK0(0),
+      fTree_Sexaquarks_ALKKX(0),
+      fTree_Sexaquarks_ALPKPP(0),
       /*  */
       tEvents_PV_TrueXv(0),
       tEvents_PV_TrueYv(0),
@@ -263,18 +269,24 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       getNegDauEsdIdx_fromMcIdx(),
       getPosDauEsdIdx_fromMcIdx(),
       esdIndicesOfAntiProtonTracks(),
+      esdIndicesOfProtonTracks(),
+      esdIndicesOfNegKaonTracks(),
       esdIndicesOfPosKaonTracks(),
       esdIndicesOfPiMinusTracks(),
       esdIndicesOfPiPlusTracks(),
       /*  */
+      getEsdIdxOfNegDau_fromLambdaIdx(),
+      getEsdIdxOfPosDau_fromLambdaIdx(),
       getEsdIdxOfNegDau_fromAntiLambdaIdx(),
       getEsdIdxOfPosDau_fromAntiLambdaIdx(),
       getEsdIdxOfNegDau_fromKaonZeroShortIdx(),
       getEsdIdxOfPosDau_fromKaonZeroShortIdx(),
       getEsdIdxOfNegDau_fromPionPairIdx(),
       getEsdIdxOfPosDau_fromPionPairIdx(),
+      esdLambdas(),
       esdAntiLambdas(),
       esdKaonsZeroShort(),
+      kfLambdas(),
       kfAntiLambdas(),
       kfKaonsZeroShort(),
       kfPionPairs(),
@@ -359,7 +371,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       /*  */
       fIsMC(0),
       fSourceOfV0s(),
-      fReactionChannel(0),
       fDoQA(0),
       fReadSignalLogs(0),
       /*  */
@@ -379,15 +390,19 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fList_QA_Hists(0),
       fList_Tracks_Hists(0),
       fList_V0s_Hists(0),
-      fList_Sexaquarks_Hists(0),
       fList_KaonPairs_Hists(0),
+      fList_Sexaquarks_ALPK_Hists(0),
+      fList_Sexaquarks_ALK0_Hists(0),
+      fList_Sexaquarks_ALKKX_Hists(0),
+      fList_Sexaquarks_ALPKPP_Hists(0),
       /*  */
       fAliEnPath(),
       fIsFirstEvent(0),
       /*  */
-      fProductsPDG(),
-      fFinalStateProductsPDG(),
-      fStruckNucleonPDG(0),
+      kMass_Neutron(0.),
+      kMass_Proton(0.),
+      kMass_Kaon(0.),
+      kMass_Pion(0.),
       getNegPdgCode_fromV0PdgCode(),
       getPosPdgCode_fromV0PdgCode(),
       /*  */
@@ -397,7 +412,10 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fTree_Tracks(0),
       fTree_V0s(0),
       fTree_KaonPairs(0),
-      fTree_Sexaquarks(0),
+      fTree_Sexaquarks_ALPK(0),
+      fTree_Sexaquarks_ALK0(0),
+      fTree_Sexaquarks_ALKKX(0),
+      fTree_Sexaquarks_ALPKPP(0),
       /*  */
       tEvents_PV_TrueXv(0),
       tEvents_PV_TrueYv(0),
@@ -611,18 +629,24 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       getNegDauEsdIdx_fromMcIdx(),
       getPosDauEsdIdx_fromMcIdx(),
       esdIndicesOfAntiProtonTracks(),
+      esdIndicesOfProtonTracks(),
+      esdIndicesOfNegKaonTracks(),
       esdIndicesOfPosKaonTracks(),
       esdIndicesOfPiMinusTracks(),
       esdIndicesOfPiPlusTracks(),
       /*  */
+      getEsdIdxOfNegDau_fromLambdaIdx(),
+      getEsdIdxOfPosDau_fromLambdaIdx(),
       getEsdIdxOfNegDau_fromAntiLambdaIdx(),
       getEsdIdxOfPosDau_fromAntiLambdaIdx(),
       getEsdIdxOfNegDau_fromKaonZeroShortIdx(),
       getEsdIdxOfPosDau_fromKaonZeroShortIdx(),
       getEsdIdxOfNegDau_fromPionPairIdx(),
       getEsdIdxOfPosDau_fromPionPairIdx(),
+      esdLambdas(),
       esdAntiLambdas(),
       esdKaonsZeroShort(),
+      kfLambdas(),
       kfAntiLambdas(),
       kfKaonsZeroShort(),
       kfPionPairs(),
@@ -700,19 +724,25 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       kMax_KaonPair_Chi2ndf(0.) {
     DefineInput(0, TChain::Class());
 
-    DefineOutput(1, TTree::Class());  // fTree_Events
-    DefineOutput(2, TTree::Class());  // fTree_Injected
-    DefineOutput(3, TTree::Class());  // fTree_MC
-    DefineOutput(4, TTree::Class());  // fTree_Tracks
-    DefineOutput(5, TTree::Class());  // fTree_V0s
-    DefineOutput(6, TTree::Class());  // fTree_Sexaquarks
-    DefineOutput(7, TTree::Class());  // fTree_KaonPairs
+    DefineOutput(1, TTree::Class());   // fTree_Events
+    DefineOutput(2, TTree::Class());   // fTree_Injected
+    DefineOutput(3, TTree::Class());   // fTree_MC
+    DefineOutput(4, TTree::Class());   // fTree_Tracks
+    DefineOutput(5, TTree::Class());   // fTree_V0s
+    DefineOutput(6, TTree::Class());   // fTree_KaonPairs
+    DefineOutput(7, TTree::Class());   // fTree_Sexaquarks_ALPK
+    DefineOutput(8, TTree::Class());   // fTree_Sexaquarks_ALK0
+    DefineOutput(9, TTree::Class());   // fTree_Sexaquarks_ALKKX
+    DefineOutput(10, TTree::Class());  // fTree_Sexaquarks_ALPKPP
 
-    DefineOutput(8, TList::Class());   // fList_QA_Hists
-    DefineOutput(9, TList::Class());   // fList_Tracks_Hists
-    DefineOutput(10, TList::Class());  // fList_V0s_Hists
-    DefineOutput(11, TList::Class());  // fList_Sexaquarks_Hists
-    DefineOutput(12, TList::Class());  // fList_KaonPairs_Hists
+    DefineOutput(11, TList::Class());  // fList_QA_Hists
+    DefineOutput(12, TList::Class());  // fList_Tracks_Hists
+    DefineOutput(13, TList::Class());  // fList_V0s_Hists
+    DefineOutput(14, TList::Class());  // fList_KaonPairs_Hists
+    DefineOutput(15, TList::Class());  // fList_Sexaquarks_ALPK_Hists
+    DefineOutput(16, TList::Class());  // fList_Sexaquarks_ALK0_Hists
+    DefineOutput(17, TList::Class());  // fList_Sexaquarks_ALKKX_Hists
+    DefineOutput(18, TList::Class());  // fList_Sexaquarks_ALPKPP_Hists
 }
 
 /*
@@ -725,14 +755,20 @@ AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
     if (fTree_MC) delete fTree_MC;
     if (fTree_Tracks) delete fTree_Tracks;
     if (fTree_V0s) delete fTree_V0s;
-    if (fTree_Sexaquarks) delete fTree_Sexaquarks;
     if (fTree_KaonPairs) delete fTree_KaonPairs;
+    if (fTree_Sexaquarks_ALPK) delete fTree_Sexaquarks_ALPK;
+    if (fTree_Sexaquarks_ALK0) delete fTree_Sexaquarks_ALK0;
+    if (fTree_Sexaquarks_ALKKX) delete fTree_Sexaquarks_ALKKX;
+    if (fTree_Sexaquarks_ALPKPP) delete fTree_Sexaquarks_ALPKPP;
 
     if (fList_QA_Hists) delete fList_QA_Hists;
     if (fList_Tracks_Hists) delete fList_Tracks_Hists;
     if (fList_V0s_Hists) delete fList_V0s_Hists;
-    if (fList_Sexaquarks_Hists) delete fList_Sexaquarks_Hists;
     if (fList_KaonPairs_Hists) delete fList_KaonPairs_Hists;
+    if (fList_Sexaquarks_ALPK_Hists) delete fList_Sexaquarks_ALPK_Hists;
+    if (fList_Sexaquarks_ALK0_Hists) delete fList_Sexaquarks_ALK0_Hists;
+    if (fList_Sexaquarks_ALKKX_Hists) delete fList_Sexaquarks_ALKKX_Hists;
+    if (fList_Sexaquarks_ALPKPP_Hists) delete fList_Sexaquarks_ALPKPP_Hists;
 }
 
 /*
@@ -742,7 +778,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     AliInfo("!! It begins !!");
 
-    /** Add mandatory routines **/
+    /* Add mandatory routines */
 
     AliAnalysisManager* man = AliAnalysisManager::GetAnalysisManager();
     if (!man) AliFatal("ERROR: AliAnalysisManager couldn't be found.");
@@ -752,9 +788,9 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
 
     fPIDResponse = inputHandler->GetPIDResponse();
 
-    /** Prepare output  **/
+    /* Prepare output  */
 
-    /* Trees */
+    /** Trees **/
 
     fTree_Events = new TTree("Events", "Events");
     PrepareEventsBranches();
@@ -781,42 +817,75 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     ClearV0sBranches();
     PostData(5, fTree_V0s);
 
-    fTree_Sexaquarks = new TTree("Sexaquarks", "Sexaquarks");
-    PrepareSexaquarksBranches();
-    ClearSexaquarksBranches();
-    PostData(6, fTree_Sexaquarks);
-
     fTree_KaonPairs = new TTree("KaonPairs", "KaonPairs");
     PrepareKaonPairsBranches();
     ClearKaonPairsBranches();
-    PostData(7, fTree_KaonPairs);
+    PostData(6, fTree_KaonPairs);
 
-    /* Histograms */
+    /** Sexaquark trees **/
+
+    fTree_Sexaquarks_ALPK = new TTree("Sexaquarks_ALPK", "Sexaquarks_ALPK");
+    PrepareCommonSexaquarkBranches(fTree_Sexaquarks_ALPK);
+
+    fTree_Sexaquarks_ALK0 = new TTree("Sexaquarks_ALK0", "Sexaquarks_ALK0");
+    PrepareCommonSexaquarkBranches(fTree_Sexaquarks_ALK0);
+
+    fTree_Sexaquarks_ALKKX = new TTree("Sexaquarks_ALKKX", "Sexaquarks_ALKKX");
+    PrepareCommonSexaquarkBranches(fTree_Sexaquarks_ALKKX);
+
+    fTree_Sexaquarks_ALPKPP = new TTree("Sexaquarks_ALPKPP", "Sexaquarks_ALPKPP");
+    PrepareCommonSexaquarkBranches(fTree_Sexaquarks_ALPKPP);
+
+    PrepareSexaquarksBranches();
+    ClearSexaquarksBranches();
+
+    PostData(7, fTree_Sexaquarks_ALPK);
+    PostData(8, fTree_Sexaquarks_ALK0);
+    PostData(9, fTree_Sexaquarks_ALKKX);
+    PostData(10, fTree_Sexaquarks_ALPKPP);
+
+    /** Histograms **/
 
     fList_QA_Hists = new TList();
     fList_QA_Hists->SetOwner(kTRUE);
     PrepareQAHistograms();
-    PostData(8, fList_QA_Hists);
+    PostData(11, fList_QA_Hists);
 
     fList_Tracks_Hists = new TList();
     fList_Tracks_Hists->SetOwner(kTRUE);
     PrepareTracksHistograms();
-    PostData(9, fList_Tracks_Hists);
+    PostData(12, fList_Tracks_Hists);
 
     fList_V0s_Hists = new TList();
     fList_V0s_Hists->SetOwner(kTRUE);
     PrepareV0Histograms();
-    PostData(10, fList_V0s_Hists);
-
-    fList_Sexaquarks_Hists = new TList();
-    fList_Sexaquarks_Hists->SetOwner(kTRUE);
-    PrepareSexaquarkHistograms();
-    PostData(11, fList_Sexaquarks_Hists);
+    PostData(13, fList_V0s_Hists);
 
     fList_KaonPairs_Hists = new TList();
     fList_KaonPairs_Hists->SetOwner(kTRUE);
     PrepareKaonPairHistograms();
-    PostData(12, fList_KaonPairs_Hists);
+    PostData(14, fList_KaonPairs_Hists);
+
+    /*** Sexaquark Hists ***/
+
+    fList_Sexaquarks_ALPK_Hists = new TList();
+    fList_Sexaquarks_ALPK_Hists->SetOwner(kTRUE);
+
+    fList_Sexaquarks_ALK0_Hists = new TList();
+    fList_Sexaquarks_ALK0_Hists->SetOwner(kTRUE);
+
+    fList_Sexaquarks_ALKKX_Hists = new TList();
+    fList_Sexaquarks_ALKKX_Hists->SetOwner(kTRUE);
+
+    fList_Sexaquarks_ALPKPP_Hists = new TList();
+    fList_Sexaquarks_ALPKPP_Hists->SetOwner(kTRUE);
+
+    PrepareSexaquarkHistograms();
+
+    PostData(15, fList_Sexaquarks_ALPK_Hists);
+    PostData(16, fList_Sexaquarks_ALK0_Hists);
+    PostData(17, fList_Sexaquarks_ALKKX_Hists);
+    PostData(18, fList_Sexaquarks_ALPKPP_Hists);
 
     AliInfo("!! It ends !!");
 }
@@ -940,69 +1009,72 @@ void AliAnalysisTaskSexaquark::PrepareV0sBranches() {
 }
 
 /*
- * Add branches to `fTree_Sexaquarks`.
+ *
+ */
+void AliAnalysisTaskSexaquark::PrepareCommonSexaquarkBranches(TTree* Tree_Sexaquarks) {
+    Tree_Sexaquarks->Branch("EventNumber", &fEventNumber);
+    Tree_Sexaquarks->Branch("DirNumber", &fDirNumber);
+    Tree_Sexaquarks->Branch("RunNumber", &fRunNumber);
+    Tree_Sexaquarks->Branch("Idx_AL", &tSexaquark_Idx_AL);
+    Tree_Sexaquarks->Branch("Idx_AL_Neg", &tSexaquark_Idx_AL_Neg);
+    Tree_Sexaquarks->Branch("Idx_AL_Pos", &tSexaquark_Idx_AL_Pos);
+    Tree_Sexaquarks->Branch("Px", &tSexaquark_Px);
+    Tree_Sexaquarks->Branch("Py", &tSexaquark_Py);
+    Tree_Sexaquarks->Branch("Pz", &tSexaquark_Pz);
+    Tree_Sexaquarks->Branch("E", &tSexaquark_E);
+    Tree_Sexaquarks->Branch("Xv", &tSexaquark_Xv);
+    Tree_Sexaquarks->Branch("Yv", &tSexaquark_Yv);
+    Tree_Sexaquarks->Branch("Zv", &tSexaquark_Zv);
+    Tree_Sexaquarks->Branch("DistFromPV", &tSexaquark_DistFromPV);
+    Tree_Sexaquarks->Branch("CPAwrtPV", &tSexaquark_CPAwrtPV);
+    Tree_Sexaquarks->Branch("DCAwrtPV", &tSexaquark_DCAwrtPV);
+    Tree_Sexaquarks->Branch("Chi2ndf", &tSexaquark_Chi2ndf);
+    Tree_Sexaquarks->Branch("IsHybrid", &tSexaquark_IsHybrid);
+    Tree_Sexaquarks->Branch("IsSignal", &tSexaquark_IsSignal);
+    Tree_Sexaquarks->Branch("ReactionID", &tSexaquark_ReactionID);
+    Tree_Sexaquarks->Branch("AL_DecayLength", &tSexaquark_AL_DecayLength);
+}
+
+/*
+ *
  */
 void AliAnalysisTaskSexaquark::PrepareSexaquarksBranches() {
-    fTree_Sexaquarks->Branch("EventNumber", &fEventNumber);
-    fTree_Sexaquarks->Branch("DirNumber", &fDirNumber);
-    fTree_Sexaquarks->Branch("RunNumber", &fRunNumber);
-    fTree_Sexaquarks->Branch("Idx_AL", &tSexaquark_Idx_AL);
-    fTree_Sexaquarks->Branch("Idx_AL_Neg", &tSexaquark_Idx_AL_Neg);
-    fTree_Sexaquarks->Branch("Idx_AL_Pos", &tSexaquark_Idx_AL_Pos);
-    fTree_Sexaquarks->Branch("Px", &tSexaquark_Px);
-    fTree_Sexaquarks->Branch("Py", &tSexaquark_Py);
-    fTree_Sexaquarks->Branch("Pz", &tSexaquark_Pz);
-    fTree_Sexaquarks->Branch("E", &tSexaquark_E);
-    fTree_Sexaquarks->Branch("Xv", &tSexaquark_Xv);
-    fTree_Sexaquarks->Branch("Yv", &tSexaquark_Yv);
-    fTree_Sexaquarks->Branch("Zv", &tSexaquark_Zv);
-    fTree_Sexaquarks->Branch("DistFromPV", &tSexaquark_DistFromPV);
-    fTree_Sexaquarks->Branch("CPAwrtPV", &tSexaquark_CPAwrtPV);
-    fTree_Sexaquarks->Branch("DCAwrtPV", &tSexaquark_DCAwrtPV);
-    fTree_Sexaquarks->Branch("Chi2ndf", &tSexaquark_Chi2ndf);
-    fTree_Sexaquarks->Branch("IsHybrid", &tSexaquark_IsHybrid);
-    fTree_Sexaquarks->Branch("IsSignal", &tSexaquark_IsSignal);
-    fTree_Sexaquarks->Branch("ReactionID", &tSexaquark_ReactionID);
-    fTree_Sexaquarks->Branch("AL_DecayLength", &tSexaquark_AL_DecayLength);
+    fTree_Sexaquarks_ALPK->Branch("Idx_PosKaon", &tSexaquarkD_Idx_PosKaon);
+    fTree_Sexaquarks_ALPK->Branch("DCAV0Ba", &tSexaquarkD_DCAV0Ba);
+    fTree_Sexaquarks_ALPK->Branch("DCAV0negBa", &tSexaquarkD_DCAV0negBa);
+    fTree_Sexaquarks_ALPK->Branch("DCAV0posBa", &tSexaquarkD_DCAV0posBa);
+    fTree_Sexaquarks_ALPK->Branch("DCAV0SV", &tSexaquarkD_DCAV0SV);
+    fTree_Sexaquarks_ALPK->Branch("DCAV0negSV", &tSexaquarkD_DCAV0negSV);
+    fTree_Sexaquarks_ALPK->Branch("DCAV0posSV", &tSexaquarkD_DCAV0posSV);
+    fTree_Sexaquarks_ALPK->Branch("DCABaSV", &tSexaquarkD_DCABaSV);
 
-    if (fReactionChannel == 'A') {
-        fTree_Sexaquarks->Branch("Idx_K0S", &tSexaquarkA_Idx_K0S);
-        fTree_Sexaquarks->Branch("Idx_K0S_Neg", &tSexaquarkA_Idx_K0S_Neg);
-        fTree_Sexaquarks->Branch("Idx_K0S_Pos", &tSexaquarkA_Idx_K0S_Pos);
-        fTree_Sexaquarks->Branch("DCAbtwV0s", &tSexaquarkA_DCAbtwV0s);
-        fTree_Sexaquarks->Branch("DCAV0aSV", &tSexaquarkA_DCAV0aSV);
-        fTree_Sexaquarks->Branch("DCAV0bSV", &tSexaquarkA_DCAV0bSV);
-        fTree_Sexaquarks->Branch("DCAV0anegSV", &tSexaquarkA_DCAV0anegSV);
-        fTree_Sexaquarks->Branch("DCAV0aposSV", &tSexaquarkA_DCAV0aposSV);
-        fTree_Sexaquarks->Branch("DCAV0bnegSV", &tSexaquarkA_DCAV0bnegSV);
-        fTree_Sexaquarks->Branch("DCAV0bposSV", &tSexaquarkA_DCAV0bposSV);
-        fTree_Sexaquarks->Branch("K0S_DecayLength", &tSexaquarkA_K0S_DecayLength);
-    } else if (fReactionChannel == 'D') {
-        fTree_Sexaquarks->Branch("Idx_PosKaon", &tSexaquarkD_Idx_PosKaon);
-        fTree_Sexaquarks->Branch("DCAV0Ba", &tSexaquarkD_DCAV0Ba);
-        fTree_Sexaquarks->Branch("DCAV0negBa", &tSexaquarkD_DCAV0negBa);
-        fTree_Sexaquarks->Branch("DCAV0posBa", &tSexaquarkD_DCAV0posBa);
-        fTree_Sexaquarks->Branch("DCAV0SV", &tSexaquarkD_DCAV0SV);
-        fTree_Sexaquarks->Branch("DCAV0negSV", &tSexaquarkD_DCAV0negSV);
-        fTree_Sexaquarks->Branch("DCAV0posSV", &tSexaquarkD_DCAV0posSV);
-        fTree_Sexaquarks->Branch("DCABaSV", &tSexaquarkD_DCABaSV);
-    } else if (fReactionChannel == 'E') {
-        fTree_Sexaquarks->Branch("Idx_PP", &tSexaquarkE_Idx_PP);
-        fTree_Sexaquarks->Branch("Idx_PP_Neg", &tSexaquarkE_Idx_PP_Neg);
-        fTree_Sexaquarks->Branch("Idx_PP_Pos", &tSexaquarkE_Idx_PP_Pos);
-        fTree_Sexaquarks->Branch("Idx_PosKaon", &tSexaquarkE_Idx_PosKaon);
-        fTree_Sexaquarks->Branch("DCAV0SV", &tSexaquarkE_DCAV0SV);
-        fTree_Sexaquarks->Branch("DCAV0negSV", &tSexaquarkE_DCAV0negSV);
-        fTree_Sexaquarks->Branch("DCAV0posSV", &tSexaquarkE_DCAV0posSV);
-        fTree_Sexaquarks->Branch("DCApkSV", &tSexaquarkE_DCApkSV);
-        fTree_Sexaquarks->Branch("DCApmSV", &tSexaquarkE_DCApmSV);
-        fTree_Sexaquarks->Branch("DCAppSV", &tSexaquarkE_DCAppSV);
-        fTree_Sexaquarks->Branch("DCApkV0", &tSexaquarkE_DCApkV0);
-        fTree_Sexaquarks->Branch("DCApmV0", &tSexaquarkE_DCApmV0);
-        fTree_Sexaquarks->Branch("DCAppV0", &tSexaquarkE_DCAppV0);
-        fTree_Sexaquarks->Branch("DCApmPK", &tSexaquarkE_DCApmPK);
-        fTree_Sexaquarks->Branch("DCAppPK", &tSexaquarkE_DCAppPK);
-    }
+    fTree_Sexaquarks_ALK0->Branch("Idx_K0S", &tSexaquarkA_Idx_K0S);
+    fTree_Sexaquarks_ALK0->Branch("Idx_K0S_Neg", &tSexaquarkA_Idx_K0S_Neg);
+    fTree_Sexaquarks_ALK0->Branch("Idx_K0S_Pos", &tSexaquarkA_Idx_K0S_Pos);
+    fTree_Sexaquarks_ALK0->Branch("DCAbtwV0s", &tSexaquarkA_DCAbtwV0s);
+    fTree_Sexaquarks_ALK0->Branch("DCAV0aSV", &tSexaquarkA_DCAV0aSV);
+    fTree_Sexaquarks_ALK0->Branch("DCAV0bSV", &tSexaquarkA_DCAV0bSV);
+    fTree_Sexaquarks_ALK0->Branch("DCAV0anegSV", &tSexaquarkA_DCAV0anegSV);
+    fTree_Sexaquarks_ALK0->Branch("DCAV0aposSV", &tSexaquarkA_DCAV0aposSV);
+    fTree_Sexaquarks_ALK0->Branch("DCAV0bnegSV", &tSexaquarkA_DCAV0bnegSV);
+    fTree_Sexaquarks_ALK0->Branch("DCAV0bposSV", &tSexaquarkA_DCAV0bposSV);
+    fTree_Sexaquarks_ALK0->Branch("K0S_DecayLength", &tSexaquarkA_K0S_DecayLength);
+
+    fTree_Sexaquarks_ALPKPP->Branch("Idx_PP", &tSexaquarkE_Idx_PP);
+    fTree_Sexaquarks_ALPKPP->Branch("Idx_PP_Neg", &tSexaquarkE_Idx_PP_Neg);
+    fTree_Sexaquarks_ALPKPP->Branch("Idx_PP_Pos", &tSexaquarkE_Idx_PP_Pos);
+    fTree_Sexaquarks_ALPKPP->Branch("Idx_PosKaon", &tSexaquarkE_Idx_PosKaon);
+    fTree_Sexaquarks_ALPKPP->Branch("DCAV0SV", &tSexaquarkE_DCAV0SV);
+    fTree_Sexaquarks_ALPKPP->Branch("DCAV0negSV", &tSexaquarkE_DCAV0negSV);
+    fTree_Sexaquarks_ALPKPP->Branch("DCAV0posSV", &tSexaquarkE_DCAV0posSV);
+    fTree_Sexaquarks_ALPKPP->Branch("DCApkSV", &tSexaquarkE_DCApkSV);
+    fTree_Sexaquarks_ALPKPP->Branch("DCApmSV", &tSexaquarkE_DCApmSV);
+    fTree_Sexaquarks_ALPKPP->Branch("DCAppSV", &tSexaquarkE_DCAppSV);
+    fTree_Sexaquarks_ALPKPP->Branch("DCApkV0", &tSexaquarkE_DCApkV0);
+    fTree_Sexaquarks_ALPKPP->Branch("DCApmV0", &tSexaquarkE_DCApmV0);
+    fTree_Sexaquarks_ALPKPP->Branch("DCAppV0", &tSexaquarkE_DCAppV0);
+    fTree_Sexaquarks_ALPKPP->Branch("DCApmPK", &tSexaquarkE_DCApmPK);
+    fTree_Sexaquarks_ALPKPP->Branch("DCAppPK", &tSexaquarkE_DCAppPK);
 }
 
 /*
@@ -1163,44 +1235,42 @@ void AliAnalysisTaskSexaquark::ClearSexaquarksBranches() {
     tSexaquark_ReactionID = 0;
     tSexaquark_AL_DecayLength = 0.;
 
-    if (fReactionChannel == 'A') {
-        tSexaquarkA_Idx_K0S = 0;
-        tSexaquarkA_Idx_K0S_Neg = 0;
-        tSexaquarkA_Idx_K0S_Pos = 0;
-        tSexaquarkA_DCAbtwV0s = 0.;
-        tSexaquarkA_DCAV0aSV = 0.;
-        tSexaquarkA_DCAV0bSV = 0.;
-        tSexaquarkA_DCAV0anegSV = 0.;
-        tSexaquarkA_DCAV0aposSV = 0.;
-        tSexaquarkA_DCAV0bnegSV = 0.;
-        tSexaquarkA_DCAV0bposSV = 0.;
-        tSexaquarkA_K0S_DecayLength = 0.;
-    } else if (fReactionChannel == 'D') {
-        tSexaquarkD_Idx_PosKaon = 0;
-        tSexaquarkD_DCAV0Ba = 0.;
-        tSexaquarkD_DCAV0negBa = 0.;
-        tSexaquarkD_DCAV0posBa = 0.;
-        tSexaquarkD_DCAV0SV = 0.;
-        tSexaquarkD_DCAV0negSV = 0.;
-        tSexaquarkD_DCAV0posSV = 0.;
-        tSexaquarkD_DCABaSV = 0.;
-    } else if (fReactionChannel == 'E') {
-        tSexaquarkE_Idx_PP = 0;
-        tSexaquarkE_Idx_PP_Neg = 0;
-        tSexaquarkE_Idx_PP_Pos = 0;
-        tSexaquarkE_Idx_PosKaon = 0;
-        tSexaquarkE_DCAV0SV = 0.;
-        tSexaquarkE_DCAV0negSV = 0.;
-        tSexaquarkE_DCAV0posSV = 0.;
-        tSexaquarkE_DCApkSV = 0.;
-        tSexaquarkE_DCApmSV = 0.;
-        tSexaquarkE_DCAppSV = 0.;
-        tSexaquarkE_DCApkV0 = 0.;
-        tSexaquarkE_DCApmV0 = 0.;
-        tSexaquarkE_DCAppV0 = 0.;
-        tSexaquarkE_DCApmPK = 0.;
-        tSexaquarkE_DCAppPK = 0.;
-    }
+    tSexaquarkA_Idx_K0S = 0;
+    tSexaquarkA_Idx_K0S_Neg = 0;
+    tSexaquarkA_Idx_K0S_Pos = 0;
+    tSexaquarkA_DCAbtwV0s = 0.;
+    tSexaquarkA_DCAV0aSV = 0.;
+    tSexaquarkA_DCAV0bSV = 0.;
+    tSexaquarkA_DCAV0anegSV = 0.;
+    tSexaquarkA_DCAV0aposSV = 0.;
+    tSexaquarkA_DCAV0bnegSV = 0.;
+    tSexaquarkA_DCAV0bposSV = 0.;
+    tSexaquarkA_K0S_DecayLength = 0.;
+
+    tSexaquarkD_Idx_PosKaon = 0;
+    tSexaquarkD_DCAV0Ba = 0.;
+    tSexaquarkD_DCAV0negBa = 0.;
+    tSexaquarkD_DCAV0posBa = 0.;
+    tSexaquarkD_DCAV0SV = 0.;
+    tSexaquarkD_DCAV0negSV = 0.;
+    tSexaquarkD_DCAV0posSV = 0.;
+    tSexaquarkD_DCABaSV = 0.;
+
+    tSexaquarkE_Idx_PP = 0;
+    tSexaquarkE_Idx_PP_Neg = 0;
+    tSexaquarkE_Idx_PP_Pos = 0;
+    tSexaquarkE_Idx_PosKaon = 0;
+    tSexaquarkE_DCAV0SV = 0.;
+    tSexaquarkE_DCAV0negSV = 0.;
+    tSexaquarkE_DCAV0posSV = 0.;
+    tSexaquarkE_DCApkSV = 0.;
+    tSexaquarkE_DCApmSV = 0.;
+    tSexaquarkE_DCAppSV = 0.;
+    tSexaquarkE_DCApkV0 = 0.;
+    tSexaquarkE_DCApmV0 = 0.;
+    tSexaquarkE_DCAppV0 = 0.;
+    tSexaquarkE_DCApmPK = 0.;
+    tSexaquarkE_DCAppPK = 0.;
 }
 
 /*
@@ -1410,8 +1480,6 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
     // clang-format on
 
     for (Int_t sp = 0; sp < (Int_t)V0_species.size(); sp++) {
-        if (fReactionChannel != 'A' && V0_species[sp] == 310) continue;
-        if (fReactionChannel != 'E' && V0_species[sp] == 422) continue;
         fHist_V0s_Bookkeep[V0_species[sp]] = new TH1F(Form("%s_Bookkeep", V0_name[sp].Data()), "", 200, 0., 200.);
         fList_V0s_Hists->Add(fHist_V0s_Bookkeep[V0_species[sp]]);
     }
@@ -1422,8 +1490,6 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
                 for (Int_t prop_idx = 0; prop_idx < (Int_t)V0_props.size(); prop_idx++) {
 
                     if (!fIsMC && (stage == "MCGen" || stage == "Findable" || set == "True" || set == "Secondary" || set == "Signal")) continue;
-                    if (fReactionChannel != 'A' && V0_species[sp] == 310) continue;
-                    if (fReactionChannel != 'E' && V0_species[sp] == 422) continue;
 
                     if (fSourceOfV0s == "kalman" && (V0_props[prop_idx] == "ImprvDCAbtwDau" || V0_props[prop_idx] == "Chi2")) continue;
                     if ((fSourceOfV0s == "offline" || fSourceOfV0s == "on-the-fly" || fSourceOfV0s == "custom") && V0_props[prop_idx] == "Chi2ndf") {
@@ -1475,6 +1541,10 @@ void AliAnalysisTaskSexaquark::PrepareV0Histograms() {
  */
 void AliAnalysisTaskSexaquark::PrepareSexaquarkHistograms() {
 
+    std::vector<TString> ReactionChannels = {"ALPK", "ALK0", "ALKKX", "ALPKPP"};
+    std::vector<TList*> Lists_Sexaquarks_Hists = {fList_Sexaquarks_ALPK_Hists, fList_Sexaquarks_ALK0_Hists, fList_Sexaquarks_ALKKX_Hists,
+                                                  fList_Sexaquarks_ALPKPP_Hists};
+
     TString SQ_stages[3] = {"MCGen", "Findable", "Found"};
     TString SQ_sets[2] = {"All", "Signal"};
 
@@ -1483,85 +1553,106 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarkHistograms() {
     std::vector<Double_t> SQ_min;
     std::vector<Double_t> SQ_max;
 
-    // clang-format off
-    if (fReactionChannel == 'A') {
-        SQ_props = {"Mass2",    "Pt",       "Px",          "Py",          "Pz",          "Phi",         "Radius",
-                    "Zv",       "Eta",      "Rapidity",    "DistFromPV",  "CPAwrtPV",    "DCAwrtPV",    "DCAbtwV0s",
-                    "DCAV0aSV", "DCAV0bSV", "DCAV0anegSV", "DCAV0aposSV", "DCAV0bnegSV", "DCAV0bposSV", "Chi2ndf"};
-        SQ_nbins = {100, 100, 100, 100, 100, 100, 100,
-                    100, 100, 100, 100, 100, 100, 100,
-                    100, 100, 100, 100, 100, 100, 100};
-        SQ_min = {0.,   -10., -10., -10., -50., -2 * TMath::Pi(), 0.,
-                  -50., -2.,  -5.,  0.,   0.,   0.,               0.,
-                  0.,   0.,   0.,   0.,   0.,   0.,               0.};
-        SQ_max = {20., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
-                  50., 2.,  5.,  500., 1.,  10.,             2.,
-                  2.,  2.,  10., 10.,  10., 10.,             1.};
-    } else if (fReactionChannel == 'D') {
-        SQ_props = {"Mass2",      "Pt",         "Px",       "Py",          "Pz",         "Phi",        "Radius",
-                    "Zv",         "Eta",        "Rapidity", "DistFromPV",  "CPAwrtPV",   "DCAwrtPV",   "DCAV0Ba",
-                    "DCAV0negBa", "DCAV0posBa", "DCAV0SV",  "DCABaSV",     "DCAV0negSV", "DCAV0posSV", "Chi2ndf"};
-        SQ_nbins = {100, 100, 100, 100, 100, 100, 100,
-                    100, 100, 100, 100, 100, 100, 100,
-                    100, 100, 100, 100, 100, 100, 100};
-        SQ_min = {0.,   -10., -10., -10., -50., 0., 0.,
-                  -50., -2.,  -5.,  0.,   0.,   0., 0.,
-                  0.,   0.,   0.,   0.,   0.,   0., 0.};
-        SQ_max = {20., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
-                  50., 2.,  5.,  500., 1.,  10.,             10.,
-                  10., 10., 10., 10.,  10., 10.,             1.};
-    } else if (fReactionChannel == 'E') {
-        SQ_props = {"Mass2",   "Pt",       "Px",         "Py",       "Pz",       "Phi",     "Radius",     "Zv",
-                    "Eta",     "Rapidity", "DistFromPV", "CPAwrtPV", "DCAwrtPV", "DCAV0SV", "DCAV0negSV", "DCAV0posSV",
-                    "DCApkSV", "DCApmSV",  "DCAppSV",    "DCApkV0",  "DCApmV0",  "DCAppV0", "DCApmPK",    "DCAppPK",
-                    "Chi2ndf"};
-        SQ_nbins = {100, 100, 100, 100, 100, 100, 100, 100,
-                    100, 100, 100, 100, 100, 100, 100, 100,
-                    100, 100, 100, 100, 100, 100, 100, 100,
-                    100};
-        SQ_min = {0.,  -10., -10., -10., -50., 0., 0., -50.,
-                  -2., -5.,  0.,   0.,   0.,   0., 0., 0.,
-                  0.,  0.,   0.,   0.,   0.,   0., 0., 0.,
-                  0.};
-        SQ_max = {20., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
-                  2.,  5.,  500., 1.,  10., 10.,             10.,  10.,
-                  10., 10., 10.,  10., 10., 10.,             10.,  1.,
-                  30.};
-    } else if (fReactionChannel == 'H') {
-        SQ_props = {"Mass2", "Pt",       "Px",         "Py",       "Pz",        "Phi", "Radius", "Zv",
-                    "Eta",   "Rapidity", "DistFromPV", "CPAwrtPV", "DCAwrtPV"};
-        SQ_nbins = {100, 100, 100, 100, 100, 100, 100, 100,
-                    100, 100, 100, 100, 100};
-        SQ_min = {0.,  -10., -10., -10., -50., 0., 0., -50.,
-                  -2., -5.,  0.,   0.,   0.};
-        SQ_max = {20., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
-                  2.,  5.,  500., 1.,  10.};
-    }
-    // clang-format on
+    TString current_channel;
+    TList* current_list;
 
-    fHist_AntiSexaquarks_Bookkeep = new TH1D("AntiSexaquarks_Bookkeep", "", 100, 0., 100.);
-    fList_Sexaquarks_Hists->Add(fHist_AntiSexaquarks_Bookkeep);
+    for (Int_t rc = 0; rc < (Int_t)ReactionChannels.size(); rc++) {
 
-    for (TString& stage : SQ_stages) {
-        for (TString& set : SQ_sets) {
-            for (Int_t prop_idx = 0; prop_idx < (Int_t)SQ_props.size(); prop_idx++) {
-                if (!fIsMC && (stage.Contains("MCGen") || stage == "Findable" || set == "Signal")) continue;
-                if (fReactionChannel == 'H' && (stage == "Findable" || stage == "Found")) continue;
+        current_channel = ReactionChannels[rc];
+        current_list = Lists_Sexaquarks_Hists[rc];
 
-                if (set == "Signal" && !stage.Contains("Found")) continue;
+        fHist_AntiSexaquarks_Bookkeep[current_channel] = new TH1D(Form("AntiSexaquarks_%s_Bookkeep", current_channel.Data()), "", 100, 0., 100.);
+        current_list->Add(fHist_AntiSexaquarks_Bookkeep[current_channel]);
 
-                if (fSourceOfV0s != "kalman" && SQ_props[prop_idx] == "Chi2ndf") continue;
+        if (current_channel == "ALPK") {
+            // clang-format off
+            SQ_props = {"Mass2",      "Pt",         "Px",       "Py",          "Pz",         "Phi",        "Radius",
+                        "Zv",         "Eta",        "Rapidity", "DistFromPV",  "CPAwrtPV",   "DCAwrtPV",   "DCAV0Ba",
+                        "DCAV0negBa", "DCAV0posBa", "DCAV0SV",  "DCABaSV",     "DCAV0negSV", "DCAV0posSV", "Chi2ndf"};
+            SQ_nbins = {100, 100, 100, 100, 100, 100, 100,
+                        100, 100, 100, 100, 100, 100, 100,
+                        100, 100, 100, 100, 100, 100, 100};
+            SQ_min = {0.,   -10., -10., -10., -50., 0., 0.,
+                      -50., -2.,  -5.,  0.,   0.,   0., 0.,
+                      0.,   0.,   0.,   0.,   0.,   0., 0.};
+            SQ_max = {20., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
+                      50., 2.,  5.,  500., 1.,  10.,             10.,
+                      10., 10., 10., 10.,  10., 10.,             1.};
+            // clang-format on
+        }
 
-                if ((stage.Contains("MCGen") || stage == "Findable") &&
-                    ((SQ_props[prop_idx].Contains("DCA") && SQ_props[prop_idx] != "DCAwrtPV") || SQ_props[prop_idx].Contains("Chi2"))) {
-                    continue;
+        if (current_channel == "ALK0") {
+            // clang-format off
+            SQ_props = {"Mass2",    "Pt",       "Px",          "Py",          "Pz",          "Phi",         "Radius",
+                        "Zv",       "Eta",      "Rapidity",    "DistFromPV",  "CPAwrtPV",    "DCAwrtPV",    "DCAbtwV0s",
+                        "DCAV0aSV", "DCAV0bSV", "DCAV0anegSV", "DCAV0aposSV", "DCAV0bnegSV", "DCAV0bposSV", "Chi2ndf"};
+            SQ_nbins = {100, 100, 100, 100, 100, 100, 100,
+                        100, 100, 100, 100, 100, 100, 100,
+                        100, 100, 100, 100, 100, 100, 100};
+            SQ_min = {0.,   -10., -10., -10., -50., -2 * TMath::Pi(), 0.,
+                      -50., -2.,  -5.,  0.,   0.,   0.,               0.,
+                      0.,   0.,   0.,   0.,   0.,   0.,               0.};
+            SQ_max = {20., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
+                      50., 2.,  5.,  500., 1.,  10.,             2.,
+                      2.,  2.,  10., 10.,  10., 10.,             1.};
+            // clang-format on
+        }
+
+        if (current_channel == "ALKKX") {
+            // clang-format off
+            SQ_props = {"Mass2", "Pt",       "Px",         "Py",       "Pz",        "Phi", "Radius", "Zv",
+                        "Eta",   "Rapidity", "DistFromPV", "CPAwrtPV", "DCAwrtPV"};
+            SQ_nbins = {100, 100, 100, 100, 100, 100, 100, 100,
+                        100, 100, 100, 100, 100};
+            SQ_min = {0.,  -10., -10., -10., -50., 0., 0., -50.,
+                    -2., -5.,  0.,   0.,   0.};
+            SQ_max = {20., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
+                    2.,  5.,  500., 1.,  10.};
+            // clang-format on
+        }
+
+        if (current_channel == "ALPKPP") {
+            // clang-format off
+            SQ_props = {"Mass2",   "Pt",       "Px",         "Py",       "Pz",       "Phi",     "Radius",     "Zv",
+                        "Eta",     "Rapidity", "DistFromPV", "CPAwrtPV", "DCAwrtPV", "DCAV0SV", "DCAV0negSV", "DCAV0posSV",
+                        "DCApkSV", "DCApmSV",  "DCAppSV",    "DCApkV0",  "DCApmV0",  "DCAppV0", "DCApmPK",    "DCAppPK",
+                        "Chi2ndf"};
+            SQ_nbins = {100, 100, 100, 100, 100, 100, 100, 100,
+                        100, 100, 100, 100, 100, 100, 100, 100,
+                        100, 100, 100, 100, 100, 100, 100, 100,
+                        100};
+            SQ_min = {0.,  -10., -10., -10., -50., 0., 0., -50.,
+                    -2., -5.,  0.,   0.,   0.,   0., 0., 0.,
+                    0.,  0.,   0.,   0.,   0.,   0., 0., 0.,
+                    0.};
+            SQ_max = {20., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
+                    2.,  5.,  500., 1.,  10., 10.,             10.,  10.,
+                    10., 10., 10.,  10., 10., 10.,             10.,  1.,
+                    30.};
+            // clang-format on
+        }
+
+        for (TString& stage : SQ_stages) {
+            for (TString& set : SQ_sets) {
+                for (Int_t prop_idx = 0; prop_idx < (Int_t)SQ_props.size(); prop_idx++) {
+                    if (!fIsMC && (stage.Contains("MCGen") || stage == "Findable" || set == "Signal")) continue;
+
+                    if (set == "Signal" && !stage.Contains("Found")) continue;
+
+                    if (fSourceOfV0s != "kalman" && SQ_props[prop_idx] == "Chi2ndf") continue;
+
+                    if ((stage.Contains("MCGen") || stage == "Findable") &&
+                        ((SQ_props[prop_idx].Contains("DCA") && SQ_props[prop_idx] != "DCAwrtPV") || SQ_props[prop_idx].Contains("Chi2"))) {
+                        continue;
+                    }
+
+                    TString histName = Form("%s_%s_AntiSexaquark_%s", stage.Data(), set.Data(), SQ_props[prop_idx].Data());
+
+                    std::tuple<TString, TString, TString, TString> histKey = std::make_tuple(current_channel, stage, set, SQ_props[prop_idx]);
+                    fHist_AntiSexaquarks[histKey] = new TH1D(histName, "", SQ_nbins[prop_idx], SQ_min[prop_idx], SQ_max[prop_idx]);
+
+                    current_list->Add(fHist_AntiSexaquarks[histKey]);
                 }
-
-                TString histName = Form("%s_%s_AntiSexaquark_%s", stage.Data(), set.Data(), SQ_props[prop_idx].Data());
-                std::tuple<TString, TString, TString> histKey = std::make_tuple(stage, set, SQ_props[prop_idx]);
-                fHist_AntiSexaquarks[histKey] = new TH1D(histName, "", SQ_nbins[prop_idx], SQ_min[prop_idx], SQ_max[prop_idx]);
-
-                fList_Sexaquarks_Hists->Add(fHist_AntiSexaquarks[histKey]);
             }
         }
     }
@@ -1644,7 +1735,8 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
         }
 
         ProcessMCGen();
-        ProcessSignalInteractions();
+        ProcessSignalInteractions(2112);
+        ProcessSignalInteractions(2212);
     }
 
     /* Load Reconstructed Event, PV and Magnetic Field */
@@ -1724,13 +1816,13 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     /* Findables */
 
     if (fIsMC) {
-        if (fReactionChannel != 'H') {
-            ProcessFindableV0s();
-            if (fReactionChannel == 'E') ProcessFindablePionPairs();
-            ProcessFindableSexaquarks();
-        } else {
-            ProcessFindableKaonPairs();
-        }
+        ProcessFindableV0s();
+        ProcessFindablePionPairs();
+        ProcessFindableKaonPairs();
+        ProcessFindableSexaquarks("ALPK");
+        ProcessFindableSexaquarks("ALK0");
+        ProcessFindableSexaquarks("ALKKX");
+        ProcessFindableSexaquarks("ALPKPP");
     }
 
     /* V0s */
@@ -1740,39 +1832,31 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t*) {
     }
 
     if (fSourceOfV0s == "custom") {
-        if (fReactionChannel == 'A') {  // "AntiSexaquark,N->AntiLambda,K0S"
-            CustomV0Finder(-3122);
-            CustomV0Finder(310);
-        }
+        CustomV0Finder(-3122);
+        CustomV0Finder(3122);
+        CustomV0Finder(310);
     }
 
     if (fSourceOfV0s == "kalman") {
-        if (fReactionChannel == 'A') {  // "AntiSexaquark,N->AntiLambda,K0S"
-            KalmanV0Finder(-3122, -2212, 211);
-            KalmanV0Finder(310, -211, 211);
-        } else if (fReactionChannel == 'D') {  // "AntiSexaquark,P->AntiLambda,K+"
-            KalmanV0Finder(-3122, -2212, 211);
-        } else if (fReactionChannel == 'E') {  // "AntiSexaquark,P->AntiLambda,K+,pi-,pi+"
-            KalmanV0Finder(-3122, -2212, 211);
-            KalmanV0Finder(422, -211, 211);
-        } else if (fReactionChannel == 'H') {  // "AntiSexaquark,P->AntiProton,K+,K+,pi0"
-            KalmanKaonPairFinder();
-        }
+        KalmanV0Finder(-3122, -2212, 211);
+        KalmanV0Finder(3122, 2212, -211);
+        KalmanV0Finder(310, -211, 211);
+        KalmanV0Finder(422, -211, 211);
+        KalmanKaonPairFinder();
     }
 
     /* Sexaquarks */
 
-    // clang-format off
     if (fSourceOfV0s != "kalman") {
-        if (fReactionChannel == 'A') GeoSexaquarkFinder_ChannelA();
-        else if (fReactionChannel == 'D') GeoSexaquarkFinder_ChannelD();
-        else if (fReactionChannel == 'E') GeoSexaquarkFinder_ChannelE();
+        GeoSexaquarkFinder_ALPK();
+        GeoSexaquarkFinder_ALK0();
+        GeoSexaquarkFinder_ALPKPP();
     } else {
-        if (fReactionChannel == 'A') KalmanSexaquarkFinder_ChannelA();
-        else if (fReactionChannel == 'D') KalmanSexaquarkFinder_ChannelD();
-        else if (fReactionChannel == 'E') KalmanSexaquarkFinder_ChannelE();
+        KalmanSexaquarkFinder_ALPK();
+        KalmanSexaquarkFinder_ALK0();
+        // KalmanSexaquarkFinder_ALKKX(); // PENDING
+        KalmanSexaquarkFinder_ALPKPP();
     }
-    // clang-format on
 
     EndOfEvent();
 }
@@ -1790,14 +1874,20 @@ void AliAnalysisTaskSexaquark::EndOfEvent() {
     PostData(3, fTree_MC);
     PostData(4, fTree_Tracks);
     PostData(5, fTree_V0s);
-    PostData(6, fTree_Sexaquarks);
-    PostData(7, fTree_KaonPairs);
+    PostData(6, fTree_KaonPairs);
+    PostData(7, fTree_Sexaquarks_ALPK);
+    PostData(8, fTree_Sexaquarks_ALK0);
+    PostData(9, fTree_Sexaquarks_ALKKX);
+    PostData(10, fTree_Sexaquarks_ALPKPP);
 
-    PostData(8, fList_QA_Hists);
-    PostData(9, fList_Tracks_Hists);
-    PostData(10, fList_V0s_Hists);
-    PostData(11, fList_Sexaquarks_Hists);
-    PostData(12, fList_KaonPairs_Hists);
+    PostData(11, fList_QA_Hists);
+    PostData(12, fList_Tracks_Hists);
+    PostData(13, fList_V0s_Hists);
+    PostData(14, fList_KaonPairs_Hists);
+    PostData(15, fList_Sexaquarks_ALPK_Hists);
+    PostData(16, fList_Sexaquarks_ALK0_Hists);
+    PostData(17, fList_Sexaquarks_ALKKX_Hists);
+    PostData(18, fList_Sexaquarks_ALPKPP_Hists);
 }
 
 /*
@@ -1832,69 +1922,37 @@ void AliAnalysisTaskSexaquark::Initialize() {
     std::array<TString, 4> validSourcesOfV0s = {"offline", "on-the-fly", "custom", "kalman"};
 
     if (std::find(validSourcesOfV0s.begin(), validSourcesOfV0s.end(), fSourceOfV0s) == validSourcesOfV0s.end()) {
-        AliWarning("Source of V0s must be \"offline\", \"on-the-fly\", \"custom\" or \"kalman\".");
-        AliWarning("=> Setting it to \"kalman\".");
-        fSourceOfV0s = "kalman";
-    }
-
-    if (fReactionChannel == 'H' && (fSourceOfV0s == "on-the-fly" || fSourceOfV0s == "offline")) {
-        AliWarning("Source of V0s must be \"custom\" or \"kalman\" for the reaction channel H.");
-        AliWarning("=> Setting it to \"kalman\".");
-        fSourceOfV0s = "kalman";
-    }
-
-    std::array<Char_t, 4> validReactionIDs = {'A', 'D', 'E', 'H'};
-    if (std::find(validReactionIDs.begin(), validReactionIDs.end(), fReactionChannel) == validReactionIDs.end()) {
-        AliWarning("Reaction ID must be set.");
-        AliWarning("=> Setting it to 'A'.");
-        fReactionChannel = 'A';
+        AliError("Source of V0s must be \"offline\", \"on-the-fly\", \"custom\" or \"kalman\".");
     }
 
     /* Define cuts */
 
     DefineTracksCuts("standard");
-    // clang-format off
-    if (fReactionChannel != 'H') DefineV0Cuts("standard");
-    else DefineKaonPairCuts("standard");
-    // clang-format on
+    DefineV0Cuts("standard");
+    DefineKaonPairCuts("standard");
     DefineSexaquarkCuts("standard");
+
+    /*  */
+
+    kMass_Neutron = fPDG.GetParticle(2112)->Mass();
+    kMass_Proton = fPDG.GetParticle(2212)->Mass();
+    kMass_Pion = fPDG.GetParticle(211)->Mass();
+    kMass_Kaon = fPDG.GetParticle(321)->Mass();
+
+    /* Initialize PDG */
 
     getNegPdgCode_fromV0PdgCode[-3122] = -2212;
     getPosPdgCode_fromV0PdgCode[-3122] = 211;
+    getNegPdgCode_fromV0PdgCode[3122] = -211;
+    getPosPdgCode_fromV0PdgCode[3122] = 2212;
     getNegPdgCode_fromV0PdgCode[310] = -211;
     getPosPdgCode_fromV0PdgCode[310] = 211;
-
-    /* Assign the rest of properties related to the respective Reaction Channel */
-
-    TString Detailed_ReactionChannel;
-    if (fReactionChannel == 'A') {
-        Detailed_ReactionChannel = "AntiSexaquark,N->AntiLambda,K0S";
-        fProductsPDG = {-3122, 310};
-        fFinalStateProductsPDG = {-2212, 211, -211, 211};
-        fStruckNucleonPDG = 2112;
-    } else if (fReactionChannel == 'D') {
-        Detailed_ReactionChannel = "AntiSexaquark,P->AntiLambda,K+";
-        fProductsPDG = {-3122, 321};
-        fFinalStateProductsPDG = {-2212, 211, 321};
-        fStruckNucleonPDG = 2212;
-    } else if (fReactionChannel == 'E') {
-        Detailed_ReactionChannel = "AntiSexaquark,P->AntiLambda,K+,pi-,pi+";
-        fProductsPDG = {-3122, 321, -211, 211};
-        fFinalStateProductsPDG = {-2212, 211, 321, -211, 211};
-        fStruckNucleonPDG = 2212;
-    } else if (fReactionChannel == 'H') {
-        Detailed_ReactionChannel = "AntiSexaquark,P->AntiProton,K+,K+,pi0";
-        fProductsPDG = {-2212, 321, 321, 111};
-        fFinalStateProductsPDG = {321, 321};  // focused only on K+K+
-        fStruckNucleonPDG = 2212;
-    }
 
     AliInfo("Initializing...");
     AliInfo("Settings:");
     AliInfo("========");
     AliInfoF(">> IsMC             = %i", (Int_t)fIsMC);
     AliInfoF(">> Source of V0s    = \"%s\"", fSourceOfV0s.Data());
-    AliInfoF(">> Reaction Channel = \'%c\' (\"%s\")", fReactionChannel, Detailed_ReactionChannel.Data());
     AliInfoF(">> Do QA            = %i", (Int_t)fDoQA);
     AliInfoF(">> Read Signal Logs = %i", (Int_t)fReadSignalLogs);
 }
@@ -2008,9 +2066,11 @@ void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
     if (fSourceOfV0s == "offline") {
         // none so far
     }
+
     if (fSourceOfV0s == "on-the-fly") {
         // none so far
     }
+
     if (fSourceOfV0s == "custom") {
         kMin_Sexa_Radius = 40;
         kMin_Sexa_CPAwrtPV = 0.99;
@@ -2018,43 +2078,35 @@ void AliAnalysisTaskSexaquark::DefineSexaquarkCuts(TString cuts_option) {
         kMax_Sexa_DCAv0aSV = 0.1;
         kMax_Sexa_DCAv0bSV = 0.1;
     }
+
     if (fSourceOfV0s == "kalman") {
-        if (fReactionChannel == 'A') {
-            kMin_Sexa_Radius = 40;
-            kMin_Sexa_CPAwrtPV = 0.99;
-            kMax_Sexa_CPAwrtPV = 1.;
-            kMax_Sexa_DCAbtwV0s = 2.;
-            kMax_Sexa_DCAv0aSV = 2.;
-            kMax_Sexa_DCAv0bSV = 2.;
-            kMax_Sexa_DCAv0anegSV = 10.;
-            kMax_Sexa_DCAv0aposSV = 10.;
-            kMax_Sexa_DCAv0bnegSV = 10.;
-            kMax_Sexa_DCAv0bposSV = 10.;
-            // kMax_Sexa_Chi2ndf = 0.5;
-        } else if (fReactionChannel == 'D') {
-            kMin_Sexa_Radius = 30;
-            kMax_Sexa_Rapidity = 0.8;
-            kMin_Sexa_CPAwrtPV = 0.99;
-            kMax_Sexa_CPAwrtPV = 1.;
-            kMax_Sexa_DCAv0ba = 0.3;
-            kMax_Sexa_DCAbaSV = 0.2;
-            kMax_Sexa_DCAv0SV = 0.2;
-            // kMax_Sexa_Chi2ndf = 1.;
-        } else if (fReactionChannel == 'E') {
-            kMin_Sexa_Radius = 30;
-            kMin_Sexa_CPAwrtPV = 0.99;
-            kMax_Sexa_CPAwrtPV = 1.;
-            kMax_Sexa_DCAv0SV = 0.1;
-            kMax_Sexa_DCApkSV = 0.1;
-            kMax_Sexa_DCApmSV = 0.1;
-            kMax_Sexa_DCAppSV = 0.1;
-            kMax_Sexa_DCAv0pk = 0.1;
-            kMax_Sexa_DCAv0pm = 0.1;
-            kMax_Sexa_DCAv0pp = 0.1;
-            kMax_Sexa_DCApkpm = 0.1;
-            kMax_Sexa_DCApkpp = 0.1;
-            // kMax_Sexa_Chi2ndf = 1.;
-        }
+        /* Common */
+        kMin_Sexa_Radius = 30;
+        kMin_Sexa_CPAwrtPV = 0.99;
+        kMax_Sexa_CPAwrtPV = 1.;
+        kMax_Sexa_Rapidity = 0.8;
+        /* -> AntiLambda,PosKaon */
+        kMax_Sexa_DCAv0ba = 0.3;
+        kMax_Sexa_DCAbaSV = 0.2;
+        kMax_Sexa_DCAv0SV = 0.2;
+        /* -> AntiLambda,KaonZeroShort */
+        kMax_Sexa_DCAbtwV0s = 2.;
+        kMax_Sexa_DCAv0aSV = 2.;
+        kMax_Sexa_DCAv0bSV = 2.;
+        kMax_Sexa_DCAv0anegSV = 10.;
+        kMax_Sexa_DCAv0aposSV = 10.;
+        kMax_Sexa_DCAv0bnegSV = 10.;
+        kMax_Sexa_DCAv0bposSV = 10.;
+        /* -> AntiLambda,PosKaon,PiMinus,PiPlus */
+        kMax_Sexa_DCAv0SV = 0.1;
+        kMax_Sexa_DCApkSV = 0.1;
+        kMax_Sexa_DCApmSV = 0.1;
+        kMax_Sexa_DCAppSV = 0.1;
+        kMax_Sexa_DCAv0pk = 0.1;
+        kMax_Sexa_DCAv0pm = 0.1;
+        kMax_Sexa_DCAv0pp = 0.1;
+        kMax_Sexa_DCApkpm = 0.1;
+        kMax_Sexa_DCApkpp = 0.1;
     }
 }
 
@@ -2217,7 +2269,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             }
         }  // end of (anti-)protons, kaons, pions condition
 
-        /* Neutral particles: anti-lambdas and K0S */
+        /* Neutral particles: (anti-)lambdas and K0S */
 
         if (TMath::Abs(pdg_mc) == 3122 || pdg_mc == 310) {
 
@@ -2358,11 +2410,11 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 /*
  * Loop over generated antisexaquark-nucleon reactions and fill histograms with information after their interaction.
  */
-void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
+void AliAnalysisTaskSexaquark::ProcessSignalInteractions(Int_t PdgCode_StruckNucleon) {
 
     AliMCParticle* mcProduct;
 
-    /*** Declare vectors ***/
+    /* Declare vectors */
 
     Math::PxPyPzEVector lvProduct;
     Math::PxPyPzEVector lvStruckNucleon;
@@ -2371,12 +2423,12 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
     Math::XYZPoint PrimaryVertex(fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
     Math::XYZPoint SecondaryVertex;
 
-    /*** Declare auxiliary variables ***/
+    /* Declare auxiliary variables */
 
     Double_t cpa_wrt_pv;
     Double_t dca_wrt_pv;
 
-    /*** Loop over reactions ***/
+    /* Loop over reactions */
 
     for (UInt_t reactionIdx = 600; reactionIdx < 620; reactionIdx++) {
 
@@ -2412,7 +2464,7 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
         /* Assume struck nucleon at rest */
 
-        lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());
+        lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., fPDG.GetParticle(PdgCode_StruckNucleon)->Mass());
         lvAntiSexaquark = lvAntiSexaquark - lvStruckNucleon;
 
         /** Get properties **/
@@ -2424,22 +2476,23 @@ void AliAnalysisTaskSexaquark::ProcessSignalInteractions() {
 
         /** Fill histograms **/
 
-        if (fReactionChannel == 'H') fHist_KaonPairs_Bookkeep->Fill(0);
-
-        fHist_AntiSexaquarks_Bookkeep->Fill(0);
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Px")]->Fill(lvAntiSexaquark.Px());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Py")]->Fill(lvAntiSexaquark.Py());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Zv")]->Fill(SecondaryVertex.Z());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "Radius")]->Fill(SecondaryVertex.Rho());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "DistFromPV")]->Fill((SecondaryVertex - PrimaryVertex).R());
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
-        fHist_AntiSexaquarks[std::make_tuple("MCGen", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
+        fHist_KaonPairs_Bookkeep->Fill(0);
+        for (TString ReactionChannel : {"ALPK", "ALK0", "ALKKX", "ALPKPP"}) {
+            fHist_AntiSexaquarks_Bookkeep[ReactionChannel]->Fill(0);
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "Py")]->Fill(lvAntiSexaquark.Py());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "Zv")]->Fill(SecondaryVertex.Z());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "Radius")]->Fill(SecondaryVertex.Rho());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "DistFromPV")]->Fill((SecondaryVertex - PrimaryVertex).R());
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "MCGen", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
+        }
     }  // end of loop over reactions
 }
 
@@ -2941,7 +2994,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesSpeciesSelection(AliESDtrack* track, Int_
 
     AliExternalTrackParam* trackInnerParam = const_cast<AliExternalTrackParam*>(track->GetInnerParam());
 
-    if (kMin_Track_Pt[esdPdgCode] && trackInnerParam->Pt() < kMin_Track_Pt[esdPdgCode]) return kFALSE;
+    if (kMin_Track_Pt.count(esdPdgCode) && trackInnerParam->Pt() < kMin_Track_Pt[esdPdgCode]) return kFALSE;
     fHist_Tracks_Bookkeep->Fill(41);
     if (is_secondary) fHist_Tracks_Bookkeep->Fill(101);
     if (is_signal) fHist_Tracks_Bookkeep->Fill(131);
@@ -3213,17 +3266,29 @@ void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
 }
 
 /*
- * Find the anti-sexaquarks that have all of their *final-state particles* reconstructed. Valid for:
- * - Reaction Channel A: 1 anti-proton, 2 pi+, 1 pi-
- * - Reaction Channel D: 1 anti-proton, 1 pi+, 1 K+
- * - Reaction Channel E: 1 anti-proton, 2 pi+, 1 pi-, 1 K+
+ * Find the anti-sexaquarks that have all of their final-state particles reconstructed and that passed selection.
  */
-void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
+void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks(TString ReactionChannel) {
 
     AliMCParticle* mcFSPart;  // FS: final-state
     Int_t mcIdx;
     AliMCParticle* mcFGPart;  // FG: first gen.
     Int_t motherMcIdx;
+
+    /* Prepare PDG codes of final state products */
+
+    Int_t PdgCode_StruckNucleon = 2212;
+    std::vector<Int_t> PdgCodes_FinalStateProducts;
+    if (ReactionChannel == "ALPK") {
+        PdgCodes_FinalStateProducts = {-2212, 211, 321};
+    } else if (ReactionChannel == "ALK0") {
+        PdgCode_StruckNucleon = 2112;
+        PdgCodes_FinalStateProducts = {-2212, 211, -211, 211};
+    } else if (ReactionChannel == "ALKKX") {
+        PdgCodes_FinalStateProducts = {-2212, 211, 321, 321};
+    } else if (ReactionChannel == "ALPKPP") {
+        PdgCodes_FinalStateProducts = {-2212, 211, 321, -211, 211};
+    }
 
     /* Declare vectors */
 
@@ -3234,7 +3299,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
     Math::XYZPoint PrimaryVertex(fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
     Math::XYZPoint SecondaryVertex;
 
-    /* Declare variables */
+    /* Auxiliary variables */
 
     Double_t cpa_wrt_pv;
     Double_t dca_wrt_pv;
@@ -3247,15 +3312,14 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
         if (!getEsdIndices_fromReactionID[reactionIdx].size()) continue;
 
-        /* Findable condition */
-        // All final state products should have been reconstructed and passed track selection
+        /* All final state products should have been reconstructed and passed track selection */
 
         std::unordered_multiset<Int_t> pdg_reconstructed_particles;
         for (Int_t& esdIdx : getEsdIndices_fromReactionID[reactionIdx]) {
             pdg_reconstructed_particles.insert(getPdgCode_fromMcIdx[getMcIdx_fromEsdIdx[esdIdx]]);
         }
 
-        std::unordered_multiset<Int_t> expected_pdg_fs_particles(fFinalStateProductsPDG.begin(), fFinalStateProductsPDG.end());
+        std::unordered_multiset<Int_t> expected_pdg_fs_particles(PdgCodes_FinalStateProducts.begin(), PdgCodes_FinalStateProducts.end());
 
         if (expected_pdg_fs_particles != pdg_reconstructed_particles) continue;
 
@@ -3266,7 +3330,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
         /* Reconstruct sexaquark */
 
-        /* Loop, to get the reconstructed final-state particles info */
+        /** Loop, to get the reconstructed final-state particles info **/
 
         for (Int_t& esdIdx : getEsdIndices_fromReactionID[reactionIdx]) {
 
@@ -3277,7 +3341,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
             lvAntiSexaquark = lvAntiSexaquark + lvFinalStateParticle;
 
-            /* Get sec. vertex from the origin of the first-generation products of the reaction */
+            /** Get sec. vertex from the origin of first-generation products of the reaction **/
 
             if (SecondaryVertex.R() < 1E-6) {
                 if (mcFSPart->MCStatusCode() == reactionIdx) {
@@ -3290,9 +3354,9 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
             }
         }
 
-        /* Assume struck nucleon at rest */
+        /** Assume struck nucleon at rest **/
 
-        lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());
+        lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., fPDG.GetParticle(PdgCode_StruckNucleon)->Mass());
 
         lvAntiSexaquark = lvAntiSexaquark - lvStruckNucleon;
 
@@ -3305,20 +3369,20 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 
         /* Fill histograms  */
 
-        fHist_AntiSexaquarks_Bookkeep->Fill(10);
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Px")]->Fill(lvAntiSexaquark.Px());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Py")]->Fill(lvAntiSexaquark.Py());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Radius")]->Fill(SecondaryVertex.Rho());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Zv")]->Fill(SecondaryVertex.Z());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "DistFromPV")]->Fill((SecondaryVertex - PrimaryVertex).R());
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
-        fHist_AntiSexaquarks[std::make_tuple("Findable", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
+        fHist_AntiSexaquarks_Bookkeep[ReactionChannel]->Fill(10);
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "Px")]->Fill(lvAntiSexaquark.Px());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "Py")]->Fill(lvAntiSexaquark.Py());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "Radius")]->Fill(SecondaryVertex.Rho());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "Zv")]->Fill(SecondaryVertex.Z());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "DistFromPV")]->Fill((SecondaryVertex - PrimaryVertex).R());
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+        fHist_AntiSexaquarks[std::make_tuple(ReactionChannel, "Findable", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
     }
 }
 
@@ -3555,7 +3619,11 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 
             /* Determine containers to use */
 
-            if (v0PdgCode == -3122) {
+            if (v0PdgCode == 3122) {
+                esdFoundV0s = &esdLambdas;
+                getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromLambdaIdx;
+                getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromLambdaIdx;
+            } else if (v0PdgCode == -3122) {
                 esdFoundV0s = &esdAntiLambdas;
                 getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromAntiLambdaIdx;
                 getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromAntiLambdaIdx;
@@ -3732,7 +3800,13 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfNegDau_fromFoundV0Idx;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfPosDau_fromFoundV0Idx;
 
-    if (pdgV0 == -3122) {
+    if (pdgV0 == 3122) {
+        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
+        esdIndicesPosTracks = esdIndicesOfProtonTracks;
+        esdFoundV0s = &esdLambdas;
+        getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromLambdaIdx;
+        getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromLambdaIdx;
+    } else if (pdgV0 == -3122) {
         esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
         esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
         esdFoundV0s = &esdAntiLambdas;
@@ -4186,7 +4260,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool
 /*
  * Using two AliESDv0 objects, reconstruct the anti-sexaquark candidate.
  */
-void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
+void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ALK0() {
 
     /* Declare AliRoot objects */
 
@@ -4279,7 +4353,7 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
             lvAntiLambda.SetPxPyPzE(AntiLambda.Px(), AntiLambda.Py(), AntiLambda.Pz(), AntiLambda.E());
             lvKaonZeroShort.SetPxPyPzE(KaonZeroShort.Px(), KaonZeroShort.Py(), KaonZeroShort.Pz(), KaonZeroShort.E());
 
-            lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());
+            lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., kMass_Neutron);
 
             lvAntiSexaquark = lvAntiLambda + lvKaonZeroShort - lvStruckNucleon;
 
@@ -4291,8 +4365,8 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
                         getReactionID_fromEsdIdx[esdIdxPos_AntiLambda] == getReactionID_fromEsdIdx[esdIdxNeg_KaonZeroShort] &&
                         getReactionID_fromEsdIdx[esdIdxNeg_KaonZeroShort] == getReactionID_fromEsdIdx[esdIdxPos_KaonZeroShort];
 
-            if (!PassesSexaquarkCuts_ChannelA(is_signal, SecondaryVertex, lvAntiSexaquark, AntiLambda, KaonZeroShort, AntiLambda_NegDau,
-                                              AntiLambda_PosDau, KaonZeroShort_NegDau, KaonZeroShort_PosDau)) {
+            if (!PassesSexaquarkCuts_ALK0(is_signal, SecondaryVertex, lvAntiSexaquark, AntiLambda, KaonZeroShort, AntiLambda_NegDau,
+                                          AntiLambda_PosDau, KaonZeroShort_NegDau, KaonZeroShort_PosDau)) {
                 continue;
             }
 
@@ -4327,51 +4401,51 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
 
             /* Fill histograms */
 
-            fHist_AntiSexaquarks_Bookkeep->Fill(50);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Radius")]->Fill(radius);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Zv")]->Fill(SecondaryVertex.Z());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DistFromPV")]->Fill(dist_from_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAbtwV0s")]->Fill(dca_btw_v0s);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0aSV")]->Fill(dca_v0a_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0bSV")]->Fill(dca_v0b_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0anegSV")]->Fill(dca_v0a_neg_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0aposSV")]->Fill(dca_v0a_pos_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0bnegSV")]->Fill(dca_v0b_neg_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0bposSV")]->Fill(dca_v0b_pos_sv);
+            fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(50);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Radius")]->Fill(radius);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Zv")]->Fill(SecondaryVertex.Z());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DistFromPV")]->Fill(dist_from_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAbtwV0s")]->Fill(dca_btw_v0s);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0aSV")]->Fill(dca_v0a_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0bSV")]->Fill(dca_v0b_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0anegSV")]->Fill(dca_v0a_neg_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0aposSV")]->Fill(dca_v0a_pos_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0bnegSV")]->Fill(dca_v0b_neg_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0bposSV")]->Fill(dca_v0b_pos_sv);
 
             if (!is_signal) continue;
 
-            fHist_AntiSexaquarks_Bookkeep->Fill(90);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Phi")]->Fill(lvAntiSexaquark.Phi());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Radius")]->Fill(radius);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Zv")]->Fill(SecondaryVertex.Z());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Eta")]->Fill(lvAntiSexaquark.Eta());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DistFromPV")]->Fill(dist_from_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAbtwV0s")]->Fill(dca_btw_v0s);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0aSV")]->Fill(dca_v0a_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0bSV")]->Fill(dca_v0b_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0anegSV")]->Fill(dca_v0a_neg_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0aposSV")]->Fill(dca_v0a_pos_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0bnegSV")]->Fill(dca_v0b_neg_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0bposSV")]->Fill(dca_v0b_pos_sv);
+            fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(90);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Phi")]->Fill(lvAntiSexaquark.Phi());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Radius")]->Fill(radius);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Zv")]->Fill(SecondaryVertex.Z());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Eta")]->Fill(lvAntiSexaquark.Eta());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DistFromPV")]->Fill(dist_from_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAbtwV0s")]->Fill(dca_btw_v0s);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0aSV")]->Fill(dca_v0a_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0bSV")]->Fill(dca_v0b_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0anegSV")]->Fill(dca_v0a_neg_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0aposSV")]->Fill(dca_v0a_pos_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0bnegSV")]->Fill(dca_v0b_neg_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0bposSV")]->Fill(dca_v0b_pos_sv);
         }  // end of loop over K0S
     }      // end of loop over anti-lambdas
 
@@ -4381,51 +4455,51 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelA() {
 /*
  * Apply anti-sexaquark candidate cuts. Exclusive to reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`.
  */
-Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark,
-                                                              AliESDv0 esdAntiLambda, AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg,
-                                                              AliESDtrack* esdAntiLambdaPos, AliESDtrack* esdKaonZeroShortNeg,
-                                                              AliESDtrack* esdKaonZeroShortPos) {
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ALK0(Bool_t isSignal, Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark,
+                                                          AliESDv0 esdAntiLambda, AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg,
+                                                          AliESDtrack* esdAntiLambdaPos, AliESDtrack* esdKaonZeroShortNeg,
+                                                          AliESDtrack* esdKaonZeroShortPos) {
 
-    fHist_AntiSexaquarks_Bookkeep->Fill(20);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(60);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(20);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(60);
 
     if (kMin_Sexa_Pt && lvAntiSexaquark.Pt() < kMin_Sexa_Pt) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(22);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(62);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(22);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(62);
 
     if (kMax_Sexa_Eta && TMath::Abs(lvAntiSexaquark.Eta()) > kMax_Sexa_Eta) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(23);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(63);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(23);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(63);
 
     if (kMax_Sexa_Rapidity && TMath::Abs(lvAntiSexaquark.Rapidity()) > kMax_Sexa_Rapidity) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(24);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(64);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(24);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(64);
 
     Double_t radius = TMath::Sqrt(SecondaryVertex.X() * SecondaryVertex.X() + SecondaryVertex.Y() * SecondaryVertex.Y());
     if (kMin_Sexa_Radius && radius < kMin_Sexa_Radius) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(25);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(65);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(25);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(65);
 
     Double_t dist_from_pv = TMath::Sqrt((SecondaryVertex.X() - fPrimaryVertex->GetX()) * (SecondaryVertex.X() - fPrimaryVertex->GetX()) +
                                         (SecondaryVertex.Y() - fPrimaryVertex->GetY()) * (SecondaryVertex.Y() - fPrimaryVertex->GetY()) +
                                         (SecondaryVertex.Z() - fPrimaryVertex->GetZ()) * (SecondaryVertex.Z() - fPrimaryVertex->GetZ()));
     if (kMin_Sexa_DistFromPV && dist_from_pv < kMin_Sexa_DistFromPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(26);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(66);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(26);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(66);
 
     Double_t cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fPrimaryVertex->GetX(),
                                               fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_Sexa_CPAwrtPV && cpa_wrt_pv < kMin_Sexa_CPAwrtPV) return kFALSE;
     if (kMax_Sexa_CPAwrtPV && cpa_wrt_pv > kMax_Sexa_CPAwrtPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(27);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(67);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(27);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(67);
 
     Double_t dca_wrt_pv = LinePointDCA(lvAntiSexaquark.Px(), lvAntiSexaquark.Py(), lvAntiSexaquark.Pz(), SecondaryVertex.X(), SecondaryVertex.Y(),
                                        SecondaryVertex.Z(), fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_Sexa_DCAwrtPV && dca_wrt_pv < kMin_Sexa_DCAwrtPV) return kFALSE;
     if (kMax_Sexa_DCAwrtPV && dca_wrt_pv > kMax_Sexa_DCAwrtPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(28);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(68);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(28);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(68);
 
     Math::XYZPoint AntiLambda_vertex(esdAntiLambda.Xv(), esdAntiLambda.Yv(), esdAntiLambda.Zv());
     Math::XYZPoint KaonZeroShort_vertex(esdKaonZeroShort.Xv(), esdKaonZeroShort.Yv(), esdKaonZeroShort.Zv());
@@ -4434,61 +4508,61 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, M
     Math::XYZPoint pca1, pca2;
     Double_t dca_btw_v0s = Calculate_TwoLinesDCA_v2(AntiLambda_vertex, AntiLambda_momentum, KaonZeroShort_vertex, KaonZeroShort_momentum, pca1, pca2);
     if (kMax_Sexa_DCAbtwV0s && dca_btw_v0s > kMax_Sexa_DCAbtwV0s) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(29);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(69);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(29);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(69);
 
     Double_t dca_v0a_sv = LinePointDCA(esdAntiLambda.Px(), esdAntiLambda.Py(), esdAntiLambda.Pz(), esdAntiLambda.Xv(), esdAntiLambda.Yv(),
                                        esdAntiLambda.Zv(), SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z());
     if (kMax_Sexa_DCAv0aSV && dca_v0a_sv > kMax_Sexa_DCAv0aSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(30);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(70);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(30);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(70);
 
     Double_t dca_v0b_sv = LinePointDCA(esdKaonZeroShort.Px(), esdKaonZeroShort.Py(), esdKaonZeroShort.Pz(), esdKaonZeroShort.Xv(),
                                        esdKaonZeroShort.Yv(), esdKaonZeroShort.Zv(), SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z());
     if (kMax_Sexa_DCAv0bSV && dca_v0b_sv > kMax_Sexa_DCAv0bSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(31);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(71);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(31);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(71);
 
     Float_t impar_v0a_neg_sv[2];
     esdAntiLambdaNeg->GetDZ(SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMagneticField, impar_v0a_neg_sv);
     Double_t dca_v0a_neg_sv = TMath::Sqrt(impar_v0a_neg_sv[0] * impar_v0a_neg_sv[0] + impar_v0a_neg_sv[1] * impar_v0a_neg_sv[1]);
     if (kMax_Sexa_DCAv0anegSV && dca_v0a_neg_sv > kMax_Sexa_DCAv0anegSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(32);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(72);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(32);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(72);
 
     Float_t impar_v0a_pos_sv[2];
     esdAntiLambdaPos->GetDZ(SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMagneticField, impar_v0a_pos_sv);
     Double_t dca_v0a_pos_sv = TMath::Sqrt(impar_v0a_pos_sv[0] * impar_v0a_pos_sv[0] + impar_v0a_pos_sv[1] * impar_v0a_pos_sv[1]);
     if (kMax_Sexa_DCAv0aposSV && dca_v0a_pos_sv > kMax_Sexa_DCAv0aposSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(33);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(73);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(33);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(73);
 
     Float_t impar_v0b_neg_sv[2];
     esdKaonZeroShortNeg->GetDZ(SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMagneticField, impar_v0b_neg_sv);
     Double_t dca_v0b_neg_sv = TMath::Sqrt(impar_v0b_neg_sv[0] * impar_v0b_neg_sv[0] + impar_v0b_neg_sv[1] * impar_v0b_neg_sv[1]);
     if (kMax_Sexa_DCAv0bnegSV && dca_v0b_neg_sv > kMax_Sexa_DCAv0bnegSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(34);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(74);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(34);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(74);
 
     Float_t impar_v0b_pos_sv[2];
     esdKaonZeroShortPos->GetDZ(SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMagneticField, impar_v0b_pos_sv);
     Double_t dca_v0b_pos_sv = TMath::Sqrt(impar_v0b_pos_sv[0] * impar_v0b_pos_sv[0] + impar_v0b_pos_sv[1] * impar_v0b_pos_sv[1]);
     if (kMax_Sexa_DCAv0bposSV && dca_v0b_pos_sv > kMax_Sexa_DCAv0bposSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(35);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(75);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(35);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(75);
 
     return kTRUE;
 }
 
 /*
  */
-void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelD() {
+void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ALPK() {
     // PENDING
 }
 
 /*
  */
-void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ChannelE() {
+void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ALPKPP() {
     // PENDING
 }
 
@@ -4538,7 +4612,13 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfNegDau_fromFoundV0Idx;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfPosDau_fromFoundV0Idx;
 
-    if (pdgV0 == -3122) {
+    if (pdgV0 == 3122) {
+        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
+        esdIndicesPosTracks = esdIndicesOfProtonTracks;
+        kfFoundV0s = &kfLambdas;
+        getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromLambdaIdx;
+        getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromLambdaIdx;
+    } else if (pdgV0 == -3122) {
         esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
         esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
         kfFoundV0s = &kfAntiLambdas;
@@ -4585,8 +4665,10 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             kfV0.TransportToDecayVertex();
 
-            KFParticle kfTransportedNeg = TransportKFParticle(kfDaughterNeg, kfDaughterPos, pdgTrackNeg, (Int_t)esdTrackNeg->Charge());
-            KFParticle kfTransportedPos = TransportKFParticle(kfDaughterPos, kfDaughterNeg, pdgTrackPos, (Int_t)esdTrackPos->Charge());
+            KFParticle kfTransportedNeg = TransportKFParticle(kfDaughterNeg, kfDaughterPos, fPDG.GetParticle(pdgTrackNeg)->Mass(),  //
+                                                              (Int_t)esdTrackNeg->Charge());
+            KFParticle kfTransportedPos = TransportKFParticle(kfDaughterPos, kfDaughterNeg, fPDG.GetParticle(pdgTrackPos)->Mass(),  //
+                                                              (Int_t)esdTrackPos->Charge());
 
             /* Reconstruct V0 */
 
@@ -4781,7 +4863,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 /*
  * Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`
  */
-void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
+void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALK0() {
 
     AliESDtrack *esdAntiLambdaNegDau, *esdAntiLambdaPosDau;
     AliESDtrack *esdKaonZeroShortNegDau, *esdKaonZeroShortPosDau;
@@ -4863,34 +4945,28 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             esdKaonZeroShortNegDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg_KaonZeroShort));
             esdKaonZeroShortPosDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos_KaonZeroShort));
 
-            KFParticle kfAntiLambdaNegDau =
-                CreateKFParticle(*esdAntiLambdaNegDau, fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass(), (Int_t)esdAntiLambdaNegDau->Charge());
-            KFParticle kfAntiLambdaPosDau =
-                CreateKFParticle(*esdAntiLambdaPosDau, fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass(), (Int_t)esdAntiLambdaPosDau->Charge());
-            KFParticle kfKaonZeroShortNegDau = CreateKFParticle(*esdKaonZeroShortNegDau, fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass(),
-                                                                (Int_t)esdKaonZeroShortNegDau->Charge());
-            KFParticle kfKaonZeroShortPosDau = CreateKFParticle(*esdKaonZeroShortPosDau, fPDG.GetParticle(fFinalStateProductsPDG[3])->Mass(),
-                                                                (Int_t)esdKaonZeroShortPosDau->Charge());
+            KFParticle kfAntiLambdaNegDau = CreateKFParticle(*esdAntiLambdaNegDau, kMass_Proton, (Int_t)esdAntiLambdaNegDau->Charge());
+            KFParticle kfAntiLambdaPosDau = CreateKFParticle(*esdAntiLambdaPosDau, kMass_Pion, (Int_t)esdAntiLambdaPosDau->Charge());
+            KFParticle kfKaonZeroShortNegDau = CreateKFParticle(*esdKaonZeroShortNegDau, kMass_Pion, (Int_t)esdKaonZeroShortNegDau->Charge());
+            KFParticle kfKaonZeroShortPosDau = CreateKFParticle(*esdKaonZeroShortPosDau, kMass_Pion, (Int_t)esdKaonZeroShortPosDau->Charge());
 
-            kfAntiLambdaNegDau = TransportKFParticle(kfAntiLambdaNegDau, kfAntiLambdaPosDau, fPDG.GetParticle(fFinalStateProductsPDG[0])->PdgCode(),
+            kfAntiLambdaNegDau = TransportKFParticle(kfAntiLambdaNegDau, kfAntiLambdaPosDau, kMass_Proton,  //
                                                      (Int_t)esdAntiLambdaNegDau->Charge());
-            kfAntiLambdaPosDau = TransportKFParticle(kfAntiLambdaPosDau, kfAntiLambdaNegDau, fPDG.GetParticle(fFinalStateProductsPDG[1])->PdgCode(),
+            kfAntiLambdaPosDau = TransportKFParticle(kfAntiLambdaPosDau, kfAntiLambdaNegDau, kMass_Pion,  //
                                                      (Int_t)esdAntiLambdaPosDau->Charge());
-            kfKaonZeroShortNegDau =
-                TransportKFParticle(kfKaonZeroShortNegDau, kfKaonZeroShortPosDau, fPDG.GetParticle(fFinalStateProductsPDG[2])->PdgCode(),
-                                    (Int_t)esdKaonZeroShortNegDau->Charge());
-            kfKaonZeroShortPosDau =
-                TransportKFParticle(kfKaonZeroShortPosDau, kfKaonZeroShortNegDau, fPDG.GetParticle(fFinalStateProductsPDG[3])->PdgCode(),
-                                    (Int_t)esdKaonZeroShortPosDau->Charge());
+            kfKaonZeroShortNegDau = TransportKFParticle(kfKaonZeroShortNegDau, kfKaonZeroShortPosDau, kMass_Pion,  //
+                                                        (Int_t)esdKaonZeroShortNegDau->Charge());
+            kfKaonZeroShortPosDau = TransportKFParticle(kfKaonZeroShortPosDau, kfKaonZeroShortNegDau, kMass_Pion,  //
+                                                        (Int_t)esdKaonZeroShortPosDau->Charge());
 
-            lvAntiLambdaNegDau = Math::PxPyPzMVector(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(),
-                                                     fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass());
-            lvAntiLambdaPosDau = Math::PxPyPzMVector(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(),
-                                                     fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass());
-            lvKaonZeroShortNegDau = Math::PxPyPzMVector(kfKaonZeroShortNegDau.Px(), kfKaonZeroShortNegDau.Py(), kfKaonZeroShortNegDau.Pz(),
-                                                        fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass());
-            lvKaonZeroShortPosDau = Math::PxPyPzMVector(kfKaonZeroShortPosDau.Px(), kfKaonZeroShortPosDau.Py(), kfKaonZeroShortPosDau.Pz(),
-                                                        fPDG.GetParticle(fFinalStateProductsPDG[3])->Mass());
+            lvAntiLambdaNegDau =  //
+                Math::PxPyPzMVector(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(), kMass_Proton);
+            lvAntiLambdaPosDau =  //
+                Math::PxPyPzMVector(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(), kMass_Pion);
+            lvKaonZeroShortNegDau =
+                Math::PxPyPzMVector(kfKaonZeroShortNegDau.Px(), kfKaonZeroShortNegDau.Py(), kfKaonZeroShortNegDau.Pz(), kMass_Pion);
+            lvKaonZeroShortPosDau =
+                Math::PxPyPzMVector(kfKaonZeroShortPosDau.Px(), kfKaonZeroShortPosDau.Py(), kfKaonZeroShortPosDau.Pz(), kMass_Pion);
 
             /* Reconstruct anti-sexaquark candidate */
             /* -- assume struck nucleon at rest -- */
@@ -4898,14 +4974,14 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             lvAntiLambda = lvAntiLambdaNegDau + lvAntiLambdaPosDau;
             lvKaonZeroShort = lvKaonZeroShortNegDau + lvKaonZeroShortPosDau;
 
-            lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());
+            lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., kMass_Neutron);
 
             lvAntiSexaquark = lvAntiLambda + lvKaonZeroShort - lvStruckNucleon;
 
             /* Apply cuts */
 
             is_signal = isEsdIdxSignal[esdIdxNeg_AntiLambda] && isEsdIdxSignal[esdIdxPos_AntiLambda] && isEsdIdxSignal[esdIdxNeg_KaonZeroShort] &&
-                        isEsdIdxSignal[esdIdxPos_KaonZeroShort] &&
+                        isEsdIdxSignal[esdIdxPos_KaonZeroShort] &&  //
                         getReactionID_fromEsdIdx[esdIdxNeg_AntiLambda] == getReactionID_fromEsdIdx[esdIdxPos_AntiLambda] &&
                         getReactionID_fromEsdIdx[esdIdxPos_AntiLambda] == getReactionID_fromEsdIdx[esdIdxNeg_KaonZeroShort] &&
                         getReactionID_fromEsdIdx[esdIdxNeg_KaonZeroShort] == getReactionID_fromEsdIdx[esdIdxPos_KaonZeroShort];
@@ -4913,8 +4989,8 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
                          isEsdIdxSignal[esdIdxPos_KaonZeroShort]) &&
                         !is_signal;
 
-            if (!PassesSexaquarkCuts_ChannelA(is_signal, kfAntiSexaquark, lvAntiSexaquark, kfAntiLambda, kfKaonZeroShort, kfAntiLambdaNegDau,
-                                              kfAntiLambdaPosDau, kfKaonZeroShortNegDau, kfKaonZeroShortPosDau)) {
+            if (!PassesSexaquarkCuts_ALK0(is_signal, kfAntiSexaquark, lvAntiSexaquark, kfAntiLambda, kfKaonZeroShort, kfAntiLambdaNegDau,
+                                          kfAntiLambdaPosDau, kfKaonZeroShortNegDau, kfKaonZeroShortPosDau)) {
                 continue;
             }
 
@@ -4972,58 +5048,58 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
             tSexaquarkA_DCAV0bposSV = dca_v0b_pos_sv;
             tSexaquarkA_K0S_DecayLength = TMath::Abs(kfKaonZeroShort.GetDecayLength());
 
-            fTree_Sexaquarks->Fill();
+            fTree_Sexaquarks_ALK0->Fill();
             ClearSexaquarksBranches();
 
             /* Fill histograms */
 
-            fHist_AntiSexaquarks_Bookkeep->Fill(50);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Radius")]->Fill(radius);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Zv")]->Fill(kfAntiSexaquark.GetZ());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DistFromPV")]->Fill(dist_from_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAbtwV0s")]->Fill(dca_btw_v0s);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0aSV")]->Fill(dca_v0a_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0bSV")]->Fill(dca_v0b_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0anegSV")]->Fill(dca_v0a_neg_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0aposSV")]->Fill(dca_v0a_pos_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0bnegSV")]->Fill(dca_v0b_neg_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0bposSV")]->Fill(dca_v0b_pos_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Chi2ndf")]->Fill(chi2_ndf);
+            fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(50);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Radius")]->Fill(radius);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Zv")]->Fill(kfAntiSexaquark.GetZ());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DistFromPV")]->Fill(dist_from_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAbtwV0s")]->Fill(dca_btw_v0s);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0aSV")]->Fill(dca_v0a_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0bSV")]->Fill(dca_v0b_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0anegSV")]->Fill(dca_v0a_neg_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0aposSV")]->Fill(dca_v0a_pos_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0bnegSV")]->Fill(dca_v0b_neg_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "DCAV0bposSV")]->Fill(dca_v0b_pos_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "All", "Chi2ndf")]->Fill(chi2_ndf);
 
             if (!is_signal) continue;
 
-            fHist_AntiSexaquarks_Bookkeep->Fill(90);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Phi")]->Fill(lvAntiSexaquark.Phi());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Radius")]->Fill(radius);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Zv")]->Fill(kfAntiSexaquark.GetZ());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Eta")]->Fill(lvAntiSexaquark.Eta());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DistFromPV")]->Fill(dist_from_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAbtwV0s")]->Fill(dca_btw_v0s);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0aSV")]->Fill(dca_v0a_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0bSV")]->Fill(dca_v0b_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0anegSV")]->Fill(dca_v0a_neg_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0aposSV")]->Fill(dca_v0a_pos_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0bnegSV")]->Fill(dca_v0b_neg_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0bposSV")]->Fill(dca_v0b_pos_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Chi2ndf")]->Fill(chi2_ndf);
+            fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(90);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Phi")]->Fill(lvAntiSexaquark.Phi());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Radius")]->Fill(radius);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Zv")]->Fill(kfAntiSexaquark.GetZ());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Eta")]->Fill(lvAntiSexaquark.Eta());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DistFromPV")]->Fill(dist_from_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAbtwV0s")]->Fill(dca_btw_v0s);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0aSV")]->Fill(dca_v0a_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0bSV")]->Fill(dca_v0b_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0anegSV")]->Fill(dca_v0a_neg_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0aposSV")]->Fill(dca_v0a_pos_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0bnegSV")]->Fill(dca_v0b_neg_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0bposSV")]->Fill(dca_v0b_pos_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Chi2ndf")]->Fill(chi2_ndf);
 
             // -- DEBUG -- //
             /*
@@ -5049,91 +5125,90 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelA() {
 /*
  * Apply anti-sexaquark candidate cuts. Exclusive to reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`.
  */
-Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
-                                                              KFParticle kfAntiLambda, KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg,
-                                                              KFParticle kfAntiLambdaPos, KFParticle kfKaonZeroShortNeg,
-                                                              KFParticle kfKaonZeroShortPos) {
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ALK0(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
+                                                          KFParticle kfAntiLambda, KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg,
+                                                          KFParticle kfAntiLambdaPos, KFParticle kfKaonZeroShortNeg, KFParticle kfKaonZeroShortPos) {
 
-    fHist_AntiSexaquarks_Bookkeep->Fill(20);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(60);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(20);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(60);
 
     if (kMin_Sexa_Pt && lvAntiSexaquark.Pt() < kMin_Sexa_Pt) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(21);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(61);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(21);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(61);
 
     if (kMax_Sexa_Eta && TMath::Abs(lvAntiSexaquark.Eta()) > kMax_Sexa_Eta) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(22);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(62);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(22);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(62);
 
     if (kMax_Sexa_Rapidity && TMath::Abs(lvAntiSexaquark.Rapidity()) > kMax_Sexa_Rapidity) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(23);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(63);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(23);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(63);
 
     Double_t radius = TMath::Sqrt(kfAntiSexaquark.GetX() * kfAntiSexaquark.GetX() + kfAntiSexaquark.GetY() * kfAntiSexaquark.GetY());
     if (kMin_Sexa_Radius && radius < kMin_Sexa_Radius) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(24);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(64);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(24);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(64);
 
     Double_t dist_from_pv = TMath::Sqrt((kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) * (kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) +
                                         (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) * (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) +
                                         (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()) * (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()));
     if (kMin_Sexa_DistFromPV && dist_from_pv < kMin_Sexa_DistFromPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(25);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(65);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(25);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(65);
 
     Double_t cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(), kfAntiSexaquark.GetZ(),
                                               fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_Sexa_CPAwrtPV && cpa_wrt_pv < kMin_Sexa_CPAwrtPV) return kFALSE;
     if (kMax_Sexa_CPAwrtPV && cpa_wrt_pv > kMax_Sexa_CPAwrtPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(26);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(66);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(26);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(66);
 
     KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
     Double_t dca_wrt_pv = TMath::Abs(kfAntiSexaquark.GetDistanceFromVertex(kfPrimaryVertex));
     if (kMin_Sexa_DCAwrtPV && dca_wrt_pv < kMin_Sexa_DCAwrtPV) return kFALSE;
     if (kMax_Sexa_DCAwrtPV && dca_wrt_pv > kMax_Sexa_DCAwrtPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(27);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(67);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(27);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(67);
 
     Double_t dca_btw_v0s = TMath::Abs(kfAntiLambda.GetDistanceFromParticle(kfKaonZeroShort));
     if (kMax_Sexa_DCAbtwV0s && dca_btw_v0s > kMax_Sexa_DCAbtwV0s) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(28);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(68);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(28);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(68);
 
     Double_t dca_v0a_sv = TMath::Abs(kfAntiLambda.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0aSV && dca_v0a_sv > kMax_Sexa_DCAv0aSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(29);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(69);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(29);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(69);
 
     Double_t dca_v0b_sv = TMath::Abs(kfKaonZeroShort.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0bSV && dca_v0b_sv > kMax_Sexa_DCAv0bSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(30);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(70);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(30);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(70);
 
     Double_t dca_v0a_neg_sv = TMath::Abs(kfAntiLambdaNeg.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0anegSV && dca_v0a_neg_sv > kMax_Sexa_DCAv0anegSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(31);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(71);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(31);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(71);
 
     Double_t dca_v0a_pos_sv = TMath::Abs(kfAntiLambdaPos.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0aposSV && dca_v0a_pos_sv > kMax_Sexa_DCAv0aposSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(32);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(72);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(32);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(72);
 
     Double_t dca_v0b_neg_sv = TMath::Abs(kfKaonZeroShortNeg.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0bnegSV && dca_v0b_neg_sv > kMax_Sexa_DCAv0bnegSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(33);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(73);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(33);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(73);
 
     Double_t dca_v0b_pos_sv = TMath::Abs(kfKaonZeroShortPos.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0bposSV && dca_v0b_pos_sv > kMax_Sexa_DCAv0bposSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(34);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(74);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(34);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(74);
 
     Double_t chi2ndf = (Double_t)kfAntiSexaquark.GetChi2() / (Double_t)kfAntiSexaquark.GetNDF();
     if (kMax_Sexa_Chi2ndf && chi2ndf > kMax_Sexa_Chi2ndf) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(35);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(75);
+    fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(35);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALK0"]->Fill(75);
 
     return kTRUE;
 }
@@ -5141,7 +5216,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelA(Bool_t isSignal, K
 /*
  * Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel D: `AntiSexaquark,P->AntiLambda,K+`
  */
-void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
+void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPK() {
 
     AliESDtrack *esdAntiLambdaNegDau, *esdAntiLambdaPosDau;
     AliESDtrack* esdPosKaon;
@@ -5199,7 +5274,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
             KFParticleMother kfAntiLambda = kfAntiLambdas[idxAntiLambda];
 
             esdPosKaon = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPosKaon));
-            KFParticle kfPosKaon = CreateKFParticle(*esdPosKaon, fPDG.GetParticle(fProductsPDG[1])->Mass(), (Int_t)esdPosKaon->Charge());
+            KFParticle kfPosKaon = CreateKFParticle(*esdPosKaon, kMass_Kaon, (Int_t)esdPosKaon->Charge());
 
             KFParticleMother kfAntiSexaquark;
             kfAntiSexaquark.AddDaughter(kfAntiLambda);
@@ -5219,30 +5294,22 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
             esdAntiLambdaNegDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg_AntiLambda));
             esdAntiLambdaPosDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos_AntiLambda));
 
-            KFParticle kfAntiLambdaNegDau =
-                CreateKFParticle(*esdAntiLambdaNegDau, fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass(), (Int_t)esdAntiLambdaNegDau->Charge());
-            KFParticle kfAntiLambdaPosDau =
-                CreateKFParticle(*esdAntiLambdaPosDau, fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass(), (Int_t)esdAntiLambdaPosDau->Charge());
+            KFParticle kfAntiLambdaNegDau = CreateKFParticle(*esdAntiLambdaNegDau, kMass_Proton, (Int_t)esdAntiLambdaNegDau->Charge());
+            KFParticle kfAntiLambdaPosDau = CreateKFParticle(*esdAntiLambdaPosDau, kMass_Pion, (Int_t)esdAntiLambdaPosDau->Charge());
 
-            kfAntiLambdaNegDau = TransportKFParticle(kfAntiLambdaNegDau, kfAntiLambdaPosDau, fPDG.GetParticle(fFinalStateProductsPDG[0])->PdgCode(),
-                                                     (Int_t)esdAntiLambdaNegDau->Charge());
-            kfAntiLambdaPosDau = TransportKFParticle(kfAntiLambdaPosDau, kfAntiLambdaNegDau, fPDG.GetParticle(fFinalStateProductsPDG[1])->PdgCode(),
-                                                     (Int_t)esdAntiLambdaPosDau->Charge());
-            kfPosKaon =
-                TransportKFParticle(kfPosKaon, kfAntiLambda, fPDG.GetParticle(fFinalStateProductsPDG[2])->PdgCode(), (Int_t)esdPosKaon->Charge());
-
-            lvAntiLambdaNegDau = Math::PxPyPzMVector(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(),
-                                                     fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass());
-            lvAntiLambdaPosDau = Math::PxPyPzMVector(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(),
-                                                     fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass());
-            lvPosKaon = Math::PxPyPzMVector(kfPosKaon.Px(), kfPosKaon.Py(), kfPosKaon.Pz(), fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass());
+            kfAntiLambdaNegDau = TransportKFParticle(kfAntiLambdaNegDau, kfAntiLambdaPosDau, kMass_Proton, (Int_t)esdAntiLambdaNegDau->Charge());
+            kfAntiLambdaPosDau = TransportKFParticle(kfAntiLambdaPosDau, kfAntiLambdaNegDau, kMass_Pion, (Int_t)esdAntiLambdaPosDau->Charge());
+            kfPosKaon = TransportKFParticle(kfPosKaon, kfAntiLambda, kMass_Kaon, (Int_t)esdPosKaon->Charge());
 
             /* Reconstruct anti-sexaquark candidate */
             /* -- assume struck nucleon at rest -- */
 
+            lvAntiLambdaNegDau = Math::PxPyPzMVector(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(), kMass_Proton);
+            lvAntiLambdaPosDau = Math::PxPyPzMVector(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(), kMass_Pion);
             lvAntiLambda = lvAntiLambdaNegDau + lvAntiLambdaPosDau;
+            lvPosKaon = Math::PxPyPzMVector(kfPosKaon.Px(), kfPosKaon.Py(), kfPosKaon.Pz(), kMass_Kaon);
 
-            lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());
+            lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., kMass_Proton);
 
             lvAntiSexaquark = lvAntiLambda + lvPosKaon - lvStruckNucleon;
 
@@ -5253,8 +5320,8 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
                         getReactionID_fromEsdIdx[esdIdxPos_AntiLambda] == getReactionID_fromEsdIdx[esdIdxPosKaon];
             is_hybrid = (isEsdIdxSignal[esdIdxNeg_AntiLambda] || isEsdIdxSignal[esdIdxPos_AntiLambda] || isEsdIdxSignal[esdIdxPosKaon]) && !is_signal;
 
-            if (!PassesSexaquarkCuts_ChannelD(is_signal, kfAntiSexaquark, lvAntiSexaquark, kfAntiLambda, kfPosKaon, kfAntiLambdaNegDau,
-                                              kfAntiLambdaPosDau)) {
+            if (!PassesSexaquarkCuts_ALPK(is_signal, kfAntiSexaquark, lvAntiSexaquark, kfAntiLambda, kfPosKaon, kfAntiLambdaNegDau,
+                                          kfAntiLambdaPosDau)) {
                 continue;
             }
 
@@ -5310,58 +5377,58 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
             tSexaquarkD_DCAV0negSV = dca_v0_neg_sv;
             tSexaquarkD_DCAV0posSV = dca_v0_pos_sv;
 
-            fTree_Sexaquarks->Fill();
+            fTree_Sexaquarks_ALPK->Fill();
             ClearSexaquarksBranches();
 
             /* Fill histograms */
 
-            fHist_AntiSexaquarks_Bookkeep->Fill(50);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Radius")]->Fill(radius);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Zv")]->Fill(kfAntiSexaquark.GetZ());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DistFromPV")]->Fill(dist_from_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0Ba")]->Fill(dca_v0_ba);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0negBa")]->Fill(dca_v0_neg_ba);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0posBa")]->Fill(dca_v0_pos_ba);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0SV")]->Fill(dca_v0_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCABaSV")]->Fill(dca_ba_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0negSV")]->Fill(dca_v0_neg_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0posSV")]->Fill(dca_v0_pos_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Chi2ndf")]->Fill(chi2_ndf);
+            fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(50);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Radius")]->Fill(radius);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Zv")]->Fill(kfAntiSexaquark.GetZ());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "DistFromPV")]->Fill(dist_from_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "DCAV0Ba")]->Fill(dca_v0_ba);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "DCAV0negBa")]->Fill(dca_v0_neg_ba);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "DCAV0posBa")]->Fill(dca_v0_pos_ba);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "DCAV0SV")]->Fill(dca_v0_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "DCABaSV")]->Fill(dca_ba_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "DCAV0negSV")]->Fill(dca_v0_neg_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "DCAV0posSV")]->Fill(dca_v0_pos_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "All", "Chi2ndf")]->Fill(chi2_ndf);
 
             if (!is_signal) continue;
 
-            fHist_AntiSexaquarks_Bookkeep->Fill(90);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Phi")]->Fill(lvAntiSexaquark.Phi());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Radius")]->Fill(radius);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Zv")]->Fill(kfAntiSexaquark.GetZ());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Eta")]->Fill(lvAntiSexaquark.Eta());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DistFromPV")]->Fill(dist_from_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "CPAwrtPV")]->Fill(cpa_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0Ba")]->Fill(dca_v0_ba);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0negBa")]->Fill(dca_v0_neg_ba);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0posBa")]->Fill(dca_v0_pos_ba);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0SV")]->Fill(dca_v0_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCABaSV")]->Fill(dca_ba_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0negSV")]->Fill(dca_v0_neg_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0posSV")]->Fill(dca_v0_pos_sv);
-            fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Chi2ndf")]->Fill(chi2_ndf);
+            fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(90);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Phi")]->Fill(lvAntiSexaquark.Phi());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Radius")]->Fill(radius);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Zv")]->Fill(kfAntiSexaquark.GetZ());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Eta")]->Fill(lvAntiSexaquark.Eta());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "DistFromPV")]->Fill(dist_from_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "DCAV0Ba")]->Fill(dca_v0_ba);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "DCAV0negBa")]->Fill(dca_v0_neg_ba);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "DCAV0posBa")]->Fill(dca_v0_pos_ba);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "DCAV0SV")]->Fill(dca_v0_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "DCABaSV")]->Fill(dca_ba_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "DCAV0negSV")]->Fill(dca_v0_neg_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "DCAV0posSV")]->Fill(dca_v0_pos_sv);
+            fHist_AntiSexaquarks[std::make_tuple("ALPK", "Found", "Signal", "Chi2ndf")]->Fill(chi2_ndf);
         }  // end of loop over pos. kaons
     }      // end of loop over anti-lambdas
 }
@@ -5369,90 +5436,90 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelD() {
 /*
  * Apply anti-sexaquark candidate cuts.
  */
-Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelD(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
-                                                              KFParticle kfAntiLambda, KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg,
-                                                              KFParticle kfAntiLambdaPos) {
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ALPK(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
+                                                          KFParticle kfAntiLambda, KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg,
+                                                          KFParticle kfAntiLambdaPos) {
 
-    fHist_AntiSexaquarks_Bookkeep->Fill(20);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(60);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(20);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(60);
 
     if (kMin_Sexa_Pt && lvAntiSexaquark.Pt() < kMin_Sexa_Pt) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(21);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(61);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(21);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(61);
 
     if (kMax_Sexa_Eta && TMath::Abs(lvAntiSexaquark.Eta()) > kMax_Sexa_Eta) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(22);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(62);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(22);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(62);
 
     if (kMax_Sexa_Rapidity && TMath::Abs(lvAntiSexaquark.Rapidity()) > kMax_Sexa_Rapidity) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(23);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(63);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(23);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(63);
 
     Double_t radius = TMath::Sqrt(kfAntiSexaquark.GetX() * kfAntiSexaquark.GetX() + kfAntiSexaquark.GetY() * kfAntiSexaquark.GetY());
     if (kMin_Sexa_Radius && radius < kMin_Sexa_Radius) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(24);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(64);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(24);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(64);
 
     Double_t dist_from_pv = TMath::Sqrt((kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) * (kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) +
                                         (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) * (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) +
                                         (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()) * (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()));
     if (kMin_Sexa_DistFromPV && dist_from_pv < kMin_Sexa_DistFromPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(25);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(65);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(25);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(65);
 
     Double_t cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(), kfAntiSexaquark.GetZ(),
                                               fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_Sexa_CPAwrtPV && cpa_wrt_pv < kMin_Sexa_CPAwrtPV) return kFALSE;
     if (kMax_Sexa_CPAwrtPV && cpa_wrt_pv > kMax_Sexa_CPAwrtPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(26);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(66);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(26);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(66);
 
     KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
     Float_t dca_wrt_pv = TMath::Abs(kfAntiSexaquark.GetDistanceFromVertex(kfPrimaryVertex));
     if (kMin_Sexa_DCAwrtPV && dca_wrt_pv < kMin_Sexa_DCAwrtPV) return kFALSE;
     if (kMax_Sexa_DCAwrtPV && dca_wrt_pv > kMax_Sexa_DCAwrtPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(27);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(67);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(27);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(67);
 
     Float_t dca_v0_sv = TMath::Abs(kfAntiLambda.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0SV && dca_v0_sv > kMax_Sexa_DCAv0SV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(28);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(68);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(28);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(68);
 
     Float_t dca_v0_ba = TMath::Abs(kfAntiLambda.GetDistanceFromVertex(kfPosKaon));
     if (kMax_Sexa_DCAv0ba && dca_v0_ba > kMax_Sexa_DCAv0ba) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(29);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(69);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(29);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(69);
 
     Float_t dca_ba_sv = TMath::Abs(kfPosKaon.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAbaSV && dca_ba_sv > kMax_Sexa_DCAbaSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(30);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(70);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(30);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(70);
 
     Float_t dca_v0_neg_sv = TMath::Abs(kfAntiLambdaNeg.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0negSV && dca_v0_neg_sv > kMax_Sexa_DCAv0negSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(31);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(71);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(31);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(71);
 
     Float_t dca_v0_pos_sv = TMath::Abs(kfAntiLambdaPos.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0posSV && dca_v0_pos_sv > kMax_Sexa_DCAv0posSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(32);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(72);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(32);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(72);
 
     Float_t dca_v0_neg_ba = TMath::Abs(kfAntiLambdaNeg.GetDistanceFromVertex(kfPosKaon));
     if (kMax_Sexa_DCAv0negba && dca_v0_neg_ba > kMax_Sexa_DCAv0negba) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(33);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(73);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(33);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(73);
 
     Float_t dca_v0_pos_ba = TMath::Abs(kfAntiLambdaPos.GetDistanceFromVertex(kfPosKaon));
     if (kMax_Sexa_DCAv0posba && dca_v0_pos_ba > kMax_Sexa_DCAv0posba) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(34);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(74);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(34);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(74);
 
     Double_t chi2ndf = (Double_t)kfAntiSexaquark.GetChi2() / (Double_t)kfAntiSexaquark.GetNDF();
     if (kMax_Sexa_Chi2ndf && chi2ndf > kMax_Sexa_Chi2ndf) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(35);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(75);
+    fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(35);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPK"]->Fill(75);
 
     return kTRUE;
 }
@@ -5460,7 +5527,7 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelD(Bool_t isSignal, K
 /*
  * Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel E: `AntiSexaquark,P->AntiLambda,K+,pi-,pi+`
  */
-void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
+void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPKPP() {
 
     AliESDtrack *esdAntiLambdaNegDau, *esdAntiLambdaPosDau;
     AliESDtrack *esdPiMinus, *esdPiPlus;
@@ -5468,12 +5535,11 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
 
     /* Declare 4-momentum vectors */
 
-    Math::PxPyPzEVector lvAntiLambda;
     Math::PxPyPzEVector lvAntiLambdaNegDau, lvAntiLambdaPosDau;
-
+    Math::PxPyPzEVector lvAntiLambda;
+    Math::PxPyPzEVector lvPosKaon;
     Math::PxPyPzEVector lvPiMinus;
     Math::PxPyPzEVector lvPiPlus;
-    Math::PxPyPzEVector lvPosKaon;
 
     Math::PxPyPzEVector lvStruckNucleon;
     Math::PxPyPzEVector lvAntiSexaquark;
@@ -5526,13 +5592,13 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                 KFParticleMother kfAntiLambda = kfAntiLambdas[idxAntiLambda];
 
                 esdPosKaon = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPosKaon));
-                KFParticle kfPosKaon = CreateKFParticle(*esdPosKaon, fPDG.GetParticle(fProductsPDG[1])->Mass(), (Int_t)esdPosKaon->Charge());
+                KFParticle kfPosKaon = CreateKFParticle(*esdPosKaon, kMass_Kaon, (Int_t)esdPosKaon->Charge());
 
                 esdPiMinus = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg_PionPair));
-                KFParticle kfPiMinus = CreateKFParticle(*esdPiMinus, fPDG.GetParticle(fProductsPDG[2])->Mass(), (Int_t)esdPiMinus->Charge());
+                KFParticle kfPiMinus = CreateKFParticle(*esdPiMinus, kMass_Pion, (Int_t)esdPiMinus->Charge());
 
                 esdPiPlus = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos_PionPair));
-                KFParticle kfPiPlus = CreateKFParticle(*esdPiPlus, fPDG.GetParticle(fProductsPDG[3])->Mass(), (Int_t)esdPiPlus->Charge());
+                KFParticle kfPiPlus = CreateKFParticle(*esdPiPlus, kMass_Pion, (Int_t)esdPiPlus->Charge());
 
                 KFParticleMother kfAntiSexaquark;
                 kfAntiSexaquark.AddDaughter(kfAntiLambda);
@@ -5558,43 +5624,28 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                 esdAntiLambdaNegDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg_AntiLambda));
                 esdAntiLambdaPosDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos_AntiLambda));
 
-                KFParticle kfAntiLambdaNegDau =
-                    CreateKFParticle(*esdAntiLambdaNegDau, fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass(), (Int_t)esdAntiLambdaNegDau->Charge());
-                KFParticle kfAntiLambdaPosDau =
-                    CreateKFParticle(*esdAntiLambdaPosDau, fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass(), (Int_t)esdAntiLambdaPosDau->Charge());
+                KFParticle kfAntiLambdaNegDau = CreateKFParticle(*esdAntiLambdaNegDau, kMass_Proton, (Int_t)esdAntiLambdaNegDau->Charge());
+                KFParticle kfAntiLambdaPosDau = CreateKFParticle(*esdAntiLambdaPosDau, kMass_Pion, (Int_t)esdAntiLambdaPosDau->Charge());
 
-                kfAntiLambdaNegDau =
-                    TransportKFParticle(kfAntiLambdaNegDau, kfAntiLambdaPosDau, fPDG.GetParticle(fFinalStateProductsPDG[0])->PdgCode(),
-                                        (Int_t)esdAntiLambdaNegDau->Charge());
-                kfAntiLambdaPosDau =
-                    TransportKFParticle(kfAntiLambdaPosDau, kfAntiLambdaNegDau, fPDG.GetParticle(fFinalStateProductsPDG[1])->PdgCode(),
-                                        (Int_t)esdAntiLambdaPosDau->Charge());
-                kfPosKaon =
-                    TransportKFParticle(kfPosKaon, kfAntiLambda, fPDG.GetParticle(fFinalStateProductsPDG[2])->PdgCode(), (Int_t)esdPosKaon->Charge());
-                kfPiMinus =
-                    TransportKFParticle(kfPiMinus, kfAntiLambda, fPDG.GetParticle(fFinalStateProductsPDG[3])->PdgCode(), (Int_t)esdPiMinus->Charge());
-                kfPiPlus =
-                    TransportKFParticle(kfPiPlus, kfAntiLambda, fPDG.GetParticle(fFinalStateProductsPDG[4])->PdgCode(), (Int_t)esdPiPlus->Charge());
-
-                lvAntiLambdaNegDau = Math::PxPyPzMVector(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(),  //
-                                                         fPDG.GetParticle(fFinalStateProductsPDG[0])->Mass());
-                lvAntiLambdaPosDau = Math::PxPyPzMVector(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(),  //
-                                                         fPDG.GetParticle(fFinalStateProductsPDG[1])->Mass());
-                lvPosKaon = Math::PxPyPzMVector(kfPosKaon.Px(), kfPosKaon.Py(), kfPosKaon.Pz(),  //
-                                                fPDG.GetParticle(fFinalStateProductsPDG[2])->Mass());
-                lvPiMinus = Math::PxPyPzMVector(kfPiMinus.Px(), kfPiMinus.Py(), kfPiMinus.Pz(),  //
-                                                fPDG.GetParticle(fFinalStateProductsPDG[3])->Mass());
-                lvPiPlus = Math::PxPyPzMVector(kfPiPlus.Px(), kfPiPlus.Py(), kfPiPlus.Pz(),  //
-                                               fPDG.GetParticle(fFinalStateProductsPDG[4])->Mass());
+                kfAntiLambdaNegDau = TransportKFParticle(kfAntiLambdaNegDau, kfAntiLambdaPosDau, kMass_Proton, (Int_t)esdAntiLambdaNegDau->Charge());
+                kfAntiLambdaPosDau = TransportKFParticle(kfAntiLambdaPosDau, kfAntiLambdaNegDau, kMass_Pion, (Int_t)esdAntiLambdaPosDau->Charge());
+                kfPosKaon = TransportKFParticle(kfPosKaon, kfAntiLambda, kMass_Kaon, (Int_t)esdPosKaon->Charge());
+                kfPiMinus = TransportKFParticle(kfPiMinus, kfAntiLambda, kMass_Pion, (Int_t)esdPiMinus->Charge());
+                kfPiPlus = TransportKFParticle(kfPiPlus, kfAntiLambda, kMass_Pion, (Int_t)esdPiPlus->Charge());
 
                 /* Reconstruct anti-sexaquark candidate */
                 /* -- assume struck nucleon at rest -- */
 
+                lvAntiLambdaNegDau = Math::PxPyPzMVector(kfAntiLambdaNegDau.Px(), kfAntiLambdaNegDau.Py(), kfAntiLambdaNegDau.Pz(), kMass_Proton);
+                lvAntiLambdaPosDau = Math::PxPyPzMVector(kfAntiLambdaPosDau.Px(), kfAntiLambdaPosDau.Py(), kfAntiLambdaPosDau.Pz(), kMass_Pion);
                 lvAntiLambda = lvAntiLambdaNegDau + lvAntiLambdaPosDau;
+                lvPosKaon = Math::PxPyPzMVector(kfPosKaon.Px(), kfPosKaon.Py(), kfPosKaon.Pz(), kMass_Kaon);
+                lvPiMinus = Math::PxPyPzMVector(kfPiMinus.Px(), kfPiMinus.Py(), kfPiMinus.Pz(), kMass_Pion);
+                lvPiPlus = Math::PxPyPzMVector(kfPiPlus.Px(), kfPiPlus.Py(), kfPiPlus.Pz(), kMass_Pion);
 
-                lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., fPDG.GetParticle(fStruckNucleonPDG)->Mass());
+                lvStruckNucleon = Math::PxPyPzMVector(0., 0., 0., kMass_Proton);
 
-                lvAntiSexaquark = lvAntiLambda + lvPosKaon + lvPiMinus + lvPiPlus - lvStruckNucleon;
+                lvAntiSexaquark = lvAntiLambda + lvPosKaon + lvPiPlus + lvPiMinus - lvStruckNucleon;
 
                 /* Apply cuts */
 
@@ -5607,8 +5658,8 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                              isEsdIdxSignal[esdIdxNeg_PionPair] || isEsdIdxSignal[esdIdxPos_PionPair]) &&
                             !is_signal;
 
-                if (!PassesSexaquarkCuts_ChannelE(is_signal, kfAntiSexaquark, lvAntiSexaquark, kfAntiLambda, kfAntiLambdaNegDau, kfAntiLambdaPosDau,
-                                                  kfPosKaon, kfPiMinus, kfPiPlus)) {
+                if (!PassesSexaquarkCuts_ALPKPP(is_signal, kfAntiSexaquark, lvAntiSexaquark, kfAntiLambda, kfAntiLambdaNegDau, kfAntiLambdaPosDau,
+                                                kfPosKaon, kfPiMinus, kfPiPlus)) {
                     continue;
                 }
 
@@ -5676,66 +5727,66 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
                 tSexaquarkE_DCApmPK = dca_pm_pk;
                 tSexaquarkE_DCAppPK = dca_pp_pk;
 
-                fTree_Sexaquarks->Fill();
+                fTree_Sexaquarks_ALPKPP->Fill();
                 ClearSexaquarksBranches();
 
                 /* Fill histograms */
 
-                fHist_AntiSexaquarks_Bookkeep->Fill(50);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Radius")]->Fill(radius);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Zv")]->Fill(kfAntiSexaquark.GetZ());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DistFromPV")]->Fill(dist_from_pv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0SV")]->Fill(dca_v0_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0negSV")]->Fill(dca_v0_neg_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAV0posSV")]->Fill(dca_v0_pos_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCApkSV")]->Fill(dca_pk_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCApmSV")]->Fill(dca_pm_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAppSV")]->Fill(dca_pp_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCApkV0")]->Fill(dca_pk_v0);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCApmV0")]->Fill(dca_pm_v0);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAppV0")]->Fill(dca_pp_v0);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCApmPK")]->Fill(dca_pm_pk);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "DCAppPK")]->Fill(dca_pp_pk);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "All", "Chi2ndf")]->Fill(chi2_ndf);
+                fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(50);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Mass2")]->Fill(lvAntiSexaquark.M2());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Pt")]->Fill(lvAntiSexaquark.Pt());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Px")]->Fill(lvAntiSexaquark.Px());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Py")]->Fill(lvAntiSexaquark.Py());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Pz")]->Fill(lvAntiSexaquark.Pz());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Phi")]->Fill(lvAntiSexaquark.Phi());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Radius")]->Fill(radius);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Zv")]->Fill(kfAntiSexaquark.GetZ());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Eta")]->Fill(lvAntiSexaquark.Eta());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DistFromPV")]->Fill(dist_from_pv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCAwrtPV")]->Fill(dca_wrt_pv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCAV0SV")]->Fill(dca_v0_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCAV0negSV")]->Fill(dca_v0_neg_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCAV0posSV")]->Fill(dca_v0_pos_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCApkSV")]->Fill(dca_pk_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCApmSV")]->Fill(dca_pm_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCAppSV")]->Fill(dca_pp_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCApkV0")]->Fill(dca_pk_v0);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCApmV0")]->Fill(dca_pm_v0);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCAppV0")]->Fill(dca_pp_v0);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCApmPK")]->Fill(dca_pm_pk);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "DCAppPK")]->Fill(dca_pp_pk);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "All", "Chi2ndf")]->Fill(chi2_ndf);
 
                 if (!is_signal) continue;
 
-                fHist_AntiSexaquarks_Bookkeep->Fill(90);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Phi")]->Fill(lvAntiSexaquark.Phi());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Radius")]->Fill(radius);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Zv")]->Fill(kfAntiSexaquark.GetZ());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Eta")]->Fill(lvAntiSexaquark.Eta());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DistFromPV")]->Fill(dist_from_pv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "CPAwrtPV")]->Fill(cpa_wrt_pv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0SV")]->Fill(dca_v0_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0negSV")]->Fill(dca_v0_neg_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAV0posSV")]->Fill(dca_v0_pos_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCApkSV")]->Fill(dca_pk_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCApmSV")]->Fill(dca_pm_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAppSV")]->Fill(dca_pp_sv);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCApkV0")]->Fill(dca_pk_v0);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCApmV0")]->Fill(dca_pm_v0);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAppV0")]->Fill(dca_pp_v0);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCApmPK")]->Fill(dca_pm_pk);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "DCAppPK")]->Fill(dca_pp_pk);
-                fHist_AntiSexaquarks[std::make_tuple("Found", "Signal", "Chi2ndf")]->Fill(chi2_ndf);
+                fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(90);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Mass2")]->Fill(lvAntiSexaquark.M2());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Pt")]->Fill(lvAntiSexaquark.Pt());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Px")]->Fill(lvAntiSexaquark.Px());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Py")]->Fill(lvAntiSexaquark.Py());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Pz")]->Fill(lvAntiSexaquark.Pz());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Phi")]->Fill(lvAntiSexaquark.Phi());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Radius")]->Fill(radius);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Zv")]->Fill(kfAntiSexaquark.GetZ());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Eta")]->Fill(lvAntiSexaquark.Eta());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Rapidity")]->Fill(lvAntiSexaquark.Rapidity());
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DistFromPV")]->Fill(dist_from_pv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "CPAwrtPV")]->Fill(cpa_wrt_pv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCAwrtPV")]->Fill(dca_wrt_pv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCAV0SV")]->Fill(dca_v0_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCAV0negSV")]->Fill(dca_v0_neg_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCAV0posSV")]->Fill(dca_v0_pos_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCApkSV")]->Fill(dca_pk_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCApmSV")]->Fill(dca_pm_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCAppSV")]->Fill(dca_pp_sv);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCApkV0")]->Fill(dca_pk_v0);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCApmV0")]->Fill(dca_pm_v0);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCAppV0")]->Fill(dca_pp_v0);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCApmPK")]->Fill(dca_pm_pk);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCAppPK")]->Fill(dca_pp_pk);
+                fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Chi2ndf")]->Fill(chi2_ndf);
 
                 // -- DEBUG -- //
                 // clang-format off
@@ -5762,105 +5813,105 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ChannelE() {
 /*
  * Check if anti-sexaquark candidate passes the cuts via channel E reconstruction
  */
-Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelE(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
-                                                              KFParticle kfAntiLambda, KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau,
-                                                              KFParticle kfPosKaon, KFParticle kfPiMinus, KFParticle kfPiPlus) {
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ALPKPP(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
+                                                            KFParticle kfAntiLambda, KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau,
+                                                            KFParticle kfPosKaon, KFParticle kfPiMinus, KFParticle kfPiPlus) {
 
-    fHist_AntiSexaquarks_Bookkeep->Fill(20);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(60);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(20);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(60);
 
     if (kMin_Sexa_Pt && lvAntiSexaquark.Pt() < kMin_Sexa_Pt) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(21);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(61);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(21);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(61);
 
     if (kMax_Sexa_Eta && TMath::Abs(lvAntiSexaquark.Eta()) > kMax_Sexa_Eta) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(22);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(62);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(22);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(62);
 
     if (kMax_Sexa_Rapidity && TMath::Abs(lvAntiSexaquark.Rapidity()) > kMax_Sexa_Rapidity) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(23);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(63);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(23);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(63);
 
     Double_t radius = TMath::Sqrt(kfAntiSexaquark.GetX() * kfAntiSexaquark.GetX() + kfAntiSexaquark.GetY() * kfAntiSexaquark.GetY());
     if (kMin_Sexa_Radius && radius < kMin_Sexa_Radius) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(24);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(64);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(24);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(64);
 
     Double_t dist_from_pv = TMath::Sqrt((kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) * (kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) +
                                         (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) * (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) +
                                         (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()) * (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()));
     if (kMin_Sexa_DistFromPV && dist_from_pv < kMin_Sexa_DistFromPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(25);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(65);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(25);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(65);
 
     Double_t cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(), kfAntiSexaquark.GetZ(),
                                               fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
     if (kMin_Sexa_CPAwrtPV && cpa_wrt_pv < kMin_Sexa_CPAwrtPV) return kFALSE;
     if (kMax_Sexa_CPAwrtPV && cpa_wrt_pv > kMax_Sexa_CPAwrtPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(26);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(66);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(26);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(66);
 
     KFVertex kfPrimaryVertex = CreateKFVertex(*fPrimaryVertex);
     Double_t dca_wrt_pv = TMath::Abs(kfAntiSexaquark.GetDistanceFromVertex(kfPrimaryVertex));
     if (kMin_Sexa_DCAwrtPV && dca_wrt_pv < kMin_Sexa_DCAwrtPV) return kFALSE;
     if (kMax_Sexa_DCAwrtPV && dca_wrt_pv > kMax_Sexa_DCAwrtPV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(27);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(67);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(27);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(67);
 
     Double_t dca_v0_sv = TMath::Abs(kfAntiLambda.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0SV && dca_v0_sv > kMax_Sexa_DCAv0SV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(28);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(68);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(28);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(68);
 
     Double_t dca_v0_pos_sv = TMath::Abs(kfAntiLambdaPosDau.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAv0posSV && dca_v0_pos_sv > kMax_Sexa_DCAv0posSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(29);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(69);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(29);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(69);
 
     Double_t dca_pk_sv = TMath::Abs(kfPosKaon.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCApkSV && dca_pk_sv > kMax_Sexa_DCApkSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(30);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(70);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(30);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(70);
 
     Double_t dca_pm_sv = TMath::Abs(kfPiMinus.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCApmSV && dca_pm_sv > kMax_Sexa_DCApmSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(31);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(71);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(31);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(71);
 
     Double_t dca_pp_sv = TMath::Abs(kfPiPlus.GetDistanceFromVertex(kfAntiSexaquark));
     if (kMax_Sexa_DCAppSV && dca_pp_sv > kMax_Sexa_DCAppSV) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(32);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(72);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(32);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(72);
 
     Double_t dca_v0_pk = TMath::Abs(kfAntiLambda.GetDistanceFromParticle(kfPosKaon));
     if (kMax_Sexa_DCAv0pk && dca_v0_pk > kMax_Sexa_DCAv0pk) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(33);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(73);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(33);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(73);
 
     Double_t dca_v0_pm = TMath::Abs(kfAntiLambda.GetDistanceFromParticle(kfPiMinus));
     if (kMax_Sexa_DCAv0pm && dca_v0_pm > kMax_Sexa_DCAv0pm) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(34);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(74);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(34);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(74);
 
     Double_t dca_v0_pp = TMath::Abs(kfAntiLambda.GetDistanceFromParticle(kfPiPlus));
     if (kMax_Sexa_DCAv0pp && dca_v0_pp > kMax_Sexa_DCAv0pp) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(35);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(75);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(35);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(75);
 
     Double_t dca_pk_pm = TMath::Abs(kfPosKaon.GetDistanceFromParticle(kfPiMinus));
     if (kMax_Sexa_DCApkpm && dca_pk_pm > kMax_Sexa_DCApkpm) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(36);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(76);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(36);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(76);
 
     Double_t dca_pk_pp = TMath::Abs(kfPosKaon.GetDistanceFromParticle(kfPiPlus));
     if (kMax_Sexa_DCApkpp && dca_pk_pp > kMax_Sexa_DCApkpp) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(37);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(77);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(37);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(77);
 
     Double_t chi2ndf = (Double_t)kfAntiSexaquark.GetChi2() / (Double_t)kfAntiSexaquark.GetNDF();
     if (kMax_Sexa_Chi2ndf && chi2ndf > kMax_Sexa_Chi2ndf) return kFALSE;
-    fHist_AntiSexaquarks_Bookkeep->Fill(38);
-    if (isSignal) fHist_AntiSexaquarks_Bookkeep->Fill(78);
+    fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(38);
+    if (isSignal) fHist_AntiSexaquarks_Bookkeep["ALPKPP"]->Fill(78);
 
     return kTRUE;
 }
@@ -5873,9 +5924,6 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ChannelE(Bool_t isSignal, K
  * Find all K+K+ pairs via Kalman Filter.
  */
 void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
-
-    const Int_t kKaonPDGCode = 321;
-    const Float_t kKaonMass = fPDG.GetParticle(kKaonPDGCode)->Mass();
 
     AliESDtrack* esdPosKaonA;
     AliESDtrack* esdPosKaonB;
@@ -5926,8 +5974,8 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
 
             /* Kalman Filter */
 
-            KFParticle kfPosKaonA = CreateKFParticle(*esdPosKaonA, kKaonMass, (Int_t)esdPosKaonA->Charge());
-            KFParticle kfPosKaonB = CreateKFParticle(*esdPosKaonB, kKaonMass, (Int_t)esdPosKaonB->Charge());
+            KFParticle kfPosKaonA = CreateKFParticle(*esdPosKaonA, kMass_Kaon, (Int_t)esdPosKaonA->Charge());
+            KFParticle kfPosKaonB = CreateKFParticle(*esdPosKaonB, kMass_Kaon, (Int_t)esdPosKaonB->Charge());
 
             KFParticleMother kfKaonPair;
             kfKaonPair.AddDaughter(kfPosKaonA);
@@ -5937,13 +5985,13 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
 
             kfKaonPair.TransportToDecayVertex();
 
-            KFParticle kfTransportedPosKaonA = TransportKFParticle(kfPosKaonA, kfPosKaonB, kKaonPDGCode, (Int_t)esdPosKaonA->Charge());
-            KFParticle kfTransportedPosKaonB = TransportKFParticle(kfPosKaonB, kfPosKaonA, kKaonPDGCode, (Int_t)esdPosKaonB->Charge());
+            KFParticle kfTransportedPosKaonA = TransportKFParticle(kfPosKaonA, kfPosKaonB, kMass_Kaon, (Int_t)esdPosKaonA->Charge());
+            KFParticle kfTransportedPosKaonB = TransportKFParticle(kfPosKaonB, kfPosKaonA, kMass_Kaon, (Int_t)esdPosKaonB->Charge());
 
             /* Reconstruct V0 */
 
-            lvPosKaonA = Math::PxPyPzMVector(kfTransportedPosKaonA.Px(), kfTransportedPosKaonA.Py(), kfTransportedPosKaonA.Pz(), kKaonMass);
-            lvPosKaonB = Math::PxPyPzMVector(kfTransportedPosKaonB.Px(), kfTransportedPosKaonB.Py(), kfTransportedPosKaonB.Pz(), kKaonMass);
+            lvPosKaonA = Math::PxPyPzMVector(kfTransportedPosKaonA.Px(), kfTransportedPosKaonA.Py(), kfTransportedPosKaonA.Pz(), kMass_Kaon);
+            lvPosKaonB = Math::PxPyPzMVector(kfTransportedPosKaonB.Px(), kfTransportedPosKaonB.Py(), kfTransportedPosKaonB.Pz(), kMass_Kaon);
 
             lvKaonPair = lvPosKaonA + lvPosKaonB;
 
@@ -6673,7 +6721,7 @@ KFVertex AliAnalysisTaskSexaquark::CreateKFVertex(const AliVVertex& vertex) {
 /*
  * Transport a KFParticle to the point of closest approach w.r.t. another KFParticle.
  */
-KFParticle AliAnalysisTaskSexaquark::TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis) {
+KFParticle AliAnalysisTaskSexaquark::TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Double_t massThis, Int_t chargeThis) {
 
     float dS[2];
     float dsdr[4][6];
@@ -6683,7 +6731,7 @@ KFParticle AliAnalysisTaskSexaquark::TransportKFParticle(KFParticle kfThis, KFPa
     float mP[8], mC[36];
     kfThis.Transport(dS[0], dsdr[0], mP, mC);
 
-    float mM = fPDG.GetParticle(pdgThis)->Mass();
+    float mM = (float)massThis;
     float mQ = chargeThis;  // only valid for charged particles with Q = +/- 1
 
     KFParticle kfTransported;
@@ -7319,11 +7367,15 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
     getPosDauEsdIdx_fromMcIdx.clear();
 
     esdIndicesOfAntiProtonTracks.clear();
+    esdIndicesOfProtonTracks.clear();
+    esdIndicesOfNegKaonTracks.clear();
     esdIndicesOfPosKaonTracks.clear();
     esdIndicesOfPiMinusTracks.clear();
     esdIndicesOfPiPlusTracks.clear();
 
     /*  */
+    getEsdIdxOfNegDau_fromLambdaIdx.clear();
+    getEsdIdxOfPosDau_fromLambdaIdx.clear();
     getEsdIdxOfNegDau_fromAntiLambdaIdx.clear();
     getEsdIdxOfPosDau_fromAntiLambdaIdx.clear();
     getEsdIdxOfNegDau_fromKaonZeroShortIdx.clear();
@@ -7331,9 +7383,11 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
     getEsdIdxOfNegDau_fromPionPairIdx.clear();
     getEsdIdxOfPosDau_fromPionPairIdx.clear();
 
+    esdLambdas.clear();
     esdAntiLambdas.clear();
     esdKaonsZeroShort.clear();
 
+    kfLambdas.clear();
     kfAntiLambdas.clear();
     kfKaonsZeroShort.clear();
     kfPionPairs.clear();

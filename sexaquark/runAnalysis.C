@@ -88,9 +88,6 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
     Int_t PassNumber = 3;  // default for 18qr and anchored sims
     if (ProductionName == "LHC15o" || ProductionName == "LHC23l1b3" || ProductionName == "LHC20j6a") PassNumber = 2;
 
-    Char_t ReactionChannel = SimulationSet[0];
-    Float_t SexaquarkMass = ((TString)SimulationSet(1, SimulationSet.Length() - 1)).Atof();
-
     TString ProductionYear = "20" + ProductionName(3, 2);
 
     TString LocalDataDir = Form("%s/%s", LocalInputPath.Data(), ProductionName.Data());
@@ -102,11 +99,11 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
 
     TString GridWorkingDir = "work/Sexaquark";
     if (!IsMC)
-        GridWorkingDir += Form("_Data_Channel%c", ReactionChannel);
-    else if (ProductionName.Contains("23l1"))
-        GridWorkingDir += Form("_MC_%s_%s", ProductionName.Data(), SimulationSet.Data());
+        GridWorkingDir += Form("_Data_%s", ProductionName.Data());
     else
-        GridWorkingDir += Form("_MC_%s_Channel%c", ProductionName.Data(), ReactionChannel);
+        GridWorkingDir += Form("_MC_%s", ProductionName.Data());
+    if (ProductionName.Contains("23l1")) GridWorkingDir += Form("_%s", SimulationSet.Data());
+
     TString GridOutputDir = "output";
 
     std::vector<Int_t> RunNumbersFromList;
@@ -215,8 +212,8 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
 
     gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
 
-    TString TaskSexaquark_Options = Form("(%i, \"%s\", \'%c\', %.2f, %i, %i)",  //
-                                         (Int_t)IsMC, SourceOfV0s.Data(), ReactionChannel, SexaquarkMass, (Int_t)DoQA, (Int_t)ReadSignalLogs);
+    TString TaskSexaquark_Options = Form("(%i, \"%s\", %i, %i)",  //
+                                         (Int_t)IsMC, SourceOfV0s.Data(), (Int_t)DoQA, (Int_t)ReadSignalLogs);
     AliAnalysisTaskSexaquark *TaskSexaquark =
         reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro("AddSexaquark.C" + TaskSexaquark_Options));
     if (!TaskSexaquark) return;

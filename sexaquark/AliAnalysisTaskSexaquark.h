@@ -96,7 +96,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Settings ~ stored in Analysis Manager */
     void IsMC(Bool_t IsMC) { fIsMC = IsMC; };
     void SetSourceOfV0s(TString SourceOfV0s) { fSourceOfV0s = SourceOfV0s; };
-    void SetReactionChannel(Char_t ReactionChannel) { fReactionChannel = ReactionChannel; };
     void DoQA(Bool_t DoQA) { fDoQA = DoQA; };
     void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
     void Initialize();
@@ -113,33 +112,34 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void PrepareMCParticlesBranches();
     void PrepareTracksBranches();
     void PrepareV0sBranches();
-    void PrepareSexaquarksBranches();
     void PrepareKaonPairsBranches();
+    void PrepareCommonSexaquarkBranches(TTree* Tree_Sexaquarks);
+    void PrepareSexaquarksBranches();
 
     void ClearEventsBranches();
     void ClearInjectedBranches();
     void ClearMCParticlesBranches();
     void ClearTracksBranches();
     void ClearV0sBranches();
-    void ClearSexaquarksBranches();
     void ClearKaonPairsBranches();
+    void ClearSexaquarksBranches();
 
     /* Histograms */
     void PrepareQAHistograms();
     void PrepareTracksHistograms();
     void PrepareV0Histograms();
-    void PrepareSexaquarkHistograms();
     void PrepareKaonPairHistograms();
+    void PrepareSexaquarkHistograms();
 
     /* Cuts */
     void DefineTracksCuts(TString cuts_option);
     void DefineV0Cuts(TString cuts_option);
-    void DefineSexaquarkCuts(TString cuts_option);
     void DefineKaonPairCuts(TString cuts_option);
+    void DefineSexaquarkCuts(TString cuts_option);
 
     /* MC Generated */
     void ProcessMCGen();
-    void ProcessSignalInteractions();
+    void ProcessSignalInteractions(Int_t PdgCode_StruckNucleon);
 
     /* Tracks */
     Bool_t PassesEventSelection();
@@ -151,8 +151,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* V0s, Anti-Sexaquarks, K+K+ pairs -- That Require True Info */
     void ProcessFindableV0s();
     void ProcessFindablePionPairs();
-    void ProcessFindableSexaquarks();
     void ProcessFindableKaonPairs();
+    void ProcessFindableSexaquarks(TString ReactionChannel);
 
     /* V0s */
     void GetV0sFromESD(Bool_t onTheFly);
@@ -163,33 +163,33 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, KFParticleMother kfV0, KFParticle kfDaughterNeg,
                           KFParticle kfDaughterPos, Math::PxPyPzEVector lvV0, Math::PxPyPzEVector lvTrackNeg, Math::PxPyPzEVector lvTrackPos);
 
-    /* Sexaquark */
-    void GeoSexaquarkFinder_ChannelA();
-    void GeoSexaquarkFinder_ChannelD();
-    void GeoSexaquarkFinder_ChannelE();
-    void KalmanSexaquarkFinder_ChannelA();
-    void KalmanSexaquarkFinder_ChannelD();
-    void KalmanSexaquarkFinder_ChannelE();
-    Bool_t PassesSexaquarkCuts_ChannelA(Bool_t isSignal, Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda,
-                                        AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos,
-                                        AliESDtrack* esdKaonZeroShortNeg, AliESDtrack* esdKaonZeroShortPos);
-    Bool_t PassesSexaquarkCuts_ChannelA(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
-                                        KFParticle kfAntiLambda, KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos,
-                                        KFParticle kfKaonZeroShortNeg, KFParticle kfKaonZeroShortPos);
-    // Bool_t PassesSexaquarkCuts_ChannelD(Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack*
-    // esdPosKaon, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
-    Bool_t PassesSexaquarkCuts_ChannelD(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
-                                        KFParticle kfAntiLambda, KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
-    // Bool_t PassesSexaquarkCuts_ChannelE(Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack*
-    // esdPosKaon, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
-    Bool_t PassesSexaquarkCuts_ChannelE(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
-                                        KFParticle kfAntiLambda, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfPosKaon,
-                                        KFParticle kfPiMinus, KFParticle kfPiPlus);
-
     /* Channel H */
     void KalmanKaonPairFinder();
     Bool_t PassesKaonPairCuts(Bool_t isSignal, KFParticleMother kfKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB,
                               Math::PxPyPzEVector lvKaonPair, Math::PxPyPzEVector lvPosKaonA, Math::PxPyPzEVector lvPosKaonB);
+
+    /* Sexaquark */
+    void GeoSexaquarkFinder_ALPK();
+    void GeoSexaquarkFinder_ALK0();
+    void GeoSexaquarkFinder_ALPKPP();
+    void KalmanSexaquarkFinder_ALPK();
+    void KalmanSexaquarkFinder_ALK0();
+    void KalmanSexaquarkFinder_ALPKPP();
+    // Bool_t PassesSexaquarkCuts_ALPK(Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack*
+    // esdPosKaon, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
+    Bool_t PassesSexaquarkCuts_ALPK(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark, KFParticle kfAntiLambda,
+                                    KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
+    Bool_t PassesSexaquarkCuts_ALK0(Bool_t isSignal, Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda,
+                                    AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos,
+                                    AliESDtrack* esdKaonZeroShortNeg, AliESDtrack* esdKaonZeroShortPos);
+    Bool_t PassesSexaquarkCuts_ALK0(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark, KFParticle kfAntiLambda,
+                                    KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfKaonZeroShortNeg,
+                                    KFParticle kfKaonZeroShortPos);
+    // Bool_t PassesSexaquarkCuts_ALPKPP(Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda, AliESDtrack*
+    // esdPosKaon, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos);
+    Bool_t PassesSexaquarkCuts_ALPKPP(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark, KFParticle kfAntiLambda,
+                                      KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfPosKaon, KFParticle kfPiMinus,
+                                      KFParticle kfPiPlus);
 
     /* Utilities */
     void ClearContainers();
@@ -217,7 +217,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Kalman Filter Utilities */
     KFParticle CreateKFParticle(AliESDtrack& track, Double_t mass, Int_t charge, Bool_t inner = kTRUE);
     KFVertex CreateKFVertex(const AliVVertex& vertex);
-    KFParticle TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Int_t pdgThis, Int_t chargeThis);
+    KFParticle TransportKFParticle(KFParticle kfThis, KFParticle kfOther, Double_t massThis, Int_t chargeThis);
     void GetDStoParticleBz(float Bz, const KFParticleBase& p, const KFParticleBase& q, float dS[2], float dsdr[4][6], const float* param1 = 0,
                            const float* param2 = 0) const;
 
@@ -226,11 +226,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
    private:
     /* Settings ~ stored in Analysis Manager ~ all persistent */
-    Bool_t fIsMC;             // kTRUE if MC simulation, kFALSE if data
-    TString fSourceOfV0s;     // choose V0 finder: "kalman", "custom", "on-the-fly", "offline"
-    Char_t fReactionChannel;  // reaction channel identifier, could be: 'A', 'D', 'E', 'H'
-    Bool_t fDoQA;             // kTRUE to do QA
-    Bool_t fReadSignalLogs;   // kTRUE to read and load signal logs
+    Bool_t fIsMC;            // kTRUE if MC simulation, kFALSE if data
+    TString fSourceOfV0s;    // choose V0 finder: "kalman", "custom", "on-the-fly", "offline"
+    Bool_t fDoQA;            // kTRUE to do QA
+    Bool_t fReadSignalLogs;  // kTRUE to read and load signal logs
 
     /* AliRoot Objects */
     AliMCEvent* fMC;                //! MC event
@@ -246,33 +245,40 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t fCentrality;            //! centrality percentile
 
     /* ROOT Objects */
-    TDatabasePDG fPDG;              //!
-    TList* fList_QA_Hists;          //!
-    TList* fList_Tracks_Hists;      //!
-    TList* fList_V0s_Hists;         //!
-    TList* fList_Sexaquarks_Hists;  //!
-    TList* fList_KaonPairs_Hists;   //!
+    TDatabasePDG fPDG;                     //!
+    TList* fList_QA_Hists;                 //!
+    TList* fList_Tracks_Hists;             //!
+    TList* fList_V0s_Hists;                //!
+    TList* fList_KaonPairs_Hists;          //!
+    TList* fList_Sexaquarks_ALPK_Hists;    //!
+    TList* fList_Sexaquarks_ALK0_Hists;    //!
+    TList* fList_Sexaquarks_ALKKX_Hists;   //!
+    TList* fList_Sexaquarks_ALPKPP_Hists;  //!
 
     /* External Files */
     TString fAliEnPath;    //!
     Bool_t fIsFirstEvent;  //!
 
-    /* Filled at Initialize() ~ persistent */
-    std::vector<Int_t> fProductsPDG;                               // PDG codes if the immediate products of the reaction
-    std::vector<Int_t> fFinalStateProductsPDG;                     // PDG codes of the final state products
-    Int_t fStruckNucleonPDG;                                       // PDG code of the struck nucleon, could be: 2112 o 2212
-    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;  // PDG code of the negative daughter from the V0 PDG code
-    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;  // PDG code of the positive daughter from the V0 PDG code
+    /* Filled at `Initialize()` ~ persistent */
+    Double_t kMass_Neutron;                                        //
+    Double_t kMass_Proton;                                         //
+    Double_t kMass_Kaon;                                           //
+    Double_t kMass_Pion;                                           //
+    std::unordered_map<Int_t, Int_t> getNegPdgCode_fromV0PdgCode;  // key: `V0 pdg code`, value: `negative daughter pdg code`
+    std::unordered_map<Int_t, Int_t> getPosPdgCode_fromV0PdgCode;  // key: `V0 pdg code`, value: `positive daughter pdg code`
 
     /*** Trees ***/
 
-    TTree* fTree_Events;      //!
-    TTree* fTree_Injected;    //!
-    TTree* fTree_MC;          //!
-    TTree* fTree_Tracks;      //!
-    TTree* fTree_V0s;         //!
-    TTree* fTree_Sexaquarks;  //!
-    TTree* fTree_KaonPairs;   //!
+    TTree* fTree_Events;             //!
+    TTree* fTree_Injected;           //!
+    TTree* fTree_MC;                 //!
+    TTree* fTree_Tracks;             //!
+    TTree* fTree_V0s;                //!
+    TTree* fTree_KaonPairs;          //!
+    TTree* fTree_Sexaquarks_ALPK;    //!
+    TTree* fTree_Sexaquarks_ALK0;    //!
+    TTree* fTree_Sexaquarks_ALKKX;   //!
+    TTree* fTree_Sexaquarks_ALPKPP;  //!
 
     /*** Branches ***/
 
@@ -376,6 +382,28 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tV0_IsSignal;     //!
     Int_t tV0_ReactionID;    //!
 
+    /** Secondary K+K+ Pairs **/
+    Int_t tKaonPair_Idx;             //!
+    Int_t tKaonPair_Idx_KaonA;       //!
+    Int_t tKaonPair_Idx_KaonB;       //!
+    Float_t tKaonPair_Px;            //!
+    Float_t tKaonPair_Py;            //!
+    Float_t tKaonPair_Pz;            //!
+    Float_t tKaonPair_E;             //!
+    Float_t tKaonPair_Xv;            //! secondary x-vertex
+    Float_t tKaonPair_Yv;            //! secondary y-vertex
+    Float_t tKaonPair_Zv;            //! secondary z-vertex
+    Float_t tKaonPair_DistFromPV;    //!
+    Float_t tKaonPair_DCAwrtPV;      //!
+    Float_t tKaonPair_DCAbtwKaons;   //!
+    Float_t tKaonPair_DCAkaSV;       //!
+    Float_t tKaonPair_DCAkbSV;       //!
+    Float_t tKaonPair_OpeningAngle;  //!
+    Float_t tKaonPair_Chi2ndf;       //!
+    Bool_t tKaonPair_IsHybrid;       //!
+    Bool_t tKaonPair_IsSignal;       //!
+    Int_t tKaonPair_ReactionID;      //!
+
     /** Anti-Sexaquark Candidates **/
     Int_t tSexaquark_Idx_AL;            //!
     Int_t tSexaquark_Idx_AL_Neg;        //!
@@ -433,34 +461,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tSexaquarkE_DCApmPK;     //!
     Float_t tSexaquarkE_DCAppPK;     //!
 
-    /** Secondary K+K+ Pairs **/
-    Int_t tKaonPair_Idx;             //!
-    Int_t tKaonPair_Idx_KaonA;       //!
-    Int_t tKaonPair_Idx_KaonB;       //!
-    Float_t tKaonPair_Px;            //!
-    Float_t tKaonPair_Py;            //!
-    Float_t tKaonPair_Pz;            //!
-    Float_t tKaonPair_E;             //!
-    Float_t tKaonPair_Xv;            //! secondary x-vertex
-    Float_t tKaonPair_Yv;            //! secondary y-vertex
-    Float_t tKaonPair_Zv;            //! secondary z-vertex
-    Float_t tKaonPair_DistFromPV;    //!
-    Float_t tKaonPair_DCAwrtPV;      //!
-    Float_t tKaonPair_DCAbtwKaons;   //!
-    Float_t tKaonPair_DCAkaSV;       //!
-    Float_t tKaonPair_DCAkbSV;       //!
-    Float_t tKaonPair_OpeningAngle;  //!
-    Float_t tKaonPair_Chi2ndf;       //!
-    Bool_t tKaonPair_IsHybrid;       //!
-    Bool_t tKaonPair_IsSignal;       //!
-    Int_t tKaonPair_ReactionID;      //!
-
-    /*** Histograms ***/
+    /* Histograms */
 
     /** QA Histograms **/
 
-    std::map<TString, TH1F*> fHist_QA;    //!
-    std::map<TString, TH2F*> f2DHist_QA;  //!
+    std::map<TString, TH1F*> fHist_QA;    //! key: `property`
+    std::map<TString, TH2F*> f2DHist_QA;  //! key: `hist name`
 
     /** Tracks Histograms **/
 
@@ -477,7 +483,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     */
     TH1F* fHist_Tracks_Bookkeep;                                                 //!
     std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;  //! key: `stage, set, pdg, property`
-    std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;                           //! key: `set`, value: histogram
+    std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;                           //! key: `set`
 
     /** V0s Histograms **/
 
@@ -501,20 +507,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;  //! key: `stage, set, pdg, property`
     std::map<TString, TH2F*> f2DHist_V0s_ArmenterosPodolanski;                //! key: `set`
 
-    /** Anti-Sexaquark Histograms **/
-
-    /*
-     - `0`   : MC Gen.
-     - `10`  : findable
-     - `20+` : effect of cuts on found candidates
-     - `50`  : found candidates that passed all cuts
-     - `60+` : effect of cuts on SIGNAL candidates
-     - `90`  : found SIGNAL candidates that passed all cuts
-    */
-    TH1D* fHist_AntiSexaquarks_Bookkeep;                                          //!
-    std::map<std::tuple<TString, TString, TString>, TH1D*> fHist_AntiSexaquarks;  //! key: `stage, set, property`
-
-    /** Channel H / Pos. Kaon Pairs Histograms **/
+    /** Secondary K+K+ Pairs Histograms **/
 
     /*
      - `0`   : MC Gen.
@@ -526,6 +519,19 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     */
     TH1D* fHist_KaonPairs_Bookkeep;                                          //!
     std::map<std::tuple<TString, TString, TString>, TH1D*> fHist_KaonPairs;  //! key: `stage, set, property`
+
+    /** Anti-Sexaquark Histograms **/
+
+    /*
+     - `0`   : MC Gen.
+     - `10`  : findable
+     - `20+` : effect of cuts on found candidates
+     - `50`  : found candidates that passed all cuts
+     - `60+` : effect of cuts on SIGNAL candidates
+     - `90`  : found SIGNAL candidates that passed all cuts
+    */
+    std::map<TString, TH1D*> fHist_AntiSexaquarks_Bookkeep;                                //! key: `reaction channel`
+    std::map<std::tuple<TString, TString, TString, TString>, TH1D*> fHist_AntiSexaquarks;  //! key: `reaction channel, stage, set, property`
 
     /*** Containers -- vectors and hash tables ***/
     /* Note: when adding a new one, don't forget to clear it on `ClearContainers()` */
@@ -566,11 +572,15 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getPosDauEsdIdx_fromMcIdx;  //! key: `mcIdx`
 
     std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //!
+    std::vector<Int_t> esdIndicesOfProtonTracks;      //!
+    std::vector<Int_t> esdIndicesOfNegKaonTracks;     //!
     std::vector<Int_t> esdIndicesOfPosKaonTracks;     //!
     std::vector<Int_t> esdIndicesOfPiMinusTracks;     //!
     std::vector<Int_t> esdIndicesOfPiPlusTracks;      //!
 
-    /* filled at `GetV0sFromESD() and [Custom|Kalman]V0Finder()` */
+    /* filled at `GetV0sFromESD()` and `[Custom|Kalman]V0Finder()` */
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromLambdaIdx;         //!
+    std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromLambdaIdx;         //!
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromAntiLambdaIdx;     //!
     std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromAntiLambdaIdx;     //!
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromKaonZeroShortIdx;  //!
@@ -578,14 +588,16 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getEsdIdxOfNegDau_fromPionPairIdx;       //!
     std::unordered_map<Int_t, Int_t> getEsdIdxOfPosDau_fromPionPairIdx;       //!
 
+    std::vector<AliESDv0> esdLambdas;         //!
     std::vector<AliESDv0> esdAntiLambdas;     //!
     std::vector<AliESDv0> esdKaonsZeroShort;  //!
 
+    std::vector<KFParticleMother> kfLambdas;         //!
     std::vector<KFParticleMother> kfAntiLambdas;     //!
     std::vector<KFParticleMother> kfKaonsZeroShort;  //!
     std::vector<KFParticleMother> kfPionPairs;       //!
 
-    /*** Cuts ~ persistent, because they are set on Initialize() ***/
+    /*** Cuts ~ persistent, because they are set on `Initialize()` ***/
 
     /** Tracks **/
     Float_t kMax_NSigma_Pion;                          //
@@ -619,6 +631,15 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Float_t> kMax_V0_ImprvDCAbtwDau;  // key: `pdg code`
     std::unordered_map<Int_t, Float_t> kMax_V0_Chi2;            // key: `pdg code`
     std::unordered_map<Int_t, Float_t> kMax_V0_Chi2ndf;         // key: `pdg code`
+
+    /** Secondary K+K+ Pairs **/
+    Float_t kMin_KaonPair_Radius;       //
+    Float_t kMin_KaonPair_Pt;           //
+    Float_t kMin_KaonPair_DCAwrtPV;     //
+    Float_t kMax_KaonPair_DCAbtwKaons;  //
+    Float_t kMax_KaonPair_DCApkaSV;     //
+    Float_t kMax_KaonPair_DCApkbSV;     //
+    Float_t kMax_KaonPair_Chi2ndf;      //
 
     /** Anti-Sexaquark Candidates **/
     Float_t kMin_Sexa_Pt;          //
@@ -656,21 +677,14 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t kMax_Sexa_DCAv0pp;     //
     Float_t kMax_Sexa_DCApkpm;     //
     Float_t kMax_Sexa_DCApkpp;     //
-
-    /** Secondary K+K+ Pairs **/
-    Float_t kMin_KaonPair_Radius;       //
-    Float_t kMin_KaonPair_Pt;           //
-    Float_t kMin_KaonPair_DCAwrtPV;     //
-    Float_t kMax_KaonPair_DCAbtwKaons;  //
-    Float_t kMax_KaonPair_DCApkaSV;     //
-    Float_t kMax_KaonPair_DCApkbSV;     //
-    Float_t kMax_KaonPair_Chi2ndf;      //
+    /* Channel H */
+    // PENDING
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented
 
     /// \cond CLASSDEF
-    ClassDef(AliAnalysisTaskSexaquark, 80);  // = number of persistent members
+    ClassDef(AliAnalysisTaskSexaquark, 78);  // = number of persistent members
     /// \endcond
 };
 
