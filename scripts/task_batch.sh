@@ -37,7 +37,6 @@ echo "INFO :: task_batch.sh :: RUN_NUMBERS_LIST = ${RUN_NUMBERS_LIST}"
 echo "INFO :: task_batch.sh :: SOURCE_OF_V0S    = ${SOURCE_OF_V0S}"
 echo "INFO :: task_batch.sh :: SIMULATION_SET   = ${SIMULATION_SET}"
 echo "INFO :: task_batch.sh :: DO_QA            = ${DO_QA}"
-echo "INFO :: task_batch.sh :: READ_SIGNAL_LOGS = ${READ_SIGNAL_LOGS}"
 echo "INFO :: task_batch.sh :: CHOOSE_N_EVENTS  = ${CHOOSE_N_EVENTS}"
 
 SBATCH_SETUP="--partition=main"

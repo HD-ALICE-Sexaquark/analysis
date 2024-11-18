@@ -27,7 +27,6 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
                  TString SourceOfV0s,     // "kalman", "custom", "on-the-fly", "offline"
                  TString SimulationSet,   // format: "<A,D,E,H><1.73,1.8,1.87,1.94,2.01>" e.g. "A1.73"
                  Bool_t DoQA,             //
-                 Bool_t ReadSignalLogs,   // (only valid when analyzing signal MC)
                  Int_t ChooseNEvents = 0  // (only valid when Mode == "local" or Mode == "hybrid") 0 means all events
 ) {
 
@@ -66,8 +65,8 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
     }
 
     if (!IsMC) {
-        if (DoQA || ReadSignalLogs) {
-            std::cerr << "!! runAnalysis.C !! Error !! DoQA and ReadSignalLogs are only valid for MC !!" << std::endl;
+        if (DoQA) {
+            std::cerr << "!! runAnalysis.C !! Error !! DoQA are only valid for MC !!" << std::endl;
             return;
         }
         if (ProductionName != "LHC15o" && ProductionName != "LHC18q" && ProductionName != "LHC18r") {
@@ -76,14 +75,11 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
         }
     }
 
-    if (!ProductionName.Contains("LHC23l1") && ReadSignalLogs) {
-        std::cerr << "!! runAnalysis.C !! Error !! ReadSignalLogs is only valid for signal MC !!" << std::endl;
-        return;
-    }
-
     std::cout << "!! runAnalysis.C !! Passed initial input checks !!" << std::endl;
 
     /* Determine Further Options */
+
+    Bool_t IsSignalMC = ProductionName.Contains("23l1");
 
     Int_t PassNumber = 3;  // default for 18qr and anchored sims
     if (ProductionName == "LHC15o" || ProductionName == "LHC23l1b3" || ProductionName == "LHC20j6a") PassNumber = 2;
@@ -91,10 +87,10 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
     TString ProductionYear = "20" + ProductionName(3, 2);
 
     TString LocalDataDir = Form("%s/%s", LocalInputPath.Data(), ProductionName.Data());
-    if (ProductionName.Contains("23l1")) LocalDataDir += Form("/%s", SimulationSet.Data());  // signal MC
+    if (IsSignalMC) LocalDataDir += Form("/%s", SimulationSet.Data());
 
     TString GridDataDir = Form("/alice/sim/%s/%s", ProductionYear.Data(), ProductionName.Data());
-    if (ProductionName.Contains("23l1")) GridDataDir += Form("/%s", SimulationSet.Data());  // signal MC
+    if (IsSignalMC) GridDataDir += Form("/%s", SimulationSet.Data());
     TString GridDataPattern = "/*/AliESDs.root";
 
     TString GridWorkingDir = "work/Sexaquark";
@@ -102,7 +98,7 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
         GridWorkingDir += Form("_Data_%s", ProductionName.Data());
     else
         GridWorkingDir += Form("_MC_%s", ProductionName.Data());
-    if (ProductionName.Contains("23l1")) GridWorkingDir += Form("_%s", SimulationSet.Data());
+    if (IsSignalMC) GridWorkingDir += Form("_%s", SimulationSet.Data());
 
     TString GridOutputDir = "output";
 
@@ -212,8 +208,8 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
 
     gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
 
-    TString TaskSexaquark_Options = Form("(%i, \"%s\", %i, %i)",  //
-                                         (Int_t)IsMC, SourceOfV0s.Data(), (Int_t)DoQA, (Int_t)ReadSignalLogs);
+    TString TaskSexaquark_Options = Form("(%i, %i, \"%s\", %i)",  //
+                                         (Int_t)IsMC, (Int_t)IsSignalMC, SourceOfV0s.Data(), (Int_t)DoQA);
     AliAnalysisTaskSexaquark *TaskSexaquark =
         reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro("AddSexaquark.C" + TaskSexaquark_Options));
     if (!TaskSexaquark) return;

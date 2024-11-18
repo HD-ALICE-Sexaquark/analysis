@@ -1,7 +1,7 @@
 #include "AliAnalysisManager.h"
 #include "AliAnalysisTaskSexaquark.h"
 
-AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s = "kalman", Bool_t DoQA = kFALSE, Bool_t ReadSignalLogs = kTRUE) {
+AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, Bool_t IsSignalMC = kTRUE, TString SourceOfV0s = "kalman", Bool_t DoQA = kFALSE) {
 
     AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
     if (!mgr) return nullptr;
@@ -11,10 +11,9 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
 
     task->SelectCollisionCandidates(AliVEvent::kAnyINT);  // from `AliPhysicsSelectionTask`
 
-    task->IsMC(IsMC);
+    task->IsMC(IsMC, IsSignalMC);
     task->SetSourceOfV0s(SourceOfV0s);
     task->DoQA(DoQA);
-    task->ReadSignalLogs(ReadSignalLogs);
     task->Initialize();
 
     mgr->AddTask(task);
@@ -32,7 +31,7 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
     mgr->ConnectOutput(task, 6, mgr->CreateContainer("KaonPairs", TTree::Class(), output_container, filename.Data()));
     mgr->ConnectOutput(task, 7, mgr->CreateContainer("Sexaquarks_ALPK", TTree::Class(), output_container, filename.Data()));
     mgr->ConnectOutput(task, 8, mgr->CreateContainer("Sexaquarks_ALK0", TTree::Class(), output_container, filename.Data()));
-    mgr->ConnectOutput(task, 9, mgr->CreateContainer("Sexaquarks_ALKKX", TTree::Class(), output_container, filename.Data()));
+    mgr->ConnectOutput(task, 9, mgr->CreateContainer("Sexaquarks_APKKX", TTree::Class(), output_container, filename.Data()));
     mgr->ConnectOutput(task, 10, mgr->CreateContainer("Sexaquarks_ALPKPP", TTree::Class(), output_container, filename.Data()));
 
     mgr->ConnectOutput(task, 11, mgr->CreateContainer("QA_Hists", TList::Class(), output_container, filename.Data()));
@@ -41,7 +40,7 @@ AliAnalysisTaskSexaquark *AddSexaquark(Bool_t IsMC = kTRUE, TString SourceOfV0s 
     mgr->ConnectOutput(task, 14, mgr->CreateContainer("KaonPairs_Hists", TList::Class(), output_container, filename.Data()));
     mgr->ConnectOutput(task, 15, mgr->CreateContainer("Sexaquarks_ALPK_Hists", TList::Class(), output_container, filename.Data()));
     mgr->ConnectOutput(task, 16, mgr->CreateContainer("Sexaquarks_ALK0_Hists", TList::Class(), output_container, filename.Data()));
-    mgr->ConnectOutput(task, 17, mgr->CreateContainer("Sexaquarks_ALKKX_Hists", TList::Class(), output_container, filename.Data()));
+    mgr->ConnectOutput(task, 17, mgr->CreateContainer("Sexaquarks_APKKX_Hists", TList::Class(), output_container, filename.Data()));
     mgr->ConnectOutput(task, 18, mgr->CreateContainer("Sexaquarks_ALPKPP_Hists", TList::Class(), output_container, filename.Data()));
 
     return task;

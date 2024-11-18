@@ -94,17 +94,19 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     virtual void Terminate(Option_t* option) { return; }
 
     /* Settings ~ stored in Analysis Manager */
-    void IsMC(Bool_t IsMC) { fIsMC = IsMC; };
+    void IsMC(Bool_t IsMC, Bool_t IsSignalMC = kFALSE) {
+        fIsMC = IsMC;
+        fIsSignalMC = IsSignalMC;
+    };
     void SetSourceOfV0s(TString SourceOfV0s) { fSourceOfV0s = SourceOfV0s; };
     void DoQA(Bool_t DoQA) { fDoQA = DoQA; };
-    void ReadSignalLogs(Bool_t ReadSignalLogs) { fReadSignalLogs = ReadSignalLogs; };
     void Initialize();
 
     /* Main ~ executed at runtime */
     virtual void UserCreateOutputObjects();
+    virtual Bool_t UserNotify();
     virtual void UserExec(Option_t* option);
     void EndOfEvent();
-    virtual Bool_t UserNotify();
 
     /* Trees */
     void PrepareEventsBranches();
@@ -139,7 +141,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* MC Generated */
     void ProcessMCGen();
-    void ProcessSignalInteractions(Int_t PdgCode_StruckNucleon);
+    void ProcessSignalReactions();
 
     /* Tracks */
     Bool_t PassesEventSelection();
@@ -148,11 +150,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t PassesSpeciesSelection(AliESDtrack* track, Int_t esdPdgCode, Bool_t is_secondary, Bool_t is_signal);
     void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
 
-    /* V0s, Anti-Sexaquarks, K+K+ pairs -- That Require True Info */
+    /* V0s, K+K+ pairs, Anti-Sexaquarks -- That Require True Info */
     void ProcessFindableV0s();
     void ProcessFindablePionPairs();
     void ProcessFindableKaonPairs();
-    void ProcessFindableSexaquarks(TString ReactionChannel);
+    void ProcessFindableSexaquarks();
 
     /* V0s */
     void GetV0sFromESD(Bool_t onTheFly);
@@ -222,14 +224,14 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                            const float* param2 = 0) const;
 
     /* External Files */
-    Bool_t LoadLogsIntoTree();
+    Bool_t ReadSignalLogs();
 
    private:
     /* Settings ~ stored in Analysis Manager ~ all persistent */
-    Bool_t fIsMC;            // kTRUE if MC simulation, kFALSE if data
-    TString fSourceOfV0s;    // choose V0 finder: "kalman", "custom", "on-the-fly", "offline"
-    Bool_t fDoQA;            // kTRUE to do QA
-    Bool_t fReadSignalLogs;  // kTRUE to read and load signal logs
+    Bool_t fIsMC;          // kTRUE if MC simulation, kFALSE if data
+    Bool_t fIsSignalMC;    // kTRUE to read and load signal logs
+    TString fSourceOfV0s;  // choose V0 finder: "kalman", "custom", "on-the-fly", "offline"
+    Bool_t fDoQA;          // kTRUE to do QA
 
     /* AliRoot Objects */
     AliMCEvent* fMC;                //! MC event
@@ -252,12 +254,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TList* fList_KaonPairs_Hists;          //!
     TList* fList_Sexaquarks_ALPK_Hists;    //!
     TList* fList_Sexaquarks_ALK0_Hists;    //!
-    TList* fList_Sexaquarks_ALKKX_Hists;   //!
+    TList* fList_Sexaquarks_APKKX_Hists;   //!
     TList* fList_Sexaquarks_ALPKPP_Hists;  //!
 
     /* External Files */
-    TString fAliEnPath;    //!
-    Bool_t fIsFirstEvent;  //!
+    TString fAliEnPath;        //! loaded in `UserNotify()`
+    Bool_t fIsFirstEvent;      //!
+    TString fReactionChannel;  //! derived from `fAliEnPath` in `UserNotify()`
 
     /* Filled at `Initialize()` ~ persistent */
     Double_t kMass_Neutron;                                        //
@@ -277,7 +280,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TTree* fTree_KaonPairs;          //!
     TTree* fTree_Sexaquarks_ALPK;    //!
     TTree* fTree_Sexaquarks_ALK0;    //!
-    TTree* fTree_Sexaquarks_ALKKX;   //!
+    TTree* fTree_Sexaquarks_APKKX;   //!
     TTree* fTree_Sexaquarks_ALPKPP;  //!
 
     /*** Branches ***/
@@ -353,16 +356,15 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TBits tTrack_TPCSharedMap;     //!
     Bool_t tTrack_IsKinkDaughter;  //!
     Int_t tTrack_Idx_True;         //!
-    Int_t tTrack_PdgCode_True;     //!
+    Int_t tTrack_True_PdgCode;     //!
     Bool_t tTrack_IsSecondary;     //!
     Bool_t tTrack_IsSignal;        //!
     Int_t tTrack_ReactionID;       //!
 
     /** V0s **/
     Int_t tV0_Idx;           //!
-    Int_t tV0_Idx_Pos;       //!
     Int_t tV0_Idx_Neg;       //!
-    Int_t tV0_Idx_True;      //!
+    Int_t tV0_Idx_Pos;       //!
     Int_t tV0_PID;           //!
     Float_t tV0_Px;          //!
     Float_t tV0_Py;          //!
@@ -377,7 +379,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tV0_Pos_Px;      //!
     Float_t tV0_Pos_Py;      //!
     Float_t tV0_Pos_Pz;      //!
-    Bool_t tV0_IsTrue;       //!
+    Int_t tV0_Idx_True;      //!
+    Int_t tV0_True_PdgCode;  //!
     Bool_t tV0_IsSecondary;  //!
     Bool_t tV0_IsSignal;     //!
     Int_t tV0_ReactionID;    //!
