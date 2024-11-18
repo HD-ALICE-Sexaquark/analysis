@@ -12,5 +12,4 @@ export PRODUCTION_NAME="LHC23l1b3"
 export RUN_NUMBERS_LIST="${ANALYSIS_DIR}/doc/LHC15o_pass2_rn_TEST.txt"
 export STOP_AFTER=""
 export DO_QA=1
-export READ_SIGNAL_LOGS=1
 export CHOOSE_N_EVENTS=0

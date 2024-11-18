@@ -12,5 +12,4 @@ export PRODUCTION_NAME="LHC20e3a"
 export RUN_NUMBERS_LIST="${ANALYSIS_DIR}/doc/LHC18qr_pass3_rn_TEST.txt"
 export STOP_AFTER=""
 export DO_QA=1
-export READ_SIGNAL_LOGS=0
 export CHOOSE_N_EVENTS=0
