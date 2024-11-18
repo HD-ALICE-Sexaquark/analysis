@@ -10,6 +10,5 @@ export GRID_TEST_MODE=0
 export IS_MC=1
 export PRODUCTION_NAME="LHC20j6a"
 export RUN_NUMBERS_LIST="${ANALYSIS_DIR}/doc/LHC15o_pass2_rn.txt"
-export STOP_AFTER=""
 export DO_QA=1
 export CHOOSE_N_EVENTS=0
