@@ -12,6 +12,7 @@
 #include <map>
 #include <set>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 #include "TArray.h"
@@ -384,6 +385,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Bool_t tV0_IsSecondary;  //!
     Bool_t tV0_IsSignal;     //!
     Int_t tV0_ReactionID;    //!
+    Bool_t tV0_IsHybrid;     //!
 
     /** Secondary K+K+ Pairs **/
     Int_t tKaonPair_Idx;             //!
@@ -403,9 +405,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tKaonPair_DCAkbSV;       //!
     Float_t tKaonPair_OpeningAngle;  //!
     Float_t tKaonPair_Chi2ndf;       //!
-    Bool_t tKaonPair_IsHybrid;       //!
     Bool_t tKaonPair_IsSignal;       //!
     Int_t tKaonPair_ReactionID;      //!
+    Bool_t tKaonPair_IsHybrid;       //!
 
     /** Anti-Sexaquark Candidates **/
     Int_t tSexaquark_Idx_AL;            //!
@@ -422,9 +424,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tSexaquark_CPAwrtPV;        //!
     Float_t tSexaquark_DCAwrtPV;        //!
     Float_t tSexaquark_Chi2ndf;         //!
-    Bool_t tSexaquark_IsHybrid;         //!
     Bool_t tSexaquark_IsSignal;         //!
     Int_t tSexaquark_ReactionID;        //!
+    Bool_t tSexaquark_IsHybrid;         //!
     Float_t tSexaquark_AL_DecayLength;  //!
     /* Channel A */
     Int_t tSexaquarkA_Idx_K0S;            //!
@@ -545,35 +547,34 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Bool_t> isMcIdxSignal;     //! key: `mcIdx`
     std::unordered_map<Int_t, Bool_t> isMcIdxSecondary;  //! key: `mcIdx`
 
-    std::unordered_map<Int_t, UInt_t> getReactionID_fromMcIdx;                   //! key: `mcIdx`
-    std::unordered_map<UInt_t, std::vector<Int_t>> getMcIndices_fromReactionID;  //! key: `ReactionID`
+    std::unordered_map<Int_t, Int_t> getReactionID_fromMcIdx;                   //! key: `mcIdx`
+    std::unordered_map<Int_t, std::vector<Int_t>> getMcIndices_fromReactionID;  //! key: `ReactionID`
 
     std::unordered_map<Int_t, Bool_t> doesMcIdxHaveMother;      //! key: `mcIdx`
     std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromMcIdx;  //! key: `mcIdx`
     std::unordered_map<Int_t, Int_t> getNegDauMcIdx_fromMcIdx;  //! key: `mcIdx`
     std::unordered_map<Int_t, Int_t> getPosDauMcIdx_fromMcIdx;  //! key: `mcIdx`
 
-    std::vector<Int_t> mcIndicesOfTrueV0s;  //!
-
     /* filled at `ProcessTracks()` */
-    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;                       //! key: `esdIdx`
-    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsProton;      //! key: `esdIdx`, necessary for `GetV0sFromESD()`
-    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsAntiProton;  //! key: `esdIdx`
-    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsPosKaon;     //! key: `esdIdx`
-    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsNegKaon;     //! key: `esdIdx`
-    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsPiPlus;      //! key: `esdIdx`
-    std::unordered_map<Int_t, Bool_t> esdIdxPassesTrackSelection_AsPiMinus;     //! key: `esdIdx`
-    std::unordered_map<Int_t, Int_t> getEsdIdx_fromMcIdx;                       //! key: `mcIdx`
+    std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;  //! key: `esdIdx`
 
-    std::unordered_map<Int_t, Bool_t> isEsdIdxSignal;                             //! key: `esdIdx`
-    std::unordered_map<Int_t, UInt_t> getReactionID_fromEsdIdx;                   //! key: `esdIdx`
-    std::unordered_map<UInt_t, std::vector<Int_t>> getEsdIndices_fromReactionID;  //! key: `ReactionID`
+    /* used in `GetV0sFromESD()` */
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSelectedAsProton;      //! key: `esdIdx`
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSelectedAsAntiProton;  //! key: `esdIdx`
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSelectedAsPosKaon;     //! key: `esdIdx`
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSelectedAsNegKaon;     //! key: `esdIdx`
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSelectedAsPiPlus;      //! key: `esdIdx`
+    std::unordered_map<Int_t, Bool_t> isEsdIdxSelectedAsPiMinus;     //! key: `esdIdx`
 
-    std::unordered_map<Int_t, Bool_t> doesEsdIdxHaveMother;      //! key: `esdIdx`
-    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromEsdIdx;  //! key: `esdIdx`
+    /* used in `ProcessFindableSexaquarks()` */
+    std::unordered_map<Int_t, std::vector<Int_t>> getEsdIndices_fromReactionID;  //! key: `ReactionID`
+
+    /* used in `ProcessFindableV0s()` */
+    std::vector<Int_t> mcIndicesOfTrueV0s;                       //!
     std::unordered_map<Int_t, Int_t> getNegDauEsdIdx_fromMcIdx;  //! key: `mcIdx`
     std::unordered_map<Int_t, Int_t> getPosDauEsdIdx_fromMcIdx;  //! key: `mcIdx`
 
+    /* looped over in `KalmanV0Finder()` and Sexaquark Finders */
     std::vector<Int_t> esdIndicesOfAntiProtonTracks;  //!
     std::vector<Int_t> esdIndicesOfProtonTracks;      //!
     std::vector<Int_t> esdIndicesOfNegKaonTracks;     //!

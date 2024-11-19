@@ -1,5 +1,4 @@
 #include "AliAnalysisTaskSexaquark.h"
-#include <unordered_set>
 
 ClassImp(AliAnalysisTaskSexaquark);
 
@@ -152,6 +151,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tV0_IsSecondary(0),
       tV0_IsSignal(0),
       tV0_ReactionID(0),
+      tV0_IsHybrid(0),
       /*  */
       tSexaquark_Idx_AL(0),
       tSexaquark_Idx_AL_Neg(0),
@@ -167,10 +167,10 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tSexaquark_CPAwrtPV(0),
       tSexaquark_DCAwrtPV(0),
       tSexaquark_Chi2ndf(0),
-      tSexaquark_IsHybrid(0),
+      tSexaquark_AL_DecayLength(0),
       tSexaquark_IsSignal(0),
       tSexaquark_ReactionID(0),
-      tSexaquark_AL_DecayLength(0),
+      tSexaquark_IsHybrid(0),
       /*  */
       tSexaquarkA_Idx_K0S(0),
       tSexaquarkA_Idx_K0S_Neg(0),
@@ -226,9 +226,9 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tKaonPair_DCAkbSV(0),
       tKaonPair_OpeningAngle(0),
       tKaonPair_Chi2ndf(0),
-      tKaonPair_IsHybrid(0),
       tKaonPair_IsSignal(0),
       tKaonPair_ReactionID(0),
+      tKaonPair_IsHybrid(0),
       /*  */
       fHist_QA(),
       f2DHist_QA(),
@@ -255,18 +255,13 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       mcIndicesOfTrueV0s(),
       /*  */
       getMcIdx_fromEsdIdx(),
-      esdIdxPassesTrackSelection_AsProton(),
-      esdIdxPassesTrackSelection_AsAntiProton(),
-      esdIdxPassesTrackSelection_AsPosKaon(),
-      esdIdxPassesTrackSelection_AsNegKaon(),
-      esdIdxPassesTrackSelection_AsPiPlus(),
-      esdIdxPassesTrackSelection_AsPiMinus(),
-      getEsdIdx_fromMcIdx(),
-      isEsdIdxSignal(),
-      getReactionID_fromEsdIdx(),
+      isEsdIdxSelectedAsProton(),
+      isEsdIdxSelectedAsAntiProton(),
+      isEsdIdxSelectedAsPosKaon(),
+      isEsdIdxSelectedAsNegKaon(),
+      isEsdIdxSelectedAsPiPlus(),
+      isEsdIdxSelectedAsPiMinus(),
       getEsdIndices_fromReactionID(),
-      doesEsdIdxHaveMother(),
-      getMotherMcIdx_fromEsdIdx(),
       getNegDauEsdIdx_fromMcIdx(),
       getPosDauEsdIdx_fromMcIdx(),
       esdIndicesOfAntiProtonTracks(),
@@ -512,6 +507,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tV0_IsSecondary(0),
       tV0_IsSignal(0),
       tV0_ReactionID(0),
+      tV0_IsHybrid(0),
       /*  */
       tSexaquark_Idx_AL(0),
       tSexaquark_Idx_AL_Neg(0),
@@ -527,10 +523,10 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tSexaquark_CPAwrtPV(0),
       tSexaquark_DCAwrtPV(0),
       tSexaquark_Chi2ndf(0),
-      tSexaquark_IsHybrid(0),
+      tSexaquark_AL_DecayLength(0),
       tSexaquark_IsSignal(0),
       tSexaquark_ReactionID(0),
-      tSexaquark_AL_DecayLength(0),
+      tSexaquark_IsHybrid(0),
       /*  */
       tSexaquarkA_Idx_K0S(0),
       tSexaquarkA_Idx_K0S_Neg(0),
@@ -586,9 +582,9 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tKaonPair_DCAkbSV(0),
       tKaonPair_OpeningAngle(0),
       tKaonPair_Chi2ndf(0),
-      tKaonPair_IsHybrid(0),
       tKaonPair_IsSignal(0),
       tKaonPair_ReactionID(0),
+      tKaonPair_IsHybrid(0),
       /*  */
       fHist_QA(),
       f2DHist_QA(),
@@ -615,18 +611,13 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       mcIndicesOfTrueV0s(),
       /*  */
       getMcIdx_fromEsdIdx(),
-      esdIdxPassesTrackSelection_AsProton(),
-      esdIdxPassesTrackSelection_AsAntiProton(),
-      esdIdxPassesTrackSelection_AsPosKaon(),
-      esdIdxPassesTrackSelection_AsNegKaon(),
-      esdIdxPassesTrackSelection_AsPiPlus(),
-      esdIdxPassesTrackSelection_AsPiMinus(),
-      getEsdIdx_fromMcIdx(),
-      isEsdIdxSignal(),
-      getReactionID_fromEsdIdx(),
+      isEsdIdxSelectedAsProton(),
+      isEsdIdxSelectedAsAntiProton(),
+      isEsdIdxSelectedAsPosKaon(),
+      isEsdIdxSelectedAsNegKaon(),
+      isEsdIdxSelectedAsPiPlus(),
+      isEsdIdxSelectedAsPiMinus(),
       getEsdIndices_fromReactionID(),
-      doesEsdIdxHaveMother(),
-      getMotherMcIdx_fromEsdIdx(),
       getNegDauEsdIdx_fromMcIdx(),
       getPosDauEsdIdx_fromMcIdx(),
       esdIndicesOfAntiProtonTracks(),
@@ -1009,6 +1000,7 @@ void AliAnalysisTaskSexaquark::PrepareV0sBranches() {
     fTree_V0s->Branch("IsSecondary", &tV0_IsSecondary);
     fTree_V0s->Branch("IsSignal", &tV0_IsSignal);
     fTree_V0s->Branch("ReactionID", &tV0_ReactionID);
+    fTree_V0s->Branch("IsHybrid", &tV0_IsHybrid);
 }
 
 /*
@@ -1033,10 +1025,11 @@ void AliAnalysisTaskSexaquark::PrepareCommonSexaquarkBranches(TTree* Tree_Sexaqu
     Tree_Sexaquarks->Branch("CPAwrtPV", &tSexaquark_CPAwrtPV);
     Tree_Sexaquarks->Branch("DCAwrtPV", &tSexaquark_DCAwrtPV);
     Tree_Sexaquarks->Branch("Chi2ndf", &tSexaquark_Chi2ndf);
-    Tree_Sexaquarks->Branch("IsHybrid", &tSexaquark_IsHybrid);
+    Tree_Sexaquarks->Branch("AL_DecayLength", &tSexaquark_AL_DecayLength);
+
     Tree_Sexaquarks->Branch("IsSignal", &tSexaquark_IsSignal);
     Tree_Sexaquarks->Branch("ReactionID", &tSexaquark_ReactionID);
-    Tree_Sexaquarks->Branch("AL_DecayLength", &tSexaquark_AL_DecayLength);
+    Tree_Sexaquarks->Branch("IsHybrid", &tSexaquark_IsHybrid);
 }
 
 /*
@@ -1105,9 +1098,9 @@ void AliAnalysisTaskSexaquark::PrepareKaonPairsBranches() {
     fTree_KaonPairs->Branch("DCAkbSV", &tKaonPair_DCAkbSV);
     fTree_KaonPairs->Branch("OpeningAngle", &tKaonPair_OpeningAngle);
     fTree_KaonPairs->Branch("Chi2ndf", &tKaonPair_Chi2ndf);
-    fTree_KaonPairs->Branch("IsHybrid", &tKaonPair_IsHybrid);
     fTree_KaonPairs->Branch("IsSignal", &tKaonPair_IsSignal);
     fTree_KaonPairs->Branch("ReactionID", &tKaonPair_ReactionID);
+    fTree_KaonPairs->Branch("IsHybrid", &tKaonPair_IsHybrid);
 }
 
 /*
@@ -1215,6 +1208,7 @@ void AliAnalysisTaskSexaquark::ClearV0sBranches() {
     tV0_IsSecondary = kFALSE;
     tV0_IsSignal = kFALSE;
     tV0_ReactionID = 0;
+    tV0_IsHybrid = kFALSE;
 }
 
 /*
@@ -1235,10 +1229,11 @@ void AliAnalysisTaskSexaquark::ClearSexaquarksBranches() {
     tSexaquark_CPAwrtPV = 0.;
     tSexaquark_DCAwrtPV = 0.;
     tSexaquark_Chi2ndf = 0.;
-    tSexaquark_IsHybrid = kFALSE;
+    tSexaquark_AL_DecayLength = 0.;
+
     tSexaquark_IsSignal = kFALSE;
     tSexaquark_ReactionID = 0;
-    tSexaquark_AL_DecayLength = 0.;
+    tSexaquark_IsHybrid = kFALSE;
 
     tSexaquarkA_Idx_K0S = 0;
     tSexaquarkA_Idx_K0S_Neg = 0;
@@ -1299,9 +1294,10 @@ void AliAnalysisTaskSexaquark::ClearKaonPairsBranches() {
     tKaonPair_DCAkbSV = 0.;
     tKaonPair_OpeningAngle = 0.;
     tKaonPair_Chi2ndf = 0.;
-    tKaonPair_IsHybrid = kFALSE;
+
     tKaonPair_IsSignal = kFALSE;
     tKaonPair_ReactionID = 0;
+    tKaonPair_IsHybrid = kFALSE;
 }
 
 /*
@@ -2537,11 +2533,11 @@ Bool_t AliAnalysisTaskSexaquark::PassesEventSelection() {
 
     if (fDoQA) fHist_QA["Events_Bookkeep"]->Fill(0);
 
-    // ! REFERENCE: https://twiki.cern.ch/twiki/bin/viewauth/ALICE/AliDPGRunList18r ! //
+    /* Reference: https://twiki.cern.ch/twiki/bin/viewauth/ALICE/AliDPGRunList18r1 */
     if (!fIsMC && (fRunNumber == 296749 || fRunNumber == 296750 || fRunNumber == 296849 || fRunNumber == 296890 || fRunNumber == 297029 ||
                    fRunNumber == 297194 || fRunNumber == 297219 || fRunNumber == 297481)) {
         fEventCuts.UseTimeRangeCut();
-        fEventCuts.OverrideAutomaticTriggerSelection(AliVEvent::kAny);  // PENDING: remove kAny!
+        fEventCuts.OverrideAutomaticTriggerSelection(AliVEvent::kAny);  // PENDING: remove kAny?
         if (!fEventCuts.AcceptEvent(fESD)) return kFALSE;
     }
 
@@ -2719,16 +2715,9 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
         /* Store info into containers (1) */
 
-        getEsdIdx_fromMcIdx[mcIdx] = esdIdxTrack;
         getMcIdx_fromEsdIdx[esdIdxTrack] = mcIdx;
+        getEsdIndices_fromReactionID[reaction_id].push_back(esdIdxTrack);
 
-        isEsdIdxSignal[esdIdxTrack] = is_signal;
-
-        getReactionID_fromEsdIdx[esdIdxTrack] = reaction_id;
-        getEsdIndices_fromReactionID[getReactionID_fromEsdIdx[esdIdxTrack]].push_back(esdIdxTrack);
-
-        doesEsdIdxHaveMother[esdIdxTrack] = doesMcIdxHaveMother[mcIdx];
-        getMotherMcIdx_fromEsdIdx[esdIdxTrack] = motherMcIdx;
         if (getNegDauMcIdx_fromMcIdx[motherMcIdx] == mcIdx) getNegDauEsdIdx_fromMcIdx[motherMcIdx] = esdIdxTrack;
         if (getPosDauMcIdx_fromMcIdx[motherMcIdx] == mcIdx) getPosDauEsdIdx_fromMcIdx[motherMcIdx] = esdIdxTrack;
 
@@ -2818,27 +2807,27 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             /* Store info into containers (2) */
 
             if (esdPdgCode == 2212) {
-                esdIdxPassesTrackSelection_AsProton[esdIdxTrack] = kTRUE;
+                isEsdIdxSelectedAsProton[esdIdxTrack] = kTRUE;
                 esdIndicesOfProtonTracks.push_back(esdIdxTrack);
             }
             if (esdPdgCode == -2212) {
-                esdIdxPassesTrackSelection_AsAntiProton[esdIdxTrack] = kTRUE;
+                isEsdIdxSelectedAsAntiProton[esdIdxTrack] = kTRUE;
                 esdIndicesOfAntiProtonTracks.push_back(esdIdxTrack);
             }
             if (esdPdgCode == 321) {
-                esdIdxPassesTrackSelection_AsPosKaon[esdIdxTrack] = kTRUE;
+                isEsdIdxSelectedAsPosKaon[esdIdxTrack] = kTRUE;
                 esdIndicesOfPosKaonTracks.push_back(esdIdxTrack);
             }
             if (esdPdgCode == -321) {
-                esdIdxPassesTrackSelection_AsNegKaon[esdIdxTrack] = kTRUE;
+                isEsdIdxSelectedAsNegKaon[esdIdxTrack] = kTRUE;
                 esdIndicesOfNegKaonTracks.push_back(esdIdxTrack);
             }
             if (esdPdgCode == 211) {
-                esdIdxPassesTrackSelection_AsPiPlus[esdIdxTrack] = kTRUE;
+                isEsdIdxSelectedAsPiPlus[esdIdxTrack] = kTRUE;
                 esdIndicesOfPiPlusTracks.push_back(esdIdxTrack);
             }
             if (esdPdgCode == -211) {
-                esdIdxPassesTrackSelection_AsPiMinus[esdIdxTrack] = kTRUE;
+                isEsdIdxSelectedAsPiMinus[esdIdxTrack] = kTRUE;
                 esdIndicesOfPiMinusTracks.push_back(esdIdxTrack);
             }
 
@@ -3059,6 +3048,8 @@ void AliAnalysisTaskSexaquark::PlotStatus(AliESDtrack* track, TString set, Int_t
 void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
     AliMCParticle* mcV0;
+    Int_t pdg_code;
+
     AliMCParticle* mcNegDaughter;
     AliMCParticle* mcPosDaughter;
 
@@ -3067,12 +3058,11 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
     Math::XYZPoint OriginVertex;
     Math::XYZPoint DecayVertex;
 
-    Math::XYZVector neg;
-    Math::XYZVector pos;
+    Math::XYZVector lvNegDaughter;
+    Math::XYZVector lvPosDaughter;
 
-    /* Declare auxiliary variables */
+    /* Auxiliary variables */
 
-    Int_t pdg_code;
     Bool_t is_signal;
     Bool_t is_secondary;
 
@@ -3088,7 +3078,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
         /* Is a V0 of interest? */
 
         pdg_code = mcV0->PdgCode();
-        if (pdg_code != -3122 && pdg_code != 310) continue;
+        if (TMath::Abs(pdg_code) != 3122 && pdg_code != 310) continue;
 
         /* Check if both daughters were reconstructed and passed track selection */
 
@@ -3104,8 +3094,8 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
         mcNegDaughter = (AliMCParticle*)fMC->GetTrack(getNegDauMcIdx_fromMcIdx[mcIdxOfTrueV0]);
         mcPosDaughter = (AliMCParticle*)fMC->GetTrack(getPosDauMcIdx_fromMcIdx[mcIdxOfTrueV0]);
 
-        neg.SetXYZ(mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz());
-        pos.SetXYZ(mcPosDaughter->Px(), mcPosDaughter->Py(), mcPosDaughter->Pz());
+        lvNegDaughter.SetXYZ(mcNegDaughter->Px(), mcNegDaughter->Py(), mcNegDaughter->Pz());
+        lvPosDaughter.SetXYZ(mcPosDaughter->Px(), mcPosDaughter->Py(), mcPosDaughter->Pz());
 
         /* Get V0 properties */
 
@@ -3135,7 +3125,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
         fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Eta")]->Fill(mcV0->Eta());
         fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "Rapidity")]->Fill(mcV0->Y());
         fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
-        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
+        fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(lvNegDaughter, lvPosDaughter));
         fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "ArmQt")]->Fill(arm_qt);
         fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
         fHist_V0s[std::make_tuple("Findable", "True", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -3156,7 +3146,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
         fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Eta")]->Fill(mcV0->Eta());
         fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "Rapidity")]->Fill(mcV0->Y());
         fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
-        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
+        fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(lvNegDaughter, lvPosDaughter));
         fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "ArmQt")]->Fill(arm_qt);
         fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
         fHist_V0s[std::make_tuple("Findable", "Secondary", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -3177,7 +3167,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
         fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Eta")]->Fill(mcV0->Eta());
         fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "Rapidity")]->Fill(mcV0->Y());
         fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "DecayLength")]->Fill((DecayVertex - OriginVertex).R());
-        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(neg, pos));
+        fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "OpeningAngle")]->Fill(Math::VectorUtil::Angle(lvNegDaughter, lvPosDaughter));
         fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "ArmQt")]->Fill(arm_qt);
         fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "ArmAlpha")]->Fill(arm_alpha);
         fHist_V0s[std::make_tuple("Findable", "Signal", pdg_code, "CPAwrtPV")]->Fill(cpa_wrt_pv);
@@ -3187,22 +3177,19 @@ void AliAnalysisTaskSexaquark::ProcessFindableV0s() {
 
 /*
  * Find the reconstructed signal pi+ (that don't come from the anti-lambda) and pi-
- * (only valid for Reaction Channel E: anti-lambda, K+, pi+, pi-)
+ * (only valid for Reaction Channel: anti-lambda, K+, pi+, pi-)
  */
 void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
 
-    Int_t single_pion_pdg_code;
-    Int_t single_pion_mother_pdg_code;
+    Int_t mcIdx;
+    Int_t pdg_code;
 
-    Int_t mcIdxPiPlus;
-    Int_t mcIdxPiMinus;
-    AliMCParticle* mcPiPlus;
-    AliMCParticle* mcPiMinus;
+    AliMCParticle *mcPiMinus, *mcPiPlus;
+    Int_t mcIdxPiMinus, mcIdxPiPlus;
 
     /* Declare vectors */
 
-    Math::PxPyPzEVector lvPiPlus;
-    Math::PxPyPzEVector lvPiMinus;
+    Math::PxPyPzEVector lvPiMinus, lvPiPlus;
     Math::PxPyPzEVector lvPionPair;
 
     Math::XYZVector PrimaryVertex(fMC_PrimaryVertex->GetX(), fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
@@ -3210,10 +3197,10 @@ void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
 
     /* Declare properties */
 
-    Float_t arm_qt;
-    Float_t arm_alpha;
-    Float_t cpa_wrt_pv;
-    Float_t dca_wrt_pv;
+    Double_t arm_qt;
+    Double_t arm_alpha;
+    Double_t cpa_wrt_pv;
+    Double_t dca_wrt_pv;
 
     /* Loop over interactions */
 
@@ -3223,7 +3210,7 @@ void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
         mcIdxPiMinus = -1;
 
         /* Protection against general-purpose simulations */
-        // There should be tracks that belong to the interaction //
+        /* There should be tracks that belong to the interaction */
 
         if (!getEsdIndices_fromReactionID[reactionIdx].size()) continue;
 
@@ -3231,20 +3218,23 @@ void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
 
         for (Int_t& esdIdx : getEsdIndices_fromReactionID[reactionIdx]) {
 
-            single_pion_pdg_code = getPdgCode_fromMcIdx[getMcIdx_fromEsdIdx[esdIdx]];
-            single_pion_mother_pdg_code = 0;
-            if (doesEsdIdxHaveMother[esdIdx]) single_pion_mother_pdg_code = getPdgCode_fromMcIdx[getMotherMcIdx_fromEsdIdx[esdIdx]];
+            mcIdx = getMcIdx_fromEsdIdx[esdIdx];
+            pdg_code = getPdgCode_fromMcIdx[mcIdx];
 
-            if (TMath::Abs(single_pion_pdg_code) != 211) continue;
-            if (single_pion_mother_pdg_code == -3122) continue;
+            if (TMath::Abs(pdg_code) != 211) continue;
+            if (doesMcIdxHaveMother[mcIdx]) continue;
 
             // if it hasn't been set yet, set it
-            if (mcIdxPiPlus == -1) mcIdxPiPlus = getMcIdx_fromEsdIdx[esdIdx];
-            if (mcIdxPiMinus == -1) mcIdxPiMinus = getMcIdx_fromEsdIdx[esdIdx];
+            if (mcIdxPiMinus == -1)
+                mcIdxPiMinus = mcIdx;
+            else if (mcIdxPiPlus == -1)
+                mcIdxPiPlus = mcIdx;
+            else
+                break;
         }
 
-        /* Findable condition */
-        // At least 1 pi+ and 1 pi- should have been reconstructed and passed track selection
+        /* Findable condition: */
+        /* At least 1 pi+ and 1 pi- should have been reconstructed and passed track selection */
 
         if (mcIdxPiPlus < 0 || mcIdxPiMinus < 0) continue;
 
@@ -3269,6 +3259,7 @@ void AliAnalysisTaskSexaquark::ProcessFindablePionPairs() {
         arm_qt = ArmenterosQt(lvPionPair.Px(), lvPionPair.Py(), lvPionPair.Pz(), lvPiMinus.Px(), lvPiMinus.Py(), lvPiMinus.Pz());
         arm_alpha = ArmenterosAlpha(lvPionPair.Px(), lvPionPair.Py(), lvPionPair.Pz(), lvPiMinus.Px(), lvPiMinus.Py(), lvPiMinus.Pz(), lvPiPlus.Px(),
                                     lvPiPlus.Py(), lvPiPlus.Pz());
+
         cpa_wrt_pv = CosinePointingAngle(lvPiPlus, SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(), fMC_PrimaryVertex->GetX(),
                                          fMC_PrimaryVertex->GetY(), fMC_PrimaryVertex->GetZ());
         dca_wrt_pv = LinePointDCA(lvPiPlus.Px(), lvPiPlus.Py(), lvPiPlus.Pz(), SecondaryVertex.X(), SecondaryVertex.Y(), SecondaryVertex.Z(),
@@ -3415,7 +3406,7 @@ void AliAnalysisTaskSexaquark::ProcessFindableSexaquarks() {
 }
 
 /*
- * Find findable signal K+K+.
+ * Find the signal K+K+ that have been reconstructed and passed track selection.
  * Valid for Reaction Channel H: 1 anti-proton, 2 K+, 1 pi0
  */
 void AliAnalysisTaskSexaquark::ProcessFindableKaonPairs() {
@@ -3515,11 +3506,9 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 
     AliESDv0* V0;
 
-    Int_t esdIdxPos;
-    Int_t esdIdxNeg;
-
-    AliESDtrack* neg_track;
-    AliESDtrack* pos_track;
+    AliESDtrack *neg_track, *pos_track;
+    Int_t esdIdxNeg, esdIdxPos;
+    Int_t mcIdxNeg, mcIdxPos;
 
     Double_t V0_X, V0_Y, V0_Z;
     Double_t N_Px, N_Py, N_Pz;
@@ -3573,13 +3562,11 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 
         /* Check if both daughters passed track selection */
 
-        if (!esdIdxPassesTrackSelection_AsAntiProton[esdIdxNeg] && !esdIdxPassesTrackSelection_AsNegKaon[esdIdxNeg] &&
-            !esdIdxPassesTrackSelection_AsPiMinus[esdIdxNeg]) {
+        if (!isEsdIdxSelectedAsAntiProton[esdIdxNeg] && !isEsdIdxSelectedAsNegKaon[esdIdxNeg] && !isEsdIdxSelectedAsPiMinus[esdIdxNeg]) {
             continue;
         }
 
-        if (!esdIdxPassesTrackSelection_AsProton[esdIdxPos] && !esdIdxPassesTrackSelection_AsPosKaon[esdIdxPos] &&
-            !esdIdxPassesTrackSelection_AsPiPlus[esdIdxPos]) {
+        if (!isEsdIdxSelectedAsProton[esdIdxPos] && !isEsdIdxSelectedAsPosKaon[esdIdxPos] && !isEsdIdxSelectedAsPiPlus[esdIdxPos]) {
             continue;
         }
 
@@ -3588,21 +3575,24 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
         neg_track = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg));
         pos_track = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos));
 
-        /* Apply cuts */
+        /* Collect true information & apply cuts */
 
-        is_true = doesEsdIdxHaveMother[esdIdxNeg] && doesEsdIdxHaveMother[esdIdxPos] &&
-                  getMotherMcIdx_fromEsdIdx[esdIdxNeg] == getMotherMcIdx_fromEsdIdx[esdIdxPos] &&
-                  getPdgCode_fromMcIdx[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] == -3122;
-        is_secondary = isMcIdxSecondary[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] && is_true;
-        is_signal = isMcIdxSignal[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] && is_secondary;
+        mcIdxNeg = getMcIdx_fromEsdIdx[esdIdxNeg];
+        mcIdxPos = getMcIdx_fromEsdIdx[esdIdxPos];
+
+        is_true = doesMcIdxHaveMother[mcIdxNeg] && doesMcIdxHaveMother[mcIdxPos] &&
+                  getMotherMcIdx_fromMcIdx[mcIdxNeg] == getMotherMcIdx_fromMcIdx[mcIdxPos] &&
+                  getPdgCode_fromMcIdx[getMotherMcIdx_fromMcIdx[mcIdxNeg]] == -3122;
+        is_secondary = isMcIdxSecondary[getMotherMcIdx_fromMcIdx[mcIdxNeg]] && is_true;
+        is_signal = isMcIdxSignal[getMotherMcIdx_fromMcIdx[mcIdxNeg]] && is_secondary;
 
         passes_cuts_as_antilambda = PassesV0CutsAs(-3122, is_true, is_secondary, is_signal, V0, neg_track, pos_track);
 
-        is_true = doesEsdIdxHaveMother[esdIdxNeg] && doesEsdIdxHaveMother[esdIdxPos] &&
-                  getMotherMcIdx_fromEsdIdx[esdIdxNeg] == getMotherMcIdx_fromEsdIdx[esdIdxPos] &&
-                  getPdgCode_fromMcIdx[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] == 310;
-        is_secondary = isMcIdxSecondary[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] && is_true;
-        is_signal = isMcIdxSignal[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] && is_secondary;
+        is_true = doesMcIdxHaveMother[mcIdxNeg] && doesMcIdxHaveMother[mcIdxPos] &&
+                  getMotherMcIdx_fromMcIdx[mcIdxNeg] == getMotherMcIdx_fromMcIdx[mcIdxPos] &&
+                  getPdgCode_fromMcIdx[getMotherMcIdx_fromMcIdx[mcIdxNeg]] == 310;
+        is_secondary = isMcIdxSecondary[getMotherMcIdx_fromMcIdx[mcIdxNeg]] && is_true;
+        is_signal = isMcIdxSignal[getMotherMcIdx_fromMcIdx[mcIdxNeg]] && is_secondary;
 
         passes_cuts_as_kaonzero = PassesV0CutsAs(310, is_true, is_secondary, is_signal, V0, neg_track, pos_track);
 
@@ -3779,12 +3769,12 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 
 /*
  * Custom V0 Finder.
- * (Adapted from `AliRoot/STEER/ESD/AliV0vertexer.cxx`)
+ * (adapted from `AliRoot/STEER/ESD/AliV0vertexer.cxx`)
  */
 void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
-    AliESDtrack* neg_track;
-    AliESDtrack* pos_track;
+    AliESDtrack *neg_track, *pos_track;
+    Int_t mcIdxNeg, mcIdxPos;
 
     Double_t V0_X, V0_Y, V0_Z;
     Double_t N_Px, N_Py, N_Pz;
@@ -3821,28 +3811,24 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
 
     /*  Choose between anti-lambda and K0S */
 
-    std::vector<Int_t> esdIndicesNegTracks;
-    std::vector<Int_t> esdIndicesPosTracks;
+    std::vector<Int_t> esdIndicesNegTracks = esdIndicesOfPiMinusTracks;  // default
+    std::vector<Int_t> esdIndicesPosTracks = esdIndicesOfPiPlusTracks;   // default
 
     std::vector<AliESDv0>* esdFoundV0s;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfNegDau_fromFoundV0Idx;
     std::unordered_map<Int_t, Int_t>* getEsdIdxOfPosDau_fromFoundV0Idx;
 
     if (pdgV0 == 3122) {
-        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
         esdIndicesPosTracks = esdIndicesOfProtonTracks;
         esdFoundV0s = &esdLambdas;
         getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromLambdaIdx;
         getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromLambdaIdx;
     } else if (pdgV0 == -3122) {
         esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
-        esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
         esdFoundV0s = &esdAntiLambdas;
         getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromAntiLambdaIdx;
         getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromAntiLambdaIdx;
     } else if (pdgV0 == 310) {
-        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
-        esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
         esdFoundV0s = &esdKaonsZeroShort;
         getEsdIdxOfNegDau_fromFoundV0Idx = &getEsdIdxOfNegDau_fromKaonZeroShortIdx;
         getEsdIdxOfPosDau_fromFoundV0Idx = &getEsdIdxOfPosDau_fromKaonZeroShortIdx;
@@ -3853,7 +3839,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
     for (Int_t& esdIdxNeg : esdIndicesNegTracks) {
         for (Int_t& esdIdxPos : esdIndicesPosTracks) {
 
-            /* Sanity check */
+            /* Sanity check: prevent tracks from repeating */
 
             if (esdIdxNeg == esdIdxPos) continue;
 
@@ -3895,13 +3881,18 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             /* --- End of Core of Custom V0 Finder --- */
             /* --------------------------------------- */
 
-            /* Apply cuts */
+            /* Collect true information */
 
-            is_true = doesEsdIdxHaveMother[esdIdxNeg] && doesEsdIdxHaveMother[esdIdxPos] &&
-                      getMotherMcIdx_fromEsdIdx[esdIdxNeg] == getMotherMcIdx_fromEsdIdx[esdIdxPos] &&
-                      getPdgCode_fromMcIdx[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] == pdgV0;
-            is_secondary = isMcIdxSecondary[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] && is_true;
-            is_signal = isMcIdxSignal[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] && is_secondary;
+            mcIdxNeg = getMcIdx_fromEsdIdx[esdIdxNeg];
+            mcIdxPos = getMcIdx_fromEsdIdx[esdIdxPos];
+
+            is_true = doesMcIdxHaveMother[mcIdxNeg] && doesMcIdxHaveMother[mcIdxPos] &&
+                      getMotherMcIdx_fromMcIdx[mcIdxNeg] == getMotherMcIdx_fromMcIdx[mcIdxPos] &&
+                      getPdgCode_fromMcIdx[getMotherMcIdx_fromMcIdx[mcIdxNeg]] == pdgV0;
+            is_secondary = isMcIdxSecondary[getMotherMcIdx_fromMcIdx[mcIdxNeg]] && is_true;
+            is_signal = isMcIdxSignal[getMotherMcIdx_fromMcIdx[mcIdxNeg]] && is_secondary;
+
+            /* Apply cuts */
 
             if (!PassesV0CutsAs(pdgV0, is_true, is_secondary, is_signal, &vertex, neg_track, pos_track)) continue;
 
@@ -4295,10 +4286,13 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ALK0() {
     AliESDv0 AntiLambda;
     AliESDv0 KaonZeroShort;
 
-    AliESDtrack* AntiLambda_NegDau;
-    AliESDtrack* AntiLambda_PosDau;
-    AliESDtrack* KaonZeroShort_NegDau;
-    AliESDtrack* KaonZeroShort_PosDau;
+    AliESDtrack *AntiLambda_NegDau, *AntiLambda_PosDau;
+    Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
+    Int_t mcIdxNeg_AntiLambda, mcIdxPos_AntiLambda;
+
+    AliESDtrack *KaonZeroShort_NegDau, *KaonZeroShort_PosDau;
+    Int_t esdIdxNeg_KaonZeroShort, esdIdxPos_KaonZeroShort;
+    Int_t mcIdxNeg_KaonZeroShort, mcIdxPos_KaonZeroShort;
 
     /* Declare vectors  */
 
@@ -4316,9 +4310,6 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ALK0() {
     Math::PxPyPzEVector lvAntiSexaquark;
 
     /* Declare auxiliar variables */
-
-    Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
-    Int_t esdIdxNeg_KaonZeroShort, esdIdxPos_KaonZeroShort;
 
     Math::XYZPoint pca1, pca2;
     Float_t radius;
@@ -4342,12 +4333,12 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ALK0() {
     for (Int_t idxAntiLambda = 0; idxAntiLambda < (Int_t)esdAntiLambdas.size(); idxAntiLambda++) {
         for (Int_t idxKaonZeroShort = 0; idxKaonZeroShort < (Int_t)esdKaonsZeroShort.size(); idxKaonZeroShort++) {
 
-            /* Check that no daughter is repeated between the V0s */
-
             esdIdxNeg_AntiLambda = getEsdIdxOfNegDau_fromAntiLambdaIdx[idxAntiLambda];
             esdIdxPos_AntiLambda = getEsdIdxOfPosDau_fromAntiLambdaIdx[idxAntiLambda];
             esdIdxNeg_KaonZeroShort = getEsdIdxOfNegDau_fromKaonZeroShortIdx[idxKaonZeroShort];
             esdIdxPos_KaonZeroShort = getEsdIdxOfPosDau_fromKaonZeroShortIdx[idxKaonZeroShort];
+
+            /* Sanity check: prevent tracks from repeating */
 
             if (esdIdxNeg_AntiLambda == esdIdxNeg_KaonZeroShort || esdIdxNeg_AntiLambda == esdIdxPos_KaonZeroShort ||
                 esdIdxPos_AntiLambda == esdIdxNeg_KaonZeroShort || esdIdxPos_AntiLambda == esdIdxPos_KaonZeroShort) {
@@ -4385,13 +4376,22 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ALK0() {
 
             lvAntiSexaquark = lvAntiLambda + lvKaonZeroShort - lvStruckNucleon;
 
-            /* Apply cuts */
+            /* Collect true information */
 
-            is_signal = isEsdIdxSignal[esdIdxNeg_AntiLambda] && isEsdIdxSignal[esdIdxPos_AntiLambda]  //
-                        && isEsdIdxSignal[esdIdxNeg_KaonZeroShort] && isEsdIdxSignal[esdIdxPos_KaonZeroShort];
-            is_signal = is_signal && getReactionID_fromEsdIdx[esdIdxNeg_AntiLambda] == getReactionID_fromEsdIdx[esdIdxPos_AntiLambda] &&
-                        getReactionID_fromEsdIdx[esdIdxPos_AntiLambda] == getReactionID_fromEsdIdx[esdIdxNeg_KaonZeroShort] &&
-                        getReactionID_fromEsdIdx[esdIdxNeg_KaonZeroShort] == getReactionID_fromEsdIdx[esdIdxPos_KaonZeroShort];
+            mcIdxNeg_AntiLambda = getMcIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
+            mcIdxPos_AntiLambda = getMcIdx_fromEsdIdx[esdIdxPos_AntiLambda];
+            mcIdxNeg_KaonZeroShort = getMcIdx_fromEsdIdx[esdIdxNeg_KaonZeroShort];
+            mcIdxPos_KaonZeroShort = getMcIdx_fromEsdIdx[esdIdxPos_KaonZeroShort];
+
+            is_signal = isMcIdxSignal[mcIdxNeg_AntiLambda] && isMcIdxSignal[mcIdxPos_AntiLambda] && isMcIdxSignal[mcIdxNeg_KaonZeroShort] &&
+                        isMcIdxSignal[mcIdxPos_KaonZeroShort] &&  //
+                        getPdgCode_fromMcIdx[mcIdxNeg_AntiLambda] == -2212 && getPdgCode_fromMcIdx[mcIdxPos_AntiLambda] == 211 &&
+                        getPdgCode_fromMcIdx[mcIdxNeg_KaonZeroShort] == -211 && getPdgCode_fromMcIdx[mcIdxPos_KaonZeroShort] == 211 &&  //
+                        getReactionID_fromMcIdx[mcIdxNeg_AntiLambda] == getReactionID_fromMcIdx[mcIdxPos_AntiLambda] &&
+                        getReactionID_fromMcIdx[mcIdxPos_AntiLambda] == getReactionID_fromMcIdx[mcIdxNeg_KaonZeroShort] &&
+                        getReactionID_fromMcIdx[mcIdxNeg_KaonZeroShort] == getReactionID_fromMcIdx[mcIdxPos_KaonZeroShort];
+
+            /* Apply cuts */
 
             if (!PassesSexaquarkCuts_ALK0(is_signal, SecondaryVertex, lvAntiSexaquark, AntiLambda, KaonZeroShort, AntiLambda_NegDau,
                                           AntiLambda_PosDau, KaonZeroShort_NegDau, KaonZeroShort_PosDau)) {
@@ -4603,8 +4603,16 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ALPKPP() {
  */
 void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, Int_t pdgTrackPos) {
 
-    AliESDtrack* esdTrackNeg;
-    AliESDtrack* esdTrackPos;
+    AliESDtrack *esdTrackNeg, *esdTrackPos;
+    Int_t mcIdxNeg, mcIdxPos;
+    Int_t mcIdxV0;
+
+    Int_t mc_pdg_code;
+    Bool_t is_true;
+    Bool_t is_secondary;
+    Bool_t is_signal;
+    Int_t reaction_id;
+    Bool_t is_hybrid;
 
     Double_t impar_neg[2], impar_pos[2];
 
@@ -4612,13 +4620,6 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     Double_t cpa_wrt_pv, dca_wrt_pv;
     Double_t dca_btw_dau, dca_neg_v0, dca_pos_v0;
     Double_t chi2_ndf;
-
-    Bool_t is_true;
-    Bool_t is_secondary;
-    Bool_t is_signal;
-
-    Int_t mc_pdg_code;
-    Int_t mc_idx_neg, mc_idx_pos;
 
     /* Define primary vertex as a KFVertex */
 
@@ -4666,7 +4667,7 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
     for (Int_t& esdIdxNeg : esdIndicesNegTracks) {
         for (Int_t& esdIdxPos : esdIndicesPosTracks) {
 
-            /* Sanity check */
+            /* Sanity check: prevent tracks from repeating */
 
             if (esdIdxNeg == esdIdxPos) continue;
 
@@ -4704,22 +4705,31 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 
             lvV0 = lvTrackNeg + lvTrackPos;
 
-            /* Apply cuts */
+            /* Collect true information */
 
-            mc_idx_neg = getMcIdx_fromEsdIdx[esdIdxNeg];
-            mc_idx_pos = getMcIdx_fromEsdIdx[esdIdxPos];
-            mc_pdg_code = getPdgCode_fromMcIdx[getMotherMcIdx_fromEsdIdx[esdIdxNeg]];
-            is_true = doesEsdIdxHaveMother[esdIdxNeg] && doesEsdIdxHaveMother[esdIdxPos] &&
-                      getMotherMcIdx_fromEsdIdx[esdIdxNeg] == getMotherMcIdx_fromEsdIdx[esdIdxPos] && mc_pdg_code == pdgV0;
-            is_secondary = isMcIdxSecondary[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] && is_true;
-            is_signal = isMcIdxSignal[getMotherMcIdx_fromEsdIdx[esdIdxNeg]] && getPdgCode_fromMcIdx[mc_idx_neg] == pdgTrackNeg &&
-                        getPdgCode_fromMcIdx[mc_idx_pos] == pdgTrackPos && is_secondary;
+            mcIdxNeg = getMcIdx_fromEsdIdx[esdIdxNeg];
+            mcIdxPos = getMcIdx_fromEsdIdx[esdIdxPos];
+            mcIdxV0 = doesMcIdxHaveMother[mcIdxNeg] && doesMcIdxHaveMother[mcIdxPos] &&
+                              getMotherMcIdx_fromMcIdx[mcIdxNeg] == getMotherMcIdx_fromMcIdx[mcIdxPos]
+                          ? getMotherMcIdx_fromMcIdx[mcIdxNeg]
+                          : -1;
+            mc_pdg_code = mcIdxV0 >= 0 ? getPdgCode_fromMcIdx[mcIdxV0] : -1;
 
+            is_true = doesMcIdxHaveMother[mcIdxNeg] && doesMcIdxHaveMother[mcIdxPos] &&
+                      getMotherMcIdx_fromMcIdx[mcIdxNeg] == getMotherMcIdx_fromMcIdx[mcIdxPos] &&                        //
+                      getPdgCode_fromMcIdx[mcIdxNeg] == pdgTrackNeg && getPdgCode_fromMcIdx[mcIdxPos] == pdgTrackPos &&  //
+                      mc_pdg_code == pdgV0;
+            is_secondary = isMcIdxSecondary[mcIdxV0] && is_true;
+            is_signal = isMcIdxSignal[mcIdxV0] && is_secondary;
             if (pdgV0 == 422) {
-                is_signal = isMcIdxSignal[mc_idx_neg] && isMcIdxSignal[mc_idx_pos] && getPdgCode_fromMcIdx[mc_idx_neg] == pdgTrackNeg &&
-                            getPdgCode_fromMcIdx[mc_idx_pos] == pdgTrackPos && !doesMcIdxHaveMother[mc_idx_neg] && !doesMcIdxHaveMother[mc_idx_pos] &&
-                            getReactionID_fromMcIdx[mc_idx_neg] == getReactionID_fromMcIdx[mc_idx_pos];
+                is_signal = isMcIdxSignal[mcIdxNeg] && isMcIdxSignal[mcIdxPos] && getPdgCode_fromMcIdx[mcIdxNeg] == pdgTrackNeg &&
+                            getPdgCode_fromMcIdx[mcIdxPos] == pdgTrackPos && !doesMcIdxHaveMother[mcIdxNeg] && !doesMcIdxHaveMother[mcIdxPos] &&
+                            getReactionID_fromMcIdx[mcIdxNeg] == getReactionID_fromMcIdx[mcIdxPos];
             }
+            reaction_id = getReactionID_fromMcIdx[mcIdxV0];
+            is_hybrid = (isMcIdxSignal[mcIdxNeg] || isMcIdxSignal[mcIdxPos]) && !is_signal;
+
+            /* Apply cuts */
 
             if (!PassesV0CutsAs(pdgV0, is_true, is_secondary, is_signal, kfV0, kfDaughterNeg, kfDaughterPos, lvV0, lvTrackNeg, lvTrackPos)) continue;
 
@@ -4764,11 +4774,13 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
             tV0_Pos_Px = (Float_t)lvTrackPos.Px();
             tV0_Pos_Py = (Float_t)lvTrackPos.Py();
             tV0_Pos_Pz = (Float_t)lvTrackPos.Pz();
-            tV0_Idx_True = is_true ? getMotherMcIdx_fromEsdIdx[esdIdxNeg] : -1;
+
+            tV0_Idx_True = mcIdxV0;
             tV0_True_PdgCode = mc_pdg_code;
             tV0_IsSecondary = is_secondary;
             tV0_IsSignal = is_signal;
-            tV0_ReactionID = is_signal ? getReactionID_fromEsdIdx[esdIdxNeg] : -1;
+            tV0_ReactionID = reaction_id;
+            tV0_IsHybrid = is_hybrid;
 
             fTree_V0s->Fill();
             ClearV0sBranches();
@@ -4884,12 +4896,17 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgV0, Int_t pdgTrackNeg, In
 /*** ========================== ***/
 
 /*
- * Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel A: `AntiSexaquark,N->AntiLambda,K0S`
+ * Using Kalman Filter, reconstruct anti-sexaquark candidates via the reaction channel `AntiSexaquark Neutron -> AntiLambda K0S`
  */
 void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALK0() {
 
     AliESDtrack *esdAntiLambdaNegDau, *esdAntiLambdaPosDau;
+    Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
+    Int_t mcIdxNeg_AntiLambda, mcIdxPos_AntiLambda;
+
     AliESDtrack *esdKaonZeroShortNegDau, *esdKaonZeroShortPosDau;
+    Int_t esdIdxNeg_KaonZeroShort, esdIdxPos_KaonZeroShort;
+    Int_t mcIdxNeg_KaonZeroShort, mcIdxPos_KaonZeroShort;
 
     /* Declare vectors */
 
@@ -4919,19 +4936,15 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALK0() {
     Float_t chi2_ndf;
 
     Bool_t is_signal;
+    Int_t reaction_id;
     Bool_t is_hybrid;
-
-    Int_t idxAntiLambda;
-    Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
-    Int_t idxKaonZeroShort;
-    Int_t esdIdxNeg_KaonZeroShort, esdIdxPos_KaonZeroShort;
 
     /* Loop over all possible pairs of anti-lambdas and K0S */
 
-    for (idxAntiLambda = 0; idxAntiLambda < (Int_t)kfAntiLambdas.size(); idxAntiLambda++) {
-        for (idxKaonZeroShort = 0; idxKaonZeroShort < (Int_t)kfKaonsZeroShort.size(); idxKaonZeroShort++) {
+    for (Int_t idxAntiLambda = 0; idxAntiLambda < (Int_t)kfAntiLambdas.size(); idxAntiLambda++) {
+        for (Int_t idxKaonZeroShort = 0; idxKaonZeroShort < (Int_t)kfKaonsZeroShort.size(); idxKaonZeroShort++) {
 
-            /* Check that no daughter is repeated between the V0s */
+            /* Sanity check: prevent any track from repeating */
 
             esdIdxNeg_AntiLambda = getEsdIdxOfNegDau_fromAntiLambdaIdx[idxAntiLambda];
             esdIdxPos_AntiLambda = getEsdIdxOfPosDau_fromAntiLambdaIdx[idxAntiLambda];
@@ -5001,16 +5014,30 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALK0() {
 
             lvAntiSexaquark = lvAntiLambda + lvKaonZeroShort - lvStruckNucleon;
 
-            /* Apply cuts */
+            /* Collect true information */
 
-            is_signal = isEsdIdxSignal[esdIdxNeg_AntiLambda] && isEsdIdxSignal[esdIdxPos_AntiLambda] && isEsdIdxSignal[esdIdxNeg_KaonZeroShort] &&
-                        isEsdIdxSignal[esdIdxPos_KaonZeroShort] &&  //
-                        getReactionID_fromEsdIdx[esdIdxNeg_AntiLambda] == getReactionID_fromEsdIdx[esdIdxPos_AntiLambda] &&
-                        getReactionID_fromEsdIdx[esdIdxPos_AntiLambda] == getReactionID_fromEsdIdx[esdIdxNeg_KaonZeroShort] &&
-                        getReactionID_fromEsdIdx[esdIdxNeg_KaonZeroShort] == getReactionID_fromEsdIdx[esdIdxPos_KaonZeroShort];
-            is_hybrid = (isEsdIdxSignal[esdIdxNeg_AntiLambda] || isEsdIdxSignal[esdIdxPos_AntiLambda] || isEsdIdxSignal[esdIdxNeg_KaonZeroShort] ||
-                         isEsdIdxSignal[esdIdxPos_KaonZeroShort]) &&
+            mcIdxNeg_AntiLambda = getMcIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
+            mcIdxPos_AntiLambda = getMcIdx_fromEsdIdx[esdIdxPos_AntiLambda];
+            mcIdxNeg_KaonZeroShort = getMcIdx_fromEsdIdx[esdIdxNeg_KaonZeroShort];
+            mcIdxPos_KaonZeroShort = getMcIdx_fromEsdIdx[esdIdxPos_KaonZeroShort];
+
+            is_signal = isMcIdxSignal[mcIdxNeg_AntiLambda] && isMcIdxSignal[mcIdxPos_AntiLambda] && isMcIdxSignal[mcIdxNeg_KaonZeroShort] &&
+                        isMcIdxSignal[mcIdxPos_KaonZeroShort] &&  //
+                        getPdgCode_fromMcIdx[mcIdxNeg_AntiLambda] == -2212 && getPdgCode_fromMcIdx[mcIdxPos_AntiLambda] == 211 &&
+                        getPdgCode_fromMcIdx[mcIdxNeg_KaonZeroShort] == -211 && getPdgCode_fromMcIdx[mcIdxPos_KaonZeroShort] == 211 &&  //
+                        getReactionID_fromMcIdx[mcIdxNeg_AntiLambda] == getReactionID_fromMcIdx[mcIdxPos_AntiLambda] &&
+                        getReactionID_fromMcIdx[mcIdxPos_AntiLambda] == getReactionID_fromMcIdx[mcIdxNeg_KaonZeroShort] &&
+                        getReactionID_fromMcIdx[mcIdxNeg_KaonZeroShort] == getReactionID_fromMcIdx[mcIdxPos_KaonZeroShort];
+            reaction_id = getReactionID_fromMcIdx[mcIdxNeg_AntiLambda] == getReactionID_fromMcIdx[mcIdxPos_AntiLambda] &&
+                                  getReactionID_fromMcIdx[mcIdxPos_AntiLambda] == getReactionID_fromMcIdx[mcIdxNeg_KaonZeroShort] &&
+                                  getReactionID_fromMcIdx[mcIdxNeg_KaonZeroShort] == getReactionID_fromMcIdx[mcIdxPos_KaonZeroShort]
+                              ? getReactionID_fromMcIdx[mcIdxNeg_AntiLambda]
+                              : -1;
+            is_hybrid = (isMcIdxSignal[mcIdxNeg_AntiLambda] || isMcIdxSignal[mcIdxPos_AntiLambda] || isMcIdxSignal[mcIdxNeg_KaonZeroShort] ||
+                         isMcIdxSignal[mcIdxPos_KaonZeroShort]) &&
                         !is_signal;
+
+            /* Apply cuts */
 
             if (!PassesSexaquarkCuts_ALK0(is_signal, kfAntiSexaquark, lvAntiSexaquark, kfAntiLambda, kfKaonZeroShort, kfAntiLambdaNegDau,
                                           kfAntiLambdaPosDau, kfKaonZeroShortNegDau, kfKaonZeroShortPosDau)) {
@@ -5023,8 +5050,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALK0() {
             dist_from_pv = TMath::Sqrt((kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) * (kfAntiSexaquark.GetX() - fPrimaryVertex->GetX()) +
                                        (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) * (kfAntiSexaquark.GetY() - fPrimaryVertex->GetY()) +
                                        (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()) * (kfAntiSexaquark.GetZ() - fPrimaryVertex->GetZ()));
-            cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(),
-                                             kfAntiSexaquark.GetZ(),  //
+            cpa_wrt_pv = CosinePointingAngle(lvAntiSexaquark, kfAntiSexaquark.GetX(), kfAntiSexaquark.GetY(), kfAntiSexaquark.GetZ(),
                                              fPrimaryVertex->GetX(), fPrimaryVertex->GetY(), fPrimaryVertex->GetZ());
             dca_wrt_pv = TMath::Abs(kfAntiSexaquark.GetDistanceFromVertex(kfPrimaryVertex));
             dca_btw_v0s = TMath::Abs(kfAntiLambda.GetDistanceFromParticle(kfKaonZeroShort));
@@ -5054,10 +5080,11 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALK0() {
             tSexaquark_CPAwrtPV = cpa_wrt_pv;
             tSexaquark_DCAwrtPV = dca_wrt_pv;
             tSexaquark_Chi2ndf = chi2_ndf;
-            tSexaquark_IsHybrid = is_hybrid;
-            tSexaquark_IsSignal = is_signal;
-            tSexaquark_ReactionID = is_signal ? getReactionID_fromEsdIdx[esdIdxNeg_AntiLambda] : -1;
             tSexaquark_AL_DecayLength = TMath::Abs(kfAntiLambda.GetDecayLength());
+
+            tSexaquark_IsSignal = is_signal;
+            tSexaquark_ReactionID = reaction_id;
+            tSexaquark_IsHybrid = is_hybrid;
 
             tSexaquarkA_Idx_K0S = idxKaonZeroShort;
             tSexaquarkA_Idx_K0S_Neg = esdIdxNeg_KaonZeroShort;
@@ -5123,24 +5150,6 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALK0() {
             fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0bnegSV")]->Fill(dca_v0b_neg_sv);
             fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "DCAV0bposSV")]->Fill(dca_v0b_pos_sv);
             fHist_AntiSexaquarks[std::make_tuple("ALK0", "Found", "Signal", "Chi2ndf")]->Fill(chi2_ndf);
-
-            // -- DEBUG -- //
-            /*
-            AliInfo("!! Anti-Sexaquark Found !!");
-            AliInfoF("RN: %i, EV: %i, DIR: %i", fRunNumber, fEventNumber, fDirNumber);
-            AliInfoF("AL: %i, K0S: %i, ESDs: %i %i %i %i, MC: %i %i %i %i, MC Mothers: %i %i %i %i, Reaction: %i %i %i %i",  //
-                     idxAntiLambda, idxKaonZeroShort,                                                                        //
-                     esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda, esdIdxNeg_KaonZeroShort,
-                     esdIdxPos_KaonZeroShort,  //
-                     getMcIdx_fromEsdIdx[esdIdxNeg_AntiLambda], getMcIdx_fromEsdIdx[esdIdxPos_AntiLambda],
-                     getMcIdx_fromEsdIdx[esdIdxNeg_KaonZeroShort],
-                     getMcIdx_fromEsdIdx[esdIdxPos_KaonZeroShort],  //
-                     getMotherMcIdx_fromEsdIdx[esdIdxNeg_AntiLambda], getMotherMcIdx_fromEsdIdx[esdIdxPos_AntiLambda],
-                     getMotherMcIdx_fromEsdIdx[esdIdxNeg_KaonZeroShort], getMotherMcIdx_fromEsdIdx[esdIdxPos_KaonZeroShort],  //
-                     getReactionID_fromEsdIdx[esdIdxNeg_AntiLambda], getReactionID_fromEsdIdx[esdIdxPos_AntiLambda],
-                     getReactionID_fromEsdIdx[esdIdxNeg_KaonZeroShort], getReactionID_fromEsdIdx[esdIdxPos_KaonZeroShort]);
-            */
-            // -- END OF DEBUG -- //
         }  // end of loop over K0S
     }      // end of loop over anti-lambdas
 }
@@ -5237,12 +5246,17 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ALK0(Bool_t isSignal, KFPar
 }
 
 /*
- * Using Kalman Filter, reconstruct anti-sexaquark candidates from the reaction channel D: `AntiSexaquark,P->AntiLambda,K+`
+ * Using Kalman Filter, reconstruct reaction channel `AntiSexaquark Proton -> AntiLambda PosKaon`
  */
 void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPK() {
 
     AliESDtrack *esdAntiLambdaNegDau, *esdAntiLambdaPosDau;
+    Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
+    Int_t mcIdxNeg_AntiLambda, mcIdxPos_AntiLambda;
+
     AliESDtrack* esdPosKaon;
+    Int_t esdIdxPosKaon;
+    Int_t mcIdxPosKaon;
 
     /* Declare 4-momentum vectors */
 
@@ -5271,18 +5285,15 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPK() {
     Float_t chi2_ndf;
 
     Bool_t is_signal;
+    Int_t reaction_id;
     Bool_t is_hybrid;
-
-    Int_t idxAntiLambda;
-    Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
-    Int_t esdIdxPosKaon;
 
     /* Loop over all possible pairs of anti-lambdas and positive kaons */
 
-    for (idxAntiLambda = 0; idxAntiLambda < (Int_t)kfAntiLambdas.size(); idxAntiLambda++) {
+    for (Int_t idxAntiLambda = 0; idxAntiLambda < (Int_t)kfAntiLambdas.size(); idxAntiLambda++) {
         for (Int_t idxPosKaon = 0; idxPosKaon < (Int_t)esdIndicesOfPosKaonTracks.size(); idxPosKaon++) {
 
-            /* Check that no daughter is repeated between the V0s */
+            /* Sanity check: prevent any track from repeating */
 
             esdIdxPosKaon = esdIndicesOfPosKaonTracks[idxPosKaon];
             esdIdxNeg_AntiLambda = getEsdIdxOfNegDau_fromAntiLambdaIdx[idxAntiLambda];
@@ -5336,12 +5347,25 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPK() {
 
             lvAntiSexaquark = lvAntiLambda + lvPosKaon - lvStruckNucleon;
 
-            /* Apply cuts */
+            /* Collect true information */
 
-            is_signal = isEsdIdxSignal[esdIdxNeg_AntiLambda] && isEsdIdxSignal[esdIdxPos_AntiLambda] && isEsdIdxSignal[esdIdxPosKaon] &&
-                        getReactionID_fromEsdIdx[esdIdxNeg_AntiLambda] == getReactionID_fromEsdIdx[esdIdxPos_AntiLambda] &&
-                        getReactionID_fromEsdIdx[esdIdxPos_AntiLambda] == getReactionID_fromEsdIdx[esdIdxPosKaon];
-            is_hybrid = (isEsdIdxSignal[esdIdxNeg_AntiLambda] || isEsdIdxSignal[esdIdxPos_AntiLambda] || isEsdIdxSignal[esdIdxPosKaon]) && !is_signal;
+            mcIdxNeg_AntiLambda = getMcIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
+            mcIdxPos_AntiLambda = getMcIdx_fromEsdIdx[esdIdxPos_AntiLambda];
+            mcIdxPosKaon = getMcIdx_fromEsdIdx[esdIdxPosKaon];
+
+            is_signal = isMcIdxSignal[mcIdxNeg_AntiLambda] && isMcIdxSignal[mcIdxPos_AntiLambda] && isMcIdxSignal[mcIdxPosKaon] &&  //
+                        getPdgCode_fromMcIdx[mcIdxNeg_AntiLambda] == -2212 && getPdgCode_fromMcIdx[mcIdxPos_AntiLambda] == 211 &&
+                        getPdgCode_fromMcIdx[mcIdxPosKaon] == 321 &&  //
+                        getReactionID_fromMcIdx[mcIdxNeg_AntiLambda] == getReactionID_fromMcIdx[mcIdxPos_AntiLambda] &&
+                        getReactionID_fromMcIdx[mcIdxPos_AntiLambda] == getReactionID_fromMcIdx[mcIdxPosKaon];
+            reaction_id = getReactionID_fromMcIdx[mcIdxNeg_AntiLambda] == getReactionID_fromMcIdx[mcIdxPos_AntiLambda] &&
+                                  getReactionID_fromMcIdx[mcIdxPos_AntiLambda] == getReactionID_fromMcIdx[mcIdxPosKaon]
+                              ? getReactionID_fromMcIdx[mcIdxNeg_AntiLambda]
+                              : -1;
+            is_hybrid = (isMcIdxSignal[mcIdxNeg_AntiLambda] || isMcIdxSignal[mcIdxPos_AntiLambda] || isMcIdxSignal[mcIdxPosKaon]) &&  //
+                        !is_signal;
+
+            /* Apply cuts */
 
             if (!PassesSexaquarkCuts_ALPK(is_signal, kfAntiSexaquark, lvAntiSexaquark, kfAntiLambda, kfPosKaon, kfAntiLambdaNegDau,
                                           kfAntiLambdaPosDau)) {
@@ -5379,17 +5403,18 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPK() {
             tSexaquark_Py = (Float_t)lvAntiSexaquark.Py();
             tSexaquark_Pz = (Float_t)lvAntiSexaquark.Pz();
             tSexaquark_E = (Float_t)lvAntiSexaquark.E();
-            tSexaquark_Xv = (Float_t)kfAntiSexaquark.GetX();
-            tSexaquark_Yv = (Float_t)kfAntiSexaquark.GetY();
-            tSexaquark_Zv = (Float_t)kfAntiSexaquark.GetZ();
+            tSexaquark_Xv = kfAntiSexaquark.GetX();
+            tSexaquark_Yv = kfAntiSexaquark.GetY();
+            tSexaquark_Zv = kfAntiSexaquark.GetZ();
             tSexaquark_DistFromPV = dist_from_pv;
             tSexaquark_CPAwrtPV = cpa_wrt_pv;
             tSexaquark_DCAwrtPV = dca_wrt_pv;
             tSexaquark_Chi2ndf = chi2_ndf;
-            tSexaquark_IsHybrid = is_hybrid;
-            tSexaquark_IsSignal = is_signal;
-            tSexaquark_ReactionID = is_signal ? getReactionID_fromEsdIdx[esdIdxNeg_AntiLambda] : -1;
             tSexaquark_AL_DecayLength = TMath::Abs(kfAntiLambda.GetDecayLength());
+
+            tSexaquark_IsSignal = is_signal;
+            tSexaquark_ReactionID = reaction_id;
+            tSexaquark_IsHybrid = is_hybrid;
 
             tSexaquarkD_Idx_PosKaon = esdIdxPosKaon;
             tSexaquarkD_DCAV0Ba = dca_v0_ba;
@@ -5553,8 +5578,16 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ALPK(Bool_t isSignal, KFPar
 void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPKPP() {
 
     AliESDtrack *esdAntiLambdaNegDau, *esdAntiLambdaPosDau;
+    Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
+    Int_t mcIdxNeg_AntiLambda, mcIdxPos_AntiLambda;
+
     AliESDtrack *esdPiMinus, *esdPiPlus;
+    Int_t esdIdxNeg_PionPair, esdIdxPos_PionPair;
+    Int_t mcIdxNeg_PionPair, mcIdxPos_PionPair;
+
     AliESDtrack* esdPosKaon;
+    Int_t esdIdxPosKaon;
+    Int_t mcIdxPosKaon;
 
     /* Declare 4-momentum vectors */
 
@@ -5584,28 +5617,22 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPKPP() {
     Float_t chi2_ndf;
 
     Bool_t is_signal;
+    Int_t reaction_id;
     Bool_t is_hybrid;
-
-    Int_t idxAntiLambda;
-    Int_t idxPionPair;
-
-    Int_t esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda;
-    Int_t esdIdxPos_PionPair, esdIdxNeg_PionPair;
-    Int_t esdIdxPosKaon;
 
     /* Loop over all possible groups of anti-lambdas, pion pairs and pos. kaons */
 
-    for (idxAntiLambda = 0; idxAntiLambda < (Int_t)kfAntiLambdas.size(); idxAntiLambda++) {
-        for (idxPionPair = 0; idxPionPair < (Int_t)kfPionPairs.size(); idxPionPair++) {
+    for (Int_t idxAntiLambda = 0; idxAntiLambda < (Int_t)kfAntiLambdas.size(); idxAntiLambda++) {
+        for (Int_t idxPionPair = 0; idxPionPair < (Int_t)kfPionPairs.size(); idxPionPair++) {
             for (Int_t idxPosKaon = 0; idxPosKaon < (Int_t)esdIndicesOfPosKaonTracks.size(); idxPosKaon++) {
 
-                /* Check that no daughter is repeated */
+                /* Sanity check: prevent any track from repeating */
 
-                esdIdxPosKaon = esdIndicesOfPosKaonTracks[idxPosKaon];
                 esdIdxNeg_AntiLambda = getEsdIdxOfNegDau_fromAntiLambdaIdx[idxAntiLambda];
                 esdIdxPos_AntiLambda = getEsdIdxOfPosDau_fromAntiLambdaIdx[idxAntiLambda];
                 esdIdxNeg_PionPair = getEsdIdxOfNegDau_fromPionPairIdx[idxPionPair];
                 esdIdxPos_PionPair = getEsdIdxOfPosDau_fromPionPairIdx[idxPionPair];
+                esdIdxPosKaon = esdIndicesOfPosKaonTracks[idxPosKaon];
 
                 std::set<Int_t> uniqueIndices = {esdIdxPosKaon, esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda, esdIdxNeg_PionPair, esdIdxPos_PionPair};
                 if (uniqueIndices.size() != 5) continue;
@@ -5670,16 +5697,29 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPKPP() {
 
                 lvAntiSexaquark = lvAntiLambda + lvPosKaon + lvPiPlus + lvPiMinus - lvStruckNucleon;
 
-                /* Apply cuts */
+                /* Collect true information */
 
-                std::set<UInt_t> uniqueReactionID = {getReactionID_fromEsdIdx[esdIdxNeg_AntiLambda], getReactionID_fromEsdIdx[esdIdxPos_AntiLambda],
-                                                     getReactionID_fromEsdIdx[esdIdxPosKaon], getReactionID_fromEsdIdx[esdIdxNeg_PionPair],
-                                                     getReactionID_fromEsdIdx[esdIdxPos_PionPair]};
-                is_signal = isEsdIdxSignal[esdIdxNeg_AntiLambda] && isEsdIdxSignal[esdIdxPos_AntiLambda] && isEsdIdxSignal[esdIdxPosKaon] &&
-                            isEsdIdxSignal[esdIdxNeg_PionPair] && isEsdIdxSignal[esdIdxPos_PionPair] && (Int_t)uniqueReactionID.size() == 1;
-                is_hybrid = (isEsdIdxSignal[esdIdxNeg_AntiLambda] || isEsdIdxSignal[esdIdxPos_AntiLambda] || isEsdIdxSignal[esdIdxPosKaon] ||
-                             isEsdIdxSignal[esdIdxNeg_PionPair] || isEsdIdxSignal[esdIdxPos_PionPair]) &&
+                mcIdxNeg_AntiLambda = getMcIdx_fromEsdIdx[esdIdxNeg_AntiLambda];
+                mcIdxPos_AntiLambda = getMcIdx_fromEsdIdx[esdIdxPos_AntiLambda];
+                mcIdxNeg_PionPair = getMcIdx_fromEsdIdx[esdIdxNeg_PionPair];
+                mcIdxPos_PionPair = getMcIdx_fromEsdIdx[esdIdxPos_PionPair];
+                mcIdxPosKaon = getMcIdx_fromEsdIdx[esdIdxPosKaon];
+
+                std::set<Int_t> uniqueReactionID = {getReactionID_fromMcIdx[mcIdxNeg_AntiLambda], getReactionID_fromMcIdx[mcIdxPos_AntiLambda],
+                                                    getReactionID_fromMcIdx[mcIdxPosKaon], getReactionID_fromMcIdx[mcIdxNeg_PionPair],
+                                                    getReactionID_fromMcIdx[mcIdxPos_PionPair]};
+                is_signal = isMcIdxSignal[mcIdxNeg_AntiLambda] && isMcIdxSignal[mcIdxPos_AntiLambda] && isMcIdxSignal[mcIdxPosKaon] &&
+                            isMcIdxSignal[mcIdxNeg_PionPair] && isMcIdxSignal[mcIdxPos_PionPair] &&  //
+                            getPdgCode_fromMcIdx[mcIdxNeg_AntiLambda] == -2212 && getPdgCode_fromMcIdx[mcIdxPos_AntiLambda] == 211 &&
+                            getPdgCode_fromMcIdx[mcIdxNeg_PionPair] == -211 && getPdgCode_fromMcIdx[mcIdxPos_PionPair] == 211 &&
+                            getPdgCode_fromMcIdx[mcIdxPosKaon] == 321 &&  //
+                            (Int_t)uniqueReactionID.size() == 1;
+                reaction_id = (Int_t)uniqueReactionID.size() == 1 ? getReactionID_fromMcIdx[mcIdxNeg_AntiLambda] : -1;
+                is_hybrid = (isMcIdxSignal[mcIdxNeg_AntiLambda] || isMcIdxSignal[mcIdxPos_AntiLambda] || isMcIdxSignal[mcIdxPosKaon] ||
+                             isMcIdxSignal[mcIdxNeg_PionPair] || isMcIdxSignal[mcIdxPos_PionPair]) &&  //
                             !is_signal;
+
+                /* Apply cuts */
 
                 if (!PassesSexaquarkCuts_ALPKPP(is_signal, kfAntiSexaquark, lvAntiSexaquark, kfAntiLambda, kfAntiLambdaNegDau, kfAntiLambdaPosDau,
                                                 kfPosKaon, kfPiMinus, kfPiPlus)) {
@@ -5729,10 +5769,11 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPKPP() {
                 tSexaquark_CPAwrtPV = cpa_wrt_pv;
                 tSexaquark_DCAwrtPV = dca_wrt_pv;
                 tSexaquark_Chi2ndf = chi2_ndf;
-                tSexaquark_IsHybrid = is_hybrid;
-                tSexaquark_IsSignal = is_signal;
-                tSexaquark_ReactionID = is_signal ? getReactionID_fromEsdIdx[esdIdxNeg_AntiLambda] : -1;
                 tSexaquark_AL_DecayLength = TMath::Abs(kfAntiLambda.GetDecayLength());
+
+                tSexaquark_IsSignal = is_signal;
+                tSexaquark_ReactionID = reaction_id;
+                tSexaquark_IsHybrid = is_hybrid;
 
                 tSexaquarkE_Idx_PP = idxPionPair;
                 tSexaquarkE_Idx_PP_Neg = esdIdxNeg_PionPair;
@@ -5810,24 +5851,6 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALPKPP() {
                 fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCApmPK")]->Fill(dca_pm_pk);
                 fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "DCAppPK")]->Fill(dca_pp_pk);
                 fHist_AntiSexaquarks[std::make_tuple("ALPKPP", "Found", "Signal", "Chi2ndf")]->Fill(chi2_ndf);
-
-                // -- DEBUG -- //
-                // clang-format off
-                /*
-                AliInfo("!! Anti-Sexaquark Found !!");
-                AliInfoF("RN: %i, EV: %i, DIR: %i", fRunNumber, fEventNumber, fDirNumber);
-                AliInfoF("AL: %i, PK: %i, PP: %i, ESDs: %i %i %i %i %i, MC: %i %i %i %i %i, MC Mothers: %i %i %i %i %i, Reaction: %i %i %i %i %i",
-                         idxAntiLambda, esdIdxPosKaon, idxPionPair,
-                         esdIdxNeg_AntiLambda, esdIdxPos_AntiLambda, esdIdxPosKaon, esdIdxNeg_PionPair, esdIdxPos_PionPair,
-                         getMcIdx_fromEsdIdx[esdIdxNeg_AntiLambda], getMcIdx_fromEsdIdx[esdIdxPos_AntiLambda], getMcIdx_fromEsdIdx[esdIdxPosKaon],
-                         getMcIdx_fromEsdIdx[esdIdxNeg_PionPair], getMcIdx_fromEsdIdx[esdIdxPos_PionPair], //
-                         getMotherMcIdx_fromEsdIdx[esdIdxNeg_AntiLambda], getMotherMcIdx_fromEsdIdx[esdIdxPos_AntiLambda], getMotherMcIdx_fromEsdIdx[esdIdxPosKaon],
-                         getMotherMcIdx_fromEsdIdx[esdIdxNeg_PionPair], getMotherMcIdx_fromEsdIdx[esdIdxPos_PionPair],  //
-                         getReactionID_fromEsdIdx[esdIdxNeg_AntiLambda], getReactionID_fromEsdIdx[esdIdxPos_AntiLambda], getReactionID_fromEsdIdx[esdIdxPosKaon],
-                         getReactionID_fromEsdIdx[esdIdxNeg_PionPair], getReactionID_fromEsdIdx[esdIdxPos_PionPair]);
-                */
-                // clang-format on
-                // -- END OF DEBUG -- //
             }  // end of loop over K+
         }      // end of loop over pi+pi- pairs
     }          // end of loop over anti-lambdas
@@ -5948,8 +5971,9 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_ALPKPP(Bool_t isSignal, KFP
  */
 void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
 
-    AliESDtrack* esdPosKaonA;
-    AliESDtrack* esdPosKaonB;
+    AliESDtrack *esdPosKaonA, *esdPosKaonB;
+    Int_t esdIdxPosKaonA, esdIdxPosKaonB;
+    Int_t mcIdxPosKaonA, mcIdxPosKaonB;
 
     /* Declare 4-momentum vectors */
 
@@ -5968,14 +5992,13 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
     Float_t dca_btw_kaons;
     Float_t dca_ka_sv, dca_kb_sv;
     Float_t opening_angle;
-
     Float_t chi2_ndf;
 
     Bool_t is_signal;
     Bool_t is_hybrid;
+    Int_t reaction_id;
 
     Int_t idxKaonPair;
-    Int_t esdIdxPosKaonA, esdIdxPosKaonB;
 
     /* Loop over all possible pairs of tracks */
 
@@ -5986,7 +6009,7 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
             esdIdxPosKaonA = esdIndicesOfPosKaonTracks[i];
             esdIdxPosKaonB = esdIndicesOfPosKaonTracks[j];
 
-            /* Sanity check */
+            /* Sanity check: prevent tracks from repeating */
 
             if (esdIdxPosKaonA == esdIdxPosKaonB) continue;
 
@@ -6018,11 +6041,20 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
 
             lvKaonPair = lvPosKaonA + lvPosKaonB;
 
-            /* Apply cuts */
+            /* Collect true information */
 
-            is_signal = isEsdIdxSignal[esdIdxPosKaonA] && isEsdIdxSignal[esdIdxPosKaonB] &&
-                        getReactionID_fromEsdIdx[esdIdxPosKaonA] == getReactionID_fromEsdIdx[esdIdxPosKaonB];
-            is_hybrid = (isEsdIdxSignal[esdIdxPosKaonA] || isEsdIdxSignal[esdIdxPosKaonB]) && !is_signal;
+            mcIdxPosKaonA = getMcIdx_fromEsdIdx[esdIdxPosKaonA];
+            mcIdxPosKaonB = getMcIdx_fromEsdIdx[esdIdxPosKaonB];
+
+            is_signal = isMcIdxSignal[mcIdxPosKaonA] && isMcIdxSignal[mcIdxPosKaonB] &&                              //
+                        getPdgCode_fromMcIdx[mcIdxPosKaonA] == 321 && getPdgCode_fromMcIdx[mcIdxPosKaonB] == 321 &&  //
+                        getReactionID_fromMcIdx[mcIdxPosKaonA] == getReactionID_fromMcIdx[mcIdxPosKaonB];
+            reaction_id =
+                getReactionID_fromMcIdx[mcIdxPosKaonA] == getReactionID_fromMcIdx[mcIdxPosKaonB] ? getReactionID_fromMcIdx[mcIdxPosKaonA] : -1;
+            is_hybrid = (isMcIdxSignal[mcIdxPosKaonA] || isMcIdxSignal[mcIdxPosKaonB]) &&  //
+                        !is_signal;
+
+            /* Apply cuts */
 
             if (!PassesKaonPairCuts(is_signal, kfKaonPair, kfPosKaonA, kfPosKaonB, lvKaonPair, lvPosKaonA, lvPosKaonB)) {
                 continue;
@@ -6051,9 +6083,9 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
             tKaonPair_Py = (Float_t)lvKaonPair.Py();
             tKaonPair_Pz = (Float_t)lvKaonPair.Pz();
             tKaonPair_E = (Float_t)lvKaonPair.E();
-            tKaonPair_Xv = (Float_t)kfKaonPair.GetX();
-            tKaonPair_Yv = (Float_t)kfKaonPair.GetY();
-            tKaonPair_Zv = (Float_t)kfKaonPair.GetZ();
+            tKaonPair_Xv = kfKaonPair.GetX();
+            tKaonPair_Yv = kfKaonPair.GetY();
+            tKaonPair_Zv = kfKaonPair.GetZ();
             tKaonPair_DistFromPV = dist_from_pv;
             tKaonPair_DCAwrtPV = dca_wrt_pv;
             tKaonPair_DCAbtwKaons = dca_btw_kaons;
@@ -6061,9 +6093,10 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
             tKaonPair_DCAkbSV = dca_kb_sv;
             tKaonPair_OpeningAngle = opening_angle;
             tKaonPair_Chi2ndf = chi2_ndf;
-            tSexaquark_IsHybrid = is_hybrid;
+
             tSexaquark_IsSignal = is_signal;
-            tKaonPair_ReactionID = getReactionID_fromEsdIdx[esdIdxPosKaonA];
+            tKaonPair_ReactionID = reaction_id;
+            tSexaquark_IsHybrid = is_hybrid;
 
             fTree_KaonPairs->Fill();
             ClearKaonPairsBranches();
@@ -7372,20 +7405,15 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
 
     /*  */
     getMcIdx_fromEsdIdx.clear();
-    esdIdxPassesTrackSelection_AsProton.clear();
-    esdIdxPassesTrackSelection_AsAntiProton.clear();
-    esdIdxPassesTrackSelection_AsPosKaon.clear();
-    esdIdxPassesTrackSelection_AsNegKaon.clear();
-    esdIdxPassesTrackSelection_AsPiPlus.clear();
-    esdIdxPassesTrackSelection_AsPiMinus.clear();
-    getEsdIdx_fromMcIdx.clear();
+    isEsdIdxSelectedAsProton.clear();
+    isEsdIdxSelectedAsAntiProton.clear();
+    isEsdIdxSelectedAsPosKaon.clear();
+    isEsdIdxSelectedAsNegKaon.clear();
+    isEsdIdxSelectedAsPiPlus.clear();
+    isEsdIdxSelectedAsPiMinus.clear();
 
-    isEsdIdxSignal.clear();
-    getReactionID_fromEsdIdx.clear();
     getEsdIndices_fromReactionID.clear();
 
-    doesEsdIdxHaveMother.clear();
-    getMotherMcIdx_fromEsdIdx.clear();
     getNegDauEsdIdx_fromMcIdx.clear();
     getPosDauEsdIdx_fromMcIdx.clear();
 
