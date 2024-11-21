@@ -253,14 +253,22 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t fCentrality;                //! centrality percentile
 
     /* ROOT Objects */
-    TDatabasePDG fPDG;                     //!
-    TList* fList_QA_Hists;                 //!
-    TList* fList_Tracks_Hists;             //!
-    TList* fList_V0s_Hists;                //!
-    TList* fList_Sexaquarks_ALK0_Hists;    //!
-    TList* fList_Sexaquarks_ALPK_Hists;    //!
-    TList* fList_Sexaquarks_ALPKPP_Hists;  //!
-    TList* fList_Sexaquarks_KKX_Hists;     //!
+    TDatabasePDG fPDG;                    //!
+    TList* fList_QA_Hists;                //!
+    TList* fList_AntiProton_Hists;        //!
+    TList* fList_Proton_Hists;            //!
+    TList* fList_NegKaon_Hists;           //!
+    TList* fList_PosKaon_Hists;           //!
+    TList* fList_PiMinus_Hists;           //!
+    TList* fList_PiPlus_Hists;            //!
+    TList* fList_AntiLambda_Hists;        //!
+    TList* fList_Lambda_Hists;            //!
+    TList* fList_KaonZeroShort_Hists;     //!
+    TList* fList_PionPair_Hists;          //!
+    TList* fList_Sexaquark_ALK0_Hists;    //!
+    TList* fList_Sexaquark_ALPK_Hists;    //!
+    TList* fList_Sexaquark_ALPKPP_Hists;  //!
+    TList* fList_Sexaquark_KKX_Hists;     //!
 
     /* External Files */
     TString fAliEnPath;        //! loaded in `UserNotify()`
@@ -458,12 +466,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /** QA Histograms **/
 
-    std::map<TString, TH1F*> fHist_QA;    //! key: `property`
-    std::map<TString, TH2F*> f2DHist_QA;  //! key: `hist name`
-
-    /** Tracks Histograms **/
-
     /*
+    fHist_QA["Tracks_Bookkeep"]:
      - `0`    : MC tracks
      - `10`   : SECONDARY MC tracks
      - `20`   : SIGNAL MC tracks
@@ -474,7 +478,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      - `120+` : effect of cuts on SIGNAL tracks
      - `140`  : found SIGNAL tracks that passed all cuts
     */
-    TH1F* fHist_Tracks_Bookkeep;                                                 //!
+    std::map<TString, TH1F*> fHist_QA;    //! key: `property`
+    std::map<TString, TH2F*> f2DHist_QA;  //! key: `hist name`
+
+    /** Tracks Histograms **/
+
     std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;  //! key: `stage, set, pdg, property`
     std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;                           //! key: `set`
 
@@ -496,9 +504,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
      - `150+` : effect of cuts on SIGNAL V0s
      - `170`  : found SIGNAL V0s that passed all cuts
     */
-    std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;                      //! key: `V0 pdg code`
-    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;  //! key: `stage, set, pdg, property`
-    std::map<TString, TH2F*> f2DHist_V0s_ArmenterosPodolanski;                //! key: `set`
+    std::unordered_map<Int_t, TH1F*> fHist_V0s_Bookkeep;                           //! key: `V0 pdg code`
+    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_V0s;       //! key: `stage, set, V0 pdg code, property`
+    std::map<std::tuple<TString, Int_t>, TH2F*> f2DHist_V0s_ArmenterosPodolanski;  //! key: `set, V0 pdg code`
 
     /** Anti-Sexaquark Histograms **/
 

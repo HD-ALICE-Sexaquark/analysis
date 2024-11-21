@@ -28,12 +28,20 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       /*  */
       fPDG(),
       fList_QA_Hists(0),
-      fList_Tracks_Hists(0),
-      fList_V0s_Hists(0),
-      fList_Sexaquarks_ALK0_Hists(0),
-      fList_Sexaquarks_ALPK_Hists(0),
-      fList_Sexaquarks_ALPKPP_Hists(0),
-      fList_Sexaquarks_KKX_Hists(0),
+      fList_AntiProton_Hists(0),
+      fList_Proton_Hists(0),
+      fList_NegKaon_Hists(0),
+      fList_PosKaon_Hists(0),
+      fList_PiMinus_Hists(0),
+      fList_PiPlus_Hists(0),
+      fList_AntiLambda_Hists(0),
+      fList_Lambda_Hists(0),
+      fList_KaonZeroShort_Hists(0),
+      fList_PionPair_Hists(0),
+      fList_Sexaquark_ALK0_Hists(0),
+      fList_Sexaquark_ALPK_Hists(0),
+      fList_Sexaquark_ALPKPP_Hists(0),
+      fList_Sexaquark_KKX_Hists(0),
       /*  */
       fAliEnPath(),
       fIsFirstEvent(0),
@@ -216,7 +224,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       /*  */
       fHist_QA(),
       f2DHist_QA(),
-      fHist_Tracks_Bookkeep(),
       fHist_Tracks(),
       f2DHist_Tracks_TPCsignal(),
       fHist_V0s_Bookkeep(),
@@ -366,12 +373,20 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       /*  */
       fPDG(),
       fList_QA_Hists(0),
-      fList_Tracks_Hists(0),
-      fList_V0s_Hists(0),
-      fList_Sexaquarks_ALK0_Hists(0),
-      fList_Sexaquarks_ALPK_Hists(0),
-      fList_Sexaquarks_ALPKPP_Hists(0),
-      fList_Sexaquarks_KKX_Hists(0),
+      fList_AntiProton_Hists(0),
+      fList_Proton_Hists(0),
+      fList_NegKaon_Hists(0),
+      fList_PosKaon_Hists(0),
+      fList_PiMinus_Hists(0),
+      fList_PiPlus_Hists(0),
+      fList_AntiLambda_Hists(0),
+      fList_Lambda_Hists(0),
+      fList_KaonZeroShort_Hists(0),
+      fList_PionPair_Hists(0),
+      fList_Sexaquark_ALK0_Hists(0),
+      fList_Sexaquark_ALPK_Hists(0),
+      fList_Sexaquark_ALPKPP_Hists(0),
+      fList_Sexaquark_KKX_Hists(0),
       /*  */
       fAliEnPath(),
       fIsFirstEvent(0),
@@ -554,7 +569,6 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       /*  */
       fHist_QA(),
       f2DHist_QA(),
-      fHist_Tracks_Bookkeep(),
       fHist_Tracks(),
       f2DHist_Tracks_TPCsignal(),
       fHist_V0s_Bookkeep(),
@@ -691,12 +705,20 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
     DefineOutput(9, TTree::Class());  // fTree_Sexaquarks_KKX
 
     DefineOutput(10, TList::Class());  // fList_QA_Hists
-    DefineOutput(11, TList::Class());  // fList_Tracks_Hists
-    DefineOutput(12, TList::Class());  // fList_V0s_Hists
-    DefineOutput(13, TList::Class());  // fList_Sexaquarks_ALK0_Hists
-    DefineOutput(14, TList::Class());  // fList_Sexaquarks_ALPK_Hists
-    DefineOutput(15, TList::Class());  // fList_Sexaquarks_ALPKPP_Hists
-    DefineOutput(16, TList::Class());  // fList_Sexaquarks_KKX_Hists
+    DefineOutput(11, TList::Class());  // fList_AntiProton_Hists
+    DefineOutput(12, TList::Class());  // fList_Proton_Hists
+    DefineOutput(13, TList::Class());  // fList_NegKaon_Hists
+    DefineOutput(14, TList::Class());  // fList_PosKaon_Hists
+    DefineOutput(15, TList::Class());  // fList_PiMinus_Hists
+    DefineOutput(16, TList::Class());  // fList_PiPlus_Hists
+    DefineOutput(17, TList::Class());  // fList_AntiLambda_Hists
+    DefineOutput(18, TList::Class());  // fList_Lambda_Hists
+    DefineOutput(19, TList::Class());  // fList_KaonZeroShort_Hists
+    DefineOutput(20, TList::Class());  // fList_PionPair_Hists
+    DefineOutput(21, TList::Class());  // fList_Sexaquark_ALK0_Hists
+    DefineOutput(22, TList::Class());  // fList_Sexaquark_ALPK_Hists
+    DefineOutput(23, TList::Class());  // fList_Sexaquark_ALPKPP_Hists
+    DefineOutput(24, TList::Class());  // fList_Sexaquark_KKX_Hists
 }
 
 /*
@@ -715,12 +737,21 @@ AliAnalysisTaskSexaquark::~AliAnalysisTaskSexaquark() {
     if (fTree_Sexaquarks_KKX) delete fTree_Sexaquarks_KKX;
 
     if (fList_QA_Hists) delete fList_QA_Hists;
-    if (fList_Tracks_Hists) delete fList_Tracks_Hists;
-    if (fList_V0s_Hists) delete fList_V0s_Hists;
-    if (fList_Sexaquarks_ALK0_Hists) delete fList_Sexaquarks_ALK0_Hists;
-    if (fList_Sexaquarks_ALPK_Hists) delete fList_Sexaquarks_ALPK_Hists;
-    if (fList_Sexaquarks_ALPKPP_Hists) delete fList_Sexaquarks_ALPKPP_Hists;
-    if (fList_Sexaquarks_KKX_Hists) delete fList_Sexaquarks_KKX_Hists;
+
+    if (fList_AntiProton_Hists) delete fList_AntiProton_Hists;
+    if (fList_Proton_Hists) delete fList_Proton_Hists;
+    if (fList_NegKaon_Hists) delete fList_NegKaon_Hists;
+    if (fList_PosKaon_Hists) delete fList_PosKaon_Hists;
+    if (fList_PiMinus_Hists) delete fList_PiMinus_Hists;
+    if (fList_PiPlus_Hists) delete fList_PiPlus_Hists;
+    if (fList_AntiLambda_Hists) delete fList_AntiLambda_Hists;
+    if (fList_Lambda_Hists) delete fList_Lambda_Hists;
+    if (fList_KaonZeroShort_Hists) delete fList_KaonZeroShort_Hists;
+    if (fList_PionPair_Hists) delete fList_PionPair_Hists;
+    if (fList_Sexaquark_ALK0_Hists) delete fList_Sexaquark_ALK0_Hists;
+    if (fList_Sexaquark_ALPK_Hists) delete fList_Sexaquark_ALPK_Hists;
+    if (fList_Sexaquark_ALPKPP_Hists) delete fList_Sexaquark_ALPKPP_Hists;
+    if (fList_Sexaquark_KKX_Hists) delete fList_Sexaquark_KKX_Hists;
 }
 
 /*
@@ -791,38 +822,63 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     /** Histograms **/
 
     fList_QA_Hists = new TList();
+    fList_AntiProton_Hists = new TList();
+    fList_Proton_Hists = new TList();
+    fList_NegKaon_Hists = new TList();
+    fList_PosKaon_Hists = new TList();
+    fList_PiMinus_Hists = new TList();
+    fList_PiPlus_Hists = new TList();
+    fList_AntiLambda_Hists = new TList();
+    fList_Lambda_Hists = new TList();
+    fList_KaonZeroShort_Hists = new TList();
+    fList_PionPair_Hists = new TList();
+
     fList_QA_Hists->SetOwner(kTRUE);
+    fList_AntiProton_Hists->SetOwner(kTRUE);
+    fList_Proton_Hists->SetOwner(kTRUE);
+    fList_NegKaon_Hists->SetOwner(kTRUE);
+    fList_PosKaon_Hists->SetOwner(kTRUE);
+    fList_PiMinus_Hists->SetOwner(kTRUE);
+    fList_PiPlus_Hists->SetOwner(kTRUE);
+    fList_AntiLambda_Hists->SetOwner(kTRUE);
+    fList_Lambda_Hists->SetOwner(kTRUE);
+    fList_KaonZeroShort_Hists->SetOwner(kTRUE);
+    fList_PionPair_Hists->SetOwner(kTRUE);
+
     PrepareQAHistograms();
-    PostData(10, fList_QA_Hists);
-
-    fList_Tracks_Hists = new TList();
-    fList_Tracks_Hists->SetOwner(kTRUE);
     PrepareTracksHistograms();
-    PostData(11, fList_Tracks_Hists);
-
-    fList_V0s_Hists = new TList();
-    fList_V0s_Hists->SetOwner(kTRUE);
     PrepareV0sHistograms();
-    PostData(12, fList_V0s_Hists);
+
+    PostData(10, fList_QA_Hists);
+    PostData(11, fList_AntiProton_Hists);
+    PostData(12, fList_Proton_Hists);
+    PostData(13, fList_NegKaon_Hists);
+    PostData(14, fList_PosKaon_Hists);
+    PostData(15, fList_PiMinus_Hists);
+    PostData(16, fList_PiPlus_Hists);
+    PostData(17, fList_AntiLambda_Hists);
+    PostData(18, fList_Lambda_Hists);
+    PostData(19, fList_KaonZeroShort_Hists);
+    PostData(20, fList_PionPair_Hists);
 
     /*** Sexaquark Hists ***/
 
-    fList_Sexaquarks_ALK0_Hists = new TList();
-    fList_Sexaquarks_ALPK_Hists = new TList();
-    fList_Sexaquarks_ALPKPP_Hists = new TList();
-    fList_Sexaquarks_KKX_Hists = new TList();
+    fList_Sexaquark_ALK0_Hists = new TList();
+    fList_Sexaquark_ALPK_Hists = new TList();
+    fList_Sexaquark_ALPKPP_Hists = new TList();
+    fList_Sexaquark_KKX_Hists = new TList();
 
-    fList_Sexaquarks_ALK0_Hists->SetOwner(kTRUE);
-    fList_Sexaquarks_ALPK_Hists->SetOwner(kTRUE);
-    fList_Sexaquarks_ALPKPP_Hists->SetOwner(kTRUE);
-    fList_Sexaquarks_KKX_Hists->SetOwner(kTRUE);
+    fList_Sexaquark_ALK0_Hists->SetOwner(kTRUE);
+    fList_Sexaquark_ALPK_Hists->SetOwner(kTRUE);
+    fList_Sexaquark_ALPKPP_Hists->SetOwner(kTRUE);
+    fList_Sexaquark_KKX_Hists->SetOwner(kTRUE);
 
     PrepareSexaquarksHistograms();
 
-    PostData(13, fList_Sexaquarks_ALK0_Hists);
-    PostData(14, fList_Sexaquarks_ALPK_Hists);
-    PostData(15, fList_Sexaquarks_ALPKPP_Hists);
-    PostData(16, fList_Sexaquarks_KKX_Hists);
+    PostData(21, fList_Sexaquark_ALK0_Hists);
+    PostData(22, fList_Sexaquark_ALPK_Hists);
+    PostData(23, fList_Sexaquark_ALPKPP_Hists);
+    PostData(24, fList_Sexaquark_KKX_Hists);
 
     AliInfo("!! It ends !!");
 }
@@ -1212,28 +1268,28 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
 
     // clang-format off
     std::vector<TString> QA_props = {"MCGen_VertexX",   "MCGen_VertexY",        "MCGen_VertexZ",
-                                     "Events_Bookkeep", "VertexX",              "VertexY",        "VertexZ",
+                                     "Events_Bookkeep", "VertexX",              "VertexY",         "VertexZ",
                                      "NTracks",         "NTracks_AfterCuts",    "NSelectedTracks",
                                      "Centrality",      "Centrality_AfterCuts",
-                                     "Tracks_DCAxy",    "Tracks_DCAz",          "Tracks_Pt",
+                                     "Tracks_DCAxy",    "Tracks_DCAz",          "Tracks_Pt",       "Tracks_Bookkeep",
                                      "SPD_NTracklets",  "TPC_NClusters"};
     std::vector<Int_t> QA_nbins = {100,  100,  200,
-                                   5,    100,  100, 200,
+                                   5,    100,  100,  200,
                                    2000, 2000, 2000,
                                    22,   22,
-                                   100,  100, 200,
+                                   100,  100,  200,  150,
                                    60,   200};
     std::vector<Float_t> QA_min = {-1,  -1,  -50,
                                    0.,  -1,  -1,  -50,
-                                   0.,  0.,  0.,
+                                   0.,  0.,  0.,  0.,
                                    0.,  0.,
                                    -5., -5., 0.,
-                                   0., 0.};
-    std::vector<Float_t> QA_max = {1,      1,      50,
-                                   5.,     1,      1,      50,
-                                   35000., 35000., 35000.,
+                                   0.,  0.};
+    std::vector<Float_t> QA_max = {1,      1,       50,
+                                   5.,     1,       1,      50,
+                                   35000., 35000.,  35000., 150.,
                                    110.,   110.,
-                                   5.,     5.,     100.,
+                                   5.,     5.,      100.,
                                    6000,   5000000.};
     // clang-format on
 
@@ -1287,14 +1343,17 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
 }
 
 /*
- * Define and add tracks' histograms to the histograms output list.
+ * Define and add tracks' histograms to the histograms output lists.
  */
 void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
 
-    TString tracks_stages[2] = {"MCGen", "Found"};
+    std::vector<TList*> Lists_Tracks_Hists = {fList_AntiProton_Hists, fList_Proton_Hists,  fList_NegKaon_Hists,
+                                              fList_PosKaon_Hists,    fList_PiMinus_Hists, fList_PiPlus_Hists};
+    std::vector<TString> species_names = {"AntiProton", "Proton", "NegKaon", "PosKaon", "PiMinus", "PiPlus"};
+    std::vector<Int_t> tracks_pdg_code = {-2212, 2212, -321, 321, -211, 211};
+
+    std::vector<TString> tracks_stages = {"MCGen", "Found"};
     std::vector<TString> tracks_sets = {"All", "True", "Secondary", "Signal"};
-    std::vector<Int_t> tracks_species = {-2212, 2212, -321, 321, -211, 211};
-    std::vector<TString> tracks_names = {"AntiProton", "Proton", "NegKaon", "PosKaon", "PiMinus", "PiPlus"};
 
     // clang-format off
     std::vector<TString> tracks_props = {"Px",           "Py",          "Pt",         "Pz",           "Eta",
@@ -1315,38 +1374,33 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
                                         10,   10,   10,   16};
     // clang-format on
 
-    fHist_Tracks_Bookkeep = new TH1F("Tracks_Bookkeep", "", 150, 0., 150.);
-    fList_Tracks_Hists->Add(fHist_Tracks_Bookkeep);
-
-    for (TString& stage : tracks_stages) {
-        for (TString& set : tracks_sets) {
-            for (Int_t species_idx = 0; species_idx < (Int_t)tracks_species.size(); species_idx++) {
+    for (Int_t species_idx = 0; species_idx < (Int_t)tracks_pdg_code.size(); species_idx++) {
+        for (TString& stage : tracks_stages) {
+            for (TString& set : tracks_sets) {
                 for (Int_t prop_idx = 0; prop_idx < (Int_t)tracks_props.size(); prop_idx++) {
 
                     if (!fIsMC && (stage == "MCGen" || set == "True" || set == "Secondary" || set == "Signal")) continue;
-
                     if (stage == "MCGen" && set == "True") continue;
-                    if (stage == "MCGen" && !(tracks_props[prop_idx] == "Px" || tracks_props[prop_idx] == "Py" || tracks_props[prop_idx] == "Pt" ||
-                                              tracks_props[prop_idx] == "Pz" || tracks_props[prop_idx] == "Eta")) {
-                        continue;
-                    }
+                    if (stage == "MCGen" && prop_idx > 4) continue;
 
-                    TString histName = Form("%s_%s_%s_%s", stage.Data(), set.Data(), tracks_names[species_idx].Data(), tracks_props[prop_idx].Data());
+                    TString histName = Form("%s_%s_%s", stage.Data(), set.Data(), tracks_props[prop_idx].Data());
+
                     std::tuple<TString, TString, Int_t, TString> histKey =
-                        std::make_tuple(stage, set, tracks_species[species_idx], tracks_props[prop_idx]);
+                        std::make_tuple(stage, set, tracks_pdg_code[species_idx], tracks_props[prop_idx]);
                     fHist_Tracks[histKey] = new TH1F(histName, "", tracks_nbins[prop_idx], tracks_min[prop_idx], tracks_max[prop_idx]);
-                    fList_Tracks_Hists->Add(fHist_Tracks[histKey]);
+
+                    Lists_Tracks_Hists[species_idx]->Add(fHist_Tracks[histKey]);
                 }
             }
         }
-    }
 
-    tracks_sets.insert(tracks_sets.begin() + 1, "Selected");
-    for (TString& set : tracks_sets) {
-        TString histName = Form("Tracks_%s_TPCsignal", set.Data());
-        f2DHist_Tracks_TPCsignal[set] = new TH2F(histName, "", 200, 0., 10., 200, 0., 400.);
-        fList_Tracks_Hists->Add(f2DHist_Tracks_TPCsignal[set]);
-    }
+        tracks_sets.insert(tracks_sets.begin() + 1, "Selected");
+        for (TString& set : tracks_sets) {
+            TString histName = Form("Tracks_%s_TPCsignal", set.Data());
+            f2DHist_Tracks_TPCsignal[set] = new TH2F(histName, "", 200, 0., 10., 200, 0., 400.);
+            Lists_Tracks_Hists[species_idx]->Add(f2DHist_Tracks_TPCsignal[set]);
+        }
+    }  // end of loop over particle species
 }
 
 /*
@@ -1354,11 +1408,11 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
  */
 void AliAnalysisTaskSexaquark::PrepareV0sHistograms() {
 
-    TString V0_stages[3] = {"MCGen", "Findable", "Found"};
-    TString V0_sets[4] = {"All", "True", "Secondary", "Signal"};
+    std::vector<TList*> Lists_V0s_Hists = {fList_AntiLambda_Hists, fList_Lambda_Hists, fList_KaonZeroShort_Hists, fList_PionPair_Hists};
+    std::vector<Int_t> V0_pdg_code = {-3122, 3122, 310, 422};
 
-    std::vector<Int_t> V0_species = {-3122, 3122, 310, 422};
-    std::vector<TString> V0_name = {"AntiLambda", "Lambda", "KaonZeroShort", "PionPair"};
+    std::vector<TString> V0_sets = {"All", "True", "Secondary", "Signal"};
+    std::vector<TString> V0_stages = {"MCGen", "Findable", "Found"};
 
     // clang-format off
     std::vector<TString> V0_props = {"Mass",         "Pt",          "Px",           "Py",       "Pz",       "Phi",
@@ -1383,56 +1437,48 @@ void AliAnalysisTaskSexaquark::PrepareV0sHistograms() {
                                     2.,   0.5};
     // clang-format on
 
-    for (Int_t sp = 0; sp < (Int_t)V0_species.size(); sp++) {
-        fHist_V0s_Bookkeep[V0_species[sp]] = new TH1F(Form("%s_Bookkeep", V0_name[sp].Data()), "", 200, 0., 200.);
-        fList_V0s_Hists->Add(fHist_V0s_Bookkeep[V0_species[sp]]);
-    }
+    for (Int_t sp = 0; sp < (Int_t)V0_pdg_code.size(); sp++) {
+        fHist_V0s_Bookkeep[V0_pdg_code[sp]] = new TH1F("Bookkeep", "", 200, 0., 200.);
+        Lists_V0s_Hists[sp]->Add(fHist_V0s_Bookkeep[V0_pdg_code[sp]]);
 
-    for (TString& stage : V0_stages) {
         for (TString& set : V0_sets) {
-            for (Int_t sp = 0; sp < (Int_t)V0_species.size(); sp++) {
+            for (TString& stage : V0_stages) {
                 for (Int_t prop_idx = 0; prop_idx < (Int_t)V0_props.size(); prop_idx++) {
 
                     if (!fIsMC && (stage == "MCGen" || stage == "Findable" || set == "True" || set == "Secondary" || set == "Signal")) continue;
-
                     if (fSourceOfV0s == "kalman" && (V0_props[prop_idx] == "ImprvDCAbtwDau" || V0_props[prop_idx] == "Chi2")) continue;
                     if ((fSourceOfV0s == "offline" || fSourceOfV0s == "on-the-fly" || fSourceOfV0s == "custom") && V0_props[prop_idx] == "Chi2ndf") {
                         continue;
                     }
-
                     if (stage == "Findable" && set == "All") continue;
                     if (stage == "MCGen" && set == "True") continue;
-
-                    if (V0_species[sp] == 422 && (stage == "MCGen" || stage == "Findable")) continue;
-
+                    if (V0_pdg_code[sp] == 422 && (stage == "MCGen" || stage == "Findable")) continue;
                     if ((stage == "Findable" || stage == "MCGen") &&
                         (V0_props[prop_idx] == "Radius" || V0_props[prop_idx] == "DistFromPV" || V0_props[prop_idx] == "DCAbtwDau" ||
                          V0_props[prop_idx] == "DCAnegV0" || V0_props[prop_idx] == "DCAposV0" || V0_props[prop_idx] == "ImprvDCAbtwDau" ||
                          V0_props[prop_idx] == "Chi2" || V0_props[prop_idx] == "Chi2ndf")) {
                         continue;
                     }
-
                     if (stage == "Found" &&
                         (V0_props[prop_idx] == "OriginRadius" || V0_props[prop_idx] == "DecayRadius" || V0_props[prop_idx] == "DecayLength")) {
                         continue;
                     }
 
-                    TString histName = Form("%s_%s_%s_%s", stage.Data(), set.Data(), V0_name[sp].Data(), V0_props[prop_idx].Data());
-                    std::tuple<TString, TString, Int_t, TString> histKey = std::make_tuple(stage, set, V0_species[sp], V0_props[prop_idx]);
-                    Float_t minEdge = V0_props[prop_idx] == "Mass" ? kMin_V0_Mass[V0_species[sp]] : V0_min[prop_idx];
-                    Float_t maxEdge = V0_props[prop_idx] == "Mass" ? kMax_V0_Mass[V0_species[sp]] : V0_max[prop_idx];
+                    TString histName = Form("%s_%s_%s", stage.Data(), set.Data(), V0_props[prop_idx].Data());
+                    std::tuple<TString, TString, Int_t, TString> histKey = std::make_tuple(stage, set, V0_pdg_code[sp], V0_props[prop_idx]);
+                    Float_t minEdge = V0_props[prop_idx] == "Mass" ? kMin_V0_Mass[V0_pdg_code[sp]] : V0_min[prop_idx];
+                    Float_t maxEdge = V0_props[prop_idx] == "Mass" ? kMax_V0_Mass[V0_pdg_code[sp]] : V0_max[prop_idx];
                     fHist_V0s[histKey] = new TH1F(histName, "", V0_nbins[prop_idx], minEdge, maxEdge);
-                    fList_V0s_Hists->Add(fHist_V0s[histKey]);
-                }
-            }
-        }
-    }
 
-    for (TString& set : V0_sets) {
-        TString histName = Form("Found_%s_V0s_ArmenterosPodolanski", set.Data());
-        f2DHist_V0s_ArmenterosPodolanski[set] = new TH2F(histName, "", 200, -1., 1., 200, 0., 0.3);
-        fList_V0s_Hists->Add(f2DHist_V0s_ArmenterosPodolanski[set]);
-    }
+                    Lists_V0s_Hists[sp]->Add(fHist_V0s[histKey]);
+                }  // end of loop over properties
+            }      // end of loop over stages
+            TString histName = Form("Found_%s_ArmenterosPodolanski", set.Data());
+            std::tuple<TString, Int_t> histKey = std::make_tuple(set, V0_pdg_code[sp]);
+            f2DHist_V0s_ArmenterosPodolanski[histKey] = new TH2F(histName, "", 200, -1., 1., 200, 0., 0.3);
+            Lists_V0s_Hists[sp]->Add(f2DHist_V0s_ArmenterosPodolanski[histKey]);
+        }  // end of loop over sets
+    }      // end of loop over V0 species
 }
 
 /*
@@ -1441,8 +1487,8 @@ void AliAnalysisTaskSexaquark::PrepareV0sHistograms() {
 void AliAnalysisTaskSexaquark::PrepareSexaquarksHistograms() {
 
     std::vector<TString> ReactionChannels = {"ALK0", "ALPK", "ALPKPP", "KKX"};
-    std::vector<TList*> Lists_Sexaquarks_Hists = {fList_Sexaquarks_ALK0_Hists, fList_Sexaquarks_ALPK_Hists, fList_Sexaquarks_ALPKPP_Hists,
-                                                  fList_Sexaquarks_KKX_Hists};
+    std::vector<TList*> Lists_Sexaquarks_Hists = {fList_Sexaquark_ALK0_Hists, fList_Sexaquark_ALPK_Hists, fList_Sexaquark_ALPKPP_Hists,
+                                                  fList_Sexaquark_KKX_Hists};
 
     TString SQ_stages[3] = {"MCGen", "Findable", "Found"};
     TString SQ_sets[2] = {"All", "Signal"};
@@ -1460,11 +1506,11 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarksHistograms() {
         current_channel = ReactionChannels[rc];
         current_list = Lists_Sexaquarks_Hists[rc];
 
-        fHist_AntiSexaquarks_Bookkeep[current_channel] = new TH1D(Form("AntiSexaquarks_%s_Bookkeep", current_channel.Data()), "", 100, 0., 100.);
+        fHist_AntiSexaquarks_Bookkeep[current_channel] = new TH1D("Bookkeep", "", 100, 0., 100.);
         current_list->Add(fHist_AntiSexaquarks_Bookkeep[current_channel]);
 
+        // clang-format off
         if (current_channel == "ALK0") {
-            // clang-format off
             SQ_props = {"Mass2",    "Pt",       "Px",          "Py",          "Pz",          "Phi",         "Radius",
                         "Zv",       "Eta",      "Rapidity",    "DistFromPV",  "CPAwrtPV",    "DCAwrtPV",    "DCAbtwV0s",
                         "DCAV0aSV", "DCAV0bSV", "DCAV0anegSV", "DCAV0aposSV", "DCAV0bnegSV", "DCAV0bposSV", "Chi2ndf"};
@@ -1477,11 +1523,9 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarksHistograms() {
             SQ_max = {20., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
                       50., 2.,  5.,  500., 1.,  10.,             2.,
                       2.,  2.,  10., 10.,  10., 10.,             1.};
-            // clang-format on
         }
 
         if (current_channel == "ALPK") {
-            // clang-format off
             SQ_props = {"Mass2",      "Pt",         "Px",       "Py",          "Pz",         "Phi",        "Radius",
                         "Zv",         "Eta",        "Rapidity", "DistFromPV",  "CPAwrtPV",   "DCAwrtPV",   "DCAV0Ba",
                         "DCAV0negBa", "DCAV0posBa", "DCAV0SV",  "DCABaSV",     "DCAV0negSV", "DCAV0posSV", "Chi2ndf"};
@@ -1494,11 +1538,9 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarksHistograms() {
             SQ_max = {20., 10., 10., 10.,  50., 2 * TMath::Pi(), 200.,
                       50., 2.,  5.,  500., 1.,  10.,             10.,
                       10., 10., 10., 10.,  10., 10.,             1.};
-            // clang-format on
         }
 
         if (current_channel == "ALPKPP") {
-            // clang-format off
             SQ_props = {"Mass2",   "Pt",       "Px",         "Py",       "Pz",       "Phi",     "Radius",     "Zv",
                         "Eta",     "Rapidity", "DistFromPV", "CPAwrtPV", "DCAwrtPV", "DCAV0SV", "DCAV0negSV", "DCAV0posSV",
                         "DCApkSV", "DCApmSV",  "DCAppSV",    "DCApkV0",  "DCApmV0",  "DCAppV0", "DCApmPK",    "DCAppPK",
@@ -1508,18 +1550,16 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarksHistograms() {
                         100, 100, 100, 100, 100, 100, 100, 100,
                         100};
             SQ_min = {0.,  -10., -10., -10., -50., 0., 0., -50.,
-                    -2., -5.,  0.,   0.,   0.,   0., 0., 0.,
-                    0.,  0.,   0.,   0.,   0.,   0., 0., 0.,
-                    0.};
+                      -2., -5.,  0.,   0.,   0.,   0., 0., 0.,
+                      0.,  0.,   0.,   0.,   0.,   0., 0., 0.,
+                      0.};
             SQ_max = {20., 10., 10.,  10., 50., 2 * TMath::Pi(), 200., 50.,
-                    2.,  5.,  500., 1.,  10., 10.,             10.,  10.,
-                    10., 10., 10.,  10., 10., 10.,             10.,  1.,
-                    30.};
-            // clang-format on
+                      2.,  5.,  500., 1.,  10., 10.,             10.,  10.,
+                      10., 10., 10.,  10., 10., 10.,             10.,  1.,
+                      30.};
         }
 
         if (current_channel == "KKX") {
-            // clang-format off
             SQ_props = {"Mass",     "Radius",      "DistFromPV",
                         "Xv",       "Yv",          "Zv",         "Eta",     "Rapidity",
                         "Px",       "Py",          "Pz",         "Pt",      "OpeningAngle",
@@ -1536,24 +1576,22 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarksHistograms() {
                       50.,  300., 300., 4.,  1.,
                       10.,  10.,  10.,  15., TMath::Pi(),
                       200., 1.,   1.,   1.,  1.5};
-            // clang-format on
         }
+        // clang-format on
 
         for (TString& stage : SQ_stages) {
             for (TString& set : SQ_sets) {
                 for (Int_t prop_idx = 0; prop_idx < (Int_t)SQ_props.size(); prop_idx++) {
+
                     if (!fIsMC && (stage.Contains("MCGen") || stage == "Findable" || set == "Signal")) continue;
-
                     if (set == "Signal" && !stage.Contains("Found")) continue;
-
                     if (fSourceOfV0s != "kalman" && SQ_props[prop_idx] == "Chi2ndf") continue;
-
                     if ((stage.Contains("MCGen") || stage == "Findable") &&
                         ((SQ_props[prop_idx].Contains("DCA") && SQ_props[prop_idx] != "DCAwrtPV") || SQ_props[prop_idx].Contains("Chi2"))) {
                         continue;
                     }
 
-                    TString histName = Form("%s_%s_AntiSexaquark_%s", stage.Data(), set.Data(), SQ_props[prop_idx].Data());
+                    TString histName = Form("%s_%s_%s", stage.Data(), set.Data(), SQ_props[prop_idx].Data());
 
                     std::tuple<TString, TString, TString, TString> histKey = std::make_tuple(current_channel, stage, set, SQ_props[prop_idx]);
                     fHist_AntiSexaquarks[histKey] = new TH1D(histName, "", SQ_nbins[prop_idx], SQ_min[prop_idx], SQ_max[prop_idx]);
@@ -1731,12 +1769,20 @@ void AliAnalysisTaskSexaquark::EndOfEvent() {
     PostData(9, fTree_Sexaquarks_KKX);
 
     PostData(10, fList_QA_Hists);
-    PostData(11, fList_Tracks_Hists);
-    PostData(12, fList_V0s_Hists);
-    PostData(13, fList_Sexaquarks_ALK0_Hists);
-    PostData(14, fList_Sexaquarks_ALPK_Hists);
-    PostData(15, fList_Sexaquarks_ALPKPP_Hists);
-    PostData(16, fList_Sexaquarks_KKX_Hists);
+    PostData(11, fList_AntiProton_Hists);
+    PostData(12, fList_Proton_Hists);
+    PostData(13, fList_NegKaon_Hists);
+    PostData(14, fList_PosKaon_Hists);
+    PostData(15, fList_PiMinus_Hists);
+    PostData(16, fList_PiPlus_Hists);
+    PostData(17, fList_AntiLambda_Hists);
+    PostData(18, fList_Lambda_Hists);
+    PostData(19, fList_KaonZeroShort_Hists);
+    PostData(20, fList_PionPair_Hists);
+    PostData(21, fList_Sexaquark_ALK0_Hists);
+    PostData(22, fList_Sexaquark_ALPK_Hists);
+    PostData(23, fList_Sexaquark_ALPKPP_Hists);
+    PostData(24, fList_Sexaquark_KKX_Hists);
 }
 
 /*
@@ -2096,7 +2142,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
             /** Fill histograms **/
 
-            fHist_Tracks_Bookkeep->Fill(0);
+            fHist_QA["Tracks_Bookkeep"]->Fill(0);
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Px")]->Fill(mcPart->Px());
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Py")]->Fill(mcPart->Py());
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Pt")]->Fill(mcPart->Pt());
@@ -2104,7 +2150,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_Tracks[std::make_tuple("MCGen", "All", pdg_mc, "Eta")]->Fill(mcPart->Eta());
 
             if (is_secondary) {
-                fHist_Tracks_Bookkeep->Fill(10);
+                fHist_QA["Tracks_Bookkeep"]->Fill(10);
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Px")]->Fill(mcPart->Px());
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Py")]->Fill(mcPart->Py());
                 fHist_Tracks[std::make_tuple("MCGen", "Secondary", pdg_mc, "Pt")]->Fill(mcPart->Pt());
@@ -2113,7 +2159,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             }
 
             if (is_signal) {
-                fHist_Tracks_Bookkeep->Fill(20);
+                fHist_QA["Tracks_Bookkeep"]->Fill(20);
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Px")]->Fill(mcPart->Px());
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Py")]->Fill(mcPart->Py());
                 fHist_Tracks[std::make_tuple("MCGen", "Signal", pdg_mc, "Pt")]->Fill(mcPart->Pt());
@@ -2675,7 +2721,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
             /* Fill histograms (3) */
 
-            fHist_Tracks_Bookkeep->Fill(50);
+            fHist_QA["Tracks_Bookkeep"]->Fill(50);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Px")]->Fill(trackInnerParam->Px());
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Py")]->Fill(trackInnerParam->Py());
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Pz")]->Fill(trackInnerParam->Pz());
@@ -2696,7 +2742,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
             if (mcPdgCode != esdPdgCode) continue;
 
-            fHist_Tracks_Bookkeep->Fill(80);
+            fHist_QA["Tracks_Bookkeep"]->Fill(80);
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Px")]->Fill(trackInnerParam->Px());
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Py")]->Fill(trackInnerParam->Py());
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "Pz")]->Fill(trackInnerParam->Pz());
@@ -2718,7 +2764,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
             if (!is_secondary) continue;
 
-            fHist_Tracks_Bookkeep->Fill(110);
+            fHist_QA["Tracks_Bookkeep"]->Fill(110);
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Px")]->Fill(trackInnerParam->Px());
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Py")]->Fill(trackInnerParam->Py());
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "Pz")]->Fill(trackInnerParam->Pz());
@@ -2740,7 +2786,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
             if (!is_signal) continue;
 
-            fHist_Tracks_Bookkeep->Fill(140);
+            fHist_QA["Tracks_Bookkeep"]->Fill(140);
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Px")]->Fill(trackInnerParam->Px());
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Py")]->Fill(trackInnerParam->Py());
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "Pz")]->Fill(trackInnerParam->Pz());
@@ -2774,9 +2820,9 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Bool_t
 
     AliExternalTrackParam* trackInnerParam = const_cast<AliExternalTrackParam*>(track->GetInnerParam());
 
-    fHist_Tracks_Bookkeep->Fill(30);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(90);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(120);
+    fHist_QA["Tracks_Bookkeep"]->Fill(30);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(90);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(120);
 
     /* Fulfill at least one of the PID cuts */
 
@@ -2788,64 +2834,64 @@ Bool_t AliAnalysisTaskSexaquark::PassesTrackSelection(AliESDtrack* track, Bool_t
         return kFALSE;
     }
 
-    fHist_Tracks_Bookkeep->Fill(31);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(91);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(121);
+    fHist_QA["Tracks_Bookkeep"]->Fill(31);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(91);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(121);
 
     if (kMax_Track_Eta && TMath::Abs(trackInnerParam->Eta()) > kMax_Track_Eta) return kFALSE;
-    fHist_Tracks_Bookkeep->Fill(32);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(92);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(122);
+    fHist_QA["Tracks_Bookkeep"]->Fill(32);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(92);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(122);
 
     Double_t NTPCClusters = track->GetTPCNcls();
     if (kMin_Track_NTPCClusters && NTPCClusters < kMin_Track_NTPCClusters) return kFALSE;
-    fHist_Tracks_Bookkeep->Fill(33);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(93);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(123);
+    fHist_QA["Tracks_Bookkeep"]->Fill(33);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(93);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(123);
 
     Double_t Chi2PerNTPCClusters = NTPCClusters > 1E-4 ? track->GetTPCchi2() / (Double_t)track->GetTPCNcls() : 999;
     if (kMax_Track_Chi2PerNTPCClusters && Chi2PerNTPCClusters > kMax_Track_Chi2PerNTPCClusters) return kFALSE;
-    fHist_Tracks_Bookkeep->Fill(34);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(94);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(124);
+    fHist_QA["Tracks_Bookkeep"]->Fill(34);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(94);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(124);
 
     // >> TPC and ITS status
     Bool_t tpc_status =
         (track->GetStatus() & AliESDtrack::kTPCin) && (track->GetStatus() & AliESDtrack::kTPCout) && (track->GetStatus() & AliESDtrack::kTPCrefit);
     if (kTurnedOn_Track_StatusCuts && !tpc_status) return kFALSE;
-    fHist_Tracks_Bookkeep->Fill(35);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(95);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(125);
+    fHist_QA["Tracks_Bookkeep"]->Fill(35);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(95);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(125);
 
     Bool_t its_status =
         !(track->GetStatus() & AliESDtrack::kITSin) && !(track->GetStatus() & AliESDtrack::kITSout) && !(track->GetStatus() & AliESDtrack::kITSrefit);
     if (kTurnedOn_Track_StatusCuts && !its_status) return kFALSE;
-    fHist_Tracks_Bookkeep->Fill(36);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(96);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(126);
+    fHist_QA["Tracks_Bookkeep"]->Fill(36);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(96);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(126);
 
     if (kTurnedOn_Track_RejectKinks && track->GetKinkIndex(0) > 0) return kFALSE;
-    fHist_Tracks_Bookkeep->Fill(37);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(97);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(127);
+    fHist_QA["Tracks_Bookkeep"]->Fill(37);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(97);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(127);
 
     Float_t DCAxy_wrtPV, DCAz_wrtPV;
     track->GetImpactParameters(DCAxy_wrtPV, DCAz_wrtPV);
     Float_t DCA_wrtPV = TMath::Sqrt((Double_t)DCAxy_wrtPV * (Double_t)DCAxy_wrtPV + (Double_t)DCAz_wrtPV * (Double_t)DCAz_wrtPV);
     if (kMin_Track_DCA_wrtPV && DCA_wrtPV < kMin_Track_DCA_wrtPV) return kFALSE;
-    fHist_Tracks_Bookkeep->Fill(38);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(98);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(128);
+    fHist_QA["Tracks_Bookkeep"]->Fill(38);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(98);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(128);
 
     if (kMin_Track_DCAxy_wrtPV && TMath::Abs(DCAxy_wrtPV) < kMin_Track_DCAxy_wrtPV) return kFALSE;
-    fHist_Tracks_Bookkeep->Fill(39);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(99);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(129);
+    fHist_QA["Tracks_Bookkeep"]->Fill(39);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(99);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(129);
 
     if (kMin_Track_DCAz_wrtPV && TMath::Abs(DCAz_wrtPV) < kMin_Track_DCAz_wrtPV) return kFALSE;
-    fHist_Tracks_Bookkeep->Fill(40);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(100);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(130);
+    fHist_QA["Tracks_Bookkeep"]->Fill(40);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(100);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(130);
 
     return kTRUE;
 }
@@ -2858,9 +2904,9 @@ Bool_t AliAnalysisTaskSexaquark::PassesSpeciesSelection(AliESDtrack* track, Int_
     AliExternalTrackParam* trackInnerParam = const_cast<AliExternalTrackParam*>(track->GetInnerParam());
 
     if (kMin_Track_Pt.count(esdPdgCode) && trackInnerParam->Pt() < kMin_Track_Pt[esdPdgCode]) return kFALSE;
-    fHist_Tracks_Bookkeep->Fill(41);
-    if (is_secondary) fHist_Tracks_Bookkeep->Fill(101);
-    if (is_signal) fHist_Tracks_Bookkeep->Fill(131);
+    fHist_QA["Tracks_Bookkeep"]->Fill(41);
+    if (is_secondary) fHist_QA["Tracks_Bookkeep"]->Fill(101);
+    if (is_signal) fHist_QA["Tracks_Bookkeep"]->Fill(131);
 
     return kTRUE;
 }
@@ -3320,7 +3366,7 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "ImprvDCAbtwDau")]->Fill(V0->GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "All", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
-            f2DHist_V0s_ArmenterosPodolanski["All"]->Fill(V0->AlphaV0(), V0->PtArmV0());
+            f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("All", v0PdgCode)]->Fill(V0->AlphaV0(), V0->PtArmV0());
 
             if (!is_true) continue;
 
@@ -3346,7 +3392,7 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "ImprvDCAbtwDau")]->Fill(V0->GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "True", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
-            f2DHist_V0s_ArmenterosPodolanski["True"]->Fill(V0->AlphaV0(), V0->PtArmV0());
+            f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("True", v0PdgCode)]->Fill(V0->AlphaV0(), V0->PtArmV0());
 
             if (!is_secondary) continue;
 
@@ -3372,7 +3418,7 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "ImprvDCAbtwDau")]->Fill(V0->GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "Secondary", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
-            f2DHist_V0s_ArmenterosPodolanski["Secondary"]->Fill(V0->AlphaV0(), V0->PtArmV0());
+            f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("Secondary", v0PdgCode)]->Fill(V0->AlphaV0(), V0->PtArmV0());
 
             if (!is_signal) continue;
 
@@ -3398,7 +3444,7 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
             fHist_V0s[std::make_tuple("Found", "Signal", v0PdgCode, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "Signal", v0PdgCode, "ImprvDCAbtwDau")]->Fill(V0->GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "Signal", v0PdgCode, "Chi2")]->Fill(V0->GetChi2V0());
-            f2DHist_V0s_ArmenterosPodolanski["Signal"]->Fill(V0->AlphaV0(), V0->PtArmV0());
+            f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("Signal", v0PdgCode)]->Fill(V0->AlphaV0(), V0->PtArmV0());
         }
     }  // end of loop over V0s
 }
@@ -3589,7 +3635,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "ImprvDCAbtwDau")]->Fill(vertex.GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
-            f2DHist_V0s_ArmenterosPodolanski["All"]->Fill(vertex.AlphaV0(), vertex.PtArmV0());
+            f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("All", pdgV0)]->Fill(vertex.AlphaV0(), vertex.PtArmV0());
 
             if (!is_true) continue;
 
@@ -3615,7 +3661,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "ImprvDCAbtwDau")]->Fill(vertex.GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
-            f2DHist_V0s_ArmenterosPodolanski["True"]->Fill(vertex.AlphaV0(), vertex.PtArmV0());
+            f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("True", pdgV0)]->Fill(vertex.AlphaV0(), vertex.PtArmV0());
 
             if (!is_secondary) continue;
 
@@ -3641,7 +3687,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "ImprvDCAbtwDau")]->Fill(vertex.GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
-            f2DHist_V0s_ArmenterosPodolanski["Secondary"]->Fill(vertex.AlphaV0(), vertex.PtArmV0());
+            f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("Secondary", pdgV0)]->Fill(vertex.AlphaV0(), vertex.PtArmV0());
 
             if (!is_signal) continue;
 
@@ -3667,7 +3713,7 @@ void AliAnalysisTaskSexaquark::CustomV0Finder(Int_t pdgV0) {
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "ImprvDCAbtwDau")]->Fill(vertex.GetDcaV0Daughters());
             fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Chi2")]->Fill(vertex.GetChi2V0());
-            f2DHist_V0s_ArmenterosPodolanski["Signal"]->Fill(vertex.AlphaV0(), vertex.PtArmV0());
+            f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("Signal", pdgV0)]->Fill(vertex.AlphaV0(), vertex.PtArmV0());
         }  // end of loop over pos. tracks
     }      // end of loop over neg. tracks
 }
@@ -4455,7 +4501,7 @@ void AliAnalysisTaskSexaquark::StoreV0As(Int_t pdgV0, Math::PxPyPzEVector lvV0, 
     fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
     fHist_V0s[std::make_tuple("Found", "All", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
     fHist_V0s[std::make_tuple("Found", "All", pdgV0, "Chi2ndf")]->Fill(chi2_ndf);
-    f2DHist_V0s_ArmenterosPodolanski["All"]->Fill(arm_alpha, arm_qt);
+    f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("All", pdgV0)]->Fill(arm_alpha, arm_qt);
 
     if (!is_true) return;
 
@@ -4480,7 +4526,7 @@ void AliAnalysisTaskSexaquark::StoreV0As(Int_t pdgV0, Math::PxPyPzEVector lvV0, 
     fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
     fHist_V0s[std::make_tuple("Found", "True", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
     fHist_V0s[std::make_tuple("Found", "True", pdgV0, "Chi2ndf")]->Fill(chi2_ndf);
-    f2DHist_V0s_ArmenterosPodolanski["True"]->Fill(arm_alpha, arm_qt);
+    f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("True", pdgV0)]->Fill(arm_alpha, arm_qt);
 
     if (!is_secondary) return;
 
@@ -4505,7 +4551,7 @@ void AliAnalysisTaskSexaquark::StoreV0As(Int_t pdgV0, Math::PxPyPzEVector lvV0, 
     fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
     fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
     fHist_V0s[std::make_tuple("Found", "Secondary", pdgV0, "Chi2ndf")]->Fill(chi2_ndf);
-    f2DHist_V0s_ArmenterosPodolanski["Secondary"]->Fill(arm_alpha, arm_qt);
+    f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("Secondary", pdgV0)]->Fill(arm_alpha, arm_qt);
 
     if (!is_signal) return;
 
@@ -4530,7 +4576,7 @@ void AliAnalysisTaskSexaquark::StoreV0As(Int_t pdgV0, Math::PxPyPzEVector lvV0, 
     fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAnegV0")]->Fill(dca_neg_v0);
     fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "DCAposV0")]->Fill(dca_pos_v0);
     fHist_V0s[std::make_tuple("Found", "Signal", pdgV0, "Chi2ndf")]->Fill(chi2_ndf);
-    f2DHist_V0s_ArmenterosPodolanski["Signal"]->Fill(arm_alpha, arm_qt);
+    f2DHist_V0s_ArmenterosPodolanski[std::make_tuple("Signal", pdgV0)]->Fill(arm_alpha, arm_qt);
 }
 
 /*                                */
