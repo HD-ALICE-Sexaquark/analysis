@@ -483,8 +483,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /** Tracks Histograms **/
 
-    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;  //! key: `stage, set, pdg, property`
-    std::map<TString, TH2F*> f2DHist_Tracks_TPCsignal;                           //! key: `set`
+    std::map<std::tuple<TString, TString, Int_t, TString>, TH1F*> fHist_Tracks;  //! key: `stage, set, pdg code, property`
+    std::map<std::tuple<TString, Int_t>, TH2F*> f2DHist_Tracks_TPCsignal;        //! key: `set, pdg code`
 
     /** V0s Histograms **/
 

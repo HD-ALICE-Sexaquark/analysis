@@ -15,8 +15,11 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       /*  */
       fMC(0),
       fMC_PrimaryVertex(0),
+      v3MC_PrimaryVertex(),
       fESD(0),
       fPrimaryVertex(0),
+      kfPrimaryVertex(),
+      v3PrimaryVertex(),
       fPIDResponse(0),
       fEventCuts(),
       fMagneticField(0.),
@@ -45,6 +48,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       /*  */
       fAliEnPath(),
       fIsFirstEvent(0),
+      fReactionChannel(),
       /*  */
       kMass_Neutron(0.),
       kMass_Proton(0.),
@@ -361,8 +365,11 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       /*  */
       fMC(0),
       fMC_PrimaryVertex(0),
+      v3MC_PrimaryVertex(),
       fESD(0),
       fPrimaryVertex(0),
+      kfPrimaryVertex(),
+      v3PrimaryVertex(),
       fPIDResponse(0),
       fEventCuts(),
       fMagneticField(0.),
@@ -390,6 +397,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       /*  */
       fAliEnPath(),
       fIsFirstEvent(0),
+      fReactionChannel(),
       /*  */
       kMass_Neutron(0.),
       kMass_Proton(0.),
@@ -1374,33 +1382,42 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
                                         10,   10,   10,   16};
     // clang-format on
 
+    TString histName;
+
     for (Int_t species_idx = 0; species_idx < (Int_t)tracks_pdg_code.size(); species_idx++) {
         for (TString& stage : tracks_stages) {
             for (TString& set : tracks_sets) {
+
+                /* 1D properties */
+
                 for (Int_t prop_idx = 0; prop_idx < (Int_t)tracks_props.size(); prop_idx++) {
 
                     if (!fIsMC && (stage == "MCGen" || set == "True" || set == "Secondary" || set == "Signal")) continue;
                     if (stage == "MCGen" && set == "True") continue;
                     if (stage == "MCGen" && prop_idx > 4) continue;
 
-                    TString histName = Form("%s_%s_%s", stage.Data(), set.Data(), tracks_props[prop_idx].Data());
+                    histName = Form("%s_%s_%s", stage.Data(), set.Data(), tracks_props[prop_idx].Data());
 
                     std::tuple<TString, TString, Int_t, TString> histKey =
                         std::make_tuple(stage, set, tracks_pdg_code[species_idx], tracks_props[prop_idx]);
                     fHist_Tracks[histKey] = new TH1F(histName, "", tracks_nbins[prop_idx], tracks_min[prop_idx], tracks_max[prop_idx]);
 
                     Lists_Tracks_Hists[species_idx]->Add(fHist_Tracks[histKey]);
-                }
-            }
-        }
+                }  // end of loop over 1D properties
 
-        tracks_sets.insert(tracks_sets.begin() + 1, "Selected");
-        for (TString& set : tracks_sets) {
-            TString histName = Form("Tracks_%s_TPCsignal", set.Data());
-            f2DHist_Tracks_TPCsignal[set] = new TH2F(histName, "", 200, 0., 10., 200, 0., 400.);
-            Lists_Tracks_Hists[species_idx]->Add(f2DHist_Tracks_TPCsignal[set]);
-        }
-    }  // end of loop over particle species
+                /* The 2D property */
+
+                if (stage == "MCGen") continue;
+
+                histName = Form("%s_%s_TPCsignal", stage.Data(), set.Data());
+
+                std::tuple<TString, Int_t> histKey2 = std::make_tuple(set, tracks_pdg_code[species_idx]);
+                f2DHist_Tracks_TPCsignal[histKey2] = new TH2F(histName, "", 200, -10., 10., 200, 0., 400.);
+
+                Lists_Tracks_Hists[species_idx]->Add(f2DHist_Tracks_TPCsignal[histKey2]);
+            }  // end of loop over sets
+        }      // end of loop over stages
+    }          // end of loop over particle species
 }
 
 /*
@@ -1437,12 +1454,17 @@ void AliAnalysisTaskSexaquark::PrepareV0sHistograms() {
                                     2.,   0.5};
     // clang-format on
 
+    TString histName;
+
     for (Int_t sp = 0; sp < (Int_t)V0_pdg_code.size(); sp++) {
         fHist_V0s_Bookkeep[V0_pdg_code[sp]] = new TH1F("Bookkeep", "", 200, 0., 200.);
         Lists_V0s_Hists[sp]->Add(fHist_V0s_Bookkeep[V0_pdg_code[sp]]);
 
-        for (TString& set : V0_sets) {
-            for (TString& stage : V0_stages) {
+        for (TString& stage : V0_stages) {
+            for (TString& set : V0_sets) {
+
+                /* 1D properties */
+
                 for (Int_t prop_idx = 0; prop_idx < (Int_t)V0_props.size(); prop_idx++) {
 
                     if (!fIsMC && (stage == "MCGen" || stage == "Findable" || set == "True" || set == "Secondary" || set == "Signal")) continue;
@@ -1464,21 +1486,26 @@ void AliAnalysisTaskSexaquark::PrepareV0sHistograms() {
                         continue;
                     }
 
-                    TString histName = Form("%s_%s_%s", stage.Data(), set.Data(), V0_props[prop_idx].Data());
+                    histName = Form("%s_%s_%s", stage.Data(), set.Data(), V0_props[prop_idx].Data());
                     std::tuple<TString, TString, Int_t, TString> histKey = std::make_tuple(stage, set, V0_pdg_code[sp], V0_props[prop_idx]);
                     Float_t minEdge = V0_props[prop_idx] == "Mass" ? kMin_V0_Mass[V0_pdg_code[sp]] : V0_min[prop_idx];
                     Float_t maxEdge = V0_props[prop_idx] == "Mass" ? kMax_V0_Mass[V0_pdg_code[sp]] : V0_max[prop_idx];
                     fHist_V0s[histKey] = new TH1F(histName, "", V0_nbins[prop_idx], minEdge, maxEdge);
 
                     Lists_V0s_Hists[sp]->Add(fHist_V0s[histKey]);
-                }  // end of loop over properties
-            }      // end of loop over stages
-            TString histName = Form("Found_%s_ArmenterosPodolanski", set.Data());
-            std::tuple<TString, Int_t> histKey = std::make_tuple(set, V0_pdg_code[sp]);
-            f2DHist_V0s_ArmenterosPodolanski[histKey] = new TH2F(histName, "", 200, -1., 1., 200, 0., 0.3);
-            Lists_V0s_Hists[sp]->Add(f2DHist_V0s_ArmenterosPodolanski[histKey]);
-        }  // end of loop over sets
-    }      // end of loop over V0 species
+                }  // end of loop over 1D properties
+
+                /* The 2D property */
+
+                if (stage == "MCGen" || stage == "Findable") continue;
+
+                histName = Form("%s_%s_ArmenterosPodolanski", stage.Data(), set.Data());
+                std::tuple<TString, Int_t> histKey = std::make_tuple(set, V0_pdg_code[sp]);
+                f2DHist_V0s_ArmenterosPodolanski[histKey] = new TH2F(histName, "", 200, -1., 1., 200, 0., 0.3);
+                Lists_V0s_Hists[sp]->Add(f2DHist_V0s_ArmenterosPodolanski[histKey]);
+            }  // end of loop over sets
+        }      // end of loop over stages
+    }          // end of loop over V0 species
 }
 
 /*
@@ -2566,10 +2593,6 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
 
         if (trackInnerParam->Pt() < 1E-3 || trackInnerParam->Pt() > 1E3) continue;
 
-        /* Fill hists (1) */
-
-        f2DHist_Tracks_TPCsignal["All"]->Fill(trackInnerParam->P() * trackInnerParam->GetSign(), track->GetTPCsignal());
-
         /* QA (1) */
 
         if (fDoQA) {
@@ -2592,10 +2615,6 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
         /* Cuts (2) : Track Selection */
 
         if (!PassesTrackSelection(track, is_secondary, is_signal)) continue;
-
-        /* Fill hists (2) */
-
-        f2DHist_Tracks_TPCsignal["Selected"]->Fill(trackInnerParam->P() * trackInnerParam->GetSign(), track->GetTPCsignal());
 
         /* QA (2) */
 
@@ -2719,7 +2738,7 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
                 esdIndicesOfPiMinusTracks.push_back(esdIdx);
             }
 
-            /* Fill histograms (3) */
+            /* Fill histograms (2) */
 
             fHist_QA["Tracks_Bookkeep"]->Fill(50);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "Px")]->Fill(trackInnerParam->Px());
@@ -2739,6 +2758,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
             fHist_Tracks[std::make_tuple("Found", "All", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
             PlotStatus(track, "All", esdPdgCode);
+            f2DHist_Tracks_TPCsignal[std::make_tuple("All", esdPdgCode)]->Fill(trackInnerParam->P() * trackInnerParam->GetSign(),
+                                                                               track->GetTPCsignal());
 
             if (mcPdgCode != esdPdgCode) continue;
 
@@ -2760,7 +2781,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
             fHist_Tracks[std::make_tuple("Found", "True", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
             PlotStatus(track, "True", esdPdgCode);
-            f2DHist_Tracks_TPCsignal["True"]->Fill(trackInnerParam->P() * trackInnerParam->GetSign(), track->GetTPCsignal());
+            f2DHist_Tracks_TPCsignal[std::make_tuple("True", esdPdgCode)]->Fill(trackInnerParam->P() * trackInnerParam->GetSign(),
+                                                                                track->GetTPCsignal());
 
             if (!is_secondary) continue;
 
@@ -2782,7 +2804,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
             fHist_Tracks[std::make_tuple("Found", "Secondary", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
             PlotStatus(track, "Secondary", esdPdgCode);
-            f2DHist_Tracks_TPCsignal["Secondary"]->Fill(trackInnerParam->P() * trackInnerParam->GetSign(), track->GetTPCsignal());
+            f2DHist_Tracks_TPCsignal[std::make_tuple("Secondary", esdPdgCode)]->Fill(trackInnerParam->P() * trackInnerParam->GetSign(),
+                                                                                     track->GetTPCsignal());
 
             if (!is_signal) continue;
 
@@ -2804,7 +2827,8 @@ void AliAnalysisTaskSexaquark::ProcessTracks() {
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaKaon")]->Fill(n_sigma_kaon);
             fHist_Tracks[std::make_tuple("Found", "Signal", esdPdgCode, "NSigmaPion")]->Fill(n_sigma_pion);
             PlotStatus(track, "Signal", esdPdgCode);
-            f2DHist_Tracks_TPCsignal["Signal"]->Fill(trackInnerParam->P() * trackInnerParam->GetSign(), track->GetTPCsignal());
+            f2DHist_Tracks_TPCsignal[std::make_tuple("Signal", esdPdgCode)]->Fill(trackInnerParam->P() * trackInnerParam->GetSign(),
+                                                                                  track->GetTPCsignal());
         }  // end of loop over PID hypotheses
     }      // end of loop over tracks
 
@@ -3255,8 +3279,8 @@ void AliAnalysisTaskSexaquark::GetV0sFromESD(Bool_t onTheFly) {
 
         /* Get tracks */
 
-        neg_track = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg));
-        pos_track = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos));
+        neg_track = fESD->GetTrack(esdIdxNeg);
+        pos_track = fESD->GetTrack(esdIdxPos);
 
         /* Collect true information & apply cuts */
 
@@ -3920,10 +3944,10 @@ void AliAnalysisTaskSexaquark::GeoSexaquarkFinder_ALK0() {
             AntiLambda = esdAntiLambdas[idxAntiLambda];
             KaonZeroShort = esdKaonsZeroShort[idxKaonZeroShort];
 
-            AntiLambda_NegDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg_AntiLambda));
-            AntiLambda_PosDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos_AntiLambda));
-            KaonZeroShort_NegDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg_KaonZeroShort));
-            KaonZeroShort_PosDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos_KaonZeroShort));
+            AntiLambda_NegDau = fESD->GetTrack(esdIdxNeg_AntiLambda);
+            AntiLambda_PosDau = fESD->GetTrack(esdIdxPos_AntiLambda);
+            KaonZeroShort_NegDau = fESD->GetTrack(esdIdxNeg_KaonZeroShort);
+            KaonZeroShort_PosDau = fESD->GetTrack(esdIdxPos_KaonZeroShort);
 
             /* Transport V0s as if they were straight lines */
 
@@ -4194,16 +4218,23 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgTrackNeg, Int_t pdgTrackP
 
     /* Choose tracks species to loop over */
 
-    std::vector<Int_t>& esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
-    if (pdgV0 == -3122) esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
-
-    std::vector<Int_t>& esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
-    if (pdgV0 == 3122) esdIndicesPosTracks = esdIndicesOfProtonTracks;
+    std::vector<Int_t> esdIndicesNegTracks;
+    std::vector<Int_t> esdIndicesPosTracks;
+    if (pdgV0 == -3122) {
+        esdIndicesNegTracks = esdIndicesOfAntiProtonTracks;
+        esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
+    } else if (pdgV0 == 3122) {
+        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
+        esdIndicesPosTracks = esdIndicesOfProtonTracks;
+    } else {
+        esdIndicesNegTracks = esdIndicesOfPiMinusTracks;
+        esdIndicesPosTracks = esdIndicesOfPiPlusTracks;
+    }
 
     /* Loop over all possible pairs of tracks */
 
-    for (Int_t& esdIdxNeg : esdIndicesNegTracks) {
-        for (Int_t& esdIdxPos : esdIndicesPosTracks) {
+    for (Int_t esdIdxNeg : esdIndicesNegTracks) {
+        for (Int_t esdIdxPos : esdIndicesPosTracks) {
 
             /* Sanity check: prevent tracks from repeating */
 
@@ -4211,8 +4242,8 @@ void AliAnalysisTaskSexaquark::KalmanV0Finder(Int_t pdgTrackNeg, Int_t pdgTrackP
 
             /* Get tracks */
 
-            esdTrackNeg = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg));
-            esdTrackPos = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos));
+            esdTrackNeg = fESD->GetTrack(esdIdxNeg);
+            esdTrackPos = fESD->GetTrack(esdIdxPos);
 
             /* Kalman Filter */
 
@@ -4660,10 +4691,10 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_ALK0() {
 
             /* Get and transport the final-state AliESDtracks */
 
-            esdAntiLambdaNegDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg_AntiLambda));
-            esdAntiLambdaPosDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos_AntiLambda));
-            esdKaonZeroShortNegDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxNeg_KaonZeroShort));
-            esdKaonZeroShortPosDau = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPos_KaonZeroShort));
+            esdAntiLambdaNegDau = fESD->GetTrack(esdIdxNeg_AntiLambda);
+            esdAntiLambdaPosDau = fESD->GetTrack(esdIdxPos_AntiLambda);
+            esdKaonZeroShortNegDau = fESD->GetTrack(esdIdxNeg_KaonZeroShort);
+            esdKaonZeroShortPosDau = fESD->GetTrack(esdIdxPos_KaonZeroShort);
 
             KFParticle kfAntiLambdaNegDau = CreateKFParticle(*esdAntiLambdaNegDau, kMass_Proton, (Int_t)esdAntiLambdaNegDau->Charge());
             KFParticle kfAntiLambdaPosDau = CreateKFParticle(*esdAntiLambdaPosDau, kMass_Pion, (Int_t)esdAntiLambdaPosDau->Charge());
@@ -5639,8 +5670,8 @@ void AliAnalysisTaskSexaquark::KalmanKaonPairFinder() {
 
             /* Get tracks */
 
-            esdPosKaonA = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPosKaonA));
-            esdPosKaonB = static_cast<AliESDtrack*>(fESD->GetTrack(esdIdxPosKaonB));
+            esdPosKaonA = fESD->GetTrack(esdIdxPosKaonA);
+            esdPosKaonB = fESD->GetTrack(esdIdxPosKaonB);
 
             /* Kalman Filter */
 
