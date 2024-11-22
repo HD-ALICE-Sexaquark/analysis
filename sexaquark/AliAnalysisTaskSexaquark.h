@@ -150,8 +150,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     Bool_t PassesEventSelection();
     void ProcessTracks();
-    Bool_t PassesTrackSelection(AliESDtrack* track, Bool_t is_secondary, Bool_t is_signal);
-    Bool_t PassesSpeciesSelection(AliESDtrack* track, Int_t esdPdgCode, Bool_t is_secondary, Bool_t is_signal);
+    Bool_t PassesTrackSelection(AliESDtrack* track, Bool_t isSecondary = kFALSE, Bool_t isSignal = kFALSE);
+    Bool_t PassesSpeciesSelection(AliESDtrack* track, Int_t esdPdgCode, Bool_t isSecondary = kFALSE, Bool_t isSignal = kFALSE);
     void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
 
     /* V0s, K+K+ pairs, Anti-Sexaquarks -- That Require True Info */
@@ -163,27 +163,28 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     void GetV0sFromESD(Bool_t onTheFly);
     void CustomV0Finder(Int_t pdgV0);
-    Bool_t PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, AliESDv0* v0, AliESDtrack* neg_track,
-                          AliESDtrack* pos_track);
+    Bool_t PassesV0CutsAs(Int_t pdgV0, AliESDv0* esdV0, AliESDtrack* esdNegDaughter, AliESDtrack* esdPosDaughter, Bool_t isTrue = kFALSE,
+                          Bool_t isSecondary = kFALSE, Bool_t isSignal = kFALSE);
 
     /* Sexaquark -- Geometrical Finder */
 
     /** `AntiSexaquark Neutron -> AntiLambda KaonZeroShort` **/
 
     void GeoSexaquarkFinder_ALK0();
-    Bool_t PassesSexaquarkCuts_ALK0(Bool_t isSignal, Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda,
-                                    AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNeg, AliESDtrack* esdAntiLambdaPos,
-                                    AliESDtrack* esdKaonZeroShortNeg, AliESDtrack* esdKaonZeroShortPos);
+    Bool_t PassesSexaquarkCuts_ALK0(Math::XYZPoint SecondaryVertex, Math::PxPyPzEVector lvAntiSexaquark, AliESDv0 esdAntiLambda,
+                                    AliESDv0 esdKaonZeroShort, AliESDtrack* esdAntiLambdaNegDau, AliESDtrack* esdAntiLambdaPosDau,
+                                    AliESDtrack* esdKaonZeroShortNegDau, AliESDtrack* esdKaonZeroShortPosDau, Bool_t isSignal = kFALSE);
 
     /* V0s -- ALICE V0 Finders */
 
-    void KalmanV0Finder(Int_t pdgTrackNeg, Int_t pdgTrackPos, Int_t pdgV0 = -1);
-    Bool_t PassesV0CutsAs(Int_t pdgV0, Bool_t IsTrue, Bool_t IsSecondary, Bool_t IsSignal, KFParticleMother kfV0, KFParticle kfDaughterNeg,
-                          KFParticle kfDaughterPos, Math::PxPyPzEVector lvV0, Math::PxPyPzEVector lvTrackNeg, Math::PxPyPzEVector lvTrackPos);
-    void StoreV0As(Int_t pdgV0, Math::PxPyPzEVector lvV0, Math::PxPyPzEVector lvTrackNeg, Math::PxPyPzEVector lvTrackPos, KFParticleMother kfV0,
-                   KFParticle kfDaughterNeg, KFParticle kfDaughterPos, Int_t esdIdxNeg, Int_t esdIdxPos, Int_t mcIdxV0 = -1, Int_t mc_pdg_code = -1,
-                   Bool_t is_true = kFALSE, Bool_t is_secondary = kFALSE, Bool_t is_signal = kFALSE, Int_t reaction_id = -1,
-                   Bool_t is_hybrid = kFALSE);
+    void KalmanV0Finder(Int_t pdgNegDaughter, Int_t pdgPosDaughter, Int_t pdgV0 = -1);
+    Bool_t PassesV0CutsAs(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfNegDaughter, KFParticle kfPosDaughter, Math::PxPyPzEVector lvV0,
+                          Math::PxPyPzEVector lvNegDaughter, Math::PxPyPzEVector lvPosDaughter, Bool_t isTrue = kFALSE, Bool_t isSecondary = kFALSE,
+                          Bool_t isSignal = kFALSE);
+    void StoreV0As(Int_t pdgV0, KFParticleMother kfV0, KFParticle kfNegDaughter, KFParticle kfPosDaughter, Math::PxPyPzEVector lvV0,
+                   Math::PxPyPzEVector lvNegDaughter, Math::PxPyPzEVector lvPosDaughter, Int_t esdIdxNegDau, Int_t esdIdxPosDau, Int_t mcIdxV0 = -1,
+                   Int_t mcPdgCode = -1, Bool_t isTrue = kFALSE, Bool_t isSecondary = kFALSE, Bool_t isSignal = kFALSE, Int_t ReactionID = -1,
+                   Bool_t isHybrid = kFALSE);
 
     /* Sexaquark -- Kalman Filter */
 
@@ -192,49 +193,45 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     void KalmanSexaquarkFinder_ALK0();
     Bool_t PassesSexaquarkCuts_ALK0(TString ReactionChannel, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
-                                    KFParticle kfAntiLambda, KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos,
-                                    KFParticle kfKaonZeroShortNeg, KFParticle kfKaonZeroShortPos, Bool_t isSignal = kFALSE);
+                                    KFParticle kfAntiLambda, KFParticle kfKaonZeroShort, KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau,
+                                    KFParticle kfKaonZeroShortNegDau, KFParticle kfKaonZeroShortPosDau, Bool_t isSignal = kFALSE);
     void StoreSexaquark_ALK0(TString ReactionChannel, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
                              KFParticleMother kfKaonZeroShort, KFParticleMother kfAntiLambda, KFParticle kfKaonZeroShortNegDau,
                              KFParticle kfKaonZeroShortPosDau, KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau, Int_t idxKaonZeroShort,
                              Int_t esdIdxNeg_KaonZeroShort, Int_t esdIdxPos_KaonZeroShort, Int_t idxAntiLambda, Int_t esdIdxNeg_AntiLambda,
-                             Int_t esdIdxPos_AntiLambda, Bool_t is_signal = kFALSE, Int_t reaction_id = -1, Bool_t is_hybrid = kFALSE);
+                             Int_t esdIdxPos_AntiLambda, Bool_t isSignal = kFALSE, Int_t ReactionID = -1, Bool_t isHybrid = kFALSE);
 
     /** `AntiSexaquark Proton -> AntiLambda K+` **/
     /** `AntiSexaquark Proton -> AntiLambda K+ pi- pi+` **/
-
-    void KalmanSexaquarkFinder_ALPKX();
-    Bool_t PassesSexaquarkCuts_ALPK(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark, KFParticle kfAntiLambda,
-                                    KFParticle kfPosKaon, KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos);
-    Bool_t PassesSexaquarkCuts_ALPKPP(Bool_t isSignal, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark, KFParticle kfAntiLambda,
-                                      KFParticle kfAntiLambdaNeg, KFParticle kfAntiLambdaPos, KFParticle kfPosKaon, KFParticle kfPiMinus,
-                                      KFParticle kfPiPlus);
-    void StoreSexaquark_ALPK(KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark, KFParticleMother kfAntiLambda,
-                             KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau, KFParticle kfPosKaon, Int_t idxAntiLambda,
-                             Int_t esdIdxNeg_AntiLambda, Int_t esdIdxPos_AntiLambda, Int_t esdIdxPosKaon, Bool_t is_signal = kFALSE,
-                             Int_t reaction_id = -1, Bool_t is_hybrid = kFALSE);
-    void StoreSexaquark_ALPKPP(KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark, KFParticleMother kfAntiLambda,
-                               KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau, KFParticle kfPosKaon, KFParticle kfPiMinus,
-                               KFParticle kfPiPlus, Int_t idxAntiLambda, Int_t esdIdxNeg_AntiLambda, Int_t esdIdxPos_AntiLambda, Int_t esdIdxPosKaon,
-                               Int_t esdIdxPiMinus, Int_t esdIdxPiPlus, Bool_t is_signal = kFALSE, Int_t reaction_id = -1, Bool_t is_hybrid = kFALSE);
-
     /** `Sexaquark AntiProton -> Lambda K-` **/
     /** `Sexaquark AntiProton -> Lambda K- pi- pi+` **/
 
-    void KalmanControlFinder_LNKX();
-    void StoreControl_LNK();
-    void StoreControl_LNKPP();
+    void KalmanSexaquarkFinder_ALPKX(TString ReactionChannel);
+    Bool_t PassesSexaquarkCuts_ALPK(TString ReactionChannel, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
+                                    KFParticle kfAntiLambda, KFParticle kfPosKaon, KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau,
+                                    Bool_t isSignal = kFALSE);
+    Bool_t PassesSexaquarkCuts_ALPKPP(TString ReactionChannel, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
+                                      KFParticle kfAntiLambda, KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau, KFParticle kfPosKaon,
+                                      KFParticle kfPiMinus, KFParticle kfPiPlus, Bool_t isSignal = kFALSE);
+    void StoreSexaquark_ALPK(TString ReactionChannel, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
+                             KFParticleMother kfAntiLambda, KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau, KFParticle kfPosKaon,
+                             Int_t idxAntiLambda, Int_t esdIdxNeg_AntiLambda, Int_t esdIdxPos_AntiLambda, Int_t esdIdxPosKaon,
+                             Bool_t isSignal = kFALSE, Int_t ReactionID = -1, Bool_t isHybrid = kFALSE);
+    void StoreSexaquark_ALPKPP(TString ReactionChannel, KFParticleMother kfAntiSexaquark, Math::PxPyPzEVector lvAntiSexaquark,
+                               KFParticleMother kfAntiLambda, KFParticle kfAntiLambdaNegDau, KFParticle kfAntiLambdaPosDau, KFParticle kfPosKaon,
+                               KFParticle kfPiMinus, KFParticle kfPiPlus, Int_t idxAntiLambda, Int_t esdIdxNeg_AntiLambda, Int_t esdIdxPos_AntiLambda,
+                               Int_t esdIdxPosKaon, Int_t esdIdxPiMinus, Int_t esdIdxPiPlus, Bool_t isSignal = kFALSE, Int_t ReactionID = -1,
+                               Bool_t isHybrid = kFALSE);
 
     /** `AntiSexaquark Proton -> K+ K+ X` **/
-
-    void KalmanKaonPairFinder();
-    Bool_t PassesKaonPairCuts(Bool_t isSignal, KFParticleMother kfKaonPair, KFParticle kfPosKaonA, KFParticle kfPosKaonB,
-                              Math::PxPyPzEVector lvKaonPair, Math::PxPyPzEVector lvPosKaonA, Math::PxPyPzEVector lvPosKaonB);
-
     /** `Sexaquark AntiProton -> K- K- X` **/
 
-    void KalmanControlFinder_NKNKX();
-    void StoreControl_NKNKX();
+    void KalmanSexaquarkFinder_KKX(TString ReactionChannel);
+    Bool_t PassesSexaquarkCuts_KKX(TString ReactionChannel, KFParticleMother kfKaonPair, KFParticle kfKaonA, KFParticle kfKaonB,
+                                   Math::PxPyPzEVector lvKaonPair, Math::PxPyPzEVector lvKaonA, Math::PxPyPzEVector lvKaonB, Bool_t isSignal);
+    void StoreSexaquark_KKX(TString ReactionChannel, KFParticleMother kfKaonPair, KFParticle kfKaonA, KFParticle kfKaonB,
+                            Math::PxPyPzEVector lvKaonPair, Math::PxPyPzEVector lvKaonA, Math::PxPyPzEVector lvKaonB, Int_t esdIdxKaonA,
+                            Int_t esdIdxKaonB, Bool_t isSignal = kFALSE, Int_t ReactionID = -1, Bool_t isHybrid = kFALSE);
 
     /* Utilities */
     void ClearContainers();
@@ -308,7 +305,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TList* fList_Sexaquark_ALK0_Hists;    //!
     TList* fList_Sexaquark_ALPK_Hists;    //!
     TList* fList_Sexaquark_ALPKPP_Hists;  //!
-    TList* fList_Sexaquark_KKX_Hists;     //!
+    TList* fList_Sexaquark_PKPKX_Hists;   //!
     TList* fList_Sexaquark_LK0_Hists;     //!
     TList* fList_Sexaquark_LNK_Hists;     //!
     TList* fList_Sexaquark_LNKPP_Hists;   //!
@@ -337,7 +334,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TTree* fTree_Sexaquarks_ALK0;    //!
     TTree* fTree_Sexaquarks_ALPK;    //!
     TTree* fTree_Sexaquarks_ALPKPP;  //!
-    TTree* fTree_Sexaquarks_KKX;     //!
+    TTree* fTree_Sexaquarks_PKPKX;   //!
     TTree* fTree_Sexaquarks_LK0;     //!
     TTree* fTree_Sexaquarks_LNK;     //!
     TTree* fTree_Sexaquarks_LNKPP;   //!
