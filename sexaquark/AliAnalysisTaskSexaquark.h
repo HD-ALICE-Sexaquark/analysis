@@ -646,23 +646,24 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Float_t> kMin_Track_Pt;  // key: `pdg code`
 
     /** V0s **/
-    std::unordered_map<Int_t, Float_t> kMin_V0_Mass;            // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_Mass;            // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_Eta;             // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_ArmPtOverAlpha;  // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMin_V0_Pt;              // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMin_V0_Radius;          // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMin_V0_DistFromPV;      // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_DistFromPV;      // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMin_V0_CPAwrtPV;        // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_CPAwrtPV;        // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMin_V0_DCAwrtPV;        // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_DCAbtwDau;       // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_DCAnegV0;        // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_DCAposV0;        // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_ImprvDCAbtwDau;  // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_Chi2;            // key: `pdg code`
-    std::unordered_map<Int_t, Float_t> kMax_V0_Chi2ndf;         // key: `pdg code`
+    /** Note: the key of these maps has to be a positive value **/
+    std::unordered_map<UInt_t, Float_t> kMin_V0_Mass;            // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_Mass;            // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_Eta;             // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_ArmPtOverAlpha;  // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMin_V0_Pt;              // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMin_V0_Radius;          // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMin_V0_DistFromPV;      // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_DistFromPV;      // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMin_V0_CPAwrtPV;        // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_CPAwrtPV;        // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMin_V0_DCAwrtPV;        // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_DCAbtwDau;       // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_DCAnegV0;        // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_DCAposV0;        // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_ImprvDCAbtwDau;  // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_Chi2;            // key: `pdg code`
+    std::unordered_map<UInt_t, Float_t> kMax_V0_Chi2ndf;         // key: `pdg code`
 
     /** Anti-Sexaquark Candidates **/
     Float_t kMin_Sexa_Pt;          //
