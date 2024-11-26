@@ -13,47 +13,57 @@ void Test_HistogramContents(TString filename) {
         return;
     }
 
-    /* Get lists of histograms */
+    TKey* single_key;
+    TString list_name;
+    TList* list_of_hists;
 
-    std::vector<TString> hist_containers = {"QA_Hists", "Tracks_Hists", "V0s_Hists", "Sexaquarks_Hists", "PosKaonPairs_Hists"};
+    UInt_t n_entries;
+    UInt_t count_empty;
 
-    for (TString& hist_ctn : hist_containers) {
+    /* Loop over file's objects */
 
-        TList* histList = dynamic_cast<TList*>(file->Get(hist_ctn));
-        if (!histList) {
-            printf("!! ERROR !! Test_HistogramContents !! Couldn't find TList %s !!\n", hist_ctn.Data());
-            file->Close();
-            return;
-        }
+    TList* file_content = file->GetListOfKeys();
+
+    for (TObject* single_obj1 : *(file_content)) {
+
+        /* Select only `TList` */
+
+        single_key = dynamic_cast<TKey*>(single_obj1);
+        if (static_cast<TString>(single_key->GetClassName()) != "TList") continue;
+
+        /* Get `TList` */
+
+        list_name = single_key->GetName();
+        list_of_hists = file->Get<TList>(list_name);
 
         /* Loop over histograms */
 
-        TIter next(histList);
-        TObject* obj;
+        printf("!! Test_HistogramContents !! # %s !!\n\n", list_name.Data());
+        printf("!! Test_HistogramContents !! %-45s %10s %10s %10s !!\n", "Name", "N_Entries", "Mean", "StdDev");
+        printf("!! Test_HistogramContents !! %-45s %10s %10s %10s !!\n", "====", "=========", "====", "======");
 
-        Int_t n_entries;
-        Int_t count_empty = 0;
+        count_empty = 0;
 
-        printf("!! Test_HistogramContents !! # %s !!\n\n", hist_ctn.Data());
-        printf("!! Test_HistogramContents !! %-45s %10s !!\n", "Name", "N_Entries");
-        printf("!! Test_HistogramContents !! %-45s %10s !!\n", "====", "=========");
-        while ((obj = next())) {
-            TH1* hist = dynamic_cast<TH1*>(obj);
-            Int_t n_entries = (Int_t)hist->GetEntries();
+        for (TObject* single_obj2 : *(list_of_hists)) {
+
+            TH1* single_hist = dynamic_cast<TH1*>(single_obj2);
+            n_entries = (UInt_t)single_hist->GetEntries();
+
             /* Note: */
             /* - `\033[1;31m` is the ANSI escape code for red and bold */
             /* - `\033[0m` is the ANSI escape code to reset color and style to default */
+
             if (!n_entries) {
-                printf("!! Test_HistogramContents !! %-45s \033[1;31m%10i\033[0m !!\n", hist->GetName(), n_entries);
+                printf("!! Test_HistogramContents !! %-45s \033[1;31m%10i\033[0m %10s %10s !!\n", single_hist->GetName(), n_entries, "", "");
                 count_empty++;
             } else {
-                printf("!! Test_HistogramContents !! %-45s %10i !!\n", hist->GetName(), n_entries);
+                printf("!! Test_HistogramContents !! %-45s %10i %10.3f %10.3f !!\n", single_hist->GetName(), n_entries, single_hist->GetMean(),
+                       single_hist->GetStdDev());
             }
         }
         printf("!! Test_HistogramContents !! %56s !!\n", "==========");
-        printf("!! Test_HistogramContents !! %45s %10i !!\n", "N_Histograms =", histList->GetEntries());
+        printf("!! Test_HistogramContents !! %45s %10i !!\n", "N_Histograms =", list_of_hists->GetEntries());
         printf("!! Test_HistogramContents !! %45s %10i !!\n\n", "N_Empty_Histograms =", count_empty);
-    }
-
+    }  // end of loop over file's objects
     file->Close();
 }

@@ -1,6 +1,7 @@
 #ifndef Macros_Headers_hxx
 #define Macros_Headers_hxx
 
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
@@ -24,6 +25,7 @@
 #include "TGraphErrors.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TKey.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
 #include "TLine.h"
