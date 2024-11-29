@@ -1,6 +1,9 @@
 #!/bin/bash
 
-if [[ -z ${ANALYSIS_DIR} || -z ${SOURCE_OF_V0S} || -z ${SIMULATION_SET} || -z ${SIMS_DIR} ]]; then exit 1; fi
+if [[ -z ${SOURCE_OF_V0S} ]]; then echo "Missing env. var. SOURCE_OF_V0S" ; return 1; fi
+if [[ -z ${SIMULATION_SET} ]]; then echo "Missing env. var. SIMULATION_SET" ; return 1; fi
+if [[ -z ${SIMS_DIR} ]]; then echo "Missing env. var. SIMS_DIR" ; return 1; fi
+if [[ -z ${ANALYSIS_DIR} ]]; then echo "Missing env. var. ANALYSIS_DIR" ; return 1; fi
 
 export ATTEMPT_NAME="local_signalMC_15o_test_${SOURCE_OF_V0S}${SIMULATION_SET}"
 export MODE="local"
