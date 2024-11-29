@@ -25,7 +25,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fMagneticField(0.),
       /*  */
       fRunNumber(0),
-      fDirNumber(0),
+      fDirNumber(0.),
       fEventNumber(0),
       fCentrality(0.),
       /*  */
@@ -376,7 +376,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fEventCuts(),
       fMagneticField(0.),
       fRunNumber(0),
-      fDirNumber(0),
+      fDirNumber(0.),
       fEventNumber(0),
       fCentrality(0.),
       /*  */
@@ -1458,6 +1458,7 @@ void AliAnalysisTaskSexaquark::PrepareTracksHistograms() {
                 /* The 2D property */
 
                 if (stage == "MCGen") continue;
+                if (!fIsMC && (set == "True" || set == "Secondary" || set == "Signal")) continue;
 
                 histName = Form("%s_%s_TPCsignal", stage.Data(), set.Data());
 
@@ -1492,15 +1493,15 @@ void AliAnalysisTaskSexaquark::PrepareV0sHistograms() {
                                    100, 100, 100, 100, 100,
                                    100, 100, 100, 100, 100, 100,
                                    100, 100};
-    std::vector<Double_t> V0_min = {0., 0., -20., -20., -20., 0.,
-                                    0., 0., 0.,   -50., -4.,  -4.,
-                                    0., 0., 0.,   0.,   -1.,
-                                    0., 0., 0.,   0.,   0.,   0.,
+    std::vector<Double_t> V0_min = {0., 0., -20., -20.,  -20., 0.,
+                                    0., 0., 0.,   -250., -4.,  -4.,
+                                    0., 0., 0.,   0.,    -1.,
+                                    0., 0., 0.,   0.,    0.,   0.,
                                     0., 0.};
-    std::vector<Double_t> V0_max = {2.,   10.,  20.,         20., 20., 2. * TMath::Pi(),
-                                    250., 250., 250.,        50., 4.,  4.,
-                                    500., 500., TMath::Pi(), 0.3, 1.,
-                                    1.,   200., 2.,          2.,  2.,  1.,
+    std::vector<Double_t> V0_max = {2.,   10.,  20.,         20.,  20., 2. * TMath::Pi(),
+                                    250., 250., 200.,        250., 4.,  4.,
+                                    500., 500., TMath::Pi(), 0.3,  1.,
+                                    1.,   200., 2.,          2.,   2.,  1.,
                                     2.,   0.5};
     // clang-format on
 
@@ -1536,6 +1537,15 @@ void AliAnalysisTaskSexaquark::PrepareV0sHistograms() {
                         continue;
                     }
 
+                    /* X-axis range for mass should depend of particle species */
+                    /* and should be set at `DefineV0Cuts()` */
+
+                    if (V0_props[prop_idx] == "Mass" &&  //
+                        kMin_V0_Mass.count(TMath::Abs(V0_pdg_code[sp])) && kMax_V0_Mass.count(TMath::Abs(V0_pdg_code[sp]))) {
+                        V0_min[prop_idx] = kMin_V0_Mass[TMath::Abs(V0_pdg_code[sp])];
+                        V0_max[prop_idx] = kMax_V0_Mass[TMath::Abs(V0_pdg_code[sp])];
+                    }
+
                     histName = Form("%s_%s_%s", stage.Data(), set.Data(), V0_props[prop_idx].Data());
                     std::tuple<TString, TString, Int_t, TString> histKey = std::make_tuple(stage, set, V0_pdg_code[sp], V0_props[prop_idx]);
                     fHist_V0s[histKey] = new TH1F(histName, "", V0_nbins[prop_idx], V0_min[prop_idx], V0_max[prop_idx]);
@@ -1546,6 +1556,7 @@ void AliAnalysisTaskSexaquark::PrepareV0sHistograms() {
                 /* The 2D property */
 
                 if (stage == "MCGen" || stage == "Findable") continue;
+                if (!fIsMC && (set == "True" || set == "Secondary" || set == "Signal")) continue;
 
                 histName = Form("%s_%s_ArmenterosPodolanski", stage.Data(), set.Data());
                 std::tuple<TString, Int_t> histKey = std::make_tuple(set, V0_pdg_code[sp]);
@@ -1574,8 +1585,8 @@ void AliAnalysisTaskSexaquark::PrepareSexaquarksHistograms() {
     std::vector<TString> vec_properties = {"Mass2", "Pt",  "Pz",       "Phi",        "Radius",  //
                                            "Zv",    "Eta", "Rapidity", "DistFromPV", "CPAwrtPV", "DCAwrtPV", "Chi2ndf"};
     std::vector<Int_t> vec_nbins = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
-    std::vector<Double_t> vec_axis_min = {0., 0., -50., -2 * TMath::Pi(), 0., -50., -2., -5., 0., -1., 0., 0.};
-    std::vector<Double_t> vec_axis_max = {20., 10., 50., 2 * TMath::Pi(), 250., 50., 2., 5., 500., 1., 2., 10.};
+    std::vector<Double_t> vec_axis_min = {0., 0., -50., -2 * TMath::Pi(), 0., -250., -2., -5., 0., -1., 0., 0.};
+    std::vector<Double_t> vec_axis_max = {20., 10., 50., 2 * TMath::Pi(), 200., 250., 2., 5., 500., 1., 2., 10.};
 
     std::vector<TString> ext_properties;
     std::vector<Int_t> ext_nbins;
@@ -1864,27 +1875,42 @@ void AliAnalysisTaskSexaquark::EndOfEvent() {
  */
 Bool_t AliAnalysisTaskSexaquark::UserNotify() {
     AliAnalysisManager* man = AliAnalysisManager::GetAnalysisManager();
-    if (!man) AliFatal("!! Analysis Manager not found !!");
+    if (!man) AliFatal("Analysis Manager not found");
     TTree* man_tree = man->GetTree();
-    if (!man_tree) AliFatal("!! Analysis Manager Tree not found !!");
+    if (!man_tree) AliFatal("Analysis Manager Tree not found");
     TFile* man_file = man_tree->GetCurrentFile();
-    if (!man_file) AliFatal("!! Analysis Manager File not found !!");
+    if (!man_file) AliFatal("Analysis Manager File not found");
+
+    /* get AliEn path and tokenize it */
 
     fAliEnPath = man_file->GetName();
-    AliInfoF("!! Loaded AliEn Path: %s !!", fAliEnPath.Data());
+    AliInfoF("AliEn Path : %s", fAliEnPath.Data());
 
-    /* assuming path ends with format `.../LHC23l1a3/A1.73/297595/001/sim.log` */
     TObjArray* tokens = fAliEnPath.Tokenize("/");
 
-    TString SimSet = ((TObjString*)tokens->At(tokens->GetEntries() - 4))->GetString();
-    if (SimSet[0] == 'A') fReactionChannel = "ALK0";
-    if (SimSet[0] == 'D') fReactionChannel = "ALPK";
-    if (SimSet[0] == 'E') fReactionChannel = "ALPKPP";
-    if (SimSet[0] == 'H') fReactionChannel = "PKPKX";
-    AliInfoF("!! Reaction Channel: %s !!", fReactionChannel.Data());
+    fReactionChannel = "";
 
-    fDirNumber = ((TObjString*)tokens->At(tokens->GetEntries() - 2))->GetString().Atoi();
-    AliInfoF("!! Dir Number: %i !!", fDirNumber);
+    if (fIsMC) {
+        /* path of signal MC ends with format `.../LHC23l1a3/A1.73/297595/001/AliESDs.root` */
+        /* and path of general MC ends with format `.../LHC20e3a/297595/001/AliESDs.root` */
+        fDirNumber = ((TObjString*)tokens->At(tokens->GetEntries() - 2))->GetString().Atof();
+        AliInfoF("Dir Number : %03.0f", fDirNumber);
+        if (fIsSignalMC) {
+            TString SimSet = ((TObjString*)tokens->At(tokens->GetEntries() - 4))->GetString();
+            if (SimSet[0] == 'A') fReactionChannel = "ALK0";
+            if (SimSet[0] == 'D') fReactionChannel = "ALPK";
+            if (SimSet[0] == 'E') fReactionChannel = "ALPKPP";
+            if (SimSet[0] == 'H') fReactionChannel = "PKPKX";
+            AliInfoF("Simulation Set : %s", SimSet.Data());
+            AliInfoF("Reaction Channel : %s", fReactionChannel.Data());
+        }
+    } else {  // fIsMC == kFALSE (data)
+        /* path of data ends with format `.../LHC15o/000245232/pass2/15000245232039.914/AliESDs.root` */
+        TString aux_dir_nr = ((TObjString*)tokens->At(tokens->GetEntries() - 2))->GetString();
+        aux_dir_nr = TString(aux_dir_nr(2 + 3 + 6, 8));
+        AliInfoF("Dir Number : %s", aux_dir_nr.Data());
+        fDirNumber = aux_dir_nr.Atof();
+    }
 
     fIsFirstEvent = kTRUE;
 
@@ -1966,7 +1992,7 @@ void AliAnalysisTaskSexaquark::DefineV0Cuts(TString cuts_option) {
     kMax_V0_Mass[310] = 0.525;
     kMin_V0_Pt[310] = 1.0;
 
-    kMin_V0_Mass[422] = 2 * fPDG.GetParticle(211)->Mass();
+    kMin_V0_Mass[422] = fPDG.GetParticle(211)->Mass();
     kMax_V0_Mass[422] = 2.;
     kMin_V0_Pt[422] = 0.1;
 
@@ -7317,7 +7343,7 @@ Bool_t AliAnalysisTaskSexaquark::ReadSignalLogs() {
     AliInfoF("!! Copying file %s ... !!", orig_path.Data());
 
     /* assuming path ends with format `.../LHC23l1a3/A1.73/297595/001/sim.log` */
-    Int_t AliEn_DirNumber = fDirNumber;
+    Int_t AliEn_DirNumber = static_cast<Int_t>(fDirNumber);
     TObjArray* tokens = fAliEnPath.Tokenize("/");
     Int_t AliEn_RunNumber = ((TObjString*)tokens->At(tokens->GetEntries() - 3))->GetString().Atoi();
     TString AliEn_SimSubSet = ((TObjString*)tokens->At(tokens->GetEntries() - 4))->GetString();

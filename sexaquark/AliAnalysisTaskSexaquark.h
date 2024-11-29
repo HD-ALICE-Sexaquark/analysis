@@ -282,7 +282,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     AliEventCuts fEventCuts;            //! event cuts
     Double_t fMagneticField;            //! magnetic field
     Int_t fRunNumber;                   //! run number
-    Int_t fDirNumber;                   //! directory number
+    Float_t fDirNumber;                 //! directory number
     Int_t fEventNumber;                 //! event number
     Float_t fCentrality;                //! centrality percentile
 

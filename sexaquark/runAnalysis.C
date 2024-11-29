@@ -16,61 +16,59 @@
 #include "AliAnalysisTaskSexaquark.h"
 
 void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
-                 TString LocalInputPath,  // (only valid when Mode == "local") dir that contains ProductionName dirs
+                 TString InputPath,       // (only valid when Mode == "local" or Mode == "hybrid") dir that contains ProductionName dirs
                  Int_t LocalNDirs,        // (only valid when Mode == "local" or Mode == "hybrid") number of subdirs per run
                  Bool_t GridTestMode,     // (only valid when Mode == "grid")
-                 Bool_t IsMC,             //
+                 Bool_t IsMC,             // kTRUE for MC, kFALSE for data
                  TString ProductionName,  // for data: "LHC15o", "LHC18q", "LHC18r"
                                           // for signal MC: "LHC23l1a3", "LHC23l1b3"
                                           // for gen. purp. MC: "LHC20e3a", "LHC20j6a"
                  TString RunNumbersList,  // path to file with run numbers
                  TString SourceOfV0s,     // "kalman", "custom", "on-the-fly", "offline"
                  TString SimulationSet,   // format: "<A,D,E,H><1.73,1.8,1.87,1.94,2.01>" e.g. "A1.73"
-                 Bool_t DoQA,             //
+                 Bool_t DoQA,             // (only valid when analyzing MC) kTRUE to enable QA
                  Int_t ChooseNEvents = 0  // (only valid when Mode == "local" or Mode == "hybrid") 0 means all events
 ) {
 
     /* Check for Input Errors */
 
     if (Mode != "local" && Mode != "grid" && Mode != "hybrid") {
-        std::cerr << "!! runAnalysis.C !! Error !! Invalid mode " << Mode << " !!" << std::endl;
+        std::cerr << "!! Error !! runAnalysis.C !! Invalid Mode " << Mode << " !!" << std::endl;
         return;
     }
 
     if (Mode == "local" || Mode == "hybrid") {
-        if (LocalInputPath == "") {
-            std::cerr << "!! runAnalysis.C !! Error !! LocalInputPath cannot be empty on local mode !!" << std::endl;
+        if (InputPath == "") {
+            std::cerr << "!! Error !! runAnalysis.C !! InputPath cannot be empty when Mode == \"local\" or \"hybrid\" !!" << std::endl;
             return;
         }
         if (GridTestMode) {
-            std::cerr << "!! runAnalysis.C !! Error !! GridTestMode is only valid on local mode !!" << std::endl;
+            std::cerr << "!! Error !! runAnalysis.C !! GridTestMode is only valid when Mode == \"grid\" !!" << std::endl;
             return;
         }
     }
 
     if (Mode == "grid") {
-        if (LocalInputPath != "") {
-            std::cerr << "!! runAnalysis.C !! Error !! LocalInputPath is only valid on local mode !!" << std::endl;
-            return;
-        }
-        if (ChooseNEvents) {
-            std::cerr << "!! runAnalysis.C !! Error !! ChooseNEvents is only valid on local mode !!" << std::endl;
-            return;
-        }
+        if (InputPath != "")
+            std::cerr << "!! Warning !! runAnalysis.C !! InputPath is only valid when Mode == \"local\" or \"hybrid\", will be ignored !!"
+                      << std::endl;
+        if (ChooseNEvents)
+            std::cerr << "!! Warning !! runAnalysis.C !! ChooseNEvents is only valid when Mode == \"local\" or \"hybrid\", will be ignored !!"
+                      << std::endl;
     }
 
-    if (IsMC && (ProductionName == "LHC15o" || ProductionName == "LHC18q" || ProductionName == "LHC18r")) {
-        std::cerr << "!! runAnalysis.C !! Error !! Make sure to put a valid ProductionName for simulations !!" << std::endl;
+    if (IsMC && (ProductionName != "LHC23l1a3" && ProductionName != "LHC23l1b3" && ProductionName != "LHC20e3a" && ProductionName != "LHC20j6a")) {
+        std::cerr << "!! Error !! runAnalysis.C !! Make sure to put a valid ProductionName for simulations !!" << std::endl;
         return;
     }
 
     if (!IsMC) {
         if (DoQA) {
-            std::cerr << "!! runAnalysis.C !! Error !! DoQA are only valid for MC !!" << std::endl;
+            std::cerr << "!! Error !! runAnalysis.C !! DoQA is only valid for MC !!" << std::endl;
             return;
         }
         if (ProductionName != "LHC15o" && ProductionName != "LHC18q" && ProductionName != "LHC18r") {
-            std::cerr << "!! runAnalysis.C !! Error !! Make sure to put a valid ProductionName for data !!" << std::endl;
+            std::cerr << "!! Error !! runAnalysis.C !! Make sure to put a valid ProductionName for data !!" << std::endl;
             return;
         }
     }
@@ -82,22 +80,22 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
     Bool_t IsSignalMC = ProductionName.Contains("23l1");
 
     Int_t PassNumber = 3;  // default for 18qr and anchored sims
-    if (ProductionName == "LHC15o" || ProductionName == "LHC23l1b3" || ProductionName == "LHC20j6a") PassNumber = 2;
+    if (ProductionName == "LHC15o" || ProductionName == "LHC20j6a" || ProductionName == "LHC23l1b3") PassNumber = 2;
 
     TString ProductionYear = "20" + ProductionName(3, 2);
 
-    TString LocalDataDir = Form("%s/%s", LocalInputPath.Data(), ProductionName.Data());
-    if (IsSignalMC) LocalDataDir += Form("/%s", SimulationSet.Data());
+    TString DataPath = Form("%s/%s", InputPath.Data(), ProductionName.Data());
+    if (IsSignalMC) DataPath += Form("/%s", SimulationSet.Data());
 
-    TString GridDataDir = Form("/alice/sim/%s/%s", ProductionYear.Data(), ProductionName.Data());
+    TString GridDataDir = Form("/alice/data/%s/%s", ProductionYear.Data(), ProductionName.Data());
+    if (IsMC) GridDataDir = Form("/alice/sim/%s/%s", ProductionYear.Data(), ProductionName.Data());
     if (IsSignalMC) GridDataDir += Form("/%s", SimulationSet.Data());
-    TString GridDataPattern = "/*/AliESDs.root";
 
-    TString GridWorkingDir = "work/Sexaquark";
-    if (!IsMC)
-        GridWorkingDir += Form("_Data_%s", ProductionName.Data());
-    else
-        GridWorkingDir += Form("_MC_%s", ProductionName.Data());
+    TString GridDataPattern = Form("/pass%i/*/AliESDs.root", PassNumber);
+    if (IsMC) GridDataPattern = "/*/AliESDs.root";
+
+    TString GridWorkingDir = Form("work/Sexaquark_Data_%s", ProductionName.Data());
+    if (IsMC) GridWorkingDir = Form("work/Sexaquark_MC_%s", ProductionName.Data());
     if (IsSignalMC) GridWorkingDir += Form("_%s", SimulationSet.Data());
 
     TString GridOutputDir = "output";
@@ -105,7 +103,7 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
     std::vector<Int_t> RunNumbersFromList;
     std::ifstream RunNumbersFile(RunNumbersList);
     if (!RunNumbersFile.is_open()) {
-        std::cerr << "!! runAnalysis.C !! Error !! Unable to open file " << RunNumbersList << " !!" << std::endl;
+        std::cerr << "!! Error !! runAnalysis.C !! Unable to open file " << RunNumbersList << " !!" << std::endl;
         return;
     }
     Int_t SingleRN;
@@ -137,7 +135,7 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
             "-I. -I$ROOTSYS/include -I$ALICE_ROOT -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include -I$KFPARTICLE_ROOT/include");
         alienHandler->SetAdditionalLibs("AliAnalysisTaskSexaquark.cxx AliAnalysisTaskSexaquark.h");
         alienHandler->SetAnalysisSource("AliAnalysisTaskSexaquark.cxx");
-        alienHandler->SetAliPhysicsVersion("vAN-20240917_O2-1");
+        alienHandler->SetAliPhysicsVersion("vAN-20241126_O2-1");
         alienHandler->SetExecutableCommand("aliroot -l -q -b");
         alienHandler->SetGridDataDir(GridDataDir);
         if (!IsMC) alienHandler->SetRunPrefix("000");
@@ -226,9 +224,10 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
     /* Start Analysis */
 
     TChain *chain = nullptr;
-    TString FilePath = "";
     TString Prefix = "";
     if (Mode == "hybrid") Prefix = "alien://";
+    TString FilePath = "";
+    TString DirString = "";
 
     if (Mode == "grid") {
         if (GridTestMode) {
@@ -242,9 +241,20 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
     } else {  // "local" or "hybrid" mode
         chain = new TChain("esdTree");
         for (Int_t &RN : RunNumbersFromList) {
-            for (Int_t DN = 1; DN <= LocalNDirs; DN++) {
-                FilePath = Form("%s%s/%i/%03i/AliESDs.root", Prefix.Data(), LocalDataDir.Data(), RN, DN);
-                chain->AddFile(FilePath);
+            if (IsMC) {
+                for (Int_t DN = 1; DN <= LocalNDirs; DN++) {
+                    FilePath = Form("%s%s/%i/%03i/AliESDs.root", Prefix.Data(), DataPath.Data(), RN, DN);
+                    chain->AddFile(FilePath);
+                }
+            } else {  // !IsMC (data)
+                for (Int_t DN = 1; DN <= 99; DN++) {
+                    for (Int_t sDN = 100; sDN <= 5000; sDN++) {
+                        DirString = Form("%s000%i%03i.%i", TString(ProductionName(3, 2)).Data(), RN, DN, sDN);
+                        FilePath = Form("%s%s/000%i/pass%i/%s/AliESDs.root", Prefix.Data(), DataPath.Data(), RN, PassNumber, DirString.Data());
+                        if (gSystem->AccessPathName(FilePath)) continue;
+                        chain->AddFile(FilePath);
+                    }
+                }
             }
         }
         if (!ChooseNEvents)
