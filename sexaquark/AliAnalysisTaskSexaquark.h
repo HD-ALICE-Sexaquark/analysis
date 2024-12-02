@@ -152,7 +152,6 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void ProcessTracks();
     Bool_t PassesTrackSelection(AliESDtrack* track, Bool_t isSecondary, Bool_t isSignal);
     Bool_t PassesSpeciesSelection(AliESDtrack* track, Int_t esdPdgCode, Bool_t isSecondary, Bool_t isSignal);
-    void PlotStatus(AliESDtrack* track, TString set, Int_t esdPdgCode);
 
     /* V0s, K+K+ pairs, Anti-Sexaquarks -- That Require True Info */
 
@@ -409,6 +408,14 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     TBits tTrack_TPCClusterMap;    //!
     TBits tTrack_TPCSharedMap;     //!
     Bool_t tTrack_IsKinkDaughter;  //!
+    Bool_t tTrack_ITSin;           //!
+    Bool_t tTrack_ITSout;          //!
+    Bool_t tTrack_ITSrefit;        //!
+    Bool_t tTrack_ITSpid;          //!
+    Bool_t tTrack_TPCin;           //!
+    Bool_t tTrack_TPCout;          //!
+    Bool_t tTrack_TPCrefit;        //!
+    Bool_t tTrack_TPCpid;          //!
     Int_t tTrack_Idx_True;         //!
     Int_t tTrack_True_PdgCode;     //!
     Bool_t tTrack_IsSecondary;     //!
