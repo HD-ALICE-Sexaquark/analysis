@@ -1369,17 +1369,17 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
                                    22,   22,
                                    100,  100,  200,  150,
                                    60,   200};
-    std::vector<Float_t> QA_min = {-1,  -1,  -50,
-                                   0.,  -1,  -1,  -50,
-                                   0.,  0.,  0.,  0.,
-                                   0.,  0.,
-                                   -5., -5., 0.,
-                                   0.,  0.};
-    std::vector<Float_t> QA_max = {1,      1,       50,
-                                   5.,     1,       1,      50,
-                                   35000., 35000.,  35000., 150.,
+    std::vector<Float_t> QA_min = {-1, -1, -50,
+                                   0., -1, -1,  -50,
+                                   0., 0., 0.,
+                                   0., 0.,
+                                   0., 0., 0.,  0.,
+                                   0., 0.};
+    std::vector<Float_t> QA_max = {1,      1,      50,
+                                   5.,     1,      1,      50,
+                                   35000., 35000., 35000.,
                                    110.,   110.,
-                                   5.,     5.,      100.,
+                                   5.,     5.,     200., 150.,
                                    6000,   5000000.};
     // clang-format on
 
@@ -1399,21 +1399,21 @@ void AliAnalysisTaskSexaquark::PrepareQAHistograms() {
                 "TPC_NSigmaProtonVsInnerParamP", "TPC_NSigmaKaonVsInnerParamP",    "TPC_NSigmaPionVsInnerParamP",
                 "TPC_NSigmaProtonVsEta",         "TPC_NSigmaKaonVsEta",            "TPC_NSigmaPionVsEta"};
     std::vector<Int_t> QA_nbinsx = {100,
-                                   10, 200, 200, 400,
-                                   200, 40,
-                                   200, 200, 200, 200, 200, 200};
+                                    10, 200, 200, 400,
+                                    200, 40,
+                                    200, 200, 200, 200, 200, 200};
     std::vector<Float_t> QA_xlow = {-1.,
-                                   -10., 0., 0., -1.,
-                                   0., -1.,
-                                   0., 0., 0., -1., -1., -1.};
+                                    -10., 0., 0., -1.,
+                                    0., -1.,
+                                    0., 0., 0., -1., -1., -1.};
     std::vector<Float_t> QA_xup = {1.,
                                    10., 3000., 3000., 1.,
                                    2 * TMath::Pi(), 1.,
                                    10., 10., 10., 1., 1., 1.};
     std::vector<Int_t> QA_nbinsy = {200,
-                                   30, 200, 200, 400,
-                                   6, 6,
-                                   200, 200, 200, 200, 200, 200};
+                                    30, 200, 200, 400,
+                                    6, 6,
+                                    200, 200, 200, 200, 200, 200};
     std::vector<Float_t> QA_ylow = {0.,
                                     0., 0., 0., 0.,
                                     0., 0.,
