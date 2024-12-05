@@ -214,10 +214,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                               KFParticle kfLambdaPosDau, KFParticle kfKaon, Math::PxPyPzEVector lvSexaquark, Math::PxPyPzEVector lvLambda,
                               Math::PxPyPzEVector lvKaon, Int_t idxLambda, Int_t esdIdxNeg_Lambda, Int_t esdIdxPos_Lambda, Int_t esdIdxKaon,
                               Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid);
-    void StoreSexaquark_TypeE(TString ReactionChannel, KFParticleMother kfSexaquark, Math::PxPyPzEVector lvSexaquark, KFParticleMother kfLambda,
-                              KFParticle kfLambdaNegDau, KFParticle kfLambdaPosDau, KFParticle kfKaon, KFParticle kfPiMinus, KFParticle kfPiPlus,
-                              Int_t idxLambda, Int_t esdIdxNeg_Lambda, Int_t esdIdxPos_Lambda, Int_t esdIdxKaon, Int_t idxPionPair,
-                              Int_t esdIdxPiMinus, Int_t esdIdxPiPlus, Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid);
+    void StoreSexaquark_TypeE(TString ReactionChannel, KFParticleMother kfSexaquark, KFParticleMother kfLambda, KFParticle kfLambdaNegDau,
+                              KFParticle kfLambdaPosDau, KFParticle kfKaon, KFParticle kfPiMinus, KFParticle kfPiPlus,
+                              Math::PxPyPzEVector lvSexaquark, Math::PxPyPzEVector lvLambda, Math::PxPyPzEVector lvKaon,
+                              Math::PxPyPzEVector lvPiMinus, Math::PxPyPzEVector lvPiPlus, Int_t idxLambda, Int_t esdIdxNeg_Lambda,
+                              Int_t esdIdxPos_Lambda, Int_t esdIdxKaon, Int_t idxPionPair, Int_t esdIdxPiMinus, Int_t esdIdxPiPlus, Bool_t isSignal,
+                              Int_t ReactionID, Bool_t isHybrid);
 
     /** `AntiSexaquark Proton -> K+ K+ X` **/
     /** `Sexaquark AntiProton -> K- K- X` **/
@@ -452,6 +454,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tSexaquark_Py;          //!
     Float_t tSexaquark_Pz;          //!
     Float_t tSexaquark_E;           //!
+    Float_t tSexaquark_E_asDecay;   //!
     Float_t tSexaquark_Xv;          //! secondary x-vertex
     Float_t tSexaquark_Yv;          //! secondary y-vertex
     Float_t tSexaquark_Zv;          //! secondary z-vertex
