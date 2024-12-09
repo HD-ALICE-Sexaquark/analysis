@@ -144,6 +144,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* MC Generated */
 
     void ProcessMCGen();
+    void GetAncestor(Int_t mcIdx, Int_t& ancestorIdx, Int_t generation = 0);
     void ProcessSignalReactions();
 
     /* Tracks */
@@ -197,7 +198,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                               KFParticle kfKaonZeroShortNegDau, KFParticle kfKaonZeroShortPosDau, KFParticle kfLambdaNegDau,
                               KFParticle kfLambdaPosDau, Math::PxPyPzEVector lvSexaquark, Math::PxPyPzEVector lvKaonZeroShort,
                               Math::PxPyPzEVector lvLambda, Int_t idxKaonZeroShort, Int_t esdIdxNeg_KaonZeroShort, Int_t esdIdxPos_KaonZeroShort,
-                              Int_t idxLambda, Int_t esdIdxNeg_Lambda, Int_t esdIdxPos_Lambda, Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid);
+                              Int_t idxLambda, Int_t esdIdxNeg_Lambda, Int_t esdIdxPos_Lambda, Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid,
+                              Bool_t isNonCombBkg, Int_t AncestorIdx);
 
     /** `AntiSexaquark Proton -> AntiLambda K+` **/
     /** `AntiSexaquark Proton -> AntiLambda K+ pi- pi+` **/
@@ -463,9 +465,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     Float_t tSexaquark_DCAwrtPV;    //!
     Float_t tSexaquark_Chi2ndf;     //!
     /* True Information */
-    Bool_t tSexaquark_IsSignal;   //!
-    Int_t tSexaquark_ReactionID;  //!
-    Bool_t tSexaquark_IsHybrid;   //!
+    Bool_t tSexaquark_IsSignal;      //!
+    Int_t tSexaquark_ReactionID;     //!
+    Bool_t tSexaquark_IsHybrid;      //!
+    Bool_t tSexaquark_IsNonCombBkg;  //!
+    Int_t tSexaquark_AncestorIdx;    //!
     /* Channels "A"+"D"+"E" */
     Int_t tSexaquark_Idx_Lambda;            //!
     Int_t tSexaquark_Idx_Lambda_Neg;        //!
@@ -582,10 +586,11 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::unordered_map<Int_t, Int_t> getReactionID_fromMcIdx;                   //! key: `mcIdx`
     std::unordered_map<Int_t, std::vector<Int_t>> getMcIndices_fromReactionID;  //! key: `ReactionID`
 
-    std::unordered_map<Int_t, Bool_t> doesMcIdxHaveMother;      //! key: `mcIdx`
-    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromMcIdx;  //! key: `mcIdx`
-    std::unordered_map<Int_t, Int_t> getNegDauMcIdx_fromMcIdx;  //! key: `mcIdx`
-    std::unordered_map<Int_t, Int_t> getPosDauMcIdx_fromMcIdx;  //! key: `mcIdx`
+    std::unordered_map<Int_t, Bool_t> doesMcIdxHaveMother;        //! key: `mcIdx`
+    std::unordered_map<Int_t, Int_t> getMotherMcIdx_fromMcIdx;    //! key: `mcIdx`
+    std::unordered_map<Int_t, Int_t> getAncestorMcIdx_fromMcIdx;  //! key: `mcIdx`
+    std::unordered_map<Int_t, Int_t> getNegDauMcIdx_fromMcIdx;    //! key: `mcIdx`
+    std::unordered_map<Int_t, Int_t> getPosDauMcIdx_fromMcIdx;    //! key: `mcIdx`
 
     /* filled at `ProcessTracks()` */
     std::unordered_map<Int_t, Int_t> getMcIdx_fromEsdIdx;  //! key: `esdIdx`

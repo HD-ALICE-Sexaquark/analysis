@@ -195,6 +195,8 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tSexaquark_IsSignal(0),
       tSexaquark_ReactionID(0),
       tSexaquark_IsHybrid(0),
+      tSexaquark_IsNonCombBkg(0),
+      tSexaquark_AncestorIdx(0),
       /*  */
       tSexaquark_Idx_Lambda(0),
       tSexaquark_Idx_Lambda_Neg(0),
@@ -257,6 +259,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       getMcIndices_fromReactionID(),
       doesMcIdxHaveMother(),
       getMotherMcIdx_fromMcIdx(),
+      getAncestorMcIdx_fromMcIdx(),
       getNegDauMcIdx_fromMcIdx(),
       getPosDauMcIdx_fromMcIdx(),
       mcIndicesOfTrueV0s(),
@@ -555,6 +558,8 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tSexaquark_IsSignal(0),
       tSexaquark_ReactionID(0),
       tSexaquark_IsHybrid(0),
+      tSexaquark_IsNonCombBkg(0),
+      tSexaquark_AncestorIdx(0),
       /*  */
       tSexaquark_Idx_Lambda(0),
       tSexaquark_Idx_Lambda_Neg(0),
@@ -617,6 +622,7 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       getMcIndices_fromReactionID(),
       doesMcIdxHaveMother(),
       getMotherMcIdx_fromMcIdx(),
+      getAncestorMcIdx_fromMcIdx(),
       getNegDauMcIdx_fromMcIdx(),
       getPosDauMcIdx_fromMcIdx(),
       mcIndicesOfTrueV0s(),
@@ -1106,6 +1112,8 @@ void AliAnalysisTaskSexaquark::PrepareCommonSexaquarkBranches(TTree* Tree_Sexaqu
     Tree_Sexaquarks->Branch("IsSignal", &tSexaquark_IsSignal);
     Tree_Sexaquarks->Branch("ReactionID", &tSexaquark_ReactionID);
     Tree_Sexaquarks->Branch("IsHybrid", &tSexaquark_IsHybrid);
+    Tree_Sexaquarks->Branch("IsNonCombBkg", &tSexaquark_IsNonCombBkg);
+    Tree_Sexaquarks->Branch("AncestorIdx", &tSexaquark_AncestorIdx);
 }
 
 /*
@@ -1307,10 +1315,12 @@ void AliAnalysisTaskSexaquark::ClearSexaquarksBranches() {
     tSexaquark_IsSignal = kFALSE;
     tSexaquark_ReactionID = 0;
     tSexaquark_IsHybrid = kFALSE;
+    tSexaquark_IsNonCombBkg = kFALSE;
+    tSexaquark_AncestorIdx = -1;
     /* Channels "A"+"D"+"E" */
-    tSexaquark_Idx_Lambda = 0;
-    tSexaquark_Idx_Lambda_Neg = 0;
-    tSexaquark_Idx_Lambda_Pos = 0;
+    tSexaquark_Idx_Lambda = -1;
+    tSexaquark_Idx_Lambda_Neg = -1;
+    tSexaquark_Idx_Lambda_Pos = -1;
     tSexaquark_Lambda_DecayLength = 0.;
     tSexaquark_DCALaSV = 0.;
     tSexaquark_DCALaNegSV = 0.;
@@ -1318,25 +1328,25 @@ void AliAnalysisTaskSexaquark::ClearSexaquarksBranches() {
     /* Channels "A"+"D"+"H" */
     tSexaquark_OpeningAngle = 0.;
     /* Channel "A" */
-    tSexaquarkA_Idx_K0S = 0;
-    tSexaquarkA_Idx_K0S_Neg = 0;
-    tSexaquarkA_Idx_K0S_Pos = 0;
+    tSexaquarkA_Idx_K0S = -1;
+    tSexaquarkA_Idx_K0S_Neg = -1;
+    tSexaquarkA_Idx_K0S_Pos = -1;
     tSexaquarkA_K0S_DecayLength = 0.;
     tSexaquarkA_DCAK0SV = 0.;
     tSexaquarkA_DCAK0NegSV = 0.;
     tSexaquarkA_DCAK0PosSV = 0.;
     tSexaquarkA_DCAbtwV0s = 0.;
     /* Channel "D" */
-    tSexaquarkD_Idx_Kaon = 0;
+    tSexaquarkD_Idx_Kaon = -1;
     tSexaquarkD_DCAKaSV = 0.;
     tSexaquarkD_DCAKaLa = 0.;
     tSexaquarkD_DCALaNegKa = 0.;
     tSexaquarkD_DCALaPosKa = 0.;
     /* Channel "E" */
-    tSexaquarkE_Idx_Kaon = 0;
-    tSexaquarkE_Idx_PP = 0;
-    tSexaquarkE_Idx_PiMinus = 0;
-    tSexaquarkE_Idx_PiPlus = 0;
+    tSexaquarkE_Idx_Kaon = -1;
+    tSexaquarkE_Idx_PP = -1;
+    tSexaquarkE_Idx_PiMinus = -1;
+    tSexaquarkE_Idx_PiPlus = -1;
     tSexaquarkE_DCAKaSV = 0.;
     tSexaquarkE_DCAKaLa = 0.;
     tSexaquarkE_DCApmSV = 0.;
@@ -1346,8 +1356,8 @@ void AliAnalysisTaskSexaquark::ClearSexaquarksBranches() {
     tSexaquarkE_DCApmKa = 0.;
     tSexaquarkE_DCAppKa = 0.;
     /* Channel "H" */
-    tKaonPair_Idx_KaonA = 0;
-    tKaonPair_Idx_KaonB = 0;
+    tKaonPair_Idx_KaonA = -1;
+    tKaonPair_Idx_KaonB = -1;
     tKaonPair_DCAbtwKK = 0.;
     tKaonPair_DCAkaSV = 0.;
     tKaonPair_DCAkbSV = 0.;
@@ -2180,6 +2190,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
     Int_t n_daughters;
     Int_t idx_first_dau;
     Int_t idx_last_dau;
+    Int_t ancestor_idx;
 
     Bool_t is_signal;
     Bool_t is_secondary;
@@ -2222,6 +2233,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
         pdg_mc = mcPart->PdgCode();
 
         mother_idx = mcPart->GetMother();
+        GetAncestor(mcIdx, ancestor_idx);
         n_daughters = mcPart->GetNDaughters();
         idx_first_dau = mcPart->GetDaughterFirst();
         idx_last_dau = mcPart->GetDaughterLast();
@@ -2242,6 +2254,7 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
 
         getPdgCode_fromMcIdx[mcIdx] = pdg_mc;
         getMotherMcIdx_fromMcIdx[mcIdx] = mother_idx;
+        getAncestorMcIdx_fromMcIdx[mcIdx] = ancestor_idx;
         isMcIdxSignal[mcIdx] = is_signal;
         getReactionID_fromMcIdx[mcIdx] = reaction_id;
         getMcIndices_fromReactionID[reaction_id].push_back(mcIdx);
@@ -2438,6 +2451,22 @@ void AliAnalysisTaskSexaquark::ProcessMCGen() {
             fHist_V0s[std::make_tuple("MCGen", "Signal", pdg_mc, "DCAwrtPV")]->Fill(dca_wrt_pv);
         }  // end of (anti-)lambda && K0S condition
     }      // end of loop over MC particles
+}
+
+/*
+ * Rercursive function to get the first particle in the decay chain of a particle
+ */
+void AliAnalysisTaskSexaquark::GetAncestor(Int_t mcIdx, Int_t& ancestorIdx, Int_t generation) {
+
+    AliMCParticle* thisMcParticle = (AliMCParticle*)fMC->GetTrack(mcIdx);
+    Int_t motherIdx = thisMcParticle->GetMother();
+
+    if (motherIdx < 0) {
+        ancestorIdx = generation ? mcIdx : -1;
+        return;
+    }
+
+    GetAncestor(motherIdx, ancestorIdx, generation + 1);
 }
 
 /*
@@ -4763,6 +4792,8 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_TypeA(TString ReactionChann
     Bool_t is_signal;
     Int_t reaction_id;
     Bool_t is_hybrid;
+    Int_t ancestor_idx;
+    Bool_t same_ancestor, is_noncomb_bkg;
 
     /* Choose between `AntiSexaquark Neutron -> AntiLambda K0S` or `Sexaquark AntiNeutron -> Lambda K0S` */
 
@@ -4880,6 +4911,13 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_TypeA(TString ReactionChann
                          isMcIdxSignal[mcIdxPos_KaonZeroShort]) &&
                         !is_signal;
 
+            same_ancestor = getAncestorMcIdx_fromMcIdx[mcIdxNeg_GenLambda] != -1 &&
+                            getAncestorMcIdx_fromMcIdx[mcIdxNeg_GenLambda] == getAncestorMcIdx_fromMcIdx[mcIdxPos_GenLambda] &&
+                            getAncestorMcIdx_fromMcIdx[mcIdxPos_GenLambda] == getAncestorMcIdx_fromMcIdx[mcIdxNeg_KaonZeroShort] &&
+                            getAncestorMcIdx_fromMcIdx[mcIdxNeg_KaonZeroShort] == getAncestorMcIdx_fromMcIdx[mcIdxPos_KaonZeroShort];
+            is_noncomb_bkg = !is_signal && !is_hybrid && same_ancestor;
+            ancestor_idx = is_noncomb_bkg ? getAncestorMcIdx_fromMcIdx[mcIdxNeg_GenLambda] : -1;
+
             /** Apply cuts **/
 
             if (PassesSexaquarkCuts_TypeA(ReactionChannel, kfAntiSexaquark, lvSexaquark, kfGenLambda, kfKaonZeroShort, kfGenLambdaNegDau,
@@ -4887,7 +4925,7 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_TypeA(TString ReactionChann
                 StoreSexaquark_TypeA(ReactionChannel, kfAntiSexaquark, kfKaonZeroShort, kfGenLambda, kfKaonZeroShortNegDau, kfKaonZeroShortPosDau,
                                      kfGenLambdaNegDau, kfGenLambdaPosDau, lvSexaquark, lvKaonZeroShort, lvGenLambda, idxKaonZeroShort,
                                      esdIdxNeg_KaonZeroShort, esdIdxPos_KaonZeroShort, idxGenLambda, esdIdxNeg_GenLambda, esdIdxPos_GenLambda,
-                                     is_signal, reaction_id, is_hybrid);
+                                     is_signal, reaction_id, is_hybrid, is_noncomb_bkg, ancestor_idx);
             }
         }  // end of loop over (anti-)lambdas
     }      // end of loop over K0S
@@ -4995,7 +5033,7 @@ void AliAnalysisTaskSexaquark::StoreSexaquark_TypeA(TString ReactionChannel, KFP
                                                     Math::PxPyPzEVector lvKaonZeroShort, Math::PxPyPzEVector lvLambda, Int_t idxKaonZeroShort,
                                                     Int_t esdIdxNeg_KaonZeroShort, Int_t esdIdxPos_KaonZeroShort, Int_t idxLambda,
                                                     Int_t esdIdxNeg_Lambda, Int_t esdIdxPos_Lambda, Bool_t isSignal, Int_t ReactionID,
-                                                    Bool_t isHybrid) {
+                                                    Bool_t isHybrid, Bool_t isNonCombBkg, Int_t AncestorIdx) {
 
     /* Get (anti-)sexaquark's properties */
 
@@ -5048,6 +5086,8 @@ void AliAnalysisTaskSexaquark::StoreSexaquark_TypeA(TString ReactionChannel, KFP
     tSexaquark_IsSignal = isSignal;
     tSexaquark_ReactionID = ReactionID;
     tSexaquark_IsHybrid = isHybrid;
+    tSexaquark_IsNonCombBkg = isNonCombBkg;
+    tSexaquark_AncestorIdx = AncestorIdx;
 
     tSexaquark_Idx_Lambda = idxLambda;
     tSexaquark_Idx_Lambda_Neg = esdIdxNeg_Lambda;
@@ -7306,6 +7346,7 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
 
     doesMcIdxHaveMother.clear();
     getMotherMcIdx_fromMcIdx.clear();
+    getAncestorMcIdx_fromMcIdx.clear();
     getNegDauMcIdx_fromMcIdx.clear();
     getPosDauMcIdx_fromMcIdx.clear();
 
