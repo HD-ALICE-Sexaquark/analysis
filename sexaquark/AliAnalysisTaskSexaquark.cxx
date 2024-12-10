@@ -5210,6 +5210,8 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_TypeDE(TString ReactionChan
     Bool_t is_signal;
     Int_t reaction_id;
     Bool_t is_hybrid;
+    Int_t ancestor_idx;
+    Bool_t same_ancestor, is_noncomb_bkg;
 
     /* Reconstruction of `AntiSexaquark Neutron -> AntiLambda K+` or `Sexaquark AntiNeutron -> Lambda K-` */
 
@@ -5316,13 +5318,19 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_TypeDE(TString ReactionChan
             is_hybrid = (isMcIdxSignal[mcIdxNeg_GenLambda] || isMcIdxSignal[mcIdxPos_GenLambda] || isMcIdxSignal[mcIdxKaon]) &&  //
                         !is_signal;
 
+            same_ancestor = getAncestorMcIdx_fromMcIdx[mcIdxNeg_GenLambda] != -1 &&
+                            getAncestorMcIdx_fromMcIdx[mcIdxNeg_GenLambda] == getAncestorMcIdx_fromMcIdx[mcIdxPos_GenLambda] &&
+                            getAncestorMcIdx_fromMcIdx[mcIdxPos_GenLambda] == getAncestorMcIdx_fromMcIdx[mcIdxKaon];
+            is_noncomb_bkg = !is_signal && !is_hybrid && same_ancestor;
+            ancestor_idx = is_noncomb_bkg ? getAncestorMcIdx_fromMcIdx[mcIdxNeg_GenLambda] : -1;
+
             /** Apply cuts & store channel (1) **/
 
             if (PassesSexaquarkCuts_TypeD(subReactionChannel1, kfSexaquark, lvSexaquark, kfGenLambda, kfKaon, kfGenLambdaNegDau, kfGenLambdaPosDau,
                                           is_signal)) {
                 StoreSexaquark_TypeD(subReactionChannel1, kfSexaquark, kfGenLambda, kfGenLambdaNegDau, kfGenLambdaPosDau, kfKaon, lvSexaquark,
                                      lvGenLambda, lvKaon, idxGenLambda, esdIdxNeg_GenLambda, esdIdxPos_GenLambda, esdIdxKaon, is_signal, reaction_id,
-                                     is_hybrid);
+                                     is_hybrid, is_noncomb_bkg, ancestor_idx);
             }
 
             /* Reconstruction of `AntiSexaquark Neutron -> AntiLambda K+ pi- pi+` or `Sexaquark AntiNeutron -> Lambda K- pi- pi+` */
@@ -5402,14 +5410,22 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_TypeDE(TString ReactionChan
                              isMcIdxSignal[mcIdxPiMinus] || isMcIdxSignal[mcIdxPiPlus]) &&  //
                             !is_signal;
 
+                same_ancestor = getAncestorMcIdx_fromMcIdx[mcIdxNeg_GenLambda] != -1 &&
+                                getAncestorMcIdx_fromMcIdx[mcIdxNeg_GenLambda] == getAncestorMcIdx_fromMcIdx[mcIdxPos_GenLambda] &&
+                                getAncestorMcIdx_fromMcIdx[mcIdxPos_GenLambda] == getAncestorMcIdx_fromMcIdx[mcIdxKaon] &&
+                                getAncestorMcIdx_fromMcIdx[mcIdxKaon] == getAncestorMcIdx_fromMcIdx[mcIdxPiMinus] &&
+                                getAncestorMcIdx_fromMcIdx[mcIdxPiMinus] == getAncestorMcIdx_fromMcIdx[mcIdxPiPlus];
+                is_noncomb_bkg = !is_signal && !is_hybrid && same_ancestor;
+                ancestor_idx = is_noncomb_bkg ? getAncestorMcIdx_fromMcIdx[mcIdxNeg_GenLambda] : -1;
+
                 /** Apply cuts & store channel (2) **/
 
                 if (PassesSexaquarkCuts_TypeE(subReactionChannel2, kfSexaquark, lvSexaquark, kfGenLambda, kfGenLambdaNegDau, kfGenLambdaPosDau,
                                               kfKaon, kfPiMinus, kfPiPlus, is_signal)) {
                     StoreSexaquark_TypeE(subReactionChannel2, kfSexaquark, kfGenLambda, kfGenLambdaNegDau, kfGenLambdaPosDau, kfKaon, kfPiMinus,
                                          kfPiPlus, lvSexaquark, lvGenLambda, lvKaon, lvPiMinus, lvPiPlus, idxGenLambda, esdIdxNeg_GenLambda,
-                                         esdIdxPos_GenLambda, esdIdxKaon, idxPionPair, esdIdxPiMinus, esdIdxPiPlus, is_signal, reaction_id,
-                                         is_hybrid);
+                                         esdIdxPos_GenLambda, esdIdxKaon, idxPionPair, esdIdxPiMinus, esdIdxPiPlus, is_signal, reaction_id, is_hybrid,
+                                         is_noncomb_bkg, ancestor_idx);
                 }
             }  // end of loop over pion pairs
         }      // end of loop over kaons
@@ -5622,7 +5638,7 @@ void AliAnalysisTaskSexaquark::StoreSexaquark_TypeD(TString ReactionChannel, KFP
                                                     KFParticle kfLambdaNegDau, KFParticle kfLambdaPosDau, KFParticle kfKaon,
                                                     Math::PxPyPzEVector lvSexaquark, Math::PxPyPzEVector lvLambda, Math::PxPyPzEVector lvKaon,
                                                     Int_t idxLambda, Int_t esdIdxNeg_Lambda, Int_t esdIdxPos_Lambda, Int_t esdIdxKaon,
-                                                    Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid) {
+                                                    Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid, Bool_t isNonCombBkg, Int_t AncestorIdx) {
 
     /* Get (anti-)sexaquark's properties */
 
@@ -5674,6 +5690,8 @@ void AliAnalysisTaskSexaquark::StoreSexaquark_TypeD(TString ReactionChannel, KFP
     tSexaquark_IsSignal = isSignal;
     tSexaquark_ReactionID = ReactionID;
     tSexaquark_IsHybrid = isHybrid;
+    tSexaquark_IsNonCombBkg = isNonCombBkg;
+    tSexaquark_AncestorIdx = AncestorIdx;
 
     tSexaquark_Idx_Lambda = idxLambda;
     tSexaquark_Idx_Lambda_Neg = esdIdxNeg_Lambda;
@@ -5756,7 +5774,7 @@ void AliAnalysisTaskSexaquark::StoreSexaquark_TypeE(TString ReactionChannel, KFP
                                                     Math::PxPyPzEVector lvKaon, Math::PxPyPzEVector lvPiMinus, Math::PxPyPzEVector lvPiPlus,
                                                     Int_t idxLambda, Int_t esdIdxNeg_Lambda, Int_t esdIdxPos_Lambda, Int_t esdIdxKaon,
                                                     Int_t idxPionPair, Int_t esdIdxPiMinus, Int_t esdIdxPiPlus, Bool_t isSignal, Int_t ReactionID,
-                                                    Bool_t isHybrid) {
+                                                    Bool_t isHybrid, Bool_t isNonCombBkg, Int_t AncestorIdx) {
 
     /* Get (anti-)sexaquark's properties */
 
@@ -5811,6 +5829,8 @@ void AliAnalysisTaskSexaquark::StoreSexaquark_TypeE(TString ReactionChannel, KFP
     tSexaquark_IsSignal = isSignal;
     tSexaquark_ReactionID = ReactionID;
     tSexaquark_IsHybrid = isHybrid;
+    tSexaquark_IsNonCombBkg = isNonCombBkg;
+    tSexaquark_AncestorIdx = AncestorIdx;
 
     tSexaquark_Idx_Lambda = idxLambda;
     tSexaquark_Idx_Lambda_Neg = esdIdxNeg_Lambda;
@@ -5920,6 +5940,8 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_TypeH(TString ReactionChann
     Bool_t is_signal;
     Int_t reaction_id;
     Bool_t is_hybrid;
+    Int_t ancestor_idx;
+    Bool_t same_ancestor, is_noncomb_bkg;
 
     /*  Reconstruct */
 
@@ -5985,11 +6007,16 @@ void AliAnalysisTaskSexaquark::KalmanSexaquarkFinder_TypeH(TString ReactionChann
             is_hybrid = (isMcIdxSignal[mcIdxKaonA] || isMcIdxSignal[mcIdxKaonB]) &&  //
                         !is_signal;
 
+            same_ancestor =
+                getAncestorMcIdx_fromMcIdx[mcIdxKaonA] != -1 && getAncestorMcIdx_fromMcIdx[mcIdxKaonA] == getAncestorMcIdx_fromMcIdx[mcIdxKaonB];
+            is_noncomb_bkg = !is_signal && !is_hybrid && same_ancestor;
+            ancestor_idx = is_noncomb_bkg ? getAncestorMcIdx_fromMcIdx[mcIdxKaonA] : -1;
+
             /* Apply cuts */
 
             if (PassesSexaquarkCuts_TypeH(ReactionChannel, kfKaonPair, kfKaonA, kfKaonB, lvKaonPair, lvKaonA, lvKaonB, is_signal)) {
                 StoreSexaquark_TypeH(ReactionChannel, kfKaonPair, kfKaonA, kfKaonB, lvKaonPair, lvKaonA, lvKaonB, esdIdxKaonA, esdIdxKaonB, is_signal,
-                                     reaction_id, is_hybrid);
+                                     reaction_id, is_hybrid, is_noncomb_bkg, ancestor_idx);
             }
 
         }  // end of loop over kaon B
@@ -6049,7 +6076,8 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_TypeH(TString ReactionChann
  */
 void AliAnalysisTaskSexaquark::StoreSexaquark_TypeH(TString ReactionChannel, KFParticleMother kfKaonPair, KFParticle kfKaonA, KFParticle kfKaonB,
                                                     Math::PxPyPzEVector lvKaonPair, Math::PxPyPzEVector lvKaonA, Math::PxPyPzEVector lvKaonB,
-                                                    Int_t esdIdxKaonA, Int_t esdIdxKaonB, Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid) {
+                                                    Int_t esdIdxKaonA, Int_t esdIdxKaonB, Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid,
+                                                    Bool_t isNonCombBkg, Int_t AncestorIdx) {
 
     /* Get kaon pair properties */
 
@@ -6092,6 +6120,8 @@ void AliAnalysisTaskSexaquark::StoreSexaquark_TypeH(TString ReactionChannel, KFP
     tSexaquark_IsSignal = isSignal;
     tSexaquark_ReactionID = ReactionID;
     tSexaquark_IsHybrid = isHybrid;
+    tSexaquark_IsNonCombBkg = isNonCombBkg;
+    tSexaquark_AncestorIdx = AncestorIdx;
 
     tKaonPair_Idx_KaonA = esdIdxKaonA;
     tKaonPair_Idx_KaonB = esdIdxKaonB;

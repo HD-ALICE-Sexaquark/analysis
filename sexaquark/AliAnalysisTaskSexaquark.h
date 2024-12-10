@@ -215,13 +215,13 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void StoreSexaquark_TypeD(TString ReactionChannel, KFParticleMother kfSexaquark, KFParticleMother kfLambda, KFParticle kfLambdaNegDau,
                               KFParticle kfLambdaPosDau, KFParticle kfKaon, Math::PxPyPzEVector lvSexaquark, Math::PxPyPzEVector lvLambda,
                               Math::PxPyPzEVector lvKaon, Int_t idxLambda, Int_t esdIdxNeg_Lambda, Int_t esdIdxPos_Lambda, Int_t esdIdxKaon,
-                              Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid);
+                              Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid, Bool_t isNonCombBkg, Int_t AncestorIdx);
     void StoreSexaquark_TypeE(TString ReactionChannel, KFParticleMother kfSexaquark, KFParticleMother kfLambda, KFParticle kfLambdaNegDau,
                               KFParticle kfLambdaPosDau, KFParticle kfKaon, KFParticle kfPiMinus, KFParticle kfPiPlus,
                               Math::PxPyPzEVector lvSexaquark, Math::PxPyPzEVector lvLambda, Math::PxPyPzEVector lvKaon,
                               Math::PxPyPzEVector lvPiMinus, Math::PxPyPzEVector lvPiPlus, Int_t idxLambda, Int_t esdIdxNeg_Lambda,
                               Int_t esdIdxPos_Lambda, Int_t esdIdxKaon, Int_t idxPionPair, Int_t esdIdxPiMinus, Int_t esdIdxPiPlus, Bool_t isSignal,
-                              Int_t ReactionID, Bool_t isHybrid);
+                              Int_t ReactionID, Bool_t isHybrid, Bool_t isNonCombBkg, Int_t AncestorIdx);
 
     /** `AntiSexaquark Proton -> K+ K+ X` **/
     /** `Sexaquark AntiProton -> K- K- X` **/
@@ -231,7 +231,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                      Math::PxPyPzEVector lvKaonPair, Math::PxPyPzEVector lvKaonA, Math::PxPyPzEVector lvKaonB, Bool_t isSignal);
     void StoreSexaquark_TypeH(TString ReactionChannel, KFParticleMother kfKaonPair, KFParticle kfKaonA, KFParticle kfKaonB,
                               Math::PxPyPzEVector lvKaonPair, Math::PxPyPzEVector lvKaonA, Math::PxPyPzEVector lvKaonB, Int_t esdIdxKaonA,
-                              Int_t esdIdxKaonB, Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid);
+                              Int_t esdIdxKaonB, Bool_t isSignal, Int_t ReactionID, Bool_t isHybrid, Bool_t isNonCombBkg, Int_t AncestorIdx);
 
     /* Utilities */
     void ClearContainers();
