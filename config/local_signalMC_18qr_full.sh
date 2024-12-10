@@ -1,9 +1,11 @@
 #!/bin/bash
 
-if [[ -z ${SOURCE_OF_V0S} ]]; then echo "Missing env. var. SOURCE_OF_V0S" ; return 1; fi
-if [[ -z ${SIMULATION_SET} ]]; then echo "Missing env. var. SIMULATION_SET" ; return 1; fi
-if [[ -z ${SIMS_DIR} ]]; then echo "Missing env. var. SIMS_DIR" ; return 1; fi
-if [[ -z ${ANALYSIS_DIR} ]]; then echo "Missing env. var. ANALYSIS_DIR" ; return 1; fi
+# IMPORTANT: this file should always be sourced by another script
+
+if [[ -z ${SOURCE_OF_V0S} ]]; then echo "ERROR :: config_file.sh :: Missing env. var. SOURCE_OF_V0S" ; exit 1; fi
+if [[ -z ${SIMULATION_SET} ]]; then echo "ERROR :: config_file.sh :: Missing env. var. SIMULATION_SET" ; exit 1; fi
+if [[ -z ${SIMS_DIR} ]]; then echo "ERROR :: config_file.sh :: Missing env. var. SIMS_DIR" ; exit 1; fi
+if [[ -z ${ANALYSIS_DIR} ]]; then echo "ERROR :: config_file.sh :: Missing env. var. ANALYSIS_DIR" ; exit 1; fi
 
 export ATTEMPT_NAME="local_signalMC_18qr_full_${SOURCE_OF_V0S}${SIMULATION_SET}"
 export MODE="local"
