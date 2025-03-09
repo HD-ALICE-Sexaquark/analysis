@@ -1,8 +1,6 @@
-#include <fstream>
-
+#include "Rtypes.h"
 #include "TChain.h"
-#include "TGrid.h"
-#include "TROOT.h"
+#include "TSystemDirectory.h"
 
 #include "AliAnalysisAlien.h"
 #include "AliAnalysisManager.h"
@@ -15,156 +13,91 @@
 
 #include "AliAnalysisTaskSexaquark.h"
 
-void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
-                 TString InputPath,       // (only valid when Mode == "local" or Mode == "hybrid") dir that contains ProductionName dirs
-                 Int_t LocalNDirs,        // (only valid when Mode == "local" or Mode == "hybrid") number of subdirs per run
-                 Bool_t GridTestMode,     // (only valid when Mode == "grid")
-                 Bool_t IsMC,             // kTRUE for MC, kFALSE for data
-                 TString ProductionName,  // for data: "LHC15o", "LHC18q", "LHC18r"
-                                          // for signal MC: "LHC23l1a3", "LHC23l1b3"
-                                          // for gen. purp. MC: "LHC20e3a", "LHC20j6a"
-                 TString RunNumbersList,  // path to file with run numbers
-                 TString SourceOfV0s,     // "kalman", "custom", "on-the-fly", "offline"
-                 TString SimulationSet,   // format: "<A,D,E,H><1.73,1.8,1.87,1.94,2.01>" e.g. "A1.73"
-                 Bool_t DoQA,             // (only valid when analyzing MC) kTRUE to enable QA
-                 Int_t ChooseNEvents = 0  // (only valid when Mode == "local" or Mode == "hybrid") 0 means all events
+void runAnalysis(const TString &Mode,            // "local", "grid"
+                 const TString &InputPath,       // what comes before the RN
+                 const TString &ProductionName,  // for data: "LHC15o", "LHC18q", "LHC18r"
+                                                 // for signal MC: "LHC23l1a3", "LHC23l1b3"
+                                                 // for gen. purp. MC: "LHC20e3a", "LHC20j6a"
+                 Int_t RunNumber,                // single run number
+                 /* only valid when Mode == "local" */
+                 Int_t Local_NDirs = 1,           // for MC: number of subdirs per run, data doesn't use it
+                 Int_t Local_LimitToNEvents = 0,  // 0 means all events
+                 /* only valid when Mode == "grid" */
+                 Bool_t Grid_TestMode = false,               //
+                 const TString &Grid_WorkingDir = "",        //
+                 Int_t Grid_CustomSplitMaxNFiles = 0,        // 0 means default
+                 const TString &Grid_CustomDataPattern = ""  // what comes after the RN, empty means default
 ) {
-
     /* Check for Input Errors */
-
-    if (Mode != "local" && Mode != "grid" && Mode != "hybrid") {
-        std::cerr << "!! Error !! runAnalysis.C !! Invalid Mode " << Mode << " !!" << std::endl;
+    if (Mode != "local" && Mode != "grid") {
+        std::cerr << "!! ERROR !! runAnalysis.C !! Invalid Mode " << Mode << '\n';
         return;
     }
-
-    if (Mode == "local" || Mode == "hybrid") {
-        if (InputPath == "") {
-            std::cerr << "!! Error !! runAnalysis.C !! InputPath cannot be empty when Mode == \"local\" or \"hybrid\" !!" << std::endl;
-            return;
-        }
-        if (GridTestMode) {
-            std::cerr << "!! Error !! runAnalysis.C !! GridTestMode is only valid when Mode == \"grid\" !!" << std::endl;
-            return;
-        }
+    if (Mode == "local" && (Grid_TestMode || Grid_WorkingDir.Length() > 0 || Grid_CustomSplitMaxNFiles > 0 || Grid_CustomDataPattern.Length() > 0)) {
+        std::cerr << "!! WARNING !! runAnalysis.C !! Grid options are only valid when Mode == \"grid\", they will be ignored" << '\n';
     }
-
-    if (Mode == "grid") {
-        if (InputPath != "")
-            std::cerr << "!! Warning !! runAnalysis.C !! InputPath is only valid when Mode == \"local\" or \"hybrid\", will be ignored !!"
-                      << std::endl;
-        if (ChooseNEvents)
-            std::cerr << "!! Warning !! runAnalysis.C !! ChooseNEvents is only valid when Mode == \"local\" or \"hybrid\", will be ignored !!"
-                      << std::endl;
+    if (Mode == "grid" && (Local_LimitToNEvents > 0 || Local_NDirs > 1)) {
+        std::cerr << "!! WARNING !! runAnalysis.C !! Local options are only valid when Mode == \"local\", they will be ignored" << '\n';
     }
-
-    if (IsMC && (ProductionName != "LHC23l1a3" && ProductionName != "LHC23l1b3" && ProductionName != "LHC20e3a" && ProductionName != "LHC20j6a")) {
-        std::cerr << "!! Error !! runAnalysis.C !! Make sure to put a valid ProductionName for simulations !!" << std::endl;
-        return;
-    }
-
-    if (!IsMC) {
-        if (DoQA) {
-            std::cerr << "!! Error !! runAnalysis.C !! DoQA is only valid for MC !!" << std::endl;
-            return;
-        }
-        if (ProductionName != "LHC15o" && ProductionName != "LHC18q" && ProductionName != "LHC18r") {
-            std::cerr << "!! Error !! runAnalysis.C !! Make sure to put a valid ProductionName for data !!" << std::endl;
-            return;
-        }
-    }
-
-    std::cout << "!! runAnalysis.C !! Passed initial input checks !!" << std::endl;
+    std::cout << "!! INFO  !! runAnalysis.C !! Passed initial input checks" << '\n';
 
     /* Determine Further Options */
 
+    Bool_t IsMC = ProductionName.Contains("LHC2");
     Bool_t IsSignalMC = ProductionName.Contains("23l1");
+
+    Int_t SplitMaxNFiles = 60;      // default for data
+    if (IsMC) SplitMaxNFiles = 10;  // default for MC
+    if (Grid_CustomSplitMaxNFiles > 0) SplitMaxNFiles = Grid_CustomSplitMaxNFiles;
 
     Int_t PassNumber = 3;  // default for 18qr and anchored sims
     if (ProductionName == "LHC15o" || ProductionName == "LHC20j6a" || ProductionName == "LHC23l1b3") PassNumber = 2;
 
-    TString ProductionYear = "20" + ProductionName(3, 2);
-
-    TString DataPath = Form("%s/%s", InputPath.Data(), ProductionName.Data());
-    if (IsSignalMC) DataPath += Form("/%s", SimulationSet.Data());
-
-    TString GridDataDir = Form("/alice/data/%s/%s", ProductionYear.Data(), ProductionName.Data());
-    if (IsMC) GridDataDir = Form("/alice/sim/%s/%s", ProductionYear.Data(), ProductionName.Data());
-    if (IsSignalMC) GridDataDir += Form("/%s", SimulationSet.Data());
-
-    TString GridDataPattern = Form("/pass%i/*/AliESDs.root", PassNumber);
-    if (IsMC) GridDataPattern = "/*/AliESDs.root";
-
-    TString GridWorkingDir = Form("work/Sexaquark_Data_%s", ProductionName.Data());
-    if (IsMC) GridWorkingDir = Form("work/Sexaquark_MC_%s", ProductionName.Data());
-    if (IsSignalMC) GridWorkingDir += Form("_%s", SimulationSet.Data());
-
-    TString GridOutputDir = "output";
-
-    std::vector<Int_t> RunNumbersFromList;
-    std::ifstream RunNumbersFile(RunNumbersList);
-    if (!RunNumbersFile.is_open()) {
-        std::cerr << "!! Error !! runAnalysis.C !! Unable to open file " << RunNumbersList << " !!" << std::endl;
-        return;
-    }
-    Int_t SingleRN;
-    while (RunNumbersFile >> SingleRN) RunNumbersFromList.push_back(SingleRN);
-    RunNumbersFile.close();
-
-    std::cout << "!! runAnalysis.C !! Passed further options !!" << std::endl;
+    TString GridDataPattern = TString::Format("/pass%i/*/AliESDs.root", PassNumber);  // default for data
+    if (IsMC) GridDataPattern = "/*/AliESDs.root";                                    // default for MC
+    if (Grid_CustomDataPattern.Length() > 0) GridDataPattern = Grid_CustomDataPattern;
 
     /* Start */
 
-    gInterpreter->ProcessLine(".include .");
     gInterpreter->ProcessLine(".include $ROOTSYS/include");
     gInterpreter->ProcessLine(".include $ALICE_ROOT/include");
     gInterpreter->ProcessLine(".include $ALICE_PHYSICS/include");
     gInterpreter->ProcessLine(".include $KFPARTICLE_ROOT/include");
 
-    AliAnalysisManager *mgr = new AliAnalysisManager("AnalysisManager_Sexaquark");
+    AliAnalysisManager *mgr = new AliAnalysisManager("Sexaquark");
 
-    std::cout << "!! runAnalysis.C !! Created AliAnalysisManager !!" << std::endl;
+    std::cout << "!! INFO  !! runAnalysis.C !! Created AliAnalysisManager" << '\n';
 
     /* Grid Connection */
 
     AliAnalysisAlien *alienHandler = nullptr;
-
     if (Mode == "grid") {
         alienHandler = new AliAnalysisAlien();
         alienHandler->SetCheckCopy(kFALSE);
         alienHandler->AddIncludePath(
             "-I. -I$ROOTSYS/include -I$ALICE_ROOT -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include -I$KFPARTICLE_ROOT/include");
-        alienHandler->SetAdditionalLibs("AliAnalysisTaskSexaquark.cxx AliAnalysisTaskSexaquark.h");
+        alienHandler->SetAdditionalLibs("AliAnalysisTaskSexaquark.cxx AliAnalysisTaskSexaquark.h AliAnalysisTaskSexaquark_Constants.h");
         alienHandler->SetAnalysisSource("AliAnalysisTaskSexaquark.cxx");
         alienHandler->SetAliPhysicsVersion("vAN-20241126_O2-1");
         alienHandler->SetExecutableCommand("aliroot -l -q -b");
-        alienHandler->SetGridDataDir(GridDataDir);
+        alienHandler->SetGridDataDir(InputPath);
         if (!IsMC) alienHandler->SetRunPrefix("000");
-        for (Int_t &RN : RunNumbersFromList) alienHandler->AddRunNumber(RN);
+        alienHandler->AddRunNumber(RunNumber);
         alienHandler->SetDataPattern(GridDataPattern);
         alienHandler->SetTTL(3600);
-        alienHandler->SetOutputToRunNo(kTRUE);
+        alienHandler->SetOutputToRunNo(static_cast<Int_t>(kTRUE));
         alienHandler->SetDefaultOutputs(kFALSE);
         alienHandler->SetOutputFiles("AnalysisResults.root");
+        alienHandler->SetOutputArchive("");
         alienHandler->SetKeepLogs(kTRUE);
         alienHandler->SetMergeViaJDL(kFALSE);
-        // alienHandler->SetMaxMergeStages(1);
-        alienHandler->SetGridWorkingDir(GridWorkingDir);
-        alienHandler->SetGridOutputDir(GridOutputDir);
+        alienHandler->SetGridWorkingDir(Grid_WorkingDir);
         alienHandler->SetJDLName("TaskSexaquark.jdl");
         alienHandler->SetExecutable("TaskSexaquark.sh");
 
         mgr->SetGridHandler(alienHandler);
 
-        std::cout << "!! runAnalysis.C !! Passed grid connection !!" << std::endl;
-    }
-
-    TGrid *grid_connection = nullptr;
-
-    if (Mode == "hybrid") {
-        if (!gGrid) {
-            grid_connection = TGrid::Connect("alien://");
-            if (!grid_connection) return;
-        }
+        std::cout << "!! INFO  !! runAnalysis.C !! Passed grid connection" << '\n';
     }
 
     /* Input Handlers */
@@ -180,7 +113,7 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
         mgr->SetMCtruthEventHandler(mcH);
     }
 
-    std::cout << "!! runAnalysis.C !! Passed creation of input handlers !!" << std::endl;
+    std::cout << "!! INFO  !! runAnalysis.C !! Passed creation of input handlers" << '\n';
 
     /* Add Helper Tasks */
 
@@ -188,80 +121,78 @@ void runAnalysis(TString Mode,            // "local", "grid", "hybrid"
     TString TaskPhysicsSelection_Options = Form("(%i, %i)", (Int_t)IsMC, (Int_t)applyPileupCuts);
     AliPhysicsSelectionTask *TaskPhysicsSelection = reinterpret_cast<AliPhysicsSelectionTask *>(
         gInterpreter->ExecuteMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C" + TaskPhysicsSelection_Options));
-    if (!TaskPhysicsSelection) return;
+    if (TaskPhysicsSelection == nullptr) return;
 
     TString TaskCentrality_Options = "";  // nothing
     AliMultSelectionTask *TaskCentrality = reinterpret_cast<AliMultSelectionTask *>(
         gInterpreter->ExecuteMacro("$ALICE_PHYSICS/OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C" + TaskCentrality_Options));
-    if (!TaskCentrality) return;
+    if (TaskCentrality == nullptr) return;
 
     TString TaskPIDResponse_Options = Form("(%i, 1, 1, \"%i\")", (Int_t)IsMC, PassNumber);
     AliAnalysisTaskPIDResponse *TaskPIDResponse = reinterpret_cast<AliAnalysisTaskPIDResponse *>(
         gInterpreter->ExecuteMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C" + TaskPIDResponse_Options));
-    if (!TaskPIDResponse) return;
+    if (TaskPIDResponse == nullptr) return;
 
-    std::cout << "!! runAnalysis.C !! Passed addition of helper tasks !!" << std::endl;
+    std::cout << "!! INFO  !! runAnalysis.C !! Passed addition of helper tasks" << '\n';
 
-    /* Add Sexaquark Task */
+    /* Add Main Task */
 
     gInterpreter->LoadMacro("AliAnalysisTaskSexaquark.cxx++g");
 
-    TString TaskSexaquark_Options = Form("(%i, %i, \"%s\", %i)",  //
-                                         (Int_t)IsMC, (Int_t)IsSignalMC, SourceOfV0s.Data(), (Int_t)DoQA);
+    TString TaskSexaquark_Options = Form("(%i, %i)", (Int_t)IsMC, (Int_t)IsSignalMC);
     AliAnalysisTaskSexaquark *TaskSexaquark =
-        reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro("AddSexaquark.C" + TaskSexaquark_Options));
-    if (!TaskSexaquark) return;
+        reinterpret_cast<AliAnalysisTaskSexaquark *>(gInterpreter->ExecuteMacro("AddTaskSexaquark.C" + TaskSexaquark_Options));
+    if (TaskSexaquark == nullptr) return;
 
-    std::cout << "!! runAnalysis.C !! Passed addition of main task !!" << std::endl;
+    std::cout << "!! INFO  !! runAnalysis.C !! Passed addition of main task" << '\n';
 
     /* Init Analysis Manager */
 
     mgr->SetDebugLevel(3);
     if (!mgr->InitAnalysis()) return;
 
-    std::cout << "!! runAnalysis.C !! Passed InitAnalysis !!" << std::endl;
+    std::cout << "!! INFO  !! runAnalysis.C !! Passed InitAnalysis" << '\n';
 
     /* Start Analysis */
 
     TChain *chain = nullptr;
-    TString Prefix = "";
-    if (Mode == "hybrid") Prefix = "alien://";
     TString FilePath = "";
-    TString DirString = "";
 
     if (Mode == "grid") {
-        if (GridTestMode) {
+        if (Grid_TestMode) {
             alienHandler->SetNtestFiles(5);  // hardcoded
             alienHandler->SetRunMode("test");
         } else {
-            alienHandler->SetSplitMaxInputFileNumber(35);  // hardcoded
+            alienHandler->SetSplitMaxInputFileNumber(SplitMaxNFiles);
             alienHandler->SetRunMode("full");
         }
         mgr->StartAnalysis("grid");
-    } else {  // "local" or "hybrid" mode
+    } else {  // local mode
         chain = new TChain("esdTree");
-        for (Int_t &RN : RunNumbersFromList) {
-            if (IsMC) {
-                for (Int_t DN = 1; DN <= LocalNDirs; DN++) {
-                    FilePath = Form("%s%s/%i/%03i/AliESDs.root", Prefix.Data(), DataPath.Data(), RN, DN);
-                    chain->AddFile(FilePath);
-                }
-            } else {  // !IsMC (data)
-                for (Int_t DN = 1; DN <= 99; DN++) {
-                    for (Int_t sDN = 100; sDN <= 5000; sDN++) {
-                        DirString = Form("%s000%i%03i.%i", TString(ProductionName(3, 2)).Data(), RN, DN, sDN);
-                        FilePath = Form("%s%s/000%i/pass%i/%s/AliESDs.root", Prefix.Data(), DataPath.Data(), RN, PassNumber, DirString.Data());
-                        if (gSystem->AccessPathName(FilePath)) continue;
-                        chain->AddFile(FilePath);
-                    }
-                }
+        if (IsMC) {
+            for (Int_t DN = 1; DN <= Local_NDirs; DN++) {
+                FilePath = Form("%s/%i/%03i/AliESDs.root", InputPath.Data(), RunNumber, DN);
+                std::cout << "!! INFO  !! runAnalysis.C !! Adding file " << FilePath << '\n';
+                chain->AddFile(FilePath);
+            }
+        } else {  // data
+            TString top_path = Form("%s/000%i/pass%i", InputPath.Data(), RunNumber, PassNumber);
+            TSystemDirectory top_dir(top_path, top_path);
+            for (auto *file : *top_dir.GetListOfFiles()) {
+                auto *one_dir = dynamic_cast<TSystemDirectory *>(file);
+                if (strcmp(one_dir->GetName(), ".") == 0 || strcmp(one_dir->GetName(), "..") == 0) continue;
+                if (!one_dir->IsDirectory()) continue;
+                FilePath = Form("%s/%s/AliESDs.root", top_path.Data(), one_dir->GetName());
+                if (gSystem->AccessPathName(FilePath)) continue;
+                std::cout << "!! INFO  !! runAnalysis.C !! Adding file " << FilePath << '\n';
+                chain->AddFile(FilePath);
             }
         }
-        if (!ChooseNEvents)
+        if (Local_LimitToNEvents == 0)
             mgr->StartAnalysis("local", chain);  // read all events
         else
-            mgr->StartAnalysis("local", chain, ChooseNEvents);  // read first NEvents
+            mgr->StartAnalysis("local", chain, (Long64_t)Local_LimitToNEvents);  // read first NEvents
     }
 
-    std::cout << "!! runAnalysis.C !! Passed StartAnalysis !!" << std::endl;
+    std::cout << "!! INFO  !! runAnalysis.C !! Passed StartAnalysis" << std::endl;
 }
