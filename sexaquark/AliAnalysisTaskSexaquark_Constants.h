@@ -5,23 +5,27 @@
 
 #include "RtypesCore.h"
 
+/** Constants **/
+
 namespace PdgCode {
-const Short_t Lambda = 3122;
 const Short_t AntiLambda = -3122;
+const Short_t Lambda = 3122;
 const Short_t KaonZeroShort = 310;
-const Short_t Neutron = 2112;
 const Short_t AntiNeutron = -2112;
-const Short_t Proton = 2212;
+const Short_t Neutron = 2112;
 const Short_t AntiProton = -2212;
-const Short_t PiPlus = 211;
-const Short_t PiMinus = -211;
-const Short_t PosKaon = 321;
+const Short_t Proton = 2212;
 const Short_t NegKaon = -321;
+const Short_t PosKaon = 321;
+const Short_t PiMinus = -211;
+const Short_t PiPlus = 211;
 }  // namespace PdgCode
 
 namespace SexaConst {
 const size_t PV_CovMatrix_Size = 6;
 }  // namespace SexaConst
+
+/** Cuts **/
 
 namespace SexaCuts {
 
@@ -42,7 +46,7 @@ const Double_t AbsMin_DCAxy_wrtPV = 2.;
 }  // namespace Track
 
 namespace Lambda {
-const Double_t Min_Pt = 1.0;
+const Double_t Min_Pt = 1.;
 const Double_t Min_Mass = 1.08;
 const Double_t Max_Mass = 1.16;
 const Double_t AbsMax_Eta = 0.9;
@@ -54,9 +58,9 @@ const Double_t AbsMax_ArmQtOverAlpha = 0.2;
 // const Double_t MinDistFromPV = 40.;
 const Double_t Min_Radius = 75.;
 const Double_t Max_Radius = 180.;
-const Double_t Max_DCAbtwDau = 10.;
 const Double_t Max_DCAnegV0 = 10.;
 const Double_t Max_DCAposV0 = 10.;
+const Double_t Max_DCAbtwDau = 10.;
 }  // namespace Lambda
 
 namespace KaonZeroShort {
@@ -72,9 +76,9 @@ const Double_t Max_DCAwrtPV = 165.;
 // const Double_t MaxDistFromPV = 175.;
 const Double_t Min_Radius = 50.;
 const Double_t Max_Radius = 180.;
-const Double_t Max_DCAbtwDau = 10.;
 const Double_t Max_DCAnegV0 = 10.;
 const Double_t Max_DCAposV0 = 10.;
+const Double_t Max_DCAbtwDau = 10.;
 }  // namespace KaonZeroShort
 
 namespace ChannelA {

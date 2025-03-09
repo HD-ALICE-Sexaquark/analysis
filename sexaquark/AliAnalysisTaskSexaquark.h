@@ -1,5 +1,5 @@
-#ifndef ALIANALYSISTASKSEXAQUARK_H
-#define ALIANALYSISTASKSEXAQUARK_H
+#ifndef TASKSEXAQUARK_H
+#define TASKSEXAQUARK_H
 
 #ifndef ALIANALYSISTASKSE_H
 #include "AliAnalysisTaskSE.h"
@@ -83,6 +83,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* Settings ~ stored in Analysis Manager */
     void Initialize(Bool_t is_mc, Bool_t is_signal_mc);
+    void PrintCuts();
     void DefineCuts_Tracks();
     void DefineCuts_V0s();
     void DefineCuts_TypeA();
@@ -122,8 +123,9 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     void KF_FindV0s(Short_t pdg_code_v0, Short_t pdg_code_neg, Short_t pdg_code_pos);
     Bool_t PassesV0CutsAs(Short_t pdg_code_v0, const KFParticle& kf_v0, const KFParticle& kf_neg, const KFParticle& kf_pos,
                           const PxPyPzMVector& lv_v0, const PxPyPzMVector& lv_neg, const PxPyPzMVector& lv_pos);
-    void StoreV0As(Short_t pdg_code_v0, Int_t esd_idx_neg, Int_t esd_idx_pos, const KFParticle& kf_v0, const KFParticle& kf_neg,
-                   const KFParticle& kf_pos, const PxPyPzMVector& lv_v0, const PxPyPzMVector& lv_neg, const PxPyPzMVector& lv_pos);
+    void StoreV0As(Short_t pdg_code_v0, Short_t pdg_code_neg, Short_t pdg_code_pos, Int_t esd_idx_neg, Int_t esd_idx_pos, const KFParticle& kf_v0,
+                   const KFParticle& kf_neg, const KFParticle& kf_pos, const PxPyPzMVector& lv_v0, const PxPyPzMVector& lv_neg,
+                   const PxPyPzMVector& lv_pos);
 
     /* Sexaquarks */
     /* -- Channel A : AntiSexaquark Neutron -> AntiLambda KaonZeroShort */
@@ -152,7 +154,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
         if (TMath::Abs(lQlPos + lQlNeg) < 1E-6) return 2.;  // protection
         return (lQlPos - lQlNeg) / (lQlPos + lQlNeg);
     }
-    inline Double_t ArmenterosQt(const XYZVector& mom_v0, const XYZVector& mom_neg) { return Perp(mom_v0, mom_neg); }
+    inline Double_t ArmenterosQt(const XYZVector& mom_v0, const XYZVector& mom_dau) { return Perp(mom_v0, mom_dau); }
     inline Double_t LinePointDCA(const XYZVector& mom, const XYZPoint& pos, const XYZPoint& ref) { return (ref - pos).Cross(mom).R() / mom.R(); }
     /* -- Kalman Filter */
     KFParticle CreateKFParticle(const AliExternalTrackParam* track_param, Double_t mass, Int_t charge);
@@ -177,6 +179,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* -- Event */
     AliESDEvent* fESD;                   //! reconstructed event
     const AliESDVertex* fPrimaryVertex;  //! primary vertex
+    KFVertex kf_pv;                      //! primary vertex (optimization: load once as KFVertex)
     XYZPoint v3_pv;                      //! primary vertex (optimization: load once as XYZPoint)
     AliEventCuts fEventCuts;             //! event cuts
 
@@ -211,10 +214,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::array<Float_t, SexaConst::PV_CovMatrix_Size> tEvent_PV_CovMatrix;  //!
     Int_t tEvents_NTracks;                                                  //!
     Int_t tEvents_NTPCClusters;                                             //!
-    /* -- KF */
-    KFVertex kf_pv;  //!
     /* -- Signal Reaction properties */
-    UShort_t tInjected_Nucleon_PdgCode;          //!
+    Short_t tInjected_Nucleon_PdgCode;           //!
     Double_t tInjected_Mass;                     //!
     std::vector<UShort_t> tInjected_ReactionID;  //!
     std::vector<Float_t> tInjected_Px;           //!
@@ -329,12 +330,12 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* -- key: `esdIdx` */
     std::unordered_map<Int_t, Int_t> fLinked_McIdx_;  //!
     /* -- looped over in `KalmanV0Finder()` and Sexaquark Finders */
-    std::vector<Int_t> fAntiProton_EsdIdx;  //!
-    std::vector<Int_t> fProton_EsdIdx;      //!
-    std::vector<Int_t> fNegKaon_EsdIdx;     //!
-    std::vector<Int_t> fPosKaon_EsdIdx;     //!
-    std::vector<Int_t> fPiMinus_EsdIdx;     //!
-    std::vector<Int_t> fPiPlus_EsdIdx;      //!
+    std::vector<Int_t> fAntiProton_Indices;  //!
+    std::vector<Int_t> fProton_Indices;      //!
+    std::vector<Int_t> fNegKaon_Indices;     //!
+    std::vector<Int_t> fPosKaon_Indices;     //!
+    std::vector<Int_t> fPiMinus_Indices;     //!
+    std::vector<Int_t> fPiPlus_Indices;      //!
     /*  */
     std::vector<KFParticle> kfAntiLambdas;     //!
     std::vector<KFParticle> kfKaonsZeroShort;  //!
@@ -347,4 +348,4 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /// \endcond
 };
 
-#endif
+#endif  // TASKSEXAQUARK_H
