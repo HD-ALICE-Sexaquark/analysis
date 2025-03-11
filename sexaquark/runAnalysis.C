@@ -46,7 +46,7 @@ void runAnalysis(const TString &Mode,            // "local", "grid"
     Bool_t IsMC = ProductionName.Contains("LHC2");
     Bool_t IsSignalMC = ProductionName.Contains("23l1");
 
-    Int_t SplitMaxNFiles = 60;      // default for data
+    Int_t SplitMaxNFiles = 10;      // default for data
     if (IsMC) SplitMaxNFiles = 10;  // default for MC
     if (Grid_CustomSplitMaxNFiles > 0) SplitMaxNFiles = Grid_CustomSplitMaxNFiles;
 
@@ -76,7 +76,9 @@ void runAnalysis(const TString &Mode,            // "local", "grid"
         alienHandler->SetCheckCopy(kFALSE);
         alienHandler->AddIncludePath(
             "-I. -I$ROOTSYS/include -I$ALICE_ROOT -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include -I$KFPARTICLE_ROOT/include");
-        alienHandler->SetAdditionalLibs("AliAnalysisTaskSexaquark.cxx AliAnalysisTaskSexaquark.h AliAnalysisTaskSexaquark_Constants.h");
+        alienHandler->SetAdditionalLibs(
+            "AliAnalysisTaskSexaquark.cxx AliAnalysisTaskSexaquark.h AliAnalysisTaskSexaquark_KalmanFilter.h AliAnalysisTaskSexaquark_Constants.h "
+            "AliAnalysisTaskSexaquark_Structs.h");
         alienHandler->SetAnalysisSource("AliAnalysisTaskSexaquark.cxx");
         alienHandler->SetAliPhysicsVersion("vAN-20241126_O2-1");
         alienHandler->SetExecutableCommand("aliroot -l -q -b");
