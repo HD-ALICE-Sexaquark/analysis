@@ -10,8 +10,8 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <set>
-#include <tuple>
 #include <unordered_set>
 #include <vector>
 
@@ -64,6 +64,8 @@
 #include "KFVertex.h"
 
 #include "AliAnalysisTaskSexaquark_Constants.h"
+#include "AliAnalysisTaskSexaquark_KalmanFilter.h"
+#include "AliAnalysisTaskSexaquark_Structs.h"
 
 using namespace ROOT::Math::VectorUtil;
 using XYZPoint = ROOT::Math::XYZPoint;
@@ -121,11 +123,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
 
     /* V0s */
     void KF_FindV0s(Short_t pdg_code_v0, Short_t pdg_code_neg, Short_t pdg_code_pos);
-    Bool_t PassesV0CutsAs(Short_t pdg_code_v0, const KFParticle& kf_v0, const KFParticle& kf_neg, const KFParticle& kf_pos,
-                          const PxPyPzMVector& lv_v0, const PxPyPzMVector& lv_neg, const PxPyPzMVector& lv_pos);
-    void StoreV0As(Short_t pdg_code_v0, Short_t pdg_code_neg, Short_t pdg_code_pos, Int_t esd_idx_neg, Int_t esd_idx_pos, const KFParticle& kf_v0,
-                   const KFParticle& kf_neg, const KFParticle& kf_pos, const PxPyPzMVector& lv_v0, const PxPyPzMVector& lv_neg,
-                   const PxPyPzMVector& lv_pos);
+    Bool_t PassesV0CutsAs(const KF_V0& this_v0, Short_t pdg_code_v0);
+    void StoreV0As(const KF_V0& this_v0, Short_t pdg_code_v0, Short_t pdg_code_neg, Short_t pdg_code_pos);
 
     /* Sexaquarks */
     /* -- Channel A : AntiSexaquark Neutron -> AntiLambda KaonZeroShort */
@@ -134,9 +133,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
                                      const PxPyPzEVector& lv_sexa_asdecay,                                                  //
                                      const KFParticle& kf_v0a, const KFParticle& kf_v0a_neg, const KFParticle& kf_v0a_pos,  //
                                      const KFParticle& kf_v0b, const KFParticle& kf_v0b_neg, const KFParticle& kf_v0b_pos);
-    void StoreSexaquark_TypeA(Int_t idx_v0a, Int_t idx_v0b, const KFParticle& kf_sexa, const PxPyPzEVector& lv_sexa, const KFParticle& kf_v0a,
-                              const PxPyPzEVector& lv_v0a, const KFParticle& kf_v0a_neg, const KFParticle& kf_v0a_pos, const KFParticle& kf_v0b,
-                              const PxPyPzEVector& lv_v0b, const KFParticle& kf_v0b_neg, const KFParticle& kf_v0b_pos);
+    void StoreSexaquark_TypeA(Int_t idx_v0a, Int_t idx_v0b, const KFParticle& kf_sexa, const PxPyPzEVector& lv_sexa,
+                              const PxPyPzEVector& lv_sexa_asdecay, const KFParticle& kf_v0a, const PxPyPzEVector& lv_v0a,
+                              const KFParticle& kf_v0a_neg, const KFParticle& kf_v0a_pos, const KFParticle& kf_v0b, const PxPyPzEVector& lv_v0b,
+                              const KFParticle& kf_v0b_neg, const KFParticle& kf_v0b_pos);
     /* -- Channel D : AntiSexaquark Proton -> AntiLambda K+ */
     void KF_FindSexaquarks_TypeD(Short_t pdg_struck_nucleon, const std::vector<Short_t>& pdg_reaction_products);
     Bool_t PassesSexaquarkCuts_TypeD(const KFParticle& kf_sexa, const PxPyPzEVector& lv_sexa, const KFParticle& kf_v0, const KFParticle& kf_v0_neg,
@@ -156,9 +156,7 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     }
     inline Double_t ArmenterosQt(const XYZVector& mom_v0, const XYZVector& mom_dau) { return Perp(mom_v0, mom_dau); }
     inline Double_t LinePointDCA(const XYZVector& mom, const XYZPoint& pos, const XYZPoint& ref) { return (ref - pos).Cross(mom).R() / mom.R(); }
-    /* -- Kalman Filter */
-    KFParticle CreateKFParticle(const AliExternalTrackParam* track_param, Double_t mass, Int_t charge);
-    KFVertex CreateKFVertex(const AliVVertex* vertex);
+
     /* -- Containers */
     void ClearBranches_Injected();
     void ClearBranches_V0s();
@@ -231,25 +229,37 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::vector<Float_t> tInjected_Post_Py;      //!
     std::vector<Float_t> tInjected_Post_Pz;      //!
     /* -- V0s properties */
-    std::map<Short_t, std::vector<Int_t>> tV0_Idx;          //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Px;         //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Py;         //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Pz;         //!
-    std::map<Short_t, std::vector<Float_t>> tV0_E;          //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Xv;         //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Yv;         //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Zv;         //!
-    std::map<Short_t, std::vector<Int_t>> tV0_Neg_EsdIdx;   //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Neg_Px;     //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Neg_Py;     //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Neg_Pz;     //!
-    std::map<Short_t, std::vector<Int_t>> tV0_Pos_EsdIdx;   //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Pos_Px;     //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Pos_Py;     //!
-    std::map<Short_t, std::vector<Float_t>> tV0_Pos_Pz;     //!
-    std::map<Short_t, std::vector<Float_t>> tV0_DCAnegV0;   //!
-    std::map<Short_t, std::vector<Float_t>> tV0_DCAposV0;   //!
-    std::map<Short_t, std::vector<Float_t>> tV0_DCAbtwDau;  //!
+    std::map<Short_t, std::vector<Int_t>> tV0_Idx;                   //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Px;                  //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Py;                  //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Pz;                  //!
+    std::map<Short_t, std::vector<Float_t>> tV0_E;                   //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Xv;                  //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Yv;                  //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Zv;                  //!
+    std::map<Short_t, std::vector<Float_t>> tV0_CPAwrtPV;            //!
+    std::map<Short_t, std::vector<Float_t>> tV0_DCAwrtPV;            //!
+    std::map<Short_t, std::vector<Float_t>> tV0_ArmQt;               //!
+    std::map<Short_t, std::vector<Float_t>> tV0_ArmAlpha;            //!
+    std::map<Short_t, std::vector<Float_t>> tV0_DCA_Daughters;       //!
+    std::map<Short_t, std::vector<Int_t>> tV0_Neg_EsdIdx;            //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Neg_Px;              //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Neg_Py;              //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Neg_Pz;              //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Neg_IPxy_V0;         //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Neg_IPz_V0;          //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Neg_TrackParamD_V0;  //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Neg_DCA_V0;          //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Neg_DCAxy_V0;        //!
+    std::map<Short_t, std::vector<Int_t>> tV0_Pos_EsdIdx;            //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Pos_Px;              //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Pos_Py;              //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Pos_Pz;              //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Pos_IPxy_V0;         //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Pos_IPz_V0;          //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Pos_TrackParamD_V0;  //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Pos_DCA_V0;          //!
+    std::map<Short_t, std::vector<Float_t>> tV0_Pos_DCAxy_V0;        //!
     /* -- V0s true information */
     std::map<Short_t, std::vector<Int_t>> tV0_McIdx;        //!
     std::map<Short_t, std::vector<Int_t>> tV0_PdgCode;      //!
@@ -337,8 +347,10 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::vector<Int_t> fPiMinus_Indices;     //!
     std::vector<Int_t> fPiPlus_Indices;      //!
     /*  */
-    std::vector<KFParticle> kfAntiLambdas;     //!
-    std::vector<KFParticle> kfKaonsZeroShort;  //!
+    std::vector<KF_V0> kfAntiLambdas;     //!
+    std::vector<KF_V0> kfKaonsZeroShort;  //!
+    std::vector<MC_V0> mcAntiLambdas;     //!
+    std::vector<MC_V0> mcKaonsZeroShort;  //!
 
     AliAnalysisTaskSexaquark(const AliAnalysisTaskSexaquark&);             // not implemented
     AliAnalysisTaskSexaquark& operator=(const AliAnalysisTaskSexaquark&);  // not implemented

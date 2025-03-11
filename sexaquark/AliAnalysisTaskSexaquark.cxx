@@ -76,17 +76,29 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tV0_Xv(),
       tV0_Yv(),
       tV0_Zv(),
+      tV0_CPAwrtPV(),
+      tV0_DCAwrtPV(),
+      tV0_ArmQt(),
+      tV0_ArmAlpha(),
+      tV0_DCA_Daughters(),
       tV0_Neg_EsdIdx(),
       tV0_Neg_Px(),
       tV0_Neg_Py(),
       tV0_Neg_Pz(),
+      tV0_Neg_IPxy_V0(),
+      tV0_Neg_IPz_V0(),
+      tV0_Neg_TrackParamD_V0(),
+      tV0_Neg_DCA_V0(),
+      tV0_Neg_DCAxy_V0(),
       tV0_Pos_EsdIdx(),
       tV0_Pos_Px(),
       tV0_Pos_Py(),
       tV0_Pos_Pz(),
-      tV0_DCAnegV0(),
-      tV0_DCAposV0(),
-      tV0_DCAbtwDau(),
+      tV0_Pos_IPxy_V0(),
+      tV0_Pos_IPz_V0(),
+      tV0_Pos_TrackParamD_V0(),
+      tV0_Pos_DCA_V0(),
+      tV0_Pos_DCAxy_V0(),
       /*  */
       tV0_McIdx(),
       tV0_PdgCode(),
@@ -171,7 +183,9 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       fPiPlus_Indices(),
       /*  */
       kfAntiLambdas(),
-      kfKaonsZeroShort() {}
+      kfKaonsZeroShort(),
+      mcAntiLambdas(),
+      mcKaonsZeroShort() {}
 
 /*
  * Constructor, called locally.
@@ -247,17 +261,29 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tV0_Xv(),
       tV0_Yv(),
       tV0_Zv(),
+      tV0_CPAwrtPV(),
+      tV0_DCAwrtPV(),
+      tV0_ArmQt(),
+      tV0_ArmAlpha(),
+      tV0_DCA_Daughters(),
       tV0_Neg_EsdIdx(),
       tV0_Neg_Px(),
       tV0_Neg_Py(),
       tV0_Neg_Pz(),
+      tV0_Neg_IPxy_V0(),
+      tV0_Neg_IPz_V0(),
+      tV0_Neg_TrackParamD_V0(),
+      tV0_Neg_DCA_V0(),
+      tV0_Neg_DCAxy_V0(),
       tV0_Pos_EsdIdx(),
       tV0_Pos_Px(),
       tV0_Pos_Py(),
       tV0_Pos_Pz(),
-      tV0_DCAnegV0(),
-      tV0_DCAposV0(),
-      tV0_DCAbtwDau(),
+      tV0_Pos_IPxy_V0(),
+      tV0_Pos_IPz_V0(),
+      tV0_Pos_TrackParamD_V0(),
+      tV0_Pos_DCA_V0(),
+      tV0_Pos_DCAxy_V0(),
       /*  */
       tV0_McIdx(),
       tV0_PdgCode(),
@@ -342,7 +368,9 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       fPiPlus_Indices(),
       /*  */
       kfAntiLambdas(),
-      kfKaonsZeroShort() {
+      kfKaonsZeroShort(),
+      mcAntiLambdas(),
+      mcKaonsZeroShort() {
     DefineInput(0, TChain::Class());
     DefineOutput(1, TTree::Class());  // fOutputTree
 }
@@ -381,8 +409,8 @@ void AliAnalysisTaskSexaquark::PrintCuts() {
     AliInfoF("Lambda::Min_CPAwrtPV          = %f", SexaCuts::Lambda::Min_CPAwrtPV);
     AliInfoF("Lambda::Max_CPAwrtPV          = %f", SexaCuts::Lambda::Max_CPAwrtPV);
     AliInfoF("Lambda::Min_DCAwrtPV          = %f", SexaCuts::Lambda::Min_DCAwrtPV);
-    AliInfoF("Lambda::Max_DCAwrtPV          = %f", SexaCuts::Lambda::Max_DCAwrtPV);
     AliInfoF("Lambda::AbsMax_ArmQtOverAlpha = %f", SexaCuts::Lambda::AbsMax_ArmQtOverAlpha);
+    AliInfoF("Lambda::AbsMax_Zv             = %f", SexaCuts::Lambda::AbsMax_Zv);
     AliInfoF("Lambda::Min_Radius            = %f", SexaCuts::Lambda::Min_Radius);
     AliInfoF("Lambda::Max_Radius            = %f", SexaCuts::Lambda::Max_Radius);
     AliInfoF("Lambda::Max_DCAbtwDau         = %f", SexaCuts::Lambda::Max_DCAbtwDau);
@@ -396,7 +424,7 @@ void AliAnalysisTaskSexaquark::PrintCuts() {
     AliInfoF("KaonZeroShort::Min_CPAwrtPV  = %f", SexaCuts::KaonZeroShort::Min_CPAwrtPV);
     AliInfoF("KaonZeroShort::Max_CPAwrtPV  = %f", SexaCuts::KaonZeroShort::Max_CPAwrtPV);
     AliInfoF("KaonZeroShort::Min_DCAwrtPV  = %f", SexaCuts::KaonZeroShort::Min_DCAwrtPV);
-    AliInfoF("KaonZeroShort::Max_DCAwrtPV  = %f", SexaCuts::KaonZeroShort::Max_DCAwrtPV);
+    AliInfoF("KaonZeroShort::AbsMax_Zv     = %f", SexaCuts::KaonZeroShort::AbsMax_Zv);
     AliInfoF("KaonZeroShort::Min_Radius    = %f", SexaCuts::KaonZeroShort::Min_Radius);
     AliInfoF("KaonZeroShort::Max_Radius    = %f", SexaCuts::KaonZeroShort::Max_Radius);
     AliInfoF("KaonZeroShort::Max_DCAbtwDau = %f", SexaCuts::KaonZeroShort::Max_DCAbtwDau);
@@ -570,17 +598,29 @@ void AliAnalysisTaskSexaquark::AssociateBranches_V0s() {
         fOutputTree->Branch(v0_names[i] + "_Xv", &tV0_Xv[v0_pdg_codes[i]]);
         fOutputTree->Branch(v0_names[i] + "_Yv", &tV0_Yv[v0_pdg_codes[i]]);
         fOutputTree->Branch(v0_names[i] + "_Zv", &tV0_Zv[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_CPAwrtPV", &tV0_CPAwrtPV[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_DCAwrtPV", &tV0_DCAwrtPV[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_ArmQt", &tV0_ArmQt[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_ArmAlpha", &tV0_ArmAlpha[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_DCA_Daughters", &tV0_DCA_Daughters[v0_pdg_codes[i]]);
         fOutputTree->Branch(v0_names[i] + "_Neg_EsdIdx", &tV0_Neg_EsdIdx[v0_pdg_codes[i]]);
         fOutputTree->Branch(v0_names[i] + "_Neg_Px", &tV0_Neg_Px[v0_pdg_codes[i]]);
         fOutputTree->Branch(v0_names[i] + "_Neg_Py", &tV0_Neg_Py[v0_pdg_codes[i]]);
         fOutputTree->Branch(v0_names[i] + "_Neg_Pz", &tV0_Neg_Pz[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_Neg_IPxy_V0", &tV0_Neg_IPxy_V0[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_Neg_IPz_V0", &tV0_Neg_IPz_V0[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_Neg_TrackParamD_V0", &tV0_Neg_TrackParamD_V0[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_Neg_DCA_V0", &tV0_Neg_DCA_V0[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_Neg_DCAxy_V0", &tV0_Neg_DCAxy_V0[v0_pdg_codes[i]]);
         fOutputTree->Branch(v0_names[i] + "_Pos_EsdIdx", &tV0_Pos_EsdIdx[v0_pdg_codes[i]]);
         fOutputTree->Branch(v0_names[i] + "_Pos_Px", &tV0_Pos_Px[v0_pdg_codes[i]]);
         fOutputTree->Branch(v0_names[i] + "_Pos_Py", &tV0_Pos_Py[v0_pdg_codes[i]]);
         fOutputTree->Branch(v0_names[i] + "_Pos_Pz", &tV0_Pos_Pz[v0_pdg_codes[i]]);
-        fOutputTree->Branch(v0_names[i] + "_DCAnegV0", &tV0_DCAnegV0[v0_pdg_codes[i]]);
-        fOutputTree->Branch(v0_names[i] + "_DCAposV0", &tV0_DCAposV0[v0_pdg_codes[i]]);
-        fOutputTree->Branch(v0_names[i] + "_DCAbtwDau", &tV0_DCAbtwDau[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_Pos_IPxy_V0", &tV0_Pos_IPxy_V0[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_Pos_IPz_V0", &tV0_Pos_IPz_V0[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_Pos_TrackParamD_V0", &tV0_Pos_TrackParamD_V0[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_Pos_DCA_V0", &tV0_Pos_DCA_V0[v0_pdg_codes[i]]);
+        fOutputTree->Branch(v0_names[i] + "_Pos_DCAxy_V0", &tV0_Pos_DCAxy_V0[v0_pdg_codes[i]]);
         if (fIsMC) {
             fOutputTree->Branch(v0_names[i] + "_McIdx", &tV0_McIdx[v0_pdg_codes[i]]);
             fOutputTree->Branch(v0_names[i] + "_PdgCode", &tV0_PdgCode[v0_pdg_codes[i]]);
@@ -669,6 +709,7 @@ Bool_t AliAnalysisTaskSexaquark::ProcessEvent() {
     if (fIsMC) {
         fMC = MCEvent();
         if (fMC == nullptr) AliFatal("AliMCEvent couldn't be found.");
+        fPIDResponse->SetCurrentMCEvent(fMC);
     }
     /* Load reconstructed event */
     fESD = dynamic_cast<AliESDEvent*>(InputEvent());
@@ -973,91 +1014,100 @@ void AliAnalysisTaskSexaquark::KF_FindV0s(Short_t pdg_code_v0, Short_t pdg_code_
     const auto mass_neg = TDatabasePDG::Instance()->GetParticle(pdg_code_neg)->Mass();
     const auto mass_pos = TDatabasePDG::Instance()->GetParticle(pdg_code_pos)->Mass();
     //
-    AliESDtrack *neg_track, *pos_track;
-    const AliExternalTrackParam* neg_param;
-    const AliExternalTrackParam* pos_param;
-    /* Declare KFParticle objects */
-    KFParticle kf_neg, kf_pos;
-    /* Declare 4-momentum vectors */
-    PxPyPzMVector lv_v0, lv_neg, lv_pos;
+    std::unique_ptr<AliExternalTrackParam> neg_param = std::make_unique<AliExternalTrackParam>();
+    std::unique_ptr<AliExternalTrackParam> pos_param = std::make_unique<AliExternalTrackParam>();
+    std::unique_ptr<AliESDVertex> esd_v0;
+    Double_t arr_v0[3], arr_v0_err[3];
     /* Choose tracks species to loop over */
     const std::vector<Int_t>& neg_indices = (pdg_code_neg == PdgCode::AntiProton) ? fAntiProton_Indices : fPiMinus_Indices;
     const std::vector<Int_t>& pos_indices = (pdg_code_pos == PdgCode::Proton) ? fProton_Indices : fPiPlus_Indices;
     /* Loop over all possible pairs of tracks */
     for (auto esd_idx_neg : neg_indices) {
+        neg_param->Reset();
+        neg_param->CopyFromVTrack(fESD->GetTrack(esd_idx_neg)->GetInnerParam());
         for (auto esd_idx_pos : pos_indices) {
+            pos_param->Reset();
+            pos_param->CopyFromVTrack(fESD->GetTrack(esd_idx_pos)->GetInnerParam());
             /* sanity check */
             if (esd_idx_neg == esd_idx_pos) continue;
-            /* get tracks */
-            neg_track = fESD->GetTrack(esd_idx_neg);
-            pos_track = fESD->GetTrack(esd_idx_pos);
-            neg_param = neg_track->GetInnerParam();
-            pos_param = pos_track->GetInnerParam();
-            kf_neg = CreateKFParticle(neg_param, mass_neg, (Int_t)neg_param->Charge());
-            kf_pos = CreateKFParticle(pos_param, mass_pos, (Int_t)pos_param->Charge());
             /* fit */
-            KFParticle kf_v0(kf_neg, kf_pos);
-            kf_v0.TransportToDecayVertex();
-            /* transport daughters to V0 vertex */
-            kf_neg.SetProductionVertex(kf_v0);
-            kf_pos.SetProductionVertex(kf_v0);
-            kf_neg.TransportToProductionVertex();
-            kf_pos.TransportToProductionVertex();
+            KF_V0 this_v0;
+            this_v0.kf_neg = CreateKFParticle(neg_param.get(), mass_neg, (Int_t)neg_param->Charge());
+            this_v0.kf_pos = CreateKFParticle(pos_param.get(), mass_pos, (Int_t)pos_param->Charge());
+            /*  */
+            this_v0.kf.AddDaughter(this_v0.kf_neg);
+            this_v0.kf.AddDaughter(this_v0.kf_pos);
+            this_v0.kf.TransportToDecayVertex();
+            /*  */
+            this_v0.v3.SetCoordinates(this_v0.kf.GetX(), this_v0.kf.GetY(), this_v0.kf.GetZ());
+            arr_v0[0] = this_v0.kf.GetX();
+            arr_v0[1] = this_v0.kf.GetY();
+            arr_v0[2] = this_v0.kf.GetZ();
+            arr_v0_err[0] = this_v0.kf.GetErrX();
+            arr_v0_err[1] = this_v0.kf.GetErrY();
+            arr_v0_err[2] = this_v0.kf.GetErrZ();
+            /*  */
+            esd_v0 = std::make_unique<AliESDVertex>(arr_v0, arr_v0_err);
+            neg_param->PropagateToDCA(esd_v0.get(), fMagneticField, 10., this_v0.impar_neg);
+            this_v0.param_d_neg_v0 = TMath::Abs(neg_param->GetD(arr_v0[0], arr_v0[1], fMagneticField));
+            pos_param->PropagateToDCA(esd_v0.get(), fMagneticField, 10., this_v0.impar_pos);
+            this_v0.param_d_pos_v0 = TMath::Abs(pos_param->GetD(arr_v0[0], arr_v0[1], fMagneticField));
+            /*  */
+            this_v0.dca_neg_v0 = TMath::Abs(this_v0.kf_neg.GetDistanceFromVertex(this_v0.kf));
+            this_v0.dcaxy_neg_v0 = TMath::Abs(this_v0.kf_neg.GetDistanceFromVertexXY(this_v0.kf));
+            this_v0.dca_pos_v0 = TMath::Abs(this_v0.kf_pos.GetDistanceFromVertex(this_v0.kf));
+            this_v0.dcaxy_pos_v0 = TMath::Abs(this_v0.kf_pos.GetDistanceFromVertexXY(this_v0.kf));
             /* kinematics */
-            lv_neg.SetCoordinates(kf_neg.Px(), kf_neg.Py(), kf_neg.Pz(), mass_neg);
-            lv_pos.SetCoordinates(kf_pos.Px(), kf_pos.Py(), kf_pos.Pz(), mass_pos);
-            lv_v0 = lv_neg + lv_pos;
+            this_v0.lv_neg.SetCoordinates(neg_param->Px(), neg_param->Py(), neg_param->Pz(), mass_neg);
+            this_v0.lv_pos.SetCoordinates(pos_param->Px(), pos_param->Py(), pos_param->Pz(), mass_pos);
+            this_v0.lv = this_v0.lv_neg + this_v0.lv_pos;
+            /*  */
+            this_v0.cpa_wrt_pv = CosinePointingAngle(this_v0.lv.Vect(), this_v0.v3, v3_pv);
+            this_v0.dca_wrt_pv = LinePointDCA(this_v0.lv.Vect(), this_v0.v3, v3_pv);
+            this_v0.arm_qt = ArmenterosQt(this_v0.lv.Vect(), this_v0.lv_neg.Vect());
+            this_v0.arm_alpha = ArmenterosAlpha(this_v0.lv.Vect(), this_v0.lv_neg.Vect(), this_v0.lv_pos.Vect());
+            this_v0.dca_btw_dau = TMath::Abs(this_v0.kf_neg.GetDistanceFromParticle(this_v0.kf_pos));
             /* apply cuts and store V0 */
-            if (!PassesV0CutsAs(pdg_code_v0, kf_v0, kf_neg, kf_pos, lv_v0, lv_neg, lv_pos)) continue;
-            StoreV0As(pdg_code_v0, pdg_code_neg, pdg_code_pos, esd_idx_neg, esd_idx_pos, kf_v0, kf_neg, kf_pos, lv_v0, lv_neg, lv_pos);
+            if (!PassesV0CutsAs(this_v0, pdg_code_v0)) continue;
+            this_v0.idx = (pdg_code_v0 == PdgCode::AntiLambda) ? (Int_t)kfAntiLambdas.size() : (Int_t)kfKaonsZeroShort.size();
+            this_v0.idx_neg = esd_idx_neg;
+            this_v0.idx_pos = esd_idx_pos;
+            StoreV0As(this_v0, pdg_code_v0, pdg_code_neg, pdg_code_pos);
         }  // end of loop over pos
     }      // end of loop over neg
 }
 
-Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Short_t pdg_code_v0, const KFParticle& kf_v0, const KFParticle& kf_neg, const KFParticle& kf_pos,
-                                                const PxPyPzMVector& lv_v0, const PxPyPzMVector& lv_neg, const PxPyPzMVector& lv_pos) {
+Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(const KF_V0& this_v0, Short_t pdg_code_v0) {
     //
-    XYZPoint v3_v0(kf_v0.GetX(), kf_v0.GetY(), kf_v0.GetZ());
     if (pdg_code_v0 == PdgCode::AntiLambda) {
         /* anti-lambdas */
         /* -- kinematics cuts */
-        if (lv_v0.Pt() < SexaCuts::Lambda::Min_Pt) return kFALSE;
-        if (lv_v0.M() < SexaCuts::Lambda::Min_Mass || lv_v0.M() > SexaCuts::Lambda::Max_Mass) return kFALSE;
-        if (TMath::Abs(lv_v0.Eta()) > SexaCuts::Lambda::AbsMax_Eta) return kFALSE;
-        /*  */ Double_t cpa_wrt_pv = CosinePointingAngle(lv_v0.Vect(), v3_v0, v3_pv);
-        if (cpa_wrt_pv < SexaCuts::Lambda::Min_CPAwrtPV || cpa_wrt_pv > SexaCuts::Lambda::Max_CPAwrtPV) return kFALSE;
-        /*  */ Double_t dca_wrt_pv = LinePointDCA(lv_v0.Vect(), v3_v0, v3_pv);
-        if (dca_wrt_pv < SexaCuts::Lambda::Min_DCAwrtPV || dca_wrt_pv > SexaCuts::Lambda::Max_DCAwrtPV) return kFALSE;
-        /*  */ Double_t arm_qt = ArmenterosQt(lv_v0.Vect(), lv_neg.Vect());
-        /*  */ Double_t arm_alpha = ArmenterosAlpha(lv_v0.Vect(), lv_neg.Vect(), lv_pos.Vect());
-        /*  */ Double_t arm_qt_over_alpha = arm_qt / TMath::Abs(arm_alpha);
-        if (arm_qt_over_alpha > SexaCuts::Lambda::AbsMax_ArmQtOverAlpha) return kFALSE;
-        /* -- geometry cuts */
-        if (v3_v0.Rho() < SexaCuts::Lambda::Min_Radius || v3_v0.Rho() > SexaCuts::Lambda::Max_Radius) return kFALSE;
-        /*  */ Double_t dca_neg_v0 = TMath::Abs((Double_t)kf_neg.GetDistanceFromVertex(kf_v0));
-        if (dca_neg_v0 > SexaCuts::Lambda::Max_DCAnegV0) return kFALSE;
-        /*  */ Double_t dca_pos_v0 = TMath::Abs((Double_t)kf_pos.GetDistanceFromVertex(kf_v0));
-        if (dca_pos_v0 > SexaCuts::Lambda::Max_DCAposV0) return kFALSE;
-        /*  */ Double_t dca_btw_dau = TMath::Abs((Double_t)kf_neg.GetDistanceFromParticle(kf_pos));
-        if (dca_btw_dau > SexaCuts::Lambda::Max_DCAbtwDau) return kFALSE;
+        if (this_v0.lv.Pt() < SexaCuts::Lambda::Min_Pt) return kFALSE;
+        if (this_v0.lv.M() < SexaCuts::Lambda::Min_Mass || this_v0.lv.M() > SexaCuts::Lambda::Max_Mass) return kFALSE;
+        if (TMath::Abs(this_v0.lv.Eta()) > SexaCuts::Lambda::AbsMax_Eta) return kFALSE;
+        if (this_v0.cpa_wrt_pv < SexaCuts::Lambda::Min_CPAwrtPV || this_v0.cpa_wrt_pv > SexaCuts::Lambda::Max_CPAwrtPV) return kFALSE;
+        if (this_v0.dca_wrt_pv < SexaCuts::Lambda::Min_DCAwrtPV) return kFALSE;
+        if (this_v0.arm_qt / TMath::Abs(this_v0.arm_alpha) > SexaCuts::Lambda::AbsMax_ArmQtOverAlpha) return kFALSE;
+        /* -- geometric cuts */
+        if (TMath::Abs(this_v0.v3.Z()) > SexaCuts::Lambda::AbsMax_Zv) return kFALSE;
+        if (this_v0.v3.Rho() < SexaCuts::Lambda::Min_Radius || this_v0.v3.Rho() > SexaCuts::Lambda::Max_Radius) return kFALSE;
+        if (this_v0.dca_neg_v0 > SexaCuts::Lambda::Max_DCAnegV0) return kFALSE;
+        if (this_v0.dca_pos_v0 > SexaCuts::Lambda::Max_DCAposV0) return kFALSE;
+        if (this_v0.dca_btw_dau > SexaCuts::Lambda::Max_DCAbtwDau) return kFALSE;
     } else if (pdg_code_v0 == PdgCode::KaonZeroShort) {
         /* kaons zero short */
         /* -- kinematics cuts */
-        if (lv_v0.Pt() < SexaCuts::KaonZeroShort::Min_Pt) return kFALSE;
-        if (lv_v0.M() < SexaCuts::KaonZeroShort::Min_Mass || lv_v0.M() > SexaCuts::KaonZeroShort::Max_Mass) return kFALSE;
-        if (TMath::Abs(lv_v0.Eta()) > SexaCuts::KaonZeroShort::AbsMax_Eta) return kFALSE;
-        /*  */ Double_t cpa_wrt_pv = CosinePointingAngle(lv_v0.Vect(), v3_v0, v3_pv);
-        if (cpa_wrt_pv < SexaCuts::KaonZeroShort::Min_CPAwrtPV || cpa_wrt_pv > SexaCuts::KaonZeroShort::Max_CPAwrtPV) return kFALSE;
-        /*  */ Double_t dca_wrt_pv = LinePointDCA(lv_v0.Vect(), v3_v0, v3_pv);
-        if (dca_wrt_pv < SexaCuts::KaonZeroShort::Min_DCAwrtPV || dca_wrt_pv > SexaCuts::KaonZeroShort::Max_DCAwrtPV) return kFALSE;
-        /* -- geometry cuts */
-        if (v3_v0.Rho() < SexaCuts::KaonZeroShort::Min_Radius || v3_v0.Rho() > SexaCuts::KaonZeroShort::Max_Radius) return kFALSE;
-        /*  */ Double_t dca_neg_v0 = TMath::Abs((Double_t)kf_neg.GetDistanceFromVertex(kf_v0));
-        if (dca_neg_v0 > SexaCuts::KaonZeroShort::Max_DCAnegV0) return kFALSE;
-        /*  */ Double_t dca_pos_v0 = TMath::Abs((Double_t)kf_pos.GetDistanceFromVertex(kf_v0));
-        if (dca_pos_v0 > SexaCuts::KaonZeroShort::Max_DCAposV0) return kFALSE;
-        /*  */ Double_t dca_btw_dau = TMath::Abs((Double_t)kf_neg.GetDistanceFromParticle(kf_pos));
-        if (dca_btw_dau > SexaCuts::KaonZeroShort::Max_DCAbtwDau) return kFALSE;
+        if (this_v0.lv.Pt() < SexaCuts::KaonZeroShort::Min_Pt) return kFALSE;
+        if (this_v0.lv.M() < SexaCuts::KaonZeroShort::Min_Mass || this_v0.lv.M() > SexaCuts::KaonZeroShort::Max_Mass) return kFALSE;
+        if (TMath::Abs(this_v0.lv.Eta()) > SexaCuts::KaonZeroShort::AbsMax_Eta) return kFALSE;
+        if (this_v0.cpa_wrt_pv < SexaCuts::KaonZeroShort::Min_CPAwrtPV || this_v0.cpa_wrt_pv > SexaCuts::KaonZeroShort::Max_CPAwrtPV) return kFALSE;
+        if (this_v0.dca_wrt_pv < SexaCuts::KaonZeroShort::Min_DCAwrtPV) return kFALSE;
+        /* -- geometric cuts */
+        if (TMath::Abs(this_v0.v3.Z()) > SexaCuts::Lambda::AbsMax_Zv) return kFALSE;
+        if (this_v0.v3.Rho() < SexaCuts::KaonZeroShort::Min_Radius || this_v0.v3.Rho() > SexaCuts::KaonZeroShort::Max_Radius) return kFALSE;
+        if (this_v0.dca_neg_v0 > SexaCuts::KaonZeroShort::Max_DCAnegV0) return kFALSE;
+        if (this_v0.dca_pos_v0 > SexaCuts::KaonZeroShort::Max_DCAposV0) return kFALSE;
+        if (this_v0.dca_btw_dau > SexaCuts::KaonZeroShort::Max_DCAbtwDau) return kFALSE;
     } else {
         AliWarning("Unknown V0 type.");
         return kFALSE;
@@ -1066,45 +1116,56 @@ Bool_t AliAnalysisTaskSexaquark::PassesV0CutsAs(Short_t pdg_code_v0, const KFPar
     return kTRUE;
 }
 
-void AliAnalysisTaskSexaquark::StoreV0As(Short_t pdg_code_v0, Short_t pdg_code_neg, Short_t pdg_code_pos,  //
-                                         Int_t esd_idx_neg, Int_t esd_idx_pos, const KFParticle& kf_v0, const KFParticle& kf_neg,
-                                         const KFParticle& kf_pos, const PxPyPzMVector& lv_v0, const PxPyPzMVector& lv_neg,
-                                         const PxPyPzMVector& lv_pos) {
-    /* Determine container */
-    std::vector<KFParticle>* kfFoundV0s;
-    if (pdg_code_v0 == PdgCode::KaonZeroShort) {
-        kfFoundV0s = &kfKaonsZeroShort;
-    } else if (pdg_code_v0 == PdgCode::AntiLambda) {
-        kfFoundV0s = &kfAntiLambdas;
+void AliAnalysisTaskSexaquark::StoreV0As(const KF_V0& this_v0, Short_t pdg_code_v0, Short_t pdg_code_neg, Short_t pdg_code_pos) {
+    //
+    tV0_Idx[pdg_code_v0].push_back(this_v0.idx);
+    tV0_Px[pdg_code_v0].push_back((Float_t)this_v0.lv.Px());
+    tV0_Py[pdg_code_v0].push_back((Float_t)this_v0.lv.Py());
+    tV0_Pz[pdg_code_v0].push_back((Float_t)this_v0.lv.Pz());
+    tV0_E[pdg_code_v0].push_back((Float_t)this_v0.lv.E());
+    tV0_Xv[pdg_code_v0].push_back(this_v0.kf.GetX());
+    tV0_Yv[pdg_code_v0].push_back(this_v0.kf.GetY());
+    tV0_Zv[pdg_code_v0].push_back(this_v0.kf.GetZ());
+    tV0_CPAwrtPV[pdg_code_v0].push_back((Float_t)this_v0.cpa_wrt_pv);
+    tV0_DCAwrtPV[pdg_code_v0].push_back((Float_t)this_v0.dca_wrt_pv);
+    tV0_ArmQt[pdg_code_v0].push_back((Float_t)this_v0.arm_qt);
+    tV0_ArmAlpha[pdg_code_v0].push_back((Float_t)this_v0.arm_alpha);
+    tV0_DCA_Daughters[pdg_code_v0].push_back(this_v0.dca_btw_dau);
+    /*  */
+    tV0_Neg_EsdIdx[pdg_code_v0].push_back(this_v0.idx_neg);
+    tV0_Neg_Px[pdg_code_v0].push_back((Float_t)this_v0.lv_neg.Px());
+    tV0_Neg_Py[pdg_code_v0].push_back((Float_t)this_v0.lv_neg.Py());
+    tV0_Neg_Pz[pdg_code_v0].push_back((Float_t)this_v0.lv_neg.Pz());
+    tV0_Neg_IPxy_V0[pdg_code_v0].push_back((Float_t)this_v0.impar_neg[0]);
+    tV0_Neg_IPz_V0[pdg_code_v0].push_back((Float_t)this_v0.impar_neg[1]);
+    tV0_Neg_TrackParamD_V0[pdg_code_v0].push_back((Float_t)this_v0.param_d_neg_v0);
+    tV0_Neg_DCA_V0[pdg_code_v0].push_back(this_v0.dca_neg_v0);
+    tV0_Neg_DCAxy_V0[pdg_code_v0].push_back(this_v0.dcaxy_neg_v0);
+    /*  */
+    tV0_Pos_EsdIdx[pdg_code_v0].push_back(this_v0.idx_pos);
+    tV0_Pos_Px[pdg_code_v0].push_back((Float_t)this_v0.lv_pos.Px());
+    tV0_Pos_Py[pdg_code_v0].push_back((Float_t)this_v0.lv_pos.Py());
+    tV0_Pos_Pz[pdg_code_v0].push_back((Float_t)this_v0.lv_pos.Pz());
+    tV0_Pos_IPxy_V0[pdg_code_v0].push_back((Float_t)this_v0.impar_pos[0]);
+    tV0_Pos_IPz_V0[pdg_code_v0].push_back((Float_t)this_v0.impar_pos[1]);
+    tV0_Pos_TrackParamD_V0[pdg_code_v0].push_back((Float_t)this_v0.param_d_pos_v0);
+    tV0_Pos_DCA_V0[pdg_code_v0].push_back(this_v0.dca_pos_v0);
+    tV0_Pos_DCAxy_V0[pdg_code_v0].push_back(this_v0.dcaxy_pos_v0);
+    /* Fill container */
+    if (pdg_code_v0 == PdgCode::AntiLambda) {
+        kfAntiLambdas.push_back(this_v0);
+    } else if (pdg_code_v0 == PdgCode::KaonZeroShort) {
+        kfKaonsZeroShort.push_back(this_v0);
     }
-    /* Assign branches and fill tree */
-    tV0_Idx[pdg_code_v0].push_back((Int_t)kfFoundV0s->size());
-    tV0_Px[pdg_code_v0].push_back((Float_t)lv_v0.Px());
-    tV0_Py[pdg_code_v0].push_back((Float_t)lv_v0.Py());
-    tV0_Pz[pdg_code_v0].push_back((Float_t)lv_v0.Pz());
-    tV0_E[pdg_code_v0].push_back((Float_t)lv_v0.E());
-    tV0_Xv[pdg_code_v0].push_back(kf_v0.GetX());
-    tV0_Yv[pdg_code_v0].push_back(kf_v0.GetY());
-    tV0_Zv[pdg_code_v0].push_back(kf_v0.GetZ());
-    tV0_Neg_EsdIdx[pdg_code_v0].push_back(esd_idx_neg);
-    tV0_Neg_Px[pdg_code_v0].push_back((Float_t)lv_neg.Px());
-    tV0_Neg_Py[pdg_code_v0].push_back((Float_t)lv_neg.Py());
-    tV0_Neg_Pz[pdg_code_v0].push_back((Float_t)lv_neg.Pz());
-    tV0_Pos_EsdIdx[pdg_code_v0].push_back(esd_idx_pos);
-    tV0_Pos_Px[pdg_code_v0].push_back((Float_t)lv_pos.Px());
-    tV0_Pos_Py[pdg_code_v0].push_back((Float_t)lv_pos.Py());
-    tV0_Pos_Pz[pdg_code_v0].push_back((Float_t)lv_pos.Pz());
-    tV0_DCAnegV0[pdg_code_v0].push_back(TMath::Abs(kf_neg.GetDistanceFromVertex(kf_v0)));      // OPTIMIZE
-    tV0_DCAposV0[pdg_code_v0].push_back(TMath::Abs(kf_pos.GetDistanceFromVertex(kf_v0)));      // OPTIMIZE
-    tV0_DCAbtwDau[pdg_code_v0].push_back(TMath::Abs(kf_neg.GetDistanceFromParticle(kf_pos)));  // OPTIMIZE
+    /* True information */
     if (fIsMC) {
         Int_t mc_idx_v0 = -1;
         Int_t mc_pdg_code_v0 = 0;
         Bool_t is_signal = false;
         UInt_t reaction_id = 0;
         /*  */
-        Int_t mc_idx_neg = fLinked_McIdx_[esd_idx_neg];
-        Int_t mc_idx_pos = fLinked_McIdx_[esd_idx_pos];
+        Int_t mc_idx_neg = fLinked_McIdx_[this_v0.idx_neg];
+        Int_t mc_idx_pos = fLinked_McIdx_[this_v0.idx_pos];
         Bool_t has_mc = fMC_Mother_McIdx_[mc_idx_neg] != -1 && fMC_Mother_McIdx_[mc_idx_neg] == fMC_Mother_McIdx_[mc_idx_pos];
         if (has_mc) {
             mc_idx_v0 = fMC_Mother_McIdx_[mc_idx_neg];
@@ -1117,15 +1178,19 @@ void AliAnalysisTaskSexaquark::StoreV0As(Short_t pdg_code_v0, Short_t pdg_code_n
         }
         Bool_t is_hybrid = !is_signal &&  //
                            ((fMC_IsSignal_[mc_idx_neg] && !fMC_IsSignal_[mc_idx_pos]) || (!fMC_IsSignal_[mc_idx_neg] && fMC_IsSignal_[mc_idx_pos]));
-        /*  */
+        /* Update vectors */
         tV0_McIdx[pdg_code_v0].push_back(mc_idx_v0);
         tV0_PdgCode[pdg_code_v0].push_back(mc_pdg_code_v0);
         tV0_IsSignal[pdg_code_v0].push_back(is_signal);
         tV0_ReactionID[pdg_code_v0].push_back(reaction_id);
         tV0_IsHybrid[pdg_code_v0].push_back(is_hybrid);
+        /* -- Fill true container */
+        if (pdg_code_v0 == PdgCode::AntiLambda) {
+            mcAntiLambdas.push_back(MC_V0{is_signal, reaction_id, is_hybrid});
+        } else if (pdg_code_v0 == PdgCode::KaonZeroShort) {
+            mcKaonsZeroShort.push_back(MC_V0{is_signal, reaction_id, is_hybrid});
+        }
     }
-    /* Fill container */
-    kfFoundV0s->push_back(kf_v0);
 }
 
 /*                                */
@@ -1136,15 +1201,69 @@ void AliAnalysisTaskSexaquark::StoreV0As(Short_t pdg_code_v0, Short_t pdg_code_n
 
 void AliAnalysisTaskSexaquark::KF_FindSexaquarks_TypeA(Short_t pdg_struck_nucleon, const std::vector<Short_t>& pdg_reaction_products) {
     //
-    // PENDING
-    //
+    const Double_t neutron_mass = TDatabasePDG::Instance()->GetParticle(pdg_struck_nucleon)->Mass();
+    if (!kfAntiLambdas.size() || !kfKaonsZeroShort.size()) return;
+    /*  */
+    KF_V0 cp_v0a, cp_v0b;
+    PxPyPzEVector lv_v0a, lv_v0b;
+    PxPyPzEVector lv_sexa, lv_sexa_asdecay;
+    /* loop over all pairs */
+    for (const auto& v0a : kfAntiLambdas) {
+        for (const auto& v0b : kfKaonsZeroShort) {
+            /* sanity check */
+            std::set<Int_t> unique_track_entries = {v0a.idx_neg, v0a.idx_pos, v0b.idx_neg, v0b.idx_pos};
+            if (unique_track_entries.size() < 4) continue;
+            cp_v0a = v0a;
+            cp_v0b = v0b;
+            /* fit */
+            KFParticle kf_sexa(cp_v0a.kf, cp_v0b.kf);
+            kf_sexa.SetProductionVertex(kf_pv);
+            //
+            kf_sexa.TransportToDecayVertex();
+            cp_v0a.kf.SetProductionVertex(kf_sexa);
+            cp_v0b.kf.SetProductionVertex(kf_sexa);
+            //
+            cp_v0a.kf.TransportToDecayVertex();
+            cp_v0a.kf_neg.SetProductionVertex(cp_v0a.kf);
+            cp_v0a.kf_pos.SetProductionVertex(cp_v0a.kf);
+            //
+            cp_v0b.kf.TransportToDecayVertex();
+            cp_v0b.kf_neg.SetProductionVertex(cp_v0b.kf);
+            cp_v0b.kf_pos.SetProductionVertex(cp_v0b.kf);
+            /* transport tracks to V0s vertices */
+            cp_v0a.kf_neg.TransportToProductionVertex();
+            cp_v0a.kf_pos.TransportToProductionVertex();
+            cp_v0b.kf_neg.TransportToProductionVertex();
+            cp_v0b.kf_pos.TransportToProductionVertex();
+            /*
+            lv_v0a_neg.SetCoordinates(cp_v0a.kf_neg.Px(), cp_v0a.kf_neg.Py(), cp_v0a.kf_neg.Pz(), lv_v0a_neg.M());
+            lv_v0a_pos.SetCoordinates(cp_v0a.kf_pos.Px(), cp_v0a.kf_pos.Py(), cp_v0a.kf_pos.Pz(), lv_v0a_pos.M());
+            lv_v0b_neg.SetCoordinates(cp_v0b.kf_neg.Px(), cp_v0b.kf_neg.Py(), cp_v0b.kf_neg.Pz(), lv_v0b_neg.M());
+            lv_v0b_pos.SetCoordinates(cp_v0b.kf_pos.Px(), cp_v0b.kf_pos.Py(), cp_v0b.kf_pos.Pz(), lv_v0b_pos.M());
+            */
+            /* transport V0s to secondary vertex */
+            cp_v0a.kf.TransportToProductionVertex();
+            cp_v0b.kf.TransportToProductionVertex();
+            lv_v0a.SetCoordinates(cp_v0a.kf.Px(), cp_v0a.kf.Py(), cp_v0a.kf.Pz(), cp_v0a.kf.E());
+            lv_v0b.SetCoordinates(cp_v0b.kf.Px(), cp_v0b.kf.Py(), cp_v0b.kf.Pz(), cp_v0b.kf.E());
+            /* fill struct */
+            lv_sexa.SetCoordinates(lv_v0a.Px() + lv_v0b.Px(), lv_v0a.Py() + lv_v0b.Py(), lv_v0a.Pz() + lv_v0b.Pz(),
+                                   lv_v0a.E() + lv_v0b.E() - neutron_mass);
+            lv_sexa_asdecay = lv_v0a + lv_v0b;
+            /* apply cuts and store */
+            if (PassesSexaquarkCuts_TypeA(kf_sexa, lv_sexa, lv_sexa_asdecay, cp_v0a.kf, cp_v0a.kf_neg, cp_v0a.kf_pos, cp_v0b.kf, cp_v0b.kf_neg,
+                                          cp_v0b.kf_pos)) {
+                StoreSexaquark_TypeA(cp_v0a.idx, cp_v0b.idx, kf_sexa, lv_sexa, lv_sexa_asdecay, cp_v0a.kf, lv_v0a, cp_v0a.kf_neg, cp_v0a.kf_pos,
+                                     cp_v0b.kf, lv_v0b, cp_v0b.kf_neg, cp_v0b.kf_pos);
+            }
+        }  // end of loop over k0s
+    }      // end of loop over (anti)lambdas
 }
 
 Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_TypeA(const KFParticle& kf_sexa, const PxPyPzEVector& lv_sexa,
                                                            const PxPyPzEVector& lv_sexa_asdecay,                                                  //
                                                            const KFParticle& kf_v0a, const KFParticle& kf_v0a_neg, const KFParticle& kf_v0a_pos,  //
                                                            const KFParticle& kf_v0b, const KFParticle& kf_v0b_neg, const KFParticle& kf_v0b_pos) {
-    //
     XYZPoint v3_sexa(kf_sexa.GetX(), kf_sexa.GetY(), kf_sexa.GetZ());
     /* -- kinematics-dependent cuts */
     if (TMath::Abs(lv_sexa.Rapidity()) > SexaCuts::ChannelA::AbsMax_Rapidity) return kFALSE;
@@ -1171,18 +1290,13 @@ Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_TypeA(const KFParticle& kf_
     if (decay_length_la > SexaCuts::ChannelA::Max_DecayLengthLa) return kFALSE;
     /*  */ Double_t decay_length_k0s = TMath::Abs((Double_t)kf_v0b.GetDecayLength());
     if (decay_length_k0s > SexaCuts::ChannelA::Max_DecayLengthK0) return kFALSE;
-
     return kTRUE;
 }
 
 void AliAnalysisTaskSexaquark::StoreSexaquark_TypeA(Int_t idx_v0a, Int_t idx_v0b, const KFParticle& kf_sexa, const PxPyPzEVector& lv_sexa,
-                                                    const KFParticle& kf_v0a, const PxPyPzEVector& lv_v0a, const KFParticle& kf_v0a_neg,
-                                                    const KFParticle& kf_v0a_pos, const KFParticle& kf_v0b, const PxPyPzEVector& lv_v0b,
-                                                    const KFParticle& kf_v0b_neg, const KFParticle& kf_v0b_pos) {
-
-    PxPyPzEVector lv_sexa_asdecay = lv_v0a + lv_v0b;
-
-    /* Assign branches and fill tree */
+                                                    const PxPyPzEVector& lv_sexa_asdecay, const KFParticle& kf_v0a, const PxPyPzEVector& lv_v0a,
+                                                    const KFParticle& kf_v0a_neg, const KFParticle& kf_v0a_pos, const KFParticle& kf_v0b,
+                                                    const PxPyPzEVector& lv_v0b, const KFParticle& kf_v0b_neg, const KFParticle& kf_v0b_pos) {
     tTypeA_Px.push_back((Float_t)lv_sexa.Px());
     tTypeA_Py.push_back((Float_t)lv_sexa.Py());
     tTypeA_Pz.push_back((Float_t)lv_sexa.Pz());
@@ -1211,9 +1325,22 @@ void AliAnalysisTaskSexaquark::StoreSexaquark_TypeA(Int_t idx_v0a, Int_t idx_v0b
     tTypeA_DCAV0bPosSV.push_back(TMath::Abs(kf_v0b_pos.GetDistanceFromVertex(kf_sexa)));
     tTypeA_DCAbtwV0s.push_back(TMath::Abs(kf_v0a.GetDistanceFromParticle(kf_v0b)));
     if (fIsMC) {
-        tTypeA_IsSignal.push_back(0);    // PENDING
-        tTypeA_ReactionID.push_back(0);  // PENDING
-        tTypeA_IsHybrid.push_back(0);    // PENDING
+        /*  */
+        Bool_t is_signal = kFALSE;
+        UInt_t reaction_id = 0;
+        /* fill values */
+        const MC_V0& mc_v0a = mcAntiLambdas[idx_v0a];
+        const MC_V0& mc_v0b = mcKaonsZeroShort[idx_v0b];
+        if (mc_v0a.reaction_id == mc_v0b.reaction_id) {
+            reaction_id = mc_v0a.reaction_id;
+            is_signal = mc_v0a.is_signal && mc_v0b.is_signal;
+        }
+        Bool_t is_hybrid = !is_signal && ((mc_v0a.is_signal && !mc_v0b.is_signal) || (!mc_v0a.is_signal && mc_v0b.is_signal) ||  //
+                                          mc_v0a.is_hybrid || mc_v0b.is_hybrid);
+        /*  */
+        tTypeA_IsSignal.push_back(is_signal);
+        tTypeA_ReactionID.push_back(reaction_id);
+        tTypeA_IsHybrid.push_back(is_hybrid);
     }
 };
 
@@ -1290,96 +1417,6 @@ void AliAnalysisTaskSexaquark::StoreSexaquark_TypeD(Int_t idx_v0, Int_t esd_idx_
     }
 }
 
-/*                             */
-/**  Kalman Filter Utilities  **/
-/*** ======================= ***/
-
-/*
- * Correct initialization of a KFParticle.
- * (Copied from `AliPhysics/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.cxx`)
- */
-KFParticle AliAnalysisTaskSexaquark::CreateKFParticle(const AliExternalTrackParam* track_param, Double_t mass, Int_t charge) {
-
-    Double_t fP[6];
-    track_param->GetXYZ(fP);
-    track_param->PxPyPz(fP + 3);
-
-    Int_t fQ = track_param->Charge() * TMath::Abs(charge);
-    fP[3] *= TMath::Abs(charge);
-    fP[4] *= TMath::Abs(charge);
-    fP[5] *= TMath::Abs(charge);
-
-    Double_t pt = 1. / TMath::Abs(track_param->GetParameter()[4]) * TMath::Abs(charge);
-    Double_t cs = TMath::Cos(track_param->GetAlpha());
-    Double_t sn = TMath::Sin(track_param->GetAlpha());
-    Double_t r = TMath::Sqrt((1. - track_param->GetParameter()[2]) * (1. + track_param->GetParameter()[2]));
-
-    Double_t m00 = -sn;
-    Double_t m10 = cs;
-    Double_t m23 = -pt * (sn + track_param->GetParameter()[2] * cs / r);
-    Double_t m43 = -pt * pt * (r * cs - track_param->GetParameter()[2] * sn);
-    Double_t m24 = pt * (cs - track_param->GetParameter()[2] * sn / r);
-    Double_t m44 = -pt * pt * (r * sn + track_param->GetParameter()[2] * cs);
-    Double_t m35 = pt;
-    Double_t m45 = -pt * pt * track_param->GetParameter()[3];
-
-    m43 *= track_param->GetSign();
-    m44 *= track_param->GetSign();
-    m45 *= track_param->GetSign();
-
-    const Double_t* cTr = track_param->GetCovariance();
-    Double_t fC[21];
-    fC[0] = cTr[0] * m00 * m00;
-    fC[1] = cTr[0] * m00 * m10;
-    fC[2] = cTr[0] * m10 * m10;
-    fC[3] = cTr[1] * m00;
-    fC[4] = cTr[1] * m10;
-    fC[5] = cTr[2];
-    fC[6] = m00 * (cTr[3] * m23 + cTr[10] * m43);
-    fC[7] = m10 * (cTr[3] * m23 + cTr[10] * m43);
-    fC[8] = cTr[4] * m23 + cTr[11] * m43;
-    fC[9] = m23 * (cTr[5] * m23 + cTr[12] * m43) + m43 * (cTr[12] * m23 + cTr[14] * m43);
-    fC[10] = m00 * (cTr[3] * m24 + cTr[10] * m44);
-    fC[11] = m10 * (cTr[3] * m24 + cTr[10] * m44);
-    fC[12] = cTr[4] * m24 + cTr[11] * m44;
-    fC[13] = m23 * (cTr[5] * m24 + cTr[12] * m44) + m43 * (cTr[12] * m24 + cTr[14] * m44);
-    fC[14] = m24 * (cTr[5] * m24 + cTr[12] * m44) + m44 * (cTr[12] * m24 + cTr[14] * m44);
-    fC[15] = m00 * (cTr[6] * m35 + cTr[10] * m45);
-    fC[16] = m10 * (cTr[6] * m35 + cTr[10] * m45);
-    fC[17] = cTr[7] * m35 + cTr[11] * m45;
-    fC[18] = m23 * (cTr[8] * m35 + cTr[12] * m45) + m43 * (cTr[13] * m35 + cTr[14] * m45);
-    fC[19] = m24 * (cTr[8] * m35 + cTr[12] * m45) + m44 * (cTr[13] * m35 + cTr[14] * m45);
-    fC[20] = m35 * (cTr[9] * m35 + cTr[13] * m45) + m45 * (cTr[13] * m35 + cTr[14] * m45);
-
-    KFParticle part;
-    part.Create(fP, fC, fQ, mass);
-
-    return part;
-}
-
-/*
- * Correct initialization of a KFVertex.
- * (Copied from `AliPhysics/PWGLF/.../AliAnalysisTaskDoubleHypNucTree.cxx`)
- */
-KFVertex AliAnalysisTaskSexaquark::CreateKFVertex(const AliVVertex* vertex) {
-
-    Double_t param[6];
-    vertex->GetXYZ(param);
-
-    Double_t cov[6];
-    vertex->GetCovarianceMatrix(cov);
-
-    KFPVertex kfpVtx;
-    Float_t paramF[3] = {(Float_t)param[0], (Float_t)param[1], (Float_t)param[2]};
-    kfpVtx.SetXYZ(paramF);
-    Float_t covF[6] = {(Float_t)cov[0], (Float_t)cov[1], (Float_t)cov[2], (Float_t)cov[3], (Float_t)cov[4], (Float_t)cov[5]};
-    kfpVtx.SetCovarianceMatrix(covF);
-
-    KFVertex KFVtx(kfpVtx);
-
-    return KFVtx;
-}
-
 /*                */
 /**  Containers  **/
 /*** ========== ***/
@@ -1412,17 +1449,29 @@ void AliAnalysisTaskSexaquark::ClearBranches_V0s() {
         tV0_Xv[v0].clear();
         tV0_Yv[v0].clear();
         tV0_Zv[v0].clear();
+        tV0_CPAwrtPV[v0].clear();
+        tV0_DCAwrtPV[v0].clear();
+        tV0_ArmQt[v0].clear();
+        tV0_ArmAlpha[v0].clear();
+        tV0_DCA_Daughters[v0].clear();
         tV0_Neg_EsdIdx[v0].clear();
         tV0_Neg_Px[v0].clear();
         tV0_Neg_Py[v0].clear();
         tV0_Neg_Pz[v0].clear();
+        tV0_Neg_IPxy_V0[v0].clear();
+        tV0_Neg_IPz_V0[v0].clear();
+        tV0_Neg_TrackParamD_V0[v0].clear();
+        tV0_Neg_DCA_V0[v0].clear();
+        tV0_Neg_DCAxy_V0[v0].clear();
         tV0_Pos_EsdIdx[v0].clear();
         tV0_Pos_Px[v0].clear();
         tV0_Pos_Py[v0].clear();
         tV0_Pos_Pz[v0].clear();
-        tV0_DCAnegV0[v0].clear();
-        tV0_DCAposV0[v0].clear();
-        tV0_DCAbtwDau[v0].clear();
+        tV0_Pos_IPxy_V0[v0].clear();
+        tV0_Pos_IPz_V0[v0].clear();
+        tV0_Pos_TrackParamD_V0[v0].clear();
+        tV0_Pos_DCA_V0[v0].clear();
+        tV0_Pos_DCAxy_V0[v0].clear();
         if (fIsMC) {
             tV0_McIdx[v0].clear();
             tV0_PdgCode[v0].clear();
@@ -1521,4 +1570,6 @@ void AliAnalysisTaskSexaquark::ClearContainers() {
     /*  */
     kfAntiLambdas.clear();
     kfKaonsZeroShort.clear();
+    mcAntiLambdas.clear();
+    mcKaonsZeroShort.clear();
 }

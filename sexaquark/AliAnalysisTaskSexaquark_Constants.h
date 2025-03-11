@@ -46,50 +46,51 @@ const Double_t AbsMin_DCAxy_wrtPV = 2.;
 }  // namespace Track
 
 namespace Lambda {
-const Double_t Min_Pt = 1.;
-const Double_t Min_Mass = 1.08;
-const Double_t Max_Mass = 1.16;
+/* kinematics */
+const Double_t Min_Pt = 2.;
+const Double_t Min_Mass = 1.1;
+const Double_t Max_Mass = 1.13;
 const Double_t AbsMax_Eta = 0.9;
-const Double_t Min_CPAwrtPV = 0.45;
-const Double_t Max_CPAwrtPV = 0.8;
-const Double_t Min_DCAwrtPV = 70.;
-const Double_t Max_DCAwrtPV = 150.;
+const Double_t Min_CPAwrtPV = 0.35;
+const Double_t Max_CPAwrtPV = 0.9;
+const Double_t Min_DCAwrtPV = 40.;
 const Double_t AbsMax_ArmQtOverAlpha = 0.2;
-// const Double_t MinDistFromPV = 40.;
-const Double_t Min_Radius = 75.;
-const Double_t Max_Radius = 180.;
-const Double_t Max_DCAnegV0 = 10.;
-const Double_t Max_DCAposV0 = 10.;
-const Double_t Max_DCAbtwDau = 10.;
+/* geometric */
+const Double_t AbsMax_Zv = 50.;
+const Double_t Min_Radius = 45.;
+const Double_t Max_Radius = 140.;
+const Double_t Max_DCAnegV0 = 0.2;
+const Double_t Max_DCAposV0 = 0.15;
+const Double_t Max_DCAbtwDau = 0.3;
 }  // namespace Lambda
 
 namespace KaonZeroShort {
-const Double_t Min_Pt = 1.;
+/* kinematics */
+const Double_t Min_Pt = 1.5;
 const Double_t Min_Mass = 0.475;
 const Double_t Max_Mass = 0.525;
 const Double_t AbsMax_Eta = 0.8;
-const Double_t Min_CPAwrtPV = 0.25;
-const Double_t Max_CPAwrtPV = 0.8;
+const Double_t Min_CPAwrtPV = 0.35;
+const Double_t Max_CPAwrtPV = 0.9;
 const Double_t Min_DCAwrtPV = 20.;
-const Double_t Max_DCAwrtPV = 165.;
-// const Double_t MinDistFromPV = 30.;
-// const Double_t MaxDistFromPV = 175.;
-const Double_t Min_Radius = 50.;
+/* geometric */
+const Double_t AbsMax_Zv = 50.;
+const Double_t Min_Radius = 20.;
 const Double_t Max_Radius = 180.;
-const Double_t Max_DCAnegV0 = 10.;
-const Double_t Max_DCAposV0 = 10.;
-const Double_t Max_DCAbtwDau = 10.;
+const Double_t Max_DCAnegV0 = 0.2;
+const Double_t Max_DCAposV0 = 0.2;
+const Double_t Max_DCAbtwDau = 0.2;
 }  // namespace KaonZeroShort
 
 namespace ChannelA {
 /* kinematics-dependent */
 const Double_t AbsMax_Rapidity = 0.7;
-const Double_t Min_CPAwrtPV = 0.99;
+const Double_t Min_CPAwrtPV = 0.9;
 const Double_t Max_CPAwrtPV = 1.;
-const Double_t Min_MassAsDecay = 2.8;
-const Double_t Max_MassAsDecay = 4.8;
+const Double_t Min_MassAsDecay = 0.;
+const Double_t Max_MassAsDecay = 6.;
 /* geometry-exclusive */
-const Double_t Min_Radius = 50.;
+const Double_t Min_Radius = 20.;
 const Double_t Max_Radius = 150.;
 const Double_t Max_DCALaSV = 10.;
 const Double_t Max_DCALaNegSV = 10.;
@@ -98,8 +99,8 @@ const Double_t Max_DCAK0SV = 10.;
 const Double_t Max_DCAK0NegSV = 10.;
 const Double_t Max_DCAK0PosSV = 10.;
 const Double_t Max_DCAbtwV0s = 10.;
-const Double_t Max_DecayLengthLa = 65.;
-const Double_t Max_DecayLengthK0 = 50.;
+const Double_t Max_DecayLengthLa = 100.;
+const Double_t Max_DecayLengthK0 = 100.;
 }  // namespace ChannelA
 
 namespace ChannelD {
@@ -110,13 +111,13 @@ const Double_t Max_CPAwrtPV = 1.;
 /* geometry-exclusive */
 const Double_t Min_Radius = 60.;
 const Double_t Max_Radius = 170.;
-const Double_t Max_DCALaSV = 10.;
-const Double_t Max_DCALaNegSV = 10.;
-const Double_t Max_DCALaPosSV = 10.;
-const Double_t Max_DCAKaSV = 10.;
-const Double_t Max_DCAKaLa = 10.;
-const Double_t Max_DCALaNegKa = 10.;
-const Double_t Max_DCALaPosKa = 10.;
+const Double_t Max_DCALaSV = 2.;
+const Double_t Max_DCALaNegSV = 2.;
+const Double_t Max_DCALaPosSV = 4.;
+const Double_t Max_DCAKaSV = 1.5;
+const Double_t Max_DCAKaLa = 1.;
+const Double_t Max_DCALaNegKa = 0.5;
+const Double_t Max_DCALaPosKa = 2.;
 }  // namespace ChannelD
 
 }  // namespace SexaCuts
