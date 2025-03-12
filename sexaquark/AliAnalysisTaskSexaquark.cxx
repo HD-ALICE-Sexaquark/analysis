@@ -114,25 +114,19 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark()
       tTypeA_Xv(),
       tTypeA_Yv(),
       tTypeA_Zv(),
+      tTypeA_CPAwrtPV(),
+      tTypeA_DCAwrtPV(),
+      tTypeA_DCAbtwV0s(),
       tTypeA_V0a_Idx(),
-      tTypeA_V0a_Px(),
-      tTypeA_V0a_Py(),
-      tTypeA_V0a_Pz(),
-      tTypeA_V0a_E(),
-      tTypeA_V0a_DecayLength(),
       tTypeA_DCAV0aSV(),
       tTypeA_DCAV0aNegSV(),
       tTypeA_DCAV0aPosSV(),
+      tTypeA_V0a_DecayLength(),
       tTypeA_V0b_Idx(),
-      tTypeA_V0b_Px(),
-      tTypeA_V0b_Py(),
-      tTypeA_V0b_Pz(),
-      tTypeA_V0b_E(),
-      tTypeA_V0b_DecayLength(),
       tTypeA_DCAV0bSV(),
       tTypeA_DCAV0bNegSV(),
       tTypeA_DCAV0bPosSV(),
-      tTypeA_DCAbtwV0s(),
+      tTypeA_V0b_DecayLength(),
       /*  */
       tTypeA_IsSignal(),
       tTypeA_ReactionID(),
@@ -299,25 +293,19 @@ AliAnalysisTaskSexaquark::AliAnalysisTaskSexaquark(const char* name)
       tTypeA_Xv(),
       tTypeA_Yv(),
       tTypeA_Zv(),
+      tTypeA_CPAwrtPV(),
+      tTypeA_DCAwrtPV(),
+      tTypeA_DCAbtwV0s(),
       tTypeA_V0a_Idx(),
-      tTypeA_V0a_Px(),
-      tTypeA_V0a_Py(),
-      tTypeA_V0a_Pz(),
-      tTypeA_V0a_E(),
-      tTypeA_V0a_DecayLength(),
       tTypeA_DCAV0aSV(),
       tTypeA_DCAV0aNegSV(),
       tTypeA_DCAV0aPosSV(),
+      tTypeA_V0a_DecayLength(),
       tTypeA_V0b_Idx(),
-      tTypeA_V0b_Px(),
-      tTypeA_V0b_Py(),
-      tTypeA_V0b_Pz(),
-      tTypeA_V0b_E(),
-      tTypeA_V0b_DecayLength(),
       tTypeA_DCAV0bSV(),
       tTypeA_DCAV0bNegSV(),
       tTypeA_DCAV0bPosSV(),
-      tTypeA_DCAbtwV0s(),
+      tTypeA_V0b_DecayLength(),
       /*  */
       tTypeA_IsSignal(),
       tTypeA_ReactionID(),
@@ -450,7 +438,7 @@ void AliAnalysisTaskSexaquark::UserCreateOutputObjects() {
     AssociateBranches_Events();
     if (fIsMC && fIsSignalMC) AssociateBranches_Injected();
     AssociateBranches_V0s();
-    // AssociateBranches_TypeA();
+    AssociateBranches_TypeA();
     // AssociateBranches_TypeD();
     /* Post data */
     PostData(1, fOutputTree);
@@ -527,7 +515,7 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t* option) {
     KF_FindV0s(PdgCode::KaonZeroShort, PdgCode::PiMinus, PdgCode::PiPlus);
     /* Sexaquarks */
     /* -- `AntiSexaquark,Neutron -> AntiLambda,K0S` */
-    // KF_FindSexaquarks_TypeA(PdgCode::Neutron, {PdgCode::AntiLambda, PdgCode::KaonZeroShort});
+    KF_FindSexaquarks_TypeA(PdgCode::Neutron, {PdgCode::AntiLambda, PdgCode::KaonZeroShort});
     /* -- `AntiSexaquark,Proton -> AntiLambda,K+,(pi-,pi+)` */
     // KF_FindSexaquarks_TypeD(PdgCode::AntiNeutron, {PdgCode::Lambda, PdgCode::KaonZeroShort});
     /* Fill tree */
@@ -535,7 +523,7 @@ void AliAnalysisTaskSexaquark::UserExec(Option_t* option) {
     /* End of event */
     if (fIsMC && fIsSignalMC) ClearBranches_Injected();
     ClearBranches_V0s();
-    // ClearBranches_TypeA();
+    ClearBranches_TypeA();
     // ClearBranches_TypeD();
     ClearContainers();
     PostData(1, fOutputTree);
@@ -641,25 +629,22 @@ void AliAnalysisTaskSexaquark::AssociateBranches_TypeA() {
     fOutputTree->Branch("ASA_Xv", &tTypeA_Xv);
     fOutputTree->Branch("ASA_Yv", &tTypeA_Yv);
     fOutputTree->Branch("ASA_Zv", &tTypeA_Zv);
+    fOutputTree->Branch("ASA_CPAwrtPV", &tTypeA_CPAwrtPV);
+    fOutputTree->Branch("ASA_DCAwrtPV", &tTypeA_DCAwrtPV);
+    fOutputTree->Branch("ASA_DCAbtwV0s", &tTypeA_DCAbtwV0s);
+    /*  */
     fOutputTree->Branch("ASA_V0a_Idx", &tTypeA_V0a_Idx);
-    fOutputTree->Branch("ASA_V0a_Px", &tTypeA_V0a_Px);
-    fOutputTree->Branch("ASA_V0a_Py", &tTypeA_V0a_Py);
-    fOutputTree->Branch("ASA_V0a_Pz", &tTypeA_V0a_Pz);
-    fOutputTree->Branch("ASA_V0a_E", &tTypeA_V0a_E);
-    fOutputTree->Branch("ASA_V0a_DecayLength", &tTypeA_V0a_DecayLength);
     fOutputTree->Branch("ASA_DCAV0aSV", &tTypeA_DCAV0aSV);
     fOutputTree->Branch("ASA_DCAV0aNegSV", &tTypeA_DCAV0aNegSV);
     fOutputTree->Branch("ASA_DCAV0aPosSV", &tTypeA_DCAV0aPosSV);
+    fOutputTree->Branch("ASA_V0a_DecayLength", &tTypeA_V0a_DecayLength);
+    /*  */
     fOutputTree->Branch("ASA_V0b_Idx", &tTypeA_V0b_Idx);
-    fOutputTree->Branch("ASA_V0b_Px", &tTypeA_V0b_Px);
-    fOutputTree->Branch("ASA_V0b_Py", &tTypeA_V0b_Py);
-    fOutputTree->Branch("ASA_V0b_Pz", &tTypeA_V0b_Pz);
-    fOutputTree->Branch("ASA_V0b_E", &tTypeA_V0b_E);
-    fOutputTree->Branch("ASA_V0b_DecayLength", &tTypeA_V0b_DecayLength);
     fOutputTree->Branch("ASA_DCAV0bSV", &tTypeA_DCAV0bSV);
     fOutputTree->Branch("ASA_DCAV0bNegSV", &tTypeA_DCAV0bNegSV);
     fOutputTree->Branch("ASA_DCAV0bPosSV", &tTypeA_DCAV0bPosSV);
-    fOutputTree->Branch("ASA_DCAbtwV0s", &tTypeA_DCAbtwV0s);
+    fOutputTree->Branch("ASA_V0b_DecayLength", &tTypeA_V0b_DecayLength);
+    /*  */
     if (fIsMC) {
         fOutputTree->Branch("ASA_IsSignal", &tTypeA_IsSignal);
         fOutputTree->Branch("ASA_ReactionID", &tTypeA_ReactionID);
@@ -1046,8 +1031,8 @@ void AliAnalysisTaskSexaquark::KF_FindV0s(Short_t pdg_code_v0, Short_t pdg_code_
             arr_v0_err[0] = this_v0.kf.GetErrX();
             arr_v0_err[1] = this_v0.kf.GetErrY();
             arr_v0_err[2] = this_v0.kf.GetErrZ();
-            /*  */
             esd_v0 = std::make_unique<AliESDVertex>(arr_v0, arr_v0_err);
+            /*  */
             neg_param->PropagateToDCA(esd_v0.get(), fMagneticField, 10., this_v0.impar_neg);
             this_v0.param_d_neg_v0 = TMath::Abs(neg_param->GetD(arr_v0[0], arr_v0[1], fMagneticField));
             pos_param->PropagateToDCA(esd_v0.get(), fMagneticField, 10., this_v0.impar_pos);
@@ -1201,136 +1186,144 @@ void AliAnalysisTaskSexaquark::StoreV0As(const KF_V0& this_v0, Short_t pdg_code_
 
 void AliAnalysisTaskSexaquark::KF_FindSexaquarks_TypeA(Short_t pdg_struck_nucleon, const std::vector<Short_t>& pdg_reaction_products) {
     //
-    const Double_t neutron_mass = TDatabasePDG::Instance()->GetParticle(pdg_struck_nucleon)->Mass();
+    const Double_t mass_nucleon = TDatabasePDG::Instance()->GetParticle(pdg_struck_nucleon)->Mass();
     if (!kfAntiLambdas.size() || !kfKaonsZeroShort.size()) return;
     /*  */
-    KF_V0 cp_v0a, cp_v0b;
-    PxPyPzEVector lv_v0a, lv_v0b;
-    PxPyPzEVector lv_sexa, lv_sexa_asdecay;
+    std::unique_ptr<AliExternalTrackParam> v0a_neg_param = std::make_unique<AliExternalTrackParam>();
+    std::unique_ptr<AliExternalTrackParam> v0a_pos_param = std::make_unique<AliExternalTrackParam>();
+    std::unique_ptr<AliExternalTrackParam> v0b_neg_param = std::make_unique<AliExternalTrackParam>();
+    std::unique_ptr<AliExternalTrackParam> v0b_pos_param = std::make_unique<AliExternalTrackParam>();
+    std::unique_ptr<AliESDVertex> esd_sv;
+    Double_t arr_sv[3], arr_sv_err[3];
     /* loop over all pairs */
     for (const auto& v0a : kfAntiLambdas) {
+        v0a_neg_param->Reset();
+        v0a_neg_param->CopyFromVTrack(fESD->GetTrack(v0a.idx_neg)->GetInnerParam());
+        v0a_pos_param->Reset();
+        v0a_pos_param->CopyFromVTrack(fESD->GetTrack(v0a.idx_pos)->GetInnerParam());
         for (const auto& v0b : kfKaonsZeroShort) {
+            v0b_neg_param->Reset();
+            v0b_neg_param->CopyFromVTrack(fESD->GetTrack(v0b.idx_neg)->GetInnerParam());
+            v0b_pos_param->Reset();
+            v0b_pos_param->CopyFromVTrack(fESD->GetTrack(v0b.idx_pos)->GetInnerParam());
             /* sanity check */
             std::set<Int_t> unique_track_entries = {v0a.idx_neg, v0a.idx_pos, v0b.idx_neg, v0b.idx_pos};
             if (unique_track_entries.size() < 4) continue;
-            cp_v0a = v0a;
-            cp_v0b = v0b;
             /* fit */
-            KFParticle kf_sexa(cp_v0a.kf, cp_v0b.kf);
-            kf_sexa.SetProductionVertex(kf_pv);
-            //
-            kf_sexa.TransportToDecayVertex();
-            cp_v0a.kf.SetProductionVertex(kf_sexa);
-            cp_v0b.kf.SetProductionVertex(kf_sexa);
-            //
-            cp_v0a.kf.TransportToDecayVertex();
-            cp_v0a.kf_neg.SetProductionVertex(cp_v0a.kf);
-            cp_v0a.kf_pos.SetProductionVertex(cp_v0a.kf);
-            //
-            cp_v0b.kf.TransportToDecayVertex();
-            cp_v0b.kf_neg.SetProductionVertex(cp_v0b.kf);
-            cp_v0b.kf_pos.SetProductionVertex(cp_v0b.kf);
-            /* transport tracks to V0s vertices */
-            cp_v0a.kf_neg.TransportToProductionVertex();
-            cp_v0a.kf_pos.TransportToProductionVertex();
-            cp_v0b.kf_neg.TransportToProductionVertex();
-            cp_v0b.kf_pos.TransportToProductionVertex();
-            /*
-            lv_v0a_neg.SetCoordinates(cp_v0a.kf_neg.Px(), cp_v0a.kf_neg.Py(), cp_v0a.kf_neg.Pz(), lv_v0a_neg.M());
-            lv_v0a_pos.SetCoordinates(cp_v0a.kf_pos.Px(), cp_v0a.kf_pos.Py(), cp_v0a.kf_pos.Pz(), lv_v0a_pos.M());
-            lv_v0b_neg.SetCoordinates(cp_v0b.kf_neg.Px(), cp_v0b.kf_neg.Py(), cp_v0b.kf_neg.Pz(), lv_v0b_neg.M());
-            lv_v0b_pos.SetCoordinates(cp_v0b.kf_pos.Px(), cp_v0b.kf_pos.Py(), cp_v0b.kf_pos.Pz(), lv_v0b_pos.M());
-            */
-            /* transport V0s to secondary vertex */
-            cp_v0a.kf.TransportToProductionVertex();
-            cp_v0b.kf.TransportToProductionVertex();
-            lv_v0a.SetCoordinates(cp_v0a.kf.Px(), cp_v0a.kf.Py(), cp_v0a.kf.Pz(), cp_v0a.kf.E());
-            lv_v0b.SetCoordinates(cp_v0b.kf.Px(), cp_v0b.kf.Py(), cp_v0b.kf.Pz(), cp_v0b.kf.E());
-            /* fill struct */
-            lv_sexa.SetCoordinates(lv_v0a.Px() + lv_v0b.Px(), lv_v0a.Py() + lv_v0b.Py(), lv_v0a.Pz() + lv_v0b.Pz(),
-                                   lv_v0a.E() + lv_v0b.E() - neutron_mass);
-            lv_sexa_asdecay = lv_v0a + lv_v0b;
+            KF_TypeA this_sexa;
+            this_sexa.kf.AddDaughter(v0a.kf);
+            this_sexa.kf.AddDaughter(v0b.kf);
+            this_sexa.kf.TransportToDecayVertex();
+            /*  */
+            this_sexa.v3.SetCoordinates(this_sexa.kf.GetX(), this_sexa.kf.GetY(), this_sexa.kf.GetZ());
+            arr_sv[0] = this_sexa.kf.GetX();
+            arr_sv[1] = this_sexa.kf.GetY();
+            arr_sv[2] = this_sexa.kf.GetZ();
+            arr_sv_err[0] = this_sexa.kf.GetErrX();
+            arr_sv_err[1] = this_sexa.kf.GetErrY();
+            arr_sv_err[2] = this_sexa.kf.GetErrZ();
+            esd_sv = std::make_unique<AliESDVertex>(arr_sv, arr_sv_err);
+            /*  */
+            this_sexa.v0a_decay_length = (v0a.v3 - this_sexa.v3).R();
+            this_sexa.v0b_decay_length = (v0b.v3 - this_sexa.v3).R();
+            /*  */
+            v0a_neg_param->PropagateToDCA(esd_sv.get(), fMagneticField, 10., this_sexa.impar_v0a_neg);
+            this_sexa.param_d_v0a_neg_sv = TMath::Abs(v0a_neg_param->GetD(arr_sv[0], arr_sv[1], fMagneticField));
+            /*  */
+            v0a_pos_param->PropagateToDCA(esd_sv.get(), fMagneticField, 10., this_sexa.impar_v0a_pos);
+            this_sexa.param_d_v0a_pos_sv = TMath::Abs(v0a_pos_param->GetD(arr_sv[0], arr_sv[1], fMagneticField));
+            /*  */
+            v0b_neg_param->PropagateToDCA(esd_sv.get(), fMagneticField, 10., this_sexa.impar_v0b_neg);
+            this_sexa.param_d_v0b_neg_sv = TMath::Abs(v0b_neg_param->GetD(arr_sv[0], arr_sv[1], fMagneticField));
+            /*  */
+            v0b_pos_param->PropagateToDCA(esd_sv.get(), fMagneticField, 10., this_sexa.impar_v0b_pos);
+            this_sexa.param_d_v0b_pos_sv = TMath::Abs(v0b_pos_param->GetD(arr_sv[0], arr_sv[1], fMagneticField));
+            /*  */
+            this_sexa.dca_v0a_neg_sv = TMath::Abs(v0a.kf_neg.GetDistanceFromVertex(this_sexa.kf));
+            this_sexa.dcaxy_v0a_neg_sv = TMath::Abs(v0a.kf_neg.GetDistanceFromVertexXY(this_sexa.kf));
+            /*  */
+            this_sexa.dca_v0a_pos_sv = TMath::Abs(v0a.kf_pos.GetDistanceFromVertex(this_sexa.kf));
+            this_sexa.dcaxy_v0a_pos_sv = TMath::Abs(v0a.kf_pos.GetDistanceFromVertexXY(this_sexa.kf));
+            /*  */
+            this_sexa.dca_v0b_neg_sv = TMath::Abs(v0b.kf_neg.GetDistanceFromVertex(this_sexa.kf));
+            this_sexa.dcaxy_v0b_neg_sv = TMath::Abs(v0b.kf_neg.GetDistanceFromVertexXY(this_sexa.kf));
+            /*  */
+            this_sexa.dca_v0b_pos_sv = TMath::Abs(v0b.kf_pos.GetDistanceFromVertex(this_sexa.kf));
+            this_sexa.dcaxy_v0b_pos_sv = TMath::Abs(v0b.kf_pos.GetDistanceFromVertexXY(this_sexa.kf));
+            /*  */
+            this_sexa.dca_v0a_sv = TMath::Abs(v0a.kf.GetDistanceFromParticle(this_sexa.kf));
+            this_sexa.dca_v0b_sv = TMath::Abs(v0b.kf.GetDistanceFromParticle(this_sexa.kf));
+            this_sexa.dca_btw_v0s = TMath::Abs(v0a.kf.GetDistanceFromParticle(v0b.kf));
+            /* kinematics */
+            this_sexa.lv.SetCoordinates(v0a.lv.Px() + v0b.lv.Px(), v0a.lv.Py() + v0b.lv.Py(), v0a.lv.Pz() + v0b.lv.Pz(),
+                                        v0a.lv.E() + v0b.lv.E() - mass_nucleon);
+            this_sexa.lv_asdecay = v0a.lv + v0b.lv;
+            /*  */
+            this_sexa.cpa_wrt_pv = CosinePointingAngle(this_sexa.lv.Vect(), this_sexa.v3, v3_pv);
+            this_sexa.dca_wrt_pv = LinePointDCA(this_sexa.lv.Vect(), this_sexa.v3, v3_pv);
             /* apply cuts and store */
-            if (PassesSexaquarkCuts_TypeA(kf_sexa, lv_sexa, lv_sexa_asdecay, cp_v0a.kf, cp_v0a.kf_neg, cp_v0a.kf_pos, cp_v0b.kf, cp_v0b.kf_neg,
-                                          cp_v0b.kf_pos)) {
-                StoreSexaquark_TypeA(cp_v0a.idx, cp_v0b.idx, kf_sexa, lv_sexa, lv_sexa_asdecay, cp_v0a.kf, lv_v0a, cp_v0a.kf_neg, cp_v0a.kf_pos,
-                                     cp_v0b.kf, lv_v0b, cp_v0b.kf_neg, cp_v0b.kf_pos);
-            }
+            if (!PassesSexaquarkCuts_TypeA(this_sexa)) continue;
+            this_sexa.idx_v0a = v0a.idx;
+            this_sexa.idx_v0b = v0b.idx;
+            StoreSexaquark_TypeA(this_sexa);
+
         }  // end of loop over k0s
     }      // end of loop over (anti)lambdas
 }
 
-Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_TypeA(const KFParticle& kf_sexa, const PxPyPzEVector& lv_sexa,
-                                                           const PxPyPzEVector& lv_sexa_asdecay,                                                  //
-                                                           const KFParticle& kf_v0a, const KFParticle& kf_v0a_neg, const KFParticle& kf_v0a_pos,  //
-                                                           const KFParticle& kf_v0b, const KFParticle& kf_v0b_neg, const KFParticle& kf_v0b_pos) {
-    XYZPoint v3_sexa(kf_sexa.GetX(), kf_sexa.GetY(), kf_sexa.GetZ());
+Bool_t AliAnalysisTaskSexaquark::PassesSexaquarkCuts_TypeA(const KF_TypeA& this_sexa) {
     /* -- kinematics-dependent cuts */
-    if (TMath::Abs(lv_sexa.Rapidity()) > SexaCuts::ChannelA::AbsMax_Rapidity) return kFALSE;
-    /*  */ Double_t cpa_wrt_pv = CosinePointingAngle(lv_sexa.Vect(), v3_sexa, v3_pv);
-    if (cpa_wrt_pv < SexaCuts::ChannelA::Min_CPAwrtPV || cpa_wrt_pv > SexaCuts::ChannelA::Max_CPAwrtPV) return kFALSE;
-    if (lv_sexa_asdecay.M() < SexaCuts::ChannelA::Min_MassAsDecay || lv_sexa_asdecay.M() > SexaCuts::ChannelA::Max_MassAsDecay) return kFALSE;
+    if (TMath::Abs(this_sexa.lv.Rapidity()) > SexaCuts::ChannelA::AbsMax_Rapidity) return kFALSE;
+    if (this_sexa.cpa_wrt_pv < SexaCuts::ChannelA::Min_CPAwrtPV || this_sexa.cpa_wrt_pv > SexaCuts::ChannelA::Max_CPAwrtPV) return kFALSE;
+    if (this_sexa.lv_asdecay.M() < SexaCuts::ChannelA::Min_MassAsDecay || this_sexa.lv_asdecay.M() > SexaCuts::ChannelA::Max_MassAsDecay)
+        return kFALSE;
     /* -- geometry-exclusive cuts */
-    if (v3_sexa.Rho() < SexaCuts::ChannelA::Min_Radius || v3_sexa.Rho() > SexaCuts::ChannelA::Max_Radius) return kFALSE;
-    /*  */ Double_t dca_la_sv = TMath::Abs((Double_t)kf_v0a.GetDistanceFromVertex(kf_sexa));
-    if (dca_la_sv > SexaCuts::ChannelA::Max_DCALaSV) return kFALSE;
-    /*  */ Double_t dca_la_neg_sv = TMath::Abs((Double_t)kf_v0a_neg.GetDistanceFromVertex(kf_sexa));
-    if (dca_la_neg_sv > SexaCuts::ChannelA::Max_DCALaNegSV) return kFALSE;
-    /*  */ Double_t dca_la_pos_sv = TMath::Abs((Double_t)kf_v0a_pos.GetDistanceFromVertex(kf_sexa));
-    if (dca_la_pos_sv > SexaCuts::ChannelA::Max_DCALaPosSV) return kFALSE;
-    /*  */ Double_t dca_k0s_sv = TMath::Abs((Double_t)kf_v0b.GetDistanceFromVertex(kf_sexa));
-    if (dca_k0s_sv > SexaCuts::ChannelA::Max_DCAK0SV) return kFALSE;
-    /*  */ Double_t dca_k0s_neg_sv = TMath::Abs((Double_t)kf_v0b_neg.GetDistanceFromVertex(kf_sexa));
-    if (dca_k0s_neg_sv > SexaCuts::ChannelA::Max_DCAK0NegSV) return kFALSE;
-    /*  */ Double_t dca_k0s_pos_sv = TMath::Abs((Double_t)kf_v0b_pos.GetDistanceFromVertex(kf_sexa));
-    if (dca_k0s_pos_sv > SexaCuts::ChannelA::Max_DCAK0PosSV) return kFALSE;
-    /*  */ Double_t dca_btw_v0s = TMath::Abs((Double_t)kf_v0a.GetDistanceFromParticle(kf_v0b));
-    if (dca_btw_v0s > SexaCuts::ChannelA::Max_DCAbtwV0s) return kFALSE;
-    /*  */ Double_t decay_length_la = TMath::Abs((Double_t)kf_v0a.GetDecayLength());
-    if (decay_length_la > SexaCuts::ChannelA::Max_DecayLengthLa) return kFALSE;
-    /*  */ Double_t decay_length_k0s = TMath::Abs((Double_t)kf_v0b.GetDecayLength());
-    if (decay_length_k0s > SexaCuts::ChannelA::Max_DecayLengthK0) return kFALSE;
+    if (this_sexa.v3.Rho() < SexaCuts::ChannelA::Min_Radius || this_sexa.v3.Rho() > SexaCuts::ChannelA::Max_Radius) return kFALSE;
+    if (this_sexa.dca_v0a_sv > SexaCuts::ChannelA::Max_DCALaSV) return kFALSE;
+    if (this_sexa.dca_v0a_neg_sv > SexaCuts::ChannelA::Max_DCALaNegSV) return kFALSE;
+    if (this_sexa.dca_v0a_pos_sv > SexaCuts::ChannelA::Max_DCALaPosSV) return kFALSE;
+    if (this_sexa.dca_v0b_sv > SexaCuts::ChannelA::Max_DCAK0SV) return kFALSE;
+    if (this_sexa.dca_v0b_neg_sv > SexaCuts::ChannelA::Max_DCAK0NegSV) return kFALSE;
+    if (this_sexa.dca_v0b_pos_sv > SexaCuts::ChannelA::Max_DCAK0PosSV) return kFALSE;
+    if (this_sexa.dca_btw_v0s > SexaCuts::ChannelA::Max_DCAbtwV0s) return kFALSE;
+    if (this_sexa.v0a_decay_length > SexaCuts::ChannelA::Max_DecayLengthLa) return kFALSE;
+    if (this_sexa.v0b_decay_length > SexaCuts::ChannelA::Max_DecayLengthK0) return kFALSE;
+
     return kTRUE;
 }
 
-void AliAnalysisTaskSexaquark::StoreSexaquark_TypeA(Int_t idx_v0a, Int_t idx_v0b, const KFParticle& kf_sexa, const PxPyPzEVector& lv_sexa,
-                                                    const PxPyPzEVector& lv_sexa_asdecay, const KFParticle& kf_v0a, const PxPyPzEVector& lv_v0a,
-                                                    const KFParticle& kf_v0a_neg, const KFParticle& kf_v0a_pos, const KFParticle& kf_v0b,
-                                                    const PxPyPzEVector& lv_v0b, const KFParticle& kf_v0b_neg, const KFParticle& kf_v0b_pos) {
-    tTypeA_Px.push_back((Float_t)lv_sexa.Px());
-    tTypeA_Py.push_back((Float_t)lv_sexa.Py());
-    tTypeA_Pz.push_back((Float_t)lv_sexa.Pz());
-    tTypeA_E.push_back((Float_t)lv_sexa.E());
-    tTypeA_E_asDecay.push_back((Float_t)lv_sexa_asdecay.E());
-    tTypeA_Xv.push_back(kf_sexa.GetX());
-    tTypeA_Yv.push_back(kf_sexa.GetY());
-    tTypeA_Zv.push_back(kf_sexa.GetZ());
-    tTypeA_V0a_Idx.push_back(idx_v0a);
-    tTypeA_V0a_Px.push_back((Float_t)lv_v0a.Px());
-    tTypeA_V0a_Py.push_back((Float_t)lv_v0a.Py());
-    tTypeA_V0a_Pz.push_back((Float_t)lv_v0a.Pz());
-    tTypeA_V0a_E.push_back((Float_t)lv_v0a.E());
-    tTypeA_V0a_DecayLength.push_back(TMath::Abs(kf_v0a.GetDecayLength()));
-    tTypeA_DCAV0aSV.push_back(TMath::Abs(kf_v0a.GetDistanceFromVertex(kf_sexa)));
-    tTypeA_DCAV0aNegSV.push_back(TMath::Abs(kf_v0a_neg.GetDistanceFromVertex(kf_sexa)));
-    tTypeA_DCAV0aPosSV.push_back(TMath::Abs(kf_v0a_pos.GetDistanceFromVertex(kf_sexa)));
-    tTypeA_V0b_Idx.push_back(idx_v0b);
-    tTypeA_V0b_Px.push_back((Float_t)lv_v0b.Px());
-    tTypeA_V0b_Py.push_back((Float_t)lv_v0b.Py());
-    tTypeA_V0b_Pz.push_back((Float_t)lv_v0b.Pz());
-    tTypeA_V0b_E.push_back((Float_t)lv_v0b.E());
-    tTypeA_V0b_DecayLength.push_back(TMath::Abs(kf_v0b.GetDecayLength()));
-    tTypeA_DCAV0bSV.push_back(TMath::Abs(kf_v0b.GetDistanceFromVertex(kf_sexa)));
-    tTypeA_DCAV0bNegSV.push_back(TMath::Abs(kf_v0b_neg.GetDistanceFromVertex(kf_sexa)));
-    tTypeA_DCAV0bPosSV.push_back(TMath::Abs(kf_v0b_pos.GetDistanceFromVertex(kf_sexa)));
-    tTypeA_DCAbtwV0s.push_back(TMath::Abs(kf_v0a.GetDistanceFromParticle(kf_v0b)));
+void AliAnalysisTaskSexaquark::StoreSexaquark_TypeA(const KF_TypeA& this_sexa) {
+    //
+    tTypeA_Px.push_back((Float_t)this_sexa.lv.Px());
+    tTypeA_Py.push_back((Float_t)this_sexa.lv.Py());
+    tTypeA_Pz.push_back((Float_t)this_sexa.lv.Pz());
+    tTypeA_E.push_back((Float_t)this_sexa.lv.E());
+    tTypeA_E_asDecay.push_back((Float_t)this_sexa.lv_asdecay.E());
+    tTypeA_Xv.push_back((Float_t)this_sexa.v3.X());
+    tTypeA_Yv.push_back((Float_t)this_sexa.v3.Y());
+    tTypeA_Zv.push_back((Float_t)this_sexa.v3.Z());
+    tTypeA_CPAwrtPV.push_back((Float_t)this_sexa.cpa_wrt_pv);
+    tTypeA_DCAwrtPV.push_back((Float_t)this_sexa.dca_wrt_pv);
+    tTypeA_DCAbtwV0s.push_back(this_sexa.dca_btw_v0s);
+    /*  */
+    tTypeA_V0a_Idx.push_back(this_sexa.idx_v0a);
+    tTypeA_DCAV0aSV.push_back(this_sexa.dca_v0a_sv);
+    tTypeA_DCAV0aNegSV.push_back(this_sexa.dca_v0a_neg_sv);
+    tTypeA_DCAV0aPosSV.push_back(this_sexa.dca_v0a_pos_sv);
+    tTypeA_V0a_DecayLength.push_back((Float_t)this_sexa.v0a_decay_length);
+    /*  */
+    tTypeA_V0b_Idx.push_back(this_sexa.idx_v0b);
+    tTypeA_DCAV0bSV.push_back(this_sexa.dca_v0b_sv);
+    tTypeA_DCAV0bNegSV.push_back(this_sexa.dca_v0b_neg_sv);
+    tTypeA_DCAV0bPosSV.push_back(this_sexa.dca_v0b_pos_sv);
+    tTypeA_V0b_DecayLength.push_back((Float_t)this_sexa.v0b_decay_length);
+    /* true information */
     if (fIsMC) {
-        /*  */
         Bool_t is_signal = kFALSE;
         UInt_t reaction_id = 0;
         /* fill values */
-        const MC_V0& mc_v0a = mcAntiLambdas[idx_v0a];
-        const MC_V0& mc_v0b = mcKaonsZeroShort[idx_v0b];
+        const MC_V0& mc_v0a = mcAntiLambdas[this_sexa.idx_v0a];
+        const MC_V0& mc_v0b = mcKaonsZeroShort[this_sexa.idx_v0b];
         if (mc_v0a.reaction_id == mc_v0b.reaction_id) {
             reaction_id = mc_v0a.reaction_id;
             is_signal = mc_v0a.is_signal && mc_v0b.is_signal;
@@ -1472,6 +1465,7 @@ void AliAnalysisTaskSexaquark::ClearBranches_V0s() {
         tV0_Pos_TrackParamD_V0[v0].clear();
         tV0_Pos_DCA_V0[v0].clear();
         tV0_Pos_DCAxy_V0[v0].clear();
+        /*  */
         if (fIsMC) {
             tV0_McIdx[v0].clear();
             tV0_PdgCode[v0].clear();
@@ -1491,25 +1485,22 @@ void AliAnalysisTaskSexaquark::ClearBranches_TypeA() {
     tTypeA_Xv.clear();
     tTypeA_Yv.clear();
     tTypeA_Zv.clear();
+    tTypeA_CPAwrtPV.clear();
+    tTypeA_DCAwrtPV.clear();
+    tTypeA_DCAbtwV0s.clear();
+    /*  */
     tTypeA_V0a_Idx.clear();
-    tTypeA_V0a_Px.clear();
-    tTypeA_V0a_Py.clear();
-    tTypeA_V0a_Pz.clear();
-    tTypeA_V0a_E.clear();
-    tTypeA_V0a_DecayLength.clear();
     tTypeA_DCAV0aSV.clear();
     tTypeA_DCAV0aNegSV.clear();
     tTypeA_DCAV0aPosSV.clear();
+    tTypeA_V0a_DecayLength.clear();
+    /*  */
     tTypeA_V0b_Idx.clear();
-    tTypeA_V0b_Px.clear();
-    tTypeA_V0b_Py.clear();
-    tTypeA_V0b_Pz.clear();
-    tTypeA_V0b_E.clear();
-    tTypeA_V0b_DecayLength.clear();
     tTypeA_DCAV0bSV.clear();
     tTypeA_DCAV0bNegSV.clear();
     tTypeA_DCAV0bPosSV.clear();
-    tTypeA_DCAbtwV0s.clear();
+    tTypeA_V0b_DecayLength.clear();
+    /*  */
     if (fIsMC) {
         tTypeA_IsSignal.clear();
         tTypeA_ReactionID.clear();

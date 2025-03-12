@@ -129,14 +129,8 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     /* Sexaquarks */
     /* -- Channel A : AntiSexaquark Neutron -> AntiLambda KaonZeroShort */
     void KF_FindSexaquarks_TypeA(Short_t pdg_struck_nucleon, const std::vector<Short_t>& pdg_reaction_products);
-    Bool_t PassesSexaquarkCuts_TypeA(const KFParticle& kf_sexa, const PxPyPzEVector& lv_sexa,
-                                     const PxPyPzEVector& lv_sexa_asdecay,                                                  //
-                                     const KFParticle& kf_v0a, const KFParticle& kf_v0a_neg, const KFParticle& kf_v0a_pos,  //
-                                     const KFParticle& kf_v0b, const KFParticle& kf_v0b_neg, const KFParticle& kf_v0b_pos);
-    void StoreSexaquark_TypeA(Int_t idx_v0a, Int_t idx_v0b, const KFParticle& kf_sexa, const PxPyPzEVector& lv_sexa,
-                              const PxPyPzEVector& lv_sexa_asdecay, const KFParticle& kf_v0a, const PxPyPzEVector& lv_v0a,
-                              const KFParticle& kf_v0a_neg, const KFParticle& kf_v0a_pos, const KFParticle& kf_v0b, const PxPyPzEVector& lv_v0b,
-                              const KFParticle& kf_v0b_neg, const KFParticle& kf_v0b_pos);
+    Bool_t PassesSexaquarkCuts_TypeA(const KF_TypeA& this_sexa);
+    void StoreSexaquark_TypeA(const KF_TypeA& this_sexa);
     /* -- Channel D : AntiSexaquark Proton -> AntiLambda K+ */
     void KF_FindSexaquarks_TypeD(Short_t pdg_struck_nucleon, const std::vector<Short_t>& pdg_reaction_products);
     Bool_t PassesSexaquarkCuts_TypeD(const KFParticle& kf_sexa, const PxPyPzEVector& lv_sexa, const KFParticle& kf_v0, const KFParticle& kf_v0_neg,
@@ -267,33 +261,29 @@ class AliAnalysisTaskSexaquark : public AliAnalysisTaskSE {
     std::map<Short_t, std::vector<UInt_t>> tV0_ReactionID;  //!
     std::map<Short_t, std::vector<Bool_t>> tV0_IsHybrid;    //!
     /* -- Sexaquarks properties (Channel A) */
-    std::vector<Float_t> tTypeA_Px;               //!
-    std::vector<Float_t> tTypeA_Py;               //!
-    std::vector<Float_t> tTypeA_Pz;               //!
-    std::vector<Float_t> tTypeA_E;                //!
-    std::vector<Float_t> tTypeA_E_asDecay;        //!
-    std::vector<Float_t> tTypeA_Xv;               //!
-    std::vector<Float_t> tTypeA_Yv;               //!
-    std::vector<Float_t> tTypeA_Zv;               //!
+    std::vector<Float_t> tTypeA_Px;         //!
+    std::vector<Float_t> tTypeA_Py;         //!
+    std::vector<Float_t> tTypeA_Pz;         //!
+    std::vector<Float_t> tTypeA_E;          //!
+    std::vector<Float_t> tTypeA_E_asDecay;  //!
+    std::vector<Float_t> tTypeA_Xv;         //!
+    std::vector<Float_t> tTypeA_Yv;         //!
+    std::vector<Float_t> tTypeA_Zv;         //!
+    std::vector<Float_t> tTypeA_CPAwrtPV;   //!
+    std::vector<Float_t> tTypeA_DCAwrtPV;   //!
+    std::vector<Float_t> tTypeA_DCAbtwV0s;  //!
+    /*  */
     std::vector<Int_t> tTypeA_V0a_Idx;            //!
-    std::vector<Float_t> tTypeA_V0a_Px;           //!
-    std::vector<Float_t> tTypeA_V0a_Py;           //!
-    std::vector<Float_t> tTypeA_V0a_Pz;           //!
-    std::vector<Float_t> tTypeA_V0a_E;            //!
-    std::vector<Float_t> tTypeA_V0a_DecayLength;  //!
     std::vector<Float_t> tTypeA_DCAV0aSV;         //!
     std::vector<Float_t> tTypeA_DCAV0aNegSV;      //!
     std::vector<Float_t> tTypeA_DCAV0aPosSV;      //!
+    std::vector<Float_t> tTypeA_V0a_DecayLength;  //!
+    /*  */
     std::vector<Int_t> tTypeA_V0b_Idx;            //!
-    std::vector<Float_t> tTypeA_V0b_Px;           //!
-    std::vector<Float_t> tTypeA_V0b_Py;           //!
-    std::vector<Float_t> tTypeA_V0b_Pz;           //!
-    std::vector<Float_t> tTypeA_V0b_E;            //!
-    std::vector<Float_t> tTypeA_V0b_DecayLength;  //!
     std::vector<Float_t> tTypeA_DCAV0bSV;         //!
     std::vector<Float_t> tTypeA_DCAV0bNegSV;      //!
     std::vector<Float_t> tTypeA_DCAV0bPosSV;      //!
-    std::vector<Float_t> tTypeA_DCAbtwV0s;        //!
+    std::vector<Float_t> tTypeA_V0b_DecayLength;  //!
     /* -- Sexaquarks true info (Channel A) */
     std::vector<Bool_t> tTypeA_IsSignal;    //!
     std::vector<UInt_t> tTypeA_ReactionID;  //!

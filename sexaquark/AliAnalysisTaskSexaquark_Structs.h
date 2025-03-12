@@ -10,6 +10,7 @@
 #include "KFParticle.h"
 
 using PxPyPzMVector = ROOT::Math::PxPyPzMVector;
+using PxPyPzEVector = ROOT::Math::PxPyPzEVector;
 using XYZPoint = ROOT::Math::XYZPoint;
 
 /** Structs **/
@@ -44,6 +45,47 @@ struct KF_V0 {
     Double_t arm_qt{};
     Double_t arm_alpha{};
     Float_t dca_btw_dau{};
+};
+
+struct KF_TypeA {
+    KF_TypeA() : kf(), v3(), lv(), lv_asdecay() {}
+
+    KFParticle kf;
+    XYZPoint v3;
+
+    Double_t v0a_decay_length{};
+    Double_t v0b_decay_length{};
+
+    Double_t impar_v0a_neg[2]{};
+    Double_t param_d_v0a_neg_sv{};
+    Float_t dca_v0a_neg_sv{};
+    Float_t dcaxy_v0a_neg_sv{};
+
+    Double_t impar_v0a_pos[2]{};
+    Double_t param_d_v0a_pos_sv{};
+    Float_t dca_v0a_pos_sv{};
+    Float_t dcaxy_v0a_pos_sv{};
+
+    Double_t impar_v0b_neg[2]{};
+    Double_t param_d_v0b_neg_sv{};
+    Float_t dca_v0b_neg_sv{};
+    Float_t dcaxy_v0b_neg_sv{};
+
+    Double_t impar_v0b_pos[2]{};
+    Double_t param_d_v0b_pos_sv{};
+    Float_t dca_v0b_pos_sv{};
+    Float_t dcaxy_v0b_pos_sv{};
+
+    Float_t dca_v0a_sv{};
+    Float_t dca_v0b_sv{};
+    Float_t dca_btw_v0s{};
+
+    PxPyPzEVector lv, lv_asdecay;
+
+    Double_t cpa_wrt_pv{};
+    Double_t dca_wrt_pv{};
+
+    Int_t idx_v0a{}, idx_v0b{};
 };
 
 #endif  // TASKSEXAQUARK_STRUCTS_H
